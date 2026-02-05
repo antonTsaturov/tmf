@@ -1,25 +1,30 @@
-
-import React, { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect } from 'react';
+'use client'
+import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
 import '../styles/SiteManager.css';
+import { AdminContext } from '@/wrappers/AdminContext';
+import { CustomSelect } from './Select';
+import { Folder, FolderType, FolderStatus } from '@/types/types';
+import { createNewFolder } from './FoldersStructureManager';
+import { StudySite, SiteStatus } from '@/types/types';
 
 // Enum для статусов
-export enum SiteStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  LOCKED = 'locked',
-  ARCHIVED = 'archived'
-}
+// export enum SiteStatus {
+//   PLANNED = 'active',
+//   INACTIVE = 'inactive',
+//   LOCKED = 'locked',
+//   ARCHIVED = 'archived'
+// }
 
 // Интерфейс центра
-export interface Site {
-  id: string;
-  name: string;
-  number: number;
-  country: string;
-  city: string;
-  principalInvestigator: string;
-  status: SiteStatus;
-}
+// export interface StudySite {
+//   id: string;
+//   name: string;
+//   number: number;
+//   country: string;
+//   city: string;
+//   principalInvestigator: string;
+//   status: SiteStatus;
+// }
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -29,29 +34,29 @@ interface StatusBadgeProps {
 }
 
 interface SiteItemProps {
-  site: Site;
+  site: StudySite;
   index: number;
-  onUpdate: (id: string, updates: Partial<Site>) => void;
+  onUpdate: (id: string, updates: Partial<StudySite>) => void;
   onDelete: (id: string) => void;
   onMove?: (fromIndex: number, toIndex: number) => void;
 }
 
 interface SiteManagerProps {
-  initialSites?: Site[];
+  initialSites?: StudySite[];
 }
 
 // Утилитарные функции
 const generateId = (): string => 
   `site-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-const createNewSite = (): Site => ({
+const createNewSite = (): StudySite => ({
   id: generateId(),
-  name: 'New Site',
+  name: 'New StudySite',
   number: Math.floor(Math.random() * 1000) + 1,
   country: 'Country',
   city: 'City',
   principalInvestigator: 'Investigator',
-  status: SiteStatus.ACTIVE
+  status: SiteStatus.PLANNED
 });
 
 // Компонент бейджа статуса
@@ -60,10 +65,9 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
   const [tempStatus, setTempStatus] = useState(status);
 
   const statusConfig = {
-    [SiteStatus.ACTIVE]: { label: 'Active', color: '#51cf66', icon: '🟢' },
-    [SiteStatus.INACTIVE]: { label: 'Inactive', color: '#ff922b', icon: '🟡' },
-    [SiteStatus.LOCKED]: { label: 'Locked', color: '#ff6b6b', icon: '🔒' },
-    [SiteStatus.ARCHIVED]: { label: 'Archived', color: '#868e96', icon: '📦' }
+    [SiteStatus.OPENED]: { label: 'Opened', color: '#51cf66', icon: '🟢' },
+    [SiteStatus.PLANNED]: { label: 'Planned', color: '#ff922b', icon: '🟡' },
+    [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔒' },
   };
 
   const config = statusConfig[status];
@@ -114,13 +118,13 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
 // Компонент элемента центра
 const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState<Partial<Site>>({
+  const [editData, setEditData] = useState<Partial<StudySite>>({
     name: site.name,
     city: site.city,
     country: site.country
   });
 
-  const handleInputChange = (field: keyof Site) => (
+  const handleInputChange = (field: keyof StudySite) => (
     e: ChangeEvent<HTMLInputElement>
   ) => {
     setEditData(prev => ({
@@ -298,7 +302,12 @@ const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }
 
 // Основной компонент
 const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
-  const [sites, setSites] = useState<Site[]>(
+
+  const { studies, saveStudy } = useContext(AdminContext)!;
+  
+  const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
+  
+  const [sites, setSites] = useState<StudySite[]>(
     initialSites || [
       {
         id: generateId(),
@@ -307,12 +316,12 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
         country: 'USA',
         city: 'New York',
         principalInvestigator: 'Dr. Smith',
-        status: SiteStatus.ACTIVE
+        status: SiteStatus.PLANNED
       },
     ]
   );
 
-  const [siteObject, setSiteObject] = useState<Site[]>([]);
+  const [siteObject, setSiteObject] = useState<StudySite[]>([]);
   const [newSiteForm, setNewSiteForm] = useState({
     name: '',
     number: '',
@@ -333,14 +342,14 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
       return;
     }
 
-    const newSite: Site = {
+    const newSite: StudySite = {
       id: generateId(),
       name: newSiteForm.name.trim(),
       number: parseInt(newSiteForm.number) || 1,
       city: newSiteForm.city.trim(),
       principalInvestigator: newSiteForm.principalInvestigator.trim(),
       country: newSiteForm.country.trim(),
-      status: SiteStatus.ACTIVE
+      status: SiteStatus.PLANNED
     };
 
     setSites(prev => [...prev, newSite]);
@@ -348,7 +357,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
   }, [newSiteForm]);
 
   // Обновление центра
-  const handleUpdateSite = useCallback((id: string, updates: Partial<Site>) => {
+  const handleUpdateSite = useCallback((id: string, updates: Partial<StudySite>) => {
     setSites(prev => 
       prev.map(site => 
         site.id === id ? { ...site, ...updates } : site
@@ -385,7 +394,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
       console.log('Sites Structure:', sites);
       
       // navigator.clipboard.writeText(JSON.stringify(sites, null, 2))
-      //   .then(() => alert('Site list copied to clipboard'))
+      //   .then(() => alert('StudySite list copied to clipboard'))
       //   .catch(err => console.error('Copy error:', err));
     };
     generateSiteObject();
@@ -423,7 +432,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
         try {
           if (!event.target?.result) return;
           
-          const imported = JSON.parse(event.target.result as string) as Site[];
+          const imported = JSON.parse(event.target.result as string) as StudySite[];
           
           // Валидация
           if (!Array.isArray(imported)) {
@@ -460,7 +469,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
           country: 'USA',
           city: 'New York',
           principalInvestigator: 'Dr. Smith',
-          status: SiteStatus.ACTIVE
+          status: SiteStatus.PLANNED
         },
       ]);
       setSiteObject([]);
@@ -471,16 +480,41 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
   const getStats = () => {
     const stats = {
       total: sites.length,
-      active: sites.filter(s => s.status === SiteStatus.ACTIVE).length,
-      inactive: sites.filter(s => s.status === SiteStatus.INACTIVE).length,
-      locked: sites.filter(s => s.status === SiteStatus.LOCKED).length,
-      archived: sites.filter(s => s.status === SiteStatus.ARCHIVED).length
+      planned: sites.filter(s => s.status === SiteStatus.PLANNED).length,
+      opened: sites.filter(s => s.status === SiteStatus.OPENED).length,
+      closed: sites.filter(s => s.status === SiteStatus.CLOSED).length,
     };
     
     return stats;
   };
 
   const stats = getStats();
+
+  const studyHandler = (studyId: number) => {
+    setCurrentStudyId(studyId);
+  };
+
+  useEffect(() => {
+    // if (currentStudyId == null) {
+    //   return;
+    // }
+
+    // const currentStudySitesList = studies?.find(study => study.id === currentStudyId)?.sites_list;
+    // let folderStructure: Folder;
+    // if (currentStudyFoldersStructure && typeof currentStudyFoldersStructure === 'object' && !Array.isArray(currentStudyFoldersStructure)) {
+    //   folderStructure = currentStudyFoldersStructure as Folder;
+    // } else {
+    //   folderStructure = {
+    //     id: generateId(),
+    //     name: studies?.find(study => study.id === currentStudyId)?.protocol || 'Root Directory',
+    //     type: FolderType.ROOT,
+    //     status: FolderStatus.PLANNED,
+    //     children: [createNewFolder('General', FolderType.FOLDER), createNewFolder('StudySite Level', FolderType.FOLDER)],
+    //   };
+    // }
+    // setRootFolder(folderStructure);
+    // setStructureObject({} as Folder);
+  }, [currentStudyId, studies]);
 
   return (
     <div className="site-manager-container">
@@ -507,17 +541,21 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
           </button>
         </div>
       </div>
-          <select
+      <CustomSelect
+        studies={studies}
+        studyHandler={studyHandler}
+      />
+          {/* <select
             className="project-select"
             style={{ marginBottom: 8 }}
             // onChange={...} // Add handler if you want to store the selected value
             required
           >
             <option value="">Select a Project</option>
-          </select>
+          </select> */}
       {/* Форма добавления нового центра */}
       <div className="add-site-form">
-        <h3>New Site</h3>
+        <h3>New StudySite</h3>
         <div className="form-grid">
           <input
             type="text"
@@ -557,7 +595,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
             className="add-button"
             disabled={!newSiteForm.name.trim() || !newSiteForm.number.trim() || !newSiteForm.city.trim() || !newSiteForm.country.trim()}
           >
-            ➕ New Site
+            ➕ New StudySite
           </button>
         </div>
       </div>
@@ -568,7 +606,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
         <div className="sites-list">
           <div className="list-header">
             <div className="header-index">#</div>
-            <div className="header-details">Site Details</div>
+            <div className="header-details">Study Site Details</div>
             <div className="header-status">Status</div>
           </div>
           
@@ -592,7 +630,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
           )}
         </div>
 
-        {/* Превью объекта */}
+        {/* Превью объекта
         <div className="sites-structure-preview">
           <div className="structure-header">
             <h3>Current Sites (JSON):</h3>
@@ -608,7 +646,7 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
               {JSON.stringify(siteObject, null, 2)}
             </pre>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* Статистика */}
@@ -618,20 +656,16 @@ const SiteManager: FC<SiteManagerProps> = ({ initialSites }) => {
           <span className="stat-value">{stats.total}</span>
         </div>
         <div className="stat-item">
-          <span className="stat-label">Active:</span>
-          <span className="stat-value active">{stats.active}</span>
+          <span className="stat-label">Planned:</span>
+          <span className="stat-value active">{stats.planned}</span>
         </div>
         <div className="stat-item">
-          <span className="stat-label">Inactive:</span>
-          <span className="stat-value inactive">{stats.inactive}</span>
+          <span className="stat-label">Opened:</span>
+          <span className="stat-value inactive">{stats.opened}</span>
         </div>
         <div className="stat-item">
-          <span className="stat-label">Locked:</span>
-          <span className="stat-value locked">{stats.locked}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Archived:</span>
-          <span className="stat-value archived">{stats.archived}</span>
+          <span className="stat-label">Closed:</span>
+          <span className="stat-value locked">{stats.closed}</span>
         </div>
       </div>
     </div>

@@ -88,7 +88,9 @@ export async function createStudyTable() {
         countries TEXT[],
         status TEXT NOT NULL,
         users JSONB,
-        totalDocuments INTEGER,
+        sites_list JSONB,
+        total_documents INTEGER,
+        folders_structure JSONB,
         audit_trail JSONB
       );
     `;

@@ -67,11 +67,11 @@
 //   auditTrail: AuditTrail[];
 // }
 
-import React, { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, use } from 'react';
+import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
 import '../styles/StudyManager.css';
 import { Study, StudyStatus } from '@/types/types';
-import { useStudies } from '@/hooks/useStudies';
 import { deleteStudy } from '@/lib/api/fetchStudy';
+import { AdminContext } from '@/wrappers/AdminContext';
 
 // Enum для статусов исследования
 // export enum StudyStatus {
@@ -105,19 +105,6 @@ export interface AuditTrail {
   details: string;
 }
 
-// Основной интерфейс исследования
-// export interface Study {
-//   id: number;
-//   title: string;
-//   protocol: string;
-//   sponsor: string;
-//   cro: string;
-//   countries: string[];
-//   status: StudyStatus;
-//   totalDocuments: number | null;
-//   users: StudyUser[] | null;
-// }
-
 // Пропсы компонентов
 interface StatusBadgeProps {
   status: StudyStatus;
@@ -145,17 +132,17 @@ interface StudyManagerProps {
 // Утилитарные функции
 const generateStudyId = (): number => Math.floor(Math.random() * 9000) + 1000;
 
-const createNewStudy = (): Study => ({
-  id: generateStudyId(),
-  title: 'New Clinical Study',
-  protocol: `PROT-${Math.floor(Math.random() * 9000) + 1000}`,
-  sponsor: 'Pharmaceutical Company',
-  cro: 'CRO Organization',
-  countries: ['USA'],
-  status: StudyStatus.PLANNED,
-  totalDocuments: null,
-  users: null,
-});
+// const createNewStudy = (): Study => ({
+//   id: generateStudyId(),
+//   title: 'New Clinical Study',
+//   protocol: `PROT-${Math.floor(Math.random() * 9000) + 1000}`,
+//   sponsor: 'Pharmaceutical Company',
+//   cro: 'CRO Organization',
+//   countries: ['USA'],
+//   status: StudyStatus.PLANNED,
+//   total_documents: null,
+//   users: null,
+// });
 
 // Список доступных стран
 const COUNTRIES_LIST = [
@@ -351,7 +338,7 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
   // Статистика исследования
   const getStudyStats = () => {
     return {
-      documents: study.totalDocuments || 0,
+      documents: study.total_documents || 0,
       users: study.users?.length || 0,
     };
   };
@@ -505,8 +492,10 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
 };
 
 // Основной компонент
-const StudyManager: FC<StudyManagerProps> = ({ initialStudies }) => {
-  const { studies, setStudies, loadStudies, error, saveStudy } = useStudies();
+const StudyManager: FC<StudyManagerProps> = () => {
+  //const { studies, setStudies, loadStudies, error, saveStudy } = useStudies();
+
+  const { studies, setStudies, loadStudies, error, saveStudy } = useContext(AdminContext)!;
 
   useEffect(() => {
     loadStudies();
@@ -536,8 +525,10 @@ const StudyManager: FC<StudyManagerProps> = ({ initialStudies }) => {
       cro: newStudyForm.cro.trim() || 'CRO TBD',
       countries: newStudyForm.countries.length > 0 ? newStudyForm.countries : ['Global'],
       status: StudyStatus.PLANNED,
-      totalDocuments: 0,
+      total_documents: 0,
+      folders_structure: null,
       users: null,
+      sites_list: null,
     };
     // Write to DB
     saveStudy(newStudy);
@@ -654,6 +645,7 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
         <h2>Clinical Trials Management</h2>
       </div>
 
+      <div style={{ display: 'flex', flexDirection: 'row', gap: '24px' }}>
       {/* Форма добавления нового исследования */}
       <div className="add-study-form">
         <h3>➕ Add New Clinical Study</h3>
@@ -719,33 +711,7 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
         <p className="form-hint">* Required fields</p>
       </div>
 
-      {/* Статистика */}
-      <div className="stats-bar">
-        <div className="stat-item">
-          <span className="stat-label">Total Studies:</span>
-          <span className="stat-value total">{stats.total}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Planned:</span>
-          <span className="stat-value planned">{stats.planned}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Ongoing:</span>
-          <span className="stat-value ongoing">{stats.ongoing}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Completed:</span>
-          <span className="stat-value completed">{stats.completed}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Terminated:</span>
-          <span className="stat-value terminated">{stats.terminated}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Archived:</span>
-          <span className="stat-value archived">{stats.archived}</span>
-        </div>
-      </div>
+      
 
       {/* Список исследований */}
       <div className="studies-list">
@@ -772,6 +738,36 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
             />
           ))
         )}
+      </div>
+
+      </div>
+
+      {/* Статистика */}
+      <div className="stats-bar">
+        <div className="stat-item">
+          <span className="stat-label">Total Studies:</span>
+          <span className="stat-value total">{stats.total}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Planned:</span>
+          <span className="stat-value planned">{stats.planned}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Ongoing:</span>
+          <span className="stat-value ongoing">{stats.ongoing}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Completed:</span>
+          <span className="stat-value completed">{stats.completed}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Terminated:</span>
+          <span className="stat-value terminated">{stats.terminated}</span>
+        </div>
+        <div className="stat-item">
+          <span className="stat-label">Archived:</span>
+          <span className="stat-value archived">{stats.archived}</span>
+        </div>
       </div>
 
       {/* Превью объекта */}

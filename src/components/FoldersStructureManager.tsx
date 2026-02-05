@@ -1,27 +1,31 @@
-import React, { useState, useCallback, FC, KeyboardEvent, ChangeEvent, useEffect } from 'react';
+import React, { useState, useCallback, FC, KeyboardEvent, ChangeEvent, useEffect, useContext } from 'react';
 import '../styles/ProjectBuilder.css';
+import { v4 as uuidv4 } from 'uuid';
+import { CustomSelect } from './Select'
+import { AdminContext } from '@/wrappers/AdminContext';
+import { FolderType, FolderStatus, Folder } from '@/types/types';
 
 // Типы для структуры папок
-export enum FolderType {
-  ROOT = 'root',
-  FOLDER = 'folder',
-  SUBFOLDER = 'subfolder'
-}
+// export enum FolderType {
+//   ROOT = 'root',
+//   FOLDER = 'folder',
+//   SUBFOLDER = 'subfolder'
+// }
 
-export enum FolderStatus {
-  ACTIVE = 'active',
-  LOCKED = 'locked',
-  ARCHIVED = 'archived'
-}
+// export enum FolderStatus {
+//   ACTIVE = 'active',
+//   LOCKED = 'locked',
+//   ARCHIVED = 'archived'
+// }
 
 
-export interface Folder {
-  id: string;
-  name: string;
-  type: FolderType;
-  status: FolderStatus;
-  children: Folder[];
-}
+// export interface Folder {
+//   id: string;
+//   name: string;
+//   type: FolderType;
+//   status: FolderStatus;
+//   children: Folder[];
+// } 
 
 export interface FolderPosition {
   folder: Folder;
@@ -49,12 +53,10 @@ interface FolderTreeProps {
 }
 
 
-// Use uuid for client-only ID generation
-import { v4 as uuidv4 } from 'uuid';
 
-const generateId = (): string => `folder-${uuidv4()}`;
+export const generateId = (): string => `folder-${uuidv4()}`;
 
-const createNewFolder = (name: string = 'New Folder', type: FolderType = FolderType.FOLDER): Folder => ({
+export const createNewFolder = (name: string = 'New Folder', type: FolderType = FolderType.FOLDER): Folder => ({
   id: generateId(),
   name,
   type,
@@ -83,7 +85,7 @@ const FolderItem: FC<FolderItemProps> = ({
   onUpdateName
 }) => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [editingName, setEditingName] = useState<string>(folder.name);
+  const [editingName, setEditingName] = useState<string>(folder?.name);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   const handleNameSave = (): void => {
@@ -194,25 +196,21 @@ const FolderItem: FC<FolderItemProps> = ({
 };
 
 // Основной компонент
+const FoldersStructureManager: FC<FolderTreeProps> = () => {
 
-const ProjectBuilder: FC<FolderTreeProps> = ({ initialStructure }) => {
-  // Always generate unique IDs for all folders
-  const [rootFolder, setRootFolder] = useState<Folder>(
-    initialStructure || {
-      id: generateId(),
-      name: 'Default Project Name',
-      type: FolderType.ROOT,
-      status: FolderStatus.ACTIVE,
-      children: [createNewFolder('Default folder', FolderType.FOLDER)],
-    }
-  );
+  const { studies, saveStudy } = useContext(AdminContext)!;
+  const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
+
+  // rootFolder is null if no study selected
+  const [rootFolder, setRootFolder] = useState<Folder | null>(null);
 
   const [structureObject, setStructureObject] = useState<Folder>({} as Folder);
 
   // Поиск папки в дереве
-  const findFolderInTree = useCallback((folderId: string, tree: Folder = rootFolder): FolderPosition | null => {
-    if (tree.id === folderId) return { folder: tree, parent: null };
-    
+  const findFolderInTree = useCallback((folderId: string, tree?: Folder): FolderPosition | null => {
+    const searchTree = tree || rootFolder;
+    if (!searchTree) return null;
+    if (searchTree.id === folderId) return { folder: searchTree, parent: null };
     const searchInChildren = (children: Folder[], parent: Folder): FolderPosition | null => {
       for (let child of children) {
         if (child.id === folderId) {
@@ -225,8 +223,7 @@ const ProjectBuilder: FC<FolderTreeProps> = ({ initialStructure }) => {
       }
       return null;
     };
-    
-    return searchInChildren(tree.children, tree);
+    return searchInChildren(searchTree.children, searchTree);
   }, [rootFolder]);
 
   // Тип для функции обновления дерева
@@ -320,7 +317,7 @@ const ProjectBuilder: FC<FolderTreeProps> = ({ initialStructure }) => {
     });
   }, [updateTree, findFolderInTree]);
 
-  // Генерация объекта структуры при каждом изменении rootFolder
+    // Генерация объекта структуры при каждом изменении rootFolder
   useEffect(() => {
     const buildObject = (folder: Folder): Folder => {
       const obj: Folder = {
@@ -335,26 +332,35 @@ const ProjectBuilder: FC<FolderTreeProps> = ({ initialStructure }) => {
       }
       return obj;
     };
-    const structure = buildObject(rootFolder);
+    const structure = rootFolder ? buildObject(rootFolder) : ({} as Folder);
     setStructureObject(structure);
   }, [rootFolder]);
 
-  // Экспорт структуры
+  // Экспорт структуры в БД
   const handleExportStructure = (): void => {
-    //generateStructureObject();
-    
+    // Находим исследование по id
+    const currentStudy = studies?.find(study => study.id === currentStudyId);
+    if (!currentStudy) {
+      return;
+    }
+    // Добавляем обновленную структуру папок
+    currentStudy.folders_structure = rootFolder;
+    // Сохраняем
+    saveStudy(currentStudy)
+    //console.log(currentStudy);
+    //saveStudy
     // Создание файла для скачивания
-    const dataStr = JSON.stringify(rootFolder, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
+    // const dataStr = JSON.stringify(rootFolder, null, 2);
+    // const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    // const url = URL.createObjectURL(dataBlob);
     
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `folder-structure-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.download = `folder-structure-${new Date().toISOString().split('T')[0]}.json`;
+    // document.body.appendChild(link);
+    // link.click();
+    // document.body.removeChild(link);
+    // URL.revokeObjectURL(url);
   };
 
   // Импорт структуры
@@ -396,25 +402,51 @@ const ProjectBuilder: FC<FolderTreeProps> = ({ initialStructure }) => {
 
   // Сброс к начальному состоянию
   const handleReset = (): void => {
-    if (window.confirm('Reset to default? All changes will be lost.')) {
-      setRootFolder({
-        id: 'root',
-        name: 'Root Directory',
-        type: FolderType.ROOT,
-        status: FolderStatus.ACTIVE,
-        children: [
-          createNewFolder('Default folder', FolderType.FOLDER),
-        ],
-        
-      });
+    if (window.confirm('Reset to last saved structure? All actual changes will be lost.')) {
+      const currentStudy = studies?.find(study => study.id === currentStudyId);
+      if (!currentStudy) {
+        return;
+      }
+
+      setRootFolder(currentStudy.folders_structure);
       setStructureObject({} as Folder);
     }
   };
 
+
+  // При смене studyId сбрасываем rootFolder
+  const studyHandler = (studyId: number) => {
+    setCurrentStudyId(studyId);
+  };
+
+  useEffect(() => {
+    if (currentStudyId == null) {
+      setRootFolder(null);
+      setStructureObject({} as Folder);
+      return;
+    }
+
+    const currentStudyFoldersStructure = studies?.find(study => study.id === currentStudyId)?.folders_structure;
+    let folderStructure: Folder;
+    if (currentStudyFoldersStructure && typeof currentStudyFoldersStructure === 'object' && !Array.isArray(currentStudyFoldersStructure)) {
+      folderStructure = currentStudyFoldersStructure as Folder;
+    } else {
+      folderStructure = {
+        id: generateId(),
+        name: studies?.find(study => study.id === currentStudyId)?.protocol || 'Root Directory',
+        type: FolderType.ROOT,
+        status: FolderStatus.ACTIVE,
+        children: [createNewFolder('General', FolderType.FOLDER), createNewFolder('Site Level', FolderType.FOLDER)],
+      };
+    }
+    setRootFolder(folderStructure);
+    setStructureObject({} as Folder);
+  }, [currentStudyId, studies]);
+
   return (
     <div className="folder-tree-container">
       <div className="folder-tree-header">
-        <h2>Project Structure Management</h2>
+        <h2>Study Folders Structure Management</h2>
         <div className="controls">
 {/*           <ActionButton onClick={handleAddToRoot}>
             + Add Root Folder
@@ -431,43 +463,56 @@ const ProjectBuilder: FC<FolderTreeProps> = ({ initialStructure }) => {
           </ActionButton>
         </div>
       </div>
+      <CustomSelect
+        studies={studies}
+        studyHandler={studyHandler}
+      />
 
     <div className="folder-tree-content">
-        <div className="folder-tree" role="tree" aria-label="Folder tree">
+      {rootFolder ? (
+        <>
+          <div className="folder-tree" role="tree" aria-label="Folder tree">
             <FolderItem
-            folder={rootFolder}
-            onAddFolder={handleAddFolder}
-            onAddSubfolder={handleAddSubfolder}
-            onDelete={handleDeleteFolder}
-            onUpdateName={handleUpdateName}
+              folder={rootFolder}
+              onAddFolder={handleAddFolder}
+              onAddSubfolder={handleAddSubfolder}
+              onDelete={handleDeleteFolder}
+              onUpdateName={handleUpdateName}
             />
-        </div>
-
-        <div className="structure-preview">
+          </div>
+          <div className="structure-preview">
             <div className="structure-header">
-            <h3>Current Structure (JSON):</h3>
-            <button 
+              <h3>Current Structure (JSON):</h3>
+              <button 
                 onClick={() => setStructureObject({} as Folder)}
                 className="clear-button"
-            >
+              >
                 Clear Preview
-            </button>
+              </button>
             </div>
             {structureObject.id && (
-            <pre data-testid="structure-output">
+              <pre data-testid="structure-output">
                 {JSON.stringify(structureObject, null, 2)}
-            </pre>
+              </pre>
             )}
+          </div>
+        </>
+      ) : (
+        <div className="empty-window" style={{ minHeight: 200, textAlign: 'center', padding: '2rem', color: '#888' }}>
+          <p>No study selected. Please select a study to view or edit its folder structure.</p>
         </div>
+      )}
     </div>
       
-      <div className="stats">
-        <p>
-          Project name: <strong>{rootFolder.name}</strong> |
-          Total folders: <strong>{countFolders(rootFolder)}</strong> | 
-          Depth: <strong>{getTreeDepth(rootFolder)}</strong>
-        </p>
-      </div>
+      {rootFolder && (
+        <div className="stats">
+          <p>
+            Project name: <strong>{rootFolder.name}</strong> |
+            Total folders: <strong>{countFolders(rootFolder)}</strong> | 
+            Depth: <strong>{getTreeDepth(rootFolder)}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -495,4 +540,4 @@ const getTreeDepth = (folder: Folder): number => {
   return maxDepth + 1;
 };
 
-export default ProjectBuilder;
+export default FoldersStructureManager;
