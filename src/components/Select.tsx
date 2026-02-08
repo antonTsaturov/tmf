@@ -1,10 +1,11 @@
 import { Select } from '@radix-ui/themes';
 import { Study } from '@/types/types';
 import { useEffect } from 'react';
+//import "./styles.css";
 
 interface SellectProps {
     studies: Study[];
-    studyHandler: (studyId: number) => void;
+    studyHandler: (studyId: number | null) => void;
 }
 
 export const CustomSelect = ({studies, studyHandler}: SellectProps) => {
@@ -14,13 +15,16 @@ export const CustomSelect = ({studies, studyHandler}: SellectProps) => {
   // Call studyHandler on mount if only one study
   useEffect(() => {
     if (studies.length === 1) {
-      studyHandler(studies[0].id);
+      //studyHandler(studies[0].id);
+      studyHandler(null);
     }
-  }, [studies, studyHandler]);
+    
+  }, []);
 
   return (
     <Select.Root
       //defaultValue={studies[0]?.protocol || ''}
+      
       onValueChange={(value) => {
         const id = protocolToId[value];
         if (id !== undefined) studyHandler(id);

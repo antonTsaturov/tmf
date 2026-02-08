@@ -45,6 +45,7 @@
 
 /* Форма добавления */
 .add-site-form {
+  width: 600px;
   background: white;
   border-radius: 12px;
   padding: 24px;
@@ -63,15 +64,22 @@
   gap: 8px;
 }
 
-.form-grid {
-column-gap: 16px;
+.site-form-grid {
+  row-gap: 8px;
   display: flex;
+  flex-direction: column;
+}
+
+.site-form-grid label {
+  color: #495057;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .form-input {
   padding: 0 0 0 10px;
   border: 2px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 15px;
   transition: all 0.2s;
   background: #f8f9fa;
@@ -90,7 +98,7 @@ column-gap: 16px;
 
 .add-button {
   grid-column: 1 / -1;
-  padding: 14px 24px;
+  padding: 10px;
   background: linear-gradient(135deg, #51cf66, #40c057);
   color: white;
   border: none;
@@ -168,30 +176,57 @@ column-gap: 16px;
     flex-direction: row;
     gap: 20px;
     justify-content: space-between;
+    margin-top: 24px;
 }
 /* Заголовок списка */
 .list-header {
   display: flex;
+  background: #f8f9fa;
   padding: 16px 20px;
-  background: #495057;
-  color: white;
-  border-radius: 10px 10px 0 0;
+  border-bottom: 1px solid #e9ecef;
   font-weight: 600;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  justify-content: space-between;
+  color: #495057;
+  flex-shrink: 0; /* Заголовок не сжимается */
 }
 
 /* Элемент центра */
 .sites-list {
   background: white;
   border-radius: 0 0 10px 10px;
-  overflow: hidden;
+  overflow: hidden; /* Скрываем переполнение у основного контейнера */
   border: 1px solid #e9ecef;
   border-top: none;
   margin-bottom: 28px;
   width: 100%;
+  height: 570px; /* Фиксированная высота для всего списка */
+  display: flex;
+  flex-direction: column; /* Чтобы header и items были в колонке */
+}
+
+.sites-list-items {
+  overflow-y: auto; /* Вертикальная прокрутка */
+  overflow-x: hidden; /* Горизонтальную прокрутку скрываем, если не нужна */
+  flex: 1; /* Занимает всё доступное пространство */
+  max-height: calc(500px - 53px); /* 500px - высота заголовка (~53px) */
+}
+
+/* Опционально: стили для скроллбара */
+.sites-list-items::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sites-list-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.sites-list-items::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.sites-list-items::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 .site-item {
@@ -205,22 +240,27 @@ column-gap: 16px;
 }
 
 .site-item-rows {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
 }
 
 .site-item-first-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 8px;
+}
+
+.site-item-first-row-left-block {
+  display: inline-flex;
+  gap: 80px;
 }
 
 .site-item-second-row {
     justify-content: end;
-  display: flex;
+    display: flex;
 }
 
 @keyframes slideIn {
@@ -323,6 +363,7 @@ column-gap: 16px;
   padding: 2px 8px;
   border-radius: 12px;
   font-weight: 600;
+  margin-left: 20px
 }
 
 .site-location {
@@ -392,11 +433,12 @@ column-gap: 16px;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   border: 2px solid #dee2e6;
+  align-items: center;
 }
 
 .status-option {
-  width: 36px;
-  height: 36px;
+  width: 35px;
+  height: 35px;
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -570,7 +612,6 @@ column-gap: 16px;
   color: #f8f9fa;
   border-radius: 10px;
   padding: 15px 20px;
-  width: 900px;
   min-height: 400px;
   margin-bottom: 30px;
 }
@@ -644,7 +685,7 @@ column-gap: 16px;
     margin-bottom: 12px;
   }
   
-  .form-grid {
+  .site-form-grid {
     grid-template-columns: 1fr;
   }
   

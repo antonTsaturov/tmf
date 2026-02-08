@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { CustomSelect } from './Select'
 import { AdminContext } from '@/wrappers/AdminContext';
 import { FolderType, FolderStatus, Folder } from '@/types/types';
+import { Tables } from '@/lib/db/schema';
+import { StructurePreview } from './StructurePreview';
 
 // Типы для структуры папок
 // export enum FolderType {
@@ -317,7 +319,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
     });
   }, [updateTree, findFolderInTree]);
 
-    // Генерация объекта структуры при каждом изменении rootFolder
+  // Генерация структуры JSON
   useEffect(() => {
     const buildObject = (folder: Folder): Folder => {
       const obj: Folder = {
@@ -346,7 +348,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
     // Добавляем обновленную структуру папок
     currentStudy.folders_structure = rootFolder;
     // Сохраняем
-    saveStudy(currentStudy)
+    saveStudy(Tables.STUDY, currentStudy)
     //console.log(currentStudy);
     //saveStudy
     // Создание файла для скачивания
@@ -413,9 +415,8 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
     }
   };
 
-
   // При смене studyId сбрасываем rootFolder
-  const studyHandler = (studyId: number) => {
+  const studyHandler = (studyId: number | null) => {
     setCurrentStudyId(studyId);
   };
 
@@ -426,7 +427,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       return;
     }
 
-    const currentStudyFoldersStructure = studies?.find(study => study.id === currentStudyId)?.folders_structure;
+  const currentStudyFoldersStructure = studies?.find(study => study.id === currentStudyId)?.folders_structure;
     let folderStructure: Folder;
     if (currentStudyFoldersStructure && typeof currentStudyFoldersStructure === 'object' && !Array.isArray(currentStudyFoldersStructure)) {
       folderStructure = currentStudyFoldersStructure as Folder;
@@ -436,7 +437,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
         name: studies?.find(study => study.id === currentStudyId)?.protocol || 'Root Directory',
         type: FolderType.ROOT,
         status: FolderStatus.ACTIVE,
-        children: [createNewFolder('General', FolderType.FOLDER), createNewFolder('Site Level', FolderType.FOLDER)],
+        children: [createNewFolder('Default folder', FolderType.FOLDER)],
       };
     }
     setRootFolder(folderStructure);
@@ -480,7 +481,8 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
               onUpdateName={handleUpdateName}
             />
           </div>
-          <div className="structure-preview">
+
+          {/* <div className="structure-preview">
             <div className="structure-header">
               <h3>Current Structure (JSON):</h3>
               <button 
@@ -495,13 +497,14 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
                 {JSON.stringify(structureObject, null, 2)}
               </pre>
             )}
-          </div>
+          </div> */}
         </>
       ) : (
         <div className="empty-window" style={{ minHeight: 200, textAlign: 'center', padding: '2rem', color: '#888' }}>
           <p>No study selected. Please select a study to view or edit its folder structure.</p>
         </div>
       )}
+      <StructurePreview structure={[structureObject]} />
     </div>
       
       {rootFolder && (

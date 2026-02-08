@@ -85,7 +85,7 @@
 .form-input {
   padding: 6px 12px;
   border: 2px solid #d0ebff;
-  border-radius: 10px;
+  border-radius: 4px;
   font-size: 15px;
   transition: all 0.3s;
   background: #f8f9fa;
@@ -105,7 +105,7 @@
 
 .add-button {
   grid-column: 1 / -1;
-  padding: 16px 28px;
+  padding: 10px;
   background: linear-gradient(135deg, #51cf66, #40c057);
   color: white;
   border: none;
@@ -505,7 +505,7 @@
 .meta-label {
   font-weight: 600;
   color: #868e96;
-  font-size: 13px;
+  font-size: 14px;
   min-width: 70px;
 }
 
@@ -601,15 +601,16 @@
   display: flex;
   gap: 8px;
   background: white;
-  padding: 8px;
+  padding: 4px;
   border-radius: 25px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
   border: 2px solid #d0ebff;
+  align-items: center;
 }
 
 .status-option {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   border: none;
   border-radius: 50%;
   cursor: pointer;

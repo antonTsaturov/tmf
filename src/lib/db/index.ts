@@ -1,4 +1,5 @@
 import { Pool } from 'pg';
+import { Tables, tableSQLMap } from './schema';
 
 const pool = new Pool({
   host: process.env.PG_HOST,
@@ -29,3 +30,24 @@ export async function connectDB() {
 
 
 //export default pool;
+
+export async function createTable(table: Tables) {
+  const client = await connectDB();
+  try {
+    const query = tableSQLMap[table];
+
+    if (!query) {
+      throw new Error(`SQL not found for table: ${table}`);
+    }
+
+    await client.query(query);
+    console.log(`createTable: Table "${table}" created successfully.`);
+
+  } catch (err) {
+    console.error(`createTable: Table "${table}" not created!. `, err);
+    throw err;
+
+  } finally {
+    client.release();
+  }
+}

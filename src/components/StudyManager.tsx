@@ -70,8 +70,10 @@
 import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
 import '../styles/StudyManager.css';
 import { Study, StudyStatus } from '@/types/types';
-import { deleteStudy } from '@/lib/api/fetchStudy';
+import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
+import { Tables } from '@/lib/db/schema';
+
 
 // Enum для статусов исследования
 // export enum StudyStatus {
@@ -493,12 +495,11 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
 
 // Основной компонент
 const StudyManager: FC<StudyManagerProps> = () => {
-  //const { studies, setStudies, loadStudies, error, saveStudy } = useStudies();
 
-  const { studies, setStudies, loadStudies, error, saveStudy } = useContext(AdminContext)!;
+  const { studies, setStudies, loadTable, error, saveStudy } = useContext(AdminContext)!;
 
   useEffect(() => {
-    loadStudies();
+    loadTable();
   }, []);
 
   const [studyObject, setStudyObject] = useState<Study[]>([]);
@@ -528,10 +529,9 @@ const StudyManager: FC<StudyManagerProps> = () => {
       total_documents: 0,
       folders_structure: null,
       users: null,
-      sites_list: null,
     };
     // Write to DB
-    saveStudy(newStudy);
+    saveStudy(Tables.STUDY, newStudy);
     // Update local state
     setStudies(prev => [...prev, newStudy]);
     
@@ -573,7 +573,7 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
     };
     
       // Сохраняем изменения в БД (асинхронно, не блокируя UI)
-    saveStudy(updatedStudy).catch(err => {
+    saveStudy(Tables.STUDY, updatedStudy).catch(err => {
       console.error('Failed to save study updates:', err);
       // Optionally, we could revert the local state change here if saving fails
     });
@@ -603,7 +603,7 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
       return;
     }
     
-    deleteStudy(id);
+    deleteRecord(Tables.STUDY, id);
     setStudies(prev => prev.filter(study => study.id !== id));
   }, []);
 

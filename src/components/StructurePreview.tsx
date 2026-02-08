@@ -7,12 +7,12 @@ export const StructurePreview = ({ structure }: {structure: any []}) => {
         <div className="sites-structure-preview">
             <div className="structure-header">
             <h3>Current Sites (JSON):</h3>
-            <button 
+            {/* <button 
                 //onClick={() => setSiteObject([])}
                 className="clear-button"
             >
                 Clear Preview
-            </button>
+            </button> */}
             </div>
             {structure.length > 0 && (
             <pre className="json-preview">

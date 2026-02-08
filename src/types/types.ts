@@ -36,12 +36,13 @@ export enum SiteStatus {
 }
 
 export interface StudySite {
-  id: string;
+  id: number;
+  study_id: number;
   name: string;
   number: number;
   country: string;
   city: string;
-  principalInvestigator: string;
+  principal_investigator: string;
   status: SiteStatus;
 }
 
@@ -55,7 +56,6 @@ export interface Study {
   countries: string[];
   status: StudyStatus;
   users: any[] | null;
-  sites_list: string[] | null;
   total_documents: number | null;
   folders_structure: Folder | null;
   audit_trail?: any[] | null;
