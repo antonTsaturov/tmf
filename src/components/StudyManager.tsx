@@ -73,7 +73,7 @@ import { Study, StudyStatus } from '@/types/types';
 import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
-
+import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
 
 // Enum для статусов исследования
 // export enum StudyStatus {
@@ -114,18 +114,13 @@ interface StatusBadgeProps {
   editable?: boolean;
 }
 
-interface StudyItemProps {
+export interface StudyItemProps {
   study: Study;
   index: number;
   onUpdate: (id: number, updates: Partial<Study>) => void;
   onDelete: (id: number) => void;
 }
 
-interface CountrySelectorProps {
-  countries: string[];
-  selectedCountries: string[];
-  onChange: (countries: string[]) => void;
-}
 
 interface StudyManagerProps {
   initialStudies?: Study[];
@@ -146,10 +141,6 @@ const generateStudyId = (): number => Math.floor(Math.random() * 9000) + 1000;
 //   users: null,
 // });
 
-// Список доступных стран
-const COUNTRIES_LIST = [
-  'Russia', 'Australia', 'China', 'India', 'Brazil', 'Mexico', 'South Korea', 'USA'
-];
 
 // Компонент бейджа статуса
 const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false }) => {
@@ -208,84 +199,6 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
   );
 };
 
-// Компонент выбора стран
-const CountrySelector: FC<CountrySelectorProps> = ({ 
-  countries, 
-  selectedCountries, 
-  onChange 
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-
-  const toggleCountry = (country: string) => {
-    const newCountries = selectedCountries.includes(country)
-      ? selectedCountries.filter(c => c !== country)
-      : [...selectedCountries, country];
-    onChange(newCountries);
-  };
-
-  const filteredCountries = countries.filter(country =>
-    country.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="country-selector">
-      <div 
-        className="selected-countries"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {selectedCountries.length > 0 ? (
-          selectedCountries.map(country => (
-            <span key={country} className="country-tag">
-              {country}
-            </span>
-          ))
-        ) : (
-          <span className="placeholder">Select countries...</span>
-        )}
-        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
-      </div>
-      
-      {isOpen && (
-        <div className="country-dropdown">
-          <input
-            type="text"
-            placeholder="Search countries..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="country-search"
-          />
-          <div className="country-list">
-            {filteredCountries.map(country => (
-              <div
-                key={country}
-                className={`country-item ${selectedCountries.includes(country) ? 'selected' : ''}`}
-                onClick={() => toggleCountry(country)}
-              >
-                <span className="country-checkbox">
-                  {selectedCountries.includes(country) ? '✓' : ''}
-                </span>
-                {country}
-              </div>
-            ))}
-          </div>
-          <div className="country-actions">
-            <button onClick={() => onChange(COUNTRIES_LIST)}>
-              Select All
-            </button>
-            <button onClick={() => onChange([])}>
-              Clear All
-            </button>
-            <button onClick={() => setIsOpen(false)}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 // Компонент элемента исследования
 const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -306,7 +219,9 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
     }));
   };
 
-  const handleCountriesChange = (countries: string[]) => {
+  const handleCountriesChange = (values: SelectorValue[]) => {
+    // Приводим к string[]
+    const countries = values as string[];
     setEditData(prev => ({
       ...prev,
       countries
@@ -395,11 +310,18 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
                   placeholder="CRO Organization"
                   className="study-input"
                 />
-                <CountrySelector
+                <CountrySelector 
+                  selectedValues={editData.countries || study.countries}
+                  onChange={handleCountriesChange}
+                  placeholder="Select countries..."
+                />
+
+
+                {/* <PseudoSelector
                   countries={COUNTRIES_LIST}
                   selectedCountries={editData.countries || study.countries}
                   onChange={handleCountriesChange}
-                />
+                /> */}
               </div>
             ) : (
               <div className="display-details">
@@ -694,11 +616,19 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
           </div>
           <div className="form-group full-width">
             <label>Countries</label>
-            <CountrySelector
+            <CountrySelector 
+              //type="country"
+              selectedValues={newStudyForm.countries}
+              onChange={(countries) => setNewStudyForm(prev => ({ ...prev, countries }))}
+              placeholder="Select countries..."
+            />
+
+
+            {/* <PseudoSelector
               countries={COUNTRIES_LIST}
               selectedCountries={newStudyForm.countries}
               onChange={(countries) => setNewStudyForm(prev => ({ ...prev, countries }))}
-            />
+            /> */}
           </div>
           <button 
             onClick={handleAddStudy}

@@ -2,7 +2,7 @@ export enum Tables {
   STUDY = 'study',
   SITE = 'site',
   DOCUMENT = 'document',
-  USER = 'user'
+  USERS = 'users'
 }
 
 export const StudyTable = `
@@ -56,21 +56,180 @@ export const DocumentTable = `
 `;
 
 export const UserTable = `
-  CREATE TABLE IF NOT EXISTS user (
-      id SERIAL PRIMARY KEY,
-      email TEXT UNIQUE NOT NULL,
-      name TEXT NOT NULL,
-      role TEXT NOT NULL,
-      password_hash TEXT,
-      is_active BOOLEAN,
-      created_at TIMESTAMPTZ DEFAULT NOW(),
-      last_login TIMESTAMPTZ
+  CREATE TABLE IF NOT EXISTS ${Tables.USERS} (
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name TEXT NOT NULL,
+    title TEXT,
+    organisation TEXT NOT NULL CHECK (organisation IN ('CRO', 'SPONSOR', 'SITE')),
+    role TEXT[] NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL CHECK (status IN ('active', 'inactive', 'pending', 'terminated')) DEFAULT 'pending',    
+    permissions JSONB NOT NULL,
+    assigned_study_id INTEGER[] DEFAULT '{}',
+    assigned_site_id INTEGER[] DEFAULT '{}',
+    failed_login_attempts INTEGER DEFAULT 0,
+    password_changed_at TIMESTAMPTZ,
+    last_login TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
   );
 `;
+
+// Триггер для обновления updated_at
+export const UpdateUserTimestamp = `
+  CREATE OR REPLACE FUNCTION update_user_timestamp()
+  RETURNS TRIGGER AS $$
+  BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+  END;
+  $$ LANGUAGE plpgsql;
+
+  DROP TRIGGER IF EXISTS update_user_timestamp_trigger ON ${Tables.USERS};
+  CREATE TRIGGER update_user_timestamp_trigger
+  BEFORE UPDATE ON ${Tables.USERS}
+  FOR EACH ROW
+  EXECUTE FUNCTION update_user_timestamp();
+`;
+
+// Вспомогательная таблица для связи пользователей и исследований (опционально)
+export const UserStudyRelationTable = `
+  CREATE TABLE IF NOT EXISTS user_study_relation (
+    user_id INTEGER REFERENCES user(id) ON DELETE CASCADE,
+    study_id INTEGER REFERENCES study(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, study_id)
+  );
+`;
+
+// Вспомогательная таблица для связи пользователей и центров (опционально)
+export const UserSiteRelationTable = `
+  CREATE TABLE IF NOT EXISTS user_site_relation (
+    user_id INTEGER REFERENCES user(id) ON DELETE CASCADE,
+    site_id INTEGER REFERENCES site(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMPTZ DEFAULT NOW(),
+    PRIMARY KEY (user_id, site_id)
+  );
+`;
+
+// Утилитарная функция для получения безопасных полей пользователя
+const getSafeUserFields = () => `
+  id,
+  email,
+  name,
+  title,
+  organisation,
+  role,
+  status,    
+  permissions,
+  assigned_study_id,
+  assigned_site_id,
+  failed_login_attempts,
+  password_changed_at,
+  last_login
+`;
+
+// Функции для работы с пользователями
+export const UserQueries = {
+  // Поиск пользователей по исследованию
+  getUsersByStudy: (studyId: number) => `
+    SELECT ${getSafeUserFields()}
+    FROM ${Tables.USERS}
+    WHERE $1 = ANY(assigned_study_id)
+    ORDER BY name ASC
+  `,
+  
+  // Поиск пользователей по роли
+  getUsersByRole: (role: string) => `
+    SELECT ${getSafeUserFields()}
+    FROM ${Tables.USERS}
+    WHERE $1 = ANY(role)
+    ORDER BY name ASC
+  `,
+
+  // Получение пользователя для аутентификации (с паролем)
+  getUserForAuthentication: (identifier: string, useEmail: boolean = true) => `
+    SELECT 
+      ${getSafeUserFields()},
+      password_hash
+    FROM ${Tables.USERS}
+    WHERE ${useEmail ? 'email' : 'id'} = $1
+  `,
+
+  // Получение всех пользователей исследования с определенной ролью
+  getUsersByStudyAndRole: (studyId: number, role: string) => `
+    SELECT ${getSafeUserFields()}
+    FROM ${Tables.USERS}
+    WHERE $1 = ANY(assigned_study_id)
+      AND $2 = ANY(roles)
+    ORDER BY name ASC
+  `,
+  
+  // Обновление статуса пользователя
+  updateUserStatus: (userId: number, status: string) => `
+    UPDATE ${Tables.USERS} 
+    SET status = $2, updated_at = NOW()
+    WHERE id = $1
+    RETURNING *
+  `,
+  
+  // Сброс счетчика неудачных попыток входа
+  resetFailedLoginAttempts: (userId: number) => `
+    UPDATE ${Tables.USERS} 
+    SET failed_login_attempts = 0, updated_at = NOW()
+    WHERE id = $1
+  `,
+  
+  // Добавление исследования пользователю
+  addStudyToUser: (userId: number, studyId: number) => `
+    UPDATE ${Tables.USERS} 
+    SET assigned_study_id = array_append(assigned_study_id, $2),
+        updated_at = NOW()
+    WHERE id = $1
+    RETURNING assigned_study_id
+  `,
+  
+  // Удаление исследования у пользователя
+  removeStudyFromUser: (userId: number, studyId: number) => `
+    UPDATE ${Tables.USERS} 
+    SET assigned_study_id = array_remove(assigned_study_id, $2),
+        updated_at = NOW()
+    WHERE id = $1
+    RETURNING assigned_study_id
+  `,
+
+  // Добавление центров пользователю
+  addSiteToUser: (userId: number, siteId: number) => `
+    UPDATE ${Tables.USERS} 
+    SET assigned_site_id = array_append(assigned_site_id, $2),
+        updated_at = NOW()
+    WHERE id = $1
+    RETURNING assigned_site_id
+  `,
+  
+  // Удаление исследования у пользователя
+  removeSiteFromUser: (userId: number, siteId: number) => `
+    UPDATE ${Tables.USERS} 
+    SET assigned_site_id = array_remove(assigned_site_id, $2),
+        updated_at = NOW()
+    WHERE id = $1
+    RETURNING assigned_site_id
+  `,
+  
+  // Обновление разрешений пользователя
+  updateUserPermissions: (userId: number, permissions: any) => `
+    UPDATE ${Tables.USERS} 
+    SET permissions = $2::jsonb,
+        updated_at = NOW()
+    WHERE id = $1
+    RETURNING permissions
+  `
+};
 
 export const tableSQLMap: Record<Tables, string> = {
   [Tables.STUDY]: StudyTable,
   [Tables.SITE]: SiteTable,
   [Tables.DOCUMENT]: DocumentTable,
-  [Tables.USER]: UserTable,
+  [Tables.USERS]: UserTable,
 };

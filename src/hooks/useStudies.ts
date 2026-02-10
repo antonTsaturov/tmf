@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { getTable, getTablePartial, createOrUpdateTable } from '@/lib/api/fetch';
-import { Study, StudySite } from '@/types/types';
+import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 
 
@@ -29,36 +29,35 @@ export function useStudies() {
     }
   }, []);
 
-
-const loadTablePartial = useCallback(async (table: Tables, id: number): Promise<StudySite | StudySite[] | []> => {
-  try {
-    setLoading(true);
-    setError(null);
-    const data = await getTablePartial(table, { studyId: id });
-    
-    // Если есть данные
-    if (data) {
-      // Если это массив
-      if (Array.isArray(data)) {
-        return data as StudySite[];
+  const loadTablePartial = useCallback(async <T>(table: Tables, id: number): Promise<T[]> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getTablePartial(table, { studyId: id });
+      
+      // Если есть данные
+      if (data) {
+        // Всегда возвращаем массив
+        if (Array.isArray(data)) {
+          return data as T[];
+        }
+        // Если пришел одиночный объект, оборачиваем в массив
+        return [data] as T[];
       }
-      // Если это одиночный объект
-      return data as StudySite;
+      
+      // Если данных нет, возвращаем пустой массив
+      return [] as T[];
+      
+    } catch (err) {
+      setError(err instanceof Error ? err.message : `Failed to load ${table}`);
+      console.error(`Error loading ${table}:`, err);
+      
+      // В случае ошибки возвращаем пустой массив
+      return [] as T[];
+    } finally {
+      setLoading(false);
     }
-    
-    // Если данных нет, возвращаем пустой массив
-    return [];
-    
-  } catch (err) {
-    setError(err instanceof Error ? err.message : 'Failed to load sites');
-    console.error('Error loading sites:', err);
-    
-    // В случае ошибки возвращаем пустой массив
-    return [];
-  } finally {
-    setLoading(false);
-  }
-}, []);
+  }, []);
 
   const saveStudy = useCallback(async (table: Tables, studyData: Partial<Study>) => {
     //console.log('Saving study data:', studyData);
@@ -87,8 +86,8 @@ const loadTablePartial = useCallback(async (table: Tables, id: number): Promise<
       return result;
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save sites list');
-      console.error('Error saving sites list:', err);
+      setError(err instanceof Error ? err.message : 'Failed to save site');
+      console.error('Error saving site: ', err);
       throw err;
 
     } finally {
@@ -96,6 +95,22 @@ const loadTablePartial = useCallback(async (table: Tables, id: number): Promise<
     }
   }, [sites]);
 
+  const saveUser = useCallback(async (table: Tables, userData: Partial<StudyUser>) => {
+    try {
+      //setLoading(true);
+      setError(null);
+      const result = await createOrUpdateTable(table, userData);
+      return result;
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save user');
+      console.error('Error saving user: ', err);
+      throw err;
+
+    } finally {
+      setLoading(false);
+    }
+  }, [sites]);
 
   useEffect(() => {
     loadTable();
@@ -111,6 +126,7 @@ const loadTablePartial = useCallback(async (table: Tables, id: number): Promise<
     loadTable,
     saveStudy,
     saveSite,
+    saveUser,
     loadTablePartial,
   };
 }

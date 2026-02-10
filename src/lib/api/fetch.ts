@@ -1,4 +1,4 @@
-import { Study, StudySite } from '@/types/types';
+import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 
 
@@ -24,8 +24,8 @@ export async function getTable(request: Tables) {
   }
 }
 // GET запрос для получения части данных
-export async function getTablePartial(request: Tables, params: Record<string, any>) {
-  const url = new URL(`/api/${request}`, window.location.origin);
+export async function getTablePartial(table: Tables, params: Record<string, any>) {
+  const url = new URL(`/api/${table}`, window.location.origin);
   
   // Добавляем параметры в URL
   if (params) {
@@ -48,7 +48,7 @@ export async function getTablePartial(request: Tables, params: Record<string, an
 }
 
 // POST запрос: Создать или обновить таблицу.
-export async function createOrUpdateTable(table: Tables, data: Partial<Study | StudySite>) {
+export async function createOrUpdateTable(table: Tables, data: Partial<Study | StudySite | StudyUser>) {
   try {
     const response = await fetch(`/api/${table}`, {
       method: 'POST',

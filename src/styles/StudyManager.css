@@ -144,7 +144,7 @@
 }
 
 /* Country Selector */
-.country-selector {
+/* .country-selector {
   position: relative;
   width: 100%;
 }
@@ -299,7 +299,7 @@
 .country-actions button:hover {
   background: #1971c2;
   transform: translateY(-1px);
-}
+} */
 
 /* Статистика */
 .stats-bar {
@@ -549,7 +549,7 @@
 
 .edit-form {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, 10fr);
   gap: 16px;
 }
 
@@ -869,4 +869,118 @@
   .action-button {
     min-width: 100%;
   } */
+}
+
+/* Стили для состояния выбора исследования */
+.select-study-prompt {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px dashed #dee2e6;
+}
+
+.select-study-prompt .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.select-study-prompt h3 {
+  color: #495057;
+  margin-bottom: 8px;
+}
+
+.select-study-prompt p {
+  color: #6c757d;
+  margin-bottom: 16px;
+}
+
+.study-selection-hint {
+  background: rgba(13, 110, 253, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-left: 4px solid #0d6efd;
+}
+
+.hint-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  font-size: 14px;
+  color: #0d6efd;
+  line-height: 1.4;
+}
+
+/* Стили для информации об исследовании */
+.study-header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.study-title {
+  color: #212529;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-count {
+  background: #6c757d;
+  color: white;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: normal;
+}
+
+.study-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button.small {
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+.study-info {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.study-badge {
+  background: #e9ecef;
+  color: #495057;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Анимация появления */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.empty-state {
+  animation: fadeInUp 0.3s ease-out;
 }

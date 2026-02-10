@@ -5,8 +5,9 @@ import { AdminContext } from '@/wrappers/AdminContext';
 import { CustomSelect } from './Select';
 import { StudySite, SiteStatus } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
-import { StructurePreview } from './StructurePreview';
+import { StructurePreview } from './Preview';
 import { useEntityState } from '@/hooks/useEntityState';
+import { deleteRecord } from '@/lib/api/fetch';
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -28,9 +29,10 @@ interface SiteManagerProps {
 }
 
 // Генерация ID центра в формате 47251770567792480
-const generateId = (siteID: number): number => 
-  parseInt(`${siteID}${Date.now()}}`); //-${Math.random().toString(36).substr(2, 9)
-
+const generateId = (siteID: number): number => {
+  const random = Math.floor(Math.random() * 100000);
+  return parseInt(`${siteID}${random}`);
+}
 
 // Компонент бейджа статуса
 const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false }) => {
@@ -374,12 +376,16 @@ const SiteManager: FC<SiteManagerProps> = () => {
   }, [updateSite]);
 
   // Удаление центра с использованием useEntityState
-  const handleDeleteSite = useCallback((id: number) => {
+  const handleDeleteSite = useCallback(async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this site?')) {
       return;
     }
     
-    removeSite(id);
+    const deleted = deleteRecord(Tables.SITE, id);
+    if (await deleted) {
+      removeSite(id);
+    }
+    
   }, [removeSite]);
 
 

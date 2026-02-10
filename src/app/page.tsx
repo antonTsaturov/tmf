@@ -10,6 +10,7 @@ import { useModal } from '@/hooks/useModal';
 import FoldersStructureManager from '@/components/FoldersStructureManager';
 import SiteManager from '@/components/SiteManager';
 import StudyManager from '@/components/StudyManager';
+import UserManager from '@/components/UserManager';
 import { Button, Tabs, Box} from '@radix-ui/themes';
 import { AdminContext, AdminContextProvider } from "@/wrappers/AdminContext";
 
@@ -89,10 +90,10 @@ const Home: React.FC<MainWindowProps> = ({ initialWidth = 600, minWidth = 500, m
                 Project Folder Structure
             </Tabs.Trigger>
             <Tabs.Trigger  value="tab3">
-                Sites Managment
+                Sites Management
             </Tabs.Trigger>
             <Tabs.Trigger value="tab4">
-                Users Managment
+                Users Management
             </Tabs.Trigger>
           </Tabs.List>
           <Box pt="5">
@@ -106,6 +107,10 @@ const Home: React.FC<MainWindowProps> = ({ initialWidth = 600, minWidth = 500, m
               <Tabs.Content  value="tab3">
                   <SiteManager />
               </Tabs.Content>
+              <Tabs.Content  value="tab4">
+                  <UserManager />
+              </Tabs.Content>
+
             </AdminContextProvider>
           </Box>
         </Tabs.Root>

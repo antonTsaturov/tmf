@@ -50,7 +50,6 @@ export function useEntityState<T extends Entity>(
   const removeEntity = useCallback((id: number) => {
     setEntities(prev => prev.filter(entity => entity.id !== id));
     
-    // Здесь можно добавить вызов API для удаления из БД
   }, []);
 
   // Массовое обновление

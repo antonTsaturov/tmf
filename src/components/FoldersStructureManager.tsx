@@ -5,7 +5,7 @@ import { CustomSelect } from './Select'
 import { AdminContext } from '@/wrappers/AdminContext';
 import { FolderType, FolderStatus, Folder } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
-import { StructurePreview } from './StructurePreview';
+import { StructurePreview } from './Preview';
 
 // Типы для структуры папок
 // export enum FolderType {
@@ -454,10 +454,10 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
           </ActionButton>
  */}          
           <ActionButton onClick={handleExportStructure}>
-            📋 Write Structure
+            📋 Write
           </ActionButton>
           <ActionButton onClick={handleImportStructure}>
-            📥 Import Structure
+            📥 Import
           </ActionButton>
           <ActionButton onClick={handleReset} className="reset-button">
             🔄 Reset

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateRecord } from '@/lib/db/study';
 import { connectDB, createTable } from '@/lib/db/index';
-import { Tables } from '@/lib/db/schema';
+import { Tables, UserQueries } from '@/lib/db/schema';
 import { bulkSaveData } from '@/lib/db/site';
 
 
@@ -62,25 +62,30 @@ export class StudyApiHandler {
       }
       
       try {
-        // Пытаемся получить центры для исследования
-        const result = await client.query(
-          `SELECT * FROM ${table} WHERE study_id = $1 ORDER BY number ASC`,
-          [studyId]
-        );
+        // Оформляем запрос в зависимости от типа таблиы
+        const qureyText = table === Tables.USERS
+          ? UserQueries.getUsersByStudy(parseInt(studyId))
+          : `SELECT * FROM ${table} WHERE study_id = $1 ORDER BY number ASC`;
+        // Пытаемся получить часть таблицы по ID для исследования
+        // const result = await client.query(
+        //   `SELECT * FROM ${table} WHERE study_id = $1 ORDER BY number ASC`,
+        //   [studyId]
+        // );
+        const result = await client.query(qureyText, [studyId]);
         
         return NextResponse.json(result.rows, { status: 200 });
         
       } catch (dbError) {
         const errorMessage = String(dbError);
         
-        // Если таблица site не существует
+        // Если таблица не существует
         if (errorMessage.includes(`relation "${table}" does not exist`) || 
             errorMessage.includes(`table "${table}" does not exist`)) {
           
-          console.log('Table ${table} does not exist, creating it...');
+          console.log(`Table ${table} does not exist, creating it...`);
           
-          // Создаем таблицу site
-          await createTable(Tables.SITE);
+          // Создаем таблицу
+          await createTable(table);
           
           // Проверяем, существует ли таблица study (для foreign key)
           // try {
@@ -100,10 +105,10 @@ export class StudyApiHandler {
       }
       
     } catch (err) {
-      console.error('GET /api/sites error:', err);
+      console.error(`GET /api/${table} error:`, err);
       return NextResponse.json(
         { 
-          error: 'Failed to fetch sites', 
+          error: `Failed to fetch data from table ${table}`, 
           details: String(err) 
         }, 
         { status: 500 }
