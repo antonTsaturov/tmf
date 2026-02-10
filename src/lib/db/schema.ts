@@ -149,12 +149,12 @@ export const UserQueries = {
   `,
 
   // Получение пользователя для аутентификации (с паролем)
-  getUserForAuthentication: (identifier: string, useEmail: boolean = true) => `
+  getUserForAuthentication: (email: boolean = true) => `
     SELECT 
       ${getSafeUserFields()},
       password_hash
     FROM ${Tables.USERS}
-    WHERE ${useEmail ? 'email' : 'id'} = $1
+    WHERE ${email ? 'email' : 'id'} = $1
   `,
 
   // Получение всех пользователей исследования с определенной ролью

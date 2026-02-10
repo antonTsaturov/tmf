@@ -4,6 +4,7 @@ import "./globals.css";
 import { ContextProvider } from "@/wrappers/MainContext";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
+import { AuthProvider } from "@/wrappers/AuthProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,11 +29,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <ContextProvider>
-          <Theme>
-            {children}
-          </Theme>
-        </ContextProvider>
+        <AuthProvider>
+          <ContextProvider>
+            <Theme>
+              {children}
+            </Theme>
+          </ContextProvider>
+        </AuthProvider>
       </body>
     </html>
   );
