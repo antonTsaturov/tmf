@@ -1,4 +1,3 @@
-
 // Enum для статусов исследования
 export enum StudyStatus {
   PLANNED = 'planned',
@@ -33,6 +32,44 @@ export enum SiteStatus {
   PLANNED = 'planned',
   OPENED = 'opened',
   CLOSED = 'closed',
+}
+
+export type AuditAction = 
+  | 'CREATE'
+  | 'READ'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'LOGIN'
+  | 'LOGOUT'
+  | 'LOGIN_FAILED'
+  | 'EXPORT'
+  | 'APPROVE'
+  | 'REJECT'
+  | 'SUBMIT';
+
+export type AuditEntity = 'document' | 'user' | 'site' | 'study' | 'audit' ;
+
+export type AuditStatus = 'SUCCESS' | 'FAILURE';
+
+export interface AuditLogEntry {
+  audit_id: string; // UUID
+  created_at: string;
+  user_id: number;
+  user_email: string;
+  user_role: UserRole[];
+  action: AuditAction;
+  entity_type: AuditEntity;
+  entity_id: number;
+  old_value: Record<string, unknown> | null;
+  new_value: Record<string, unknown> | null;
+  ip_address: string;
+  user_agent: string;
+  session_id: string;
+  status: AuditStatus;
+  error_message: string;
+  reason?: string;
+  site_id: string | number;
+  study_id: string | number;
 }
 
 export interface StudySite {

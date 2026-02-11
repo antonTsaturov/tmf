@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // 4. Проверить, первый ли это вход (last_login === null)
     const isFirstLogin = user.last_login === null || user.last_login === undefined;
     
-    // 5. Если это первый вход, пароль может быть в открытом виде
+    // 5. Если это первый вход
     if (isFirstLogin) {
       // Проверяем пароль как есть (предполагаем, что в БД хранится открытый пароль)
       // const isPasswordValid = password === user.password_hash;
@@ -64,7 +64,8 @@ export async function POST(request: NextRequest) {
         `UPDATE users 
          SET password_hash = $1, 
              password_changed_at = NOW(),
-             last_login = NOW()
+             last_login = NOW(),
+             status = ${UserStatus.ACTIVE}
          WHERE id = $2`,
         [hashedPassword, user.id]
       );
@@ -81,6 +82,7 @@ export async function POST(request: NextRequest) {
 
       if (!isValidPassword) {
         // Увеличиваем счетчик неудачных попыток
+        // TODO: сделать блокировку после 5 неудачных попыток
         const newAttempts = user.failed_login_attempts + 1;
         // let lockUntil = null;
         
@@ -91,7 +93,7 @@ export async function POST(request: NextRequest) {
         
         await client.query(
           `UPDATE users 
-           SET failed_login_attempts = $1,
+           SET failed_login_attempts = $1
            WHERE id = $2`,
           [newAttempts, user.id]
         );
@@ -151,7 +153,7 @@ export async function POST(request: NextRequest) {
       // Сбросить счетчик неудачных попыток при успешном входе
       await client.query(
         `UPDATE users 
-         SET failed_login_attempts = 0, 
+         SET failed_login_attempts = 0
          WHERE id = $1`,
         [user.id]
       );

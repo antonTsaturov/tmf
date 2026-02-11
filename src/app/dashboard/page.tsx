@@ -19,7 +19,7 @@ export default function DashboardPage() {
 
   const loadSites = async () => {
     try {
-      const data = await api.get<any[]>(`/api/sites?studyId=${user?.studyId}`);
+      const data = await api.get<any[]>(`/api/site?study_id=${user?.assigned_study_id}`);
       setSites(data);
     } catch (error) {
       console.error('Failed to load sites:', error);
@@ -35,11 +35,11 @@ export default function DashboardPage() {
       </div>
     );
   }
-
+  console.log('DashboardPage: ', user)
   return (
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">Dummy Dashboard</h1>
         <button
           onClick={logout}
           className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -51,8 +51,8 @@ export default function DashboardPage() {
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Welcome, {user.name}!</h2>
         <p>Email: {user.email}</p>
-        <p>Roles: {user.roles.join(', ')}</p>
-        <p>Study ID: {user.studyId}</p>
+        <p>Roles: {user.role.join(', ')}</p>
+        <p>Study ID: {user.assigned_study_id}</p>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">

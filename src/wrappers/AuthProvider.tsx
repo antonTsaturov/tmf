@@ -10,9 +10,9 @@ interface User {
   id: number;
   name: string;
   email: string;
-  roles: string[];
+  role: string[];
   assigned_site_id: number[];
-  studyId: number;
+  assigned_study_id: number;
 }
 
 interface AuthContextType {

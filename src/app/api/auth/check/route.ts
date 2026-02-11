@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       email: user.email,
       role: user.role,
       assigned_site_id: user.assigned_site_id,
-      study_id: user.study_id
+      assigned_study_id: user.assigned_study_id
     }
   });
 }

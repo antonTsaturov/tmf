@@ -74,6 +74,8 @@ import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
 import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
+import { useModal } from '@/hooks/useModal';
+import { MainContext } from '@/wrappers/MainContext';
 
 // Enum для статусов исследования
 // export enum StudyStatus {
@@ -84,28 +86,6 @@ import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
 //   ARCHIVED = 'archived'
 // }
 
-// Дополнительные интерфейсы
-export interface StudyDocument {
-  id: string;
-  name: string;
-  type: string;
-  uploadedAt: Date;
-}
-
-export interface StudyUser {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-}
-
-export interface AuditTrail {
-  id: string;
-  action: string;
-  userId: string;
-  timestamp: Date;
-  details: string;
-}
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -419,9 +399,13 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
 const StudyManager: FC<StudyManagerProps> = () => {
 
   const { studies, setStudies, loadTable, error, saveStudy } = useContext(AdminContext)!;
+  const { context } = useContext(MainContext)!;
 
   useEffect(() => {
-    loadTable();
+    if (context.isModal) {
+      loadTable();
+    }
+    
   }, []);
 
   const [studyObject, setStudyObject] = useState<Study[]>([]);
@@ -434,7 +418,7 @@ const StudyManager: FC<StudyManagerProps> = () => {
   });
 
   // Добавление исследования в конец списка
-  const handleAddStudy = useCallback(() => {
+  const handleAddStudy = useCallback(async () => {
     if (!newStudyForm.title.trim() || !newStudyForm.protocol.trim()) {
       alert('Please fill at least study title and protocol number');
       return;
@@ -453,11 +437,13 @@ const StudyManager: FC<StudyManagerProps> = () => {
       users: null,
     };
     // Write to DB
-    saveStudy(Tables.STUDY, newStudy);
-    // Update local state
-    setStudies(prev => [...prev, newStudy]);
+    const respond = await saveStudy(Tables.STUDY, newStudy);
+    if (respond) {
+      // Update local state if writing to db was successful
+      setStudies(prev => [...prev, newStudy]);
+      console.log('Added new study:', newStudy);
+    }
     
-    console.log('Added new study:', newStudy);
     // Clear form
     setNewStudyForm({ title: '', protocol: '', sponsor: '', cro: '', countries: [] });
   }, [newStudyForm]);

@@ -3,23 +3,37 @@ import { Tables } from '@/lib/db/schema';
 
 
 // GET запрос: Получить все исследования | центры / пользователей /
-export async function getTable(request: Tables) {
+export async function getTable(table: Tables) {
   try {
-    const response = await fetch(`/api/${request}`, {
+    console.log('Fetching table:', table);
+    
+    // Убедимся, что table - это строка и правильно форматируется
+    const tableName = String(table);
+    const url = `/api/${tableName}`;
+    
+    console.log('Fetching URL:', url);
+    
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
-      cache: 'no-store', // Для динамических данных
+      cache: 'no-store',
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch studies: ${response.statusText}`);
+      // Добавляем больше информации об ошибке
+      const errorText = await response.text().catch(() => 'No error details');
+      throw new Error(`Failed to fetch ${tableName}: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error('Error fetching studies:', error);
+    console.error('getTable - Error:', {
+      table,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined
+    });
     throw error;
   }
 }

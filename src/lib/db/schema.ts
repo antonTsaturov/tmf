@@ -2,8 +2,57 @@ export enum Tables {
   STUDY = 'study',
   SITE = 'site',
   DOCUMENT = 'document',
-  USERS = 'users'
+  USERS = 'users',
+  AUDIT = 'audit',
 }
+
+export const AuditTrialTable = `
+    CREATE TABLE IF NOT EXISTS audit (
+        id BIGSERIAL PRIMARY KEY,
+        audit_id UUID NOT NULL UNIQUE,
+        created_at TIMESTAMPTZ NOT NULL,
+        user_id BIGINT NOT NULL,
+        user_email TEXT NOT NULL,
+        user_role JSONB NOT NULL,
+        action TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id BIGINT NOT NULL,
+        old_value JSONB,
+        new_value JSONB,
+        ip_address INET NOT NULL,
+        user_agent TEXT NOT NULL,
+        session_id TEXT NOT NULL,
+        status TEXT NOT NULL,
+        error_message TEXT,
+        reason TEXT,
+        site_id VARCHAR(100),
+        study_id VARCHAR(100),
+
+        CONSTRAINT audit_status_check CHECK (status IN ('SUCCESS', 'FAILURE')),
+        CONSTRAINT audit_action_check CHECK (action IN ('CREATE', 'UPDATE', 'DELETE'))
+    );
+        CREATE INDEX idx_audit_timestamp ON audit(created_at DESC);
+        CREATE INDEX idx_audit_user ON audit(user_id, created_at DESC);
+        CREATE INDEX idx_audit_entity ON audit(entity_type, entity_id, created_at DESC);
+        CREATE INDEX idx_audit_action ON audit(action, created_at DESC);
+        CREATE INDEX idx_audit_study ON audit(study_id, created_at DESC);
+        CREATE INDEX idx_audit_site ON audit(site_id, created_at DESC);
+
+        CREATE OR REPLACE FUNCTION prevent_audit_update()
+        RETURNS TRIGGER AS $$
+        BEGIN
+          RAISE EXCEPTION 'Audit logs cannot be modified';
+        END;
+        $$ LANGUAGE plpgsql;
+
+        DROP TRIGGER IF EXISTS trigger_prevent_audit_update ON audit; 
+
+        CREATE TRIGGER trigger_prevent_audit_update
+          BEFORE UPDATE OR DELETE ON audit
+          FOR EACH ROW
+          EXECUTE FUNCTION prevent_audit_update();
+`;
+
 
 export const StudyTable = `
     CREATE TABLE IF NOT EXISTS study (
@@ -232,4 +281,5 @@ export const tableSQLMap: Record<Tables, string> = {
   [Tables.SITE]: SiteTable,
   [Tables.DOCUMENT]: DocumentTable,
   [Tables.USERS]: UserTable,
+  [Tables.AUDIT]: AuditTrialTable
 };

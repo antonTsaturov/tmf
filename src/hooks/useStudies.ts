@@ -65,9 +65,6 @@ export function useStudies() {
       setLoading(true);
       setError(null);
       const result = await createOrUpdateTable(table, studyData);
-      if (table === 'study') {
-        await loadTable(); // Перезагрузить список после сохранения
-      }
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save study');

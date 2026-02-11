@@ -36,7 +36,7 @@ export default function LoginPage() {
       }
 
       // Перенаправление после успешного входа
-      router.push('/dashboard');
+      router.push('/');
       router.refresh();
 
     } catch (err: any) {
