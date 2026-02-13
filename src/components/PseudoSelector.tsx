@@ -1,7 +1,7 @@
 import { FC, useState, ChangeEvent } from "react";
 import '../styles/SiteManager.css';
 import '../styles/PresudoSelector.css';
-import { UserRole, StudySite, SiteStatus, Study } from "@/types/types";
+import { UserRole, StudySite, SiteStatus, Study, StudyUser } from "@/types/types";
 
 // Список доступных стран
 const COUNTRIES_LIST = [
@@ -86,26 +86,55 @@ const PseudoSelector: FC<PseudoSelectorProps> = ({
   };
 
   // Получаем отображаемое имя для опции
-  const getDisplayName = (value: SelectorValue): string => {
-    if (type === 'role') {
-      const role = value as UserRole;
-      return ROLE_CONFIG[role]?.label || role.replace('_', ' ');
-    } else if (type === 'site' ) {
-      const siteObj = value as { id: number; site?: StudySite };
-      if (siteObj.site) {
-        return siteObj.site.name || `Site #${siteObj.site.number}`;
-      }
-      return `Site #${siteObj.id}`;
+  // const getDisplayName = (value: SelectorValue): string => {
 
-    } else if ( type === 'study'){
-      const siteObj = value as { id: number; study?: Study };
-      if (siteObj.study) {
-        return siteObj.study.protocol;
-      }
-      //return `Site #${siteObj.id}`;
+  //   if (type === 'role') {
+  //     const role = value as UserRole;
+  //     return ROLE_CONFIG[role]?.label || role.replace('_', ' ');
+
+  //   } else if (type === 'site' ) {
+  //     const siteObj = value as { id: number; site?: StudySite };
+  //     if (siteObj.site) {
+  //       return siteObj.site.name ;//|| `Site #${siteObj.site.number}`
+  //     }
+  //     return `Site #${siteObj.id}`;
+
+  //   } else if ( type === 'study'){
+  //     const siteObj = value as { id: number; study?: Study };
+  //     if (siteObj.study) {
+  //       return siteObj.study.protocol;
+  //     }
+  //     //return `Site #${siteObj.id}`;
+  //   }
+  //   return value as string;
+  // };
+
+  // Получаем отображаемое имя для опции
+const getDisplayName = (value: SelectorValue): string => {
+
+  if (type === 'role') {
+    const role = value as UserRole;
+    return ROLE_CONFIG[role]?.label || role.replace('_', ' ');
+
+  } else if (type === 'site') {
+    const siteObj = value as { id: number; site?: StudySite };
+    // Всегда пытаемся получить название сайта, если оно доступно
+    if (siteObj.site) {
+      return `${siteObj.site.name}`;
     }
-    return value as string;
-  };
+    // Если сайт не найден в availableOptions, пробуем найти его в переданных опциях
+    // Это может случиться, если сайт был удален или недоступен
+    return `Site #${siteObj.id} (unavailable)`;
+    
+  } else if (type === 'study') {
+    const studyObj = value as { id: number; study?: Study };
+    if (studyObj.study) {
+      return studyObj.study.protocol || studyObj.study.title || `Study #${studyObj.id}`;
+    }
+    return `Study #${studyObj.id}`;
+  }
+  return value as string;
+};
 
   // Получаем дополнительную информацию для отображения
   const getDisplayInfo = (value: SelectorValue): string | undefined => {
@@ -113,7 +142,8 @@ const PseudoSelector: FC<PseudoSelectorProps> = ({
     if (type === 'site') {
       const siteObj = value as { id: number; site?: StudySite };
       if (siteObj.site) {
-        return `${siteObj.site.city}, ${siteObj.site.country}`;
+        //return `${siteObj.site.city}, ${siteObj.site.country}`;
+        return `${siteObj.site.study_protocol}`;
       }
 
     } else if (type === 'study') {
@@ -452,38 +482,113 @@ export const RoleSelector: FC<{
   );
 };
 
+// export const SiteSelector: FC<{
+//   // Принимаем массив StudySite для отображения информации
+//   availableOptions: StudySite[];
+//   // Принимаем массив чисел (ID) как выбранные значения
+//   selectedValues: number[];
+//   // Возвращаем массив чисел (ID)
+//   onChange: (values: number[]) => void;
+//   placeholder?: string;
+//   showSiteDetails?: boolean;
+//   disabled: boolean;
+//   user?: StudyUser;
+// }> = ({ availableOptions, selectedValues, onChange, placeholder, showSiteDetails = false, disabled, user }) => {
+  
+//   // Преобразуем StudySite[] в { id: number, site: StudySite }[] для отображения
+//   const siteOptions = availableOptions.map(site => ({
+//     id: site.id,
+//     site: site
+//   }));
+  
+//   // Преобразуем числа (ID) в { id: number, site?: StudySite } для отображения
+//   const selectedSiteObjects = selectedValues.map(id => {
+//     console.log(id)
+//     const foundSite = availableOptions.find(site => {
+//       if(!user) {
+//         return site.id === id
+//       } else {
+//         return user.assigned_site_id.includes(site.id)
+//       }
+      
+//     });
+    
+//     console.log('foundSite: ', foundSite)
+//     return {
+//       id,
+//       site: foundSite
+//     };
+//   });
+  
+//   // Обработчик изменения - извлекаем только ID
+//   const handleChange = (values: SelectorValue[]) => {
+//     const ids = values
+//       .filter(v => typeof v === 'object' && 'id' in v)
+//       .map(v => (v as { id: number }).id);
+//     onChange(ids);
+//   };
+  
+//   return (
+//     <PseudoSelector 
+//       type="site"
+//       availableOptions={siteOptions}
+//       selectedValues={selectedSiteObjects}
+//       onChange={handleChange}
+//       placeholder={placeholder}
+//       showSiteDetails={showSiteDetails}
+//       disabled={disabled}
+//     />
+//   );
+// };
+
 export const SiteSelector: FC<{
-  // Принимаем массив StudySite для отображения информации
   availableOptions: StudySite[];
-  // Принимаем массив чисел (ID) как выбранные значения
   selectedValues: number[];
-  // Возвращаем массив чисел (ID)
   onChange: (values: number[]) => void;
   placeholder?: string;
   showSiteDetails?: boolean;
   disabled: boolean;
-}> = ({ availableOptions, selectedValues, onChange, placeholder, showSiteDetails = false, disabled }) => {
+  user?: StudyUser;
+}> = ({ availableOptions, selectedValues, onChange, placeholder, showSiteDetails = true, disabled, user }) => {
   
-  // Преобразуем StudySite[] в { id: number, site: StudySite }[] для отображения
-  const siteOptions = availableOptions.map(site => ({
-    id: site.id,
+  
+  // Фильтруем доступные опции на основе assigned_site_id пользователя
+  // Важно: приводим к одному типу (строке или числу) для сравнения
+  const filteredOptions = user 
+    ? availableOptions.filter(site => {
+        // Приводим оба значения к строке для надежного сравнения
+        const siteId = String(site.study_id);
+        return user.assigned_study_id.some(assignedId => String(assignedId) === siteId);
+      })
+    : availableOptions;
+    
+  // Преобразуем отфильтрованные StudySite[] в { id: number, site: StudySite }[] для отображения
+  // Важно: приводим id к числу для соответствия ожидаемому типу SelectorValue
+  const siteOptions = filteredOptions.map(site => ({
+    id: Number(site.id), // Преобразуем строку в число
     site: site
   }));
   
-  // Преобразуем числа (ID) в { id: number, site?: StudySite } для отображения
-  const selectedSiteObjects = selectedValues.map(id => {
-    const foundSite = availableOptions.find(site => site.id === id);
-    return {
-      id,
-      site: foundSite
-    };
-  });
-  
+  // Преобразуем числа (ID) в { id: number, site: StudySite } для отображения
+  const selectedSiteObjects = selectedValues
+    .map(id => {
+      // При поиске также приводим к одному типу
+      const foundSite = filteredOptions.find(site => String(site.id) === String(id));
+      if (!foundSite) {
+        console.warn(`Site with id ${id} not found in filtered options`);
+      }
+      return {
+        id: Number(id), // Преобразуем в число для консистентности
+        site: foundSite
+      };
+    })
+    .filter(obj => obj.site); // Убираем те, для которых не нашли сайт
+    
   // Обработчик изменения - извлекаем только ID
   const handleChange = (values: SelectorValue[]) => {
     const ids = values
       .filter(v => typeof v === 'object' && 'id' in v)
-      .map(v => (v as { id: number }).id);
+      .map(v => Number((v as { id: number }).id)); // Преобразуем в число
     onChange(ids);
   };
   
@@ -500,7 +605,6 @@ export const SiteSelector: FC<{
   );
 };
 
-
 export const StudySelector: FC<{
   // Принимаем массив Study для отображения информации
   availableOptions: Study[];
@@ -510,15 +614,17 @@ export const StudySelector: FC<{
   onChange: (values: number[]) => void;
   placeholder?: string;
   disabled: boolean;
+  user?: StudyUser;
 }> = ({ 
   availableOptions, 
   selectedValues, 
   onChange, 
   placeholder = "Выберите исследования", 
-  disabled 
+  disabled ,
+  user
 }) => {
-  
-  console.log('availableOptions studies: ', availableOptions)
+
+ 
   // Преобразуем Study[] в { id: number, study: Study }[] для отображения
   const studyOptions = availableOptions.map((study: Study) => ({
     id: study.id,
@@ -554,11 +660,6 @@ export const StudySelector: FC<{
       onChange={handleChange}
       placeholder={placeholder}
       disabled={disabled}
-      // Кастомный рендеринг для отображения протокола
-      // getOptionLabel={(option) => option.protocol || option.displayName}
-      // getOptionDescription={(option) => 
-      //   option.sponsor ? `Спонсор: ${option.sponsor}` : undefined
-      // }
     />
   );
 };

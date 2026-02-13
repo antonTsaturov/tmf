@@ -65,9 +65,9 @@ export async function POST(request: NextRequest) {
          SET password_hash = $1, 
              password_changed_at = NOW(),
              last_login = NOW(),
-             status = ${UserStatus.ACTIVE}
-         WHERE id = $2`,
-        [hashedPassword, user.id]
+             status = $2
+         WHERE id = $3`,
+        [hashedPassword, UserStatus.ACTIVE, user.id]
       );
       
       // Обновляем объект пользователя с новым хэшем для дальнейшего использования

@@ -12,7 +12,7 @@ interface User {
   email: string;
   role: string[];
   assigned_site_id: number[];
-  assigned_study_id: number;
+  assigned_study_id: number[];
 }
 
 interface AuthContextType {

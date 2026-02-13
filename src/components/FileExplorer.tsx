@@ -145,7 +145,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           </span>
 
           {/* Имя файла/папки */}
-          <span className="node-name">{node.name}</span>
+          <span className="node-name" title={node.name}>{node.name}</span>
 
         </div>
 

@@ -136,12 +136,12 @@ export class AuditService {
         
         // Логируем создание таблицы аудита (рекурсивно, но skip проверит)
         await this.log({
-          user_id: 0,
+          user_id: '0',
           user_email: 'system',
           user_role: [],
           action: 'CREATE',
           entity_type: 'audit',
-          entity_id: 0,
+          entity_id: '0',
           old_value: null,
           new_value: { table: 'audit', created_at: new Date().toISOString() },
           ip_address: '0.0.0.0',

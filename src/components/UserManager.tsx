@@ -3,7 +3,7 @@ import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useCo
 import '../styles/SiteManager.css'; // Можно создать отдельный стиль UserManager.css
 import { AdminContext } from '@/wrappers/AdminContext';
 import { CustomSelect } from './Select';
-import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite } from '@/types/types';
+import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './Preview';
 import { useEntityState } from '@/hooks/useEntityState';
@@ -22,10 +22,10 @@ interface StatusBadgeProps {
 interface UserItemProps {
   user: StudyUser;
   sites: StudySite[];
+  studies: Study[];
   index: number;
   onUpdate: (id: StudyUser['id'], updates: Partial<StudyUser>) => void;
   onDelete: (id: StudyUser['id']) => void;
-  onMove?: (fromIndex: number, toIndex: number) => void;
 }
 
 interface UserManagerProps {
@@ -37,10 +37,6 @@ interface UserManagerProps {
 //   const random = Math.floor(Math.random() * 100000);
 //   return parseInt(`${currentStudyId}${random}`);
 // };
-
-const generateId = (currentStudyId: number): string => {
-  return `${currentStudyId}-${uuidv4()}`;
-};
 
 // Компонент бейджа статуса
 const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false }) => {
@@ -126,9 +122,8 @@ const RoleBadge: FC<{ role: UserRole }> = ({ role }) => {
 };
 
 // Компонент элемента пользователя
-const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, onMove }) => {
+const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, onDelete }) => {
 
-  //console.log('UserItem user: ', user)
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<StudyUser>>({
     name: user.name,
@@ -137,7 +132,8 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
     organisation: user.organisation,
     status: user.status,
     role: user.role,
-    assigned_site_id: user.assigned_site_id
+    assigned_site_id: user.assigned_site_id,
+    assigned_study_id: user.assigned_study_id
   });
 
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>(user.role || []);
@@ -183,7 +179,8 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
       organisation: user.organisation,
       status: user.status,
       role: user.role,
-      assigned_site_id: user.assigned_site_id
+      assigned_site_id: user.assigned_site_id,
+      assigned_study_id: user.assigned_study_id
     });
     setSelectedRoles(user.role || []);
     setIsEditing(false);
@@ -212,6 +209,14 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
     }));
   };
 
+  const handleStudyChange = (studyID: number[]) => {
+    setEditData(prev => ({
+      ...prev,
+      assigned_study_id: studyID
+    }));
+  };
+
+
   return (
     <div
       className="site-item" // Используем те же классы для единообразия
@@ -224,23 +229,6 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
           <div className="site-item-first-row-left-block">
             <div className="site-index">
               <span className="index-number">{index + 1}</span>
-              {onMove && (
-                <div className="move-controls">
-                  <button 
-                    onClick={() => onMove(index, index - 1)}
-                    disabled={index === 0}
-                    title="Move up"
-                  >
-                    ↑
-                  </button>
-                  <button 
-                    onClick={() => onMove(index, index + 1)}
-                    title="Move down"
-                  >
-                    ↓
-                  </button>
-                </div>
-              )}
             </div>
 
             <div className="site-details">
@@ -291,12 +279,22 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
                   />
 
                   <SiteSelector
+                    user={user}
                     availableOptions={sites}
                     selectedValues={editData.assigned_site_id as number[]}
                     onChange={handleSitesChange}
                     placeholder="Select sites..."
                     disabled={false}
                     showSiteDetails={true}
+                  />
+                  <StudySelector
+                    user={user}
+                    availableOptions={studies}
+                    selectedValues={editData.assigned_study_id as number[]}
+                    onChange={handleStudyChange}
+                    placeholder="Select sites..."
+                    disabled={false}
+                    //showSiteDetails={true}
                   />            
                 </div>
               ) : (
@@ -337,7 +335,19 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
                       </span>
                     </div>
                     <div className="site-meta-item">
-                      <span className="meta-label">Sites: </span>
+                      <span className="meta-label">Assigned Studies: </span>
+                      <span className="meta-value">
+                        {studies && user
+                          ? studies.filter(study => user.assigned_study_id.includes(Number(study.id))).map((study) => (
+                            <li style={{marginLeft: '20px'}} key={study.id}>
+                              {study.protocol}
+                            </li>))
+                          : 'No studies assigned'
+                        }
+                      </span>
+                    </div>
+                    <div className="site-meta-item">
+                      <span className="meta-label">Assigned Sites: </span>
                       <span className="meta-value">
                         {sites && user
                           ?
@@ -414,15 +424,8 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
 const UserManager: FC<UserManagerProps> = () => {
   const { studies, saveUser, loadTable, loadTablePartial, loadAllUsers } = useContext(AdminContext)!;
 
-  const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
-
   const [sites, setSites] = useState<StudySite[]>([]);
   
-  const studyHandler = (studyId: number | null) => {
-    setCurrentStudyId(studyId);
-    //console.log(studyId)
-  };
-
   const { 
     entities: managedUsers, 
     updateEntity: updateUser,
@@ -476,7 +479,7 @@ const UserManager: FC<UserManagerProps> = () => {
   }, [newUserForm.roles]);
     
   // Добавление нового пользователя
-  const handleAddUser = useCallback(() => {
+  const handleAddUser = useCallback( async () => {
     if (!newUserForm.name.trim() || !newUserForm.email.trim()) {
       alert('Please fill all required fields: Name and Email.');
       return;
@@ -489,12 +492,9 @@ const UserManager: FC<UserManagerProps> = () => {
       return;
     }
 
-    if (!currentStudyId) {
-      return;
-    }
 
     const newUser: StudyUser = {
-      id: generateId(currentStudyId),
+      id: `${uuidv4()}`,
       email: newUserForm.email.trim(),
       name: newUserForm.name.trim(),
       title: newUserForm.title.trim(),
@@ -509,21 +509,23 @@ const UserManager: FC<UserManagerProps> = () => {
       created_at: new Date().toISOString()
     };
 
-    // Используем addUser из useEntityState
-    addUser(newUser);
-    
-    setNewUserForm({ 
-      name: '', 
-      email: '', 
-      title: '', 
-      organisation: 'CRO',
-      roles: [],
-      assigned_site_id: [],
-      assigned_study_id: [],
-      permissions: undefined
-    });
+    const response = await saveUser(Tables.USERS, newUser);
+    if (response) {
+      setNewUserForm({ 
+        name: '', 
+        email: '', 
+        title: '', 
+        organisation: 'CRO',
+        roles: [],
+        assigned_site_id: [],
+        assigned_study_id: [],
+        permissions: undefined
+      });
+      loadUsers();
+    } else {
+      console.log('User nod saved in DB')
+    }
 
-    //console.log('newUserForm: ', newUserForm)
   }, [newUserForm, addUser]);
 
   // Обновление пользователя
@@ -532,20 +534,25 @@ const UserManager: FC<UserManagerProps> = () => {
   }, [updateUser]);
 
   // Удаление пользователя
-  const handleDeleteUser = useCallback((id: StudyUser['id']) => {
+  const handleDeleteUser = useCallback( async (id: StudyUser['id']) => {
     if (!window.confirm('Are you sure you want to delete this user?')) {
       return;
     }
     
-    removeUser(id);
-    deleteRecord(Tables.USERS, id);
+    
+    const response = await deleteRecord(Tables.USERS, id);
+    if (response) {
+      removeUser(id);
+    } else {
+      console.log('Error. User record not deleted')
+    }
   }, [removeUser]);
 
   const [userObject, setUserObject] = useState<any>([]);
   // Генерация объекта структуры
   useEffect(() => {
 
-    if (!currentStudyId || managedUsers.length < 1) {
+    if ( managedUsers.length < 1) {
       setUserObject([]);
       return;
     }
@@ -557,19 +564,31 @@ const UserManager: FC<UserManagerProps> = () => {
     };
     generateUserObject();
     //console.log('Structure generated')
-  }, [newUserForm, currentStudyId, managedUsers, loadTablePartial]);
+  }, [newUserForm, managedUsers, loadTablePartial]);
 
-  // Загрузка пользователей и списка центров по ID исследования
+  // Функция для загрузки списка пользователей
+  // Вынесена отдельно, так как используется повторно после добавления нового пользователя
+  const loadUsers = async () => {
+    try {
+      const loadedUsers = await loadAllUsers();
+      const studyUsers = loadedUsers as unknown as StudyUser[];
+      //console.log('studyUsers: ', studyUsers)
+      if (studyUsers ) {
+        setManagedUsers(studyUsers);
+      } else {
+        setManagedUsers([]);
+      }
+    } catch (error) {
+      console.error('Error loading users:', error);
+      setManagedUsers([]);
+    }
+  };
+
+  // Загрузка пользователей и центров 
   useEffect(() => {
-    const loadSitesForUser = async () => {
-      // if (currentStudyId === null) {
-      //   setSites([]); // Очищаем сайты если исследование не выбрано
-      //   return;
-      // }
-
+    const loadSites = async () => {
       try {
         const loadedSites = await loadTable(Tables.SITE);
-        
         const userSites = loadedSites as unknown as StudySite[]
 
         if (userSites ) {
@@ -583,32 +602,11 @@ const UserManager: FC<UserManagerProps> = () => {
         setSites([]);
       }
     };
-    
-    const loadUsers = async () => {
-      // if (currentStudyId === null) {
-      //   setManagedUsers([]); // Очищаем сайты если исследование не выбрано
-      //   return;
-      // }
-
-      try {
-        const loadedUsers = await loadAllUsers();
-
-        const studyUsers = loadedUsers as unknown as StudyUser[];
-        console.log('studyUsers: ', studyUsers)
-        if (studyUsers ) {
-          setManagedUsers(studyUsers);
-        } else {
-          setManagedUsers([]);
-        }
-      } catch (error) {
-        console.error('Error loading users:', error);
-        setManagedUsers([]);
-      }
-    };
 
     loadUsers();
-    loadSitesForUser();
-  }, [loadTablePartial, setManagedUsers, currentStudyId]);
+    loadSites();
+    
+  }, [loadTablePartial, setManagedUsers ]);
 
 
   // Тоггл роли в форме добавления
@@ -635,15 +633,6 @@ const UserManager: FC<UserManagerProps> = () => {
       assigned_study_id: studyID
     }));
   };
-
-
-  // const handleCountriesChange = (countries: string[]) => {
-  //   setEditData(prev => ({
-  //     ...prev,
-  //     countries
-  //   }));
-  // };
-
 
   // Сброс
   const handleReset = () => {
@@ -782,56 +771,18 @@ const UserManager: FC<UserManagerProps> = () => {
             <div className="header-details">User Details</div>
             <div className="header-status">Status</div>
           </div>
-          {/* <div className="sites-list-items">
-            {managedUsers?.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">👤</div>
-                <h3>No users yet</h3>
-                <p>Add your first user using the form above</p>
-              </div>
-            ) : (
-              managedUsers.map((user, index) => (
-                <UserItem
-                  key={user.id}
-                  user={user}
-                  index={index}
-                  onUpdate={handleUpdateUser}
-                  onDelete={handleDeleteUser}
-                />
-              ))
-            )}
-          </div> */}
           <div className="sites-list-items">
-
-                {managedUsers?.map((user, index) => (
-                  <UserItem
-                    sites={sites}
-                    key={user.id}
-                    user={user}
-                    index={index}
-                    onUpdate={handleUpdateUser}
-                    onDelete={handleDeleteUser}
-                  />
-                ))}
-            {/* {currentStudyId === null ? (
-              <div className="empty-state">
-                <div className="empty-icon">🔍</div>
-                <h3>Select a Study First</h3>
-                <p>Please select a study from the dropdown above to view and manage users</p>
-              </div>
-            ) : managedUsers?.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-icon">👤</div>
-                <h3>No users in this study</h3>
-                <p>Add your first user to <strong>Study #{currentStudyId}</strong> using the form on left</p>
-                <div className="study-info">
-                  <span className="study-badge">Study ID: {currentStudyId}</span>
-                </div>
-              </div>
-            ) : (
-              <>
-              </>
-            )} */}
+            {managedUsers?.map((user, index) => (
+              <UserItem
+                sites={sites}
+                key={user.id}
+                user={user}
+                studies={studies}
+                index={index}
+                onUpdate={handleUpdateUser}
+                onDelete={handleDeleteUser}
+              />
+            ))}
           </div>          
         </div>
       </div>

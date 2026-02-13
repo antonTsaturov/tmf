@@ -54,12 +54,12 @@ export type AuditStatus = 'SUCCESS' | 'FAILURE';
 export interface AuditLogEntry {
   audit_id: string; // UUID
   created_at: string;
-  user_id: number;
+  user_id: string;
   user_email: string;
   user_role: UserRole[];
   action: AuditAction;
   entity_type: AuditEntity;
-  entity_id: number;
+  entity_id: string;
   old_value: Record<string, unknown> | null;
   new_value: Record<string, unknown> | null;
   ip_address: string;
@@ -75,6 +75,7 @@ export interface AuditLogEntry {
 export interface StudySite {
   id: number;
   study_id: number;
+  study_protocol: string;
   name: string;
   number: number;
   country: string;

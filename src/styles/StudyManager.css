@@ -473,7 +473,6 @@
 .study-title {
   margin: 0;
   color: #2c3e50;
-  font-size: 18px;
   font-weight: 700;
   flex: 1;
 }
@@ -926,7 +925,6 @@
 
 .study-title {
   color: #212529;
-  font-size: 18px;
   font-weight: 600;
   margin: 0;
   display: flex;

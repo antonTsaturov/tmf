@@ -21,7 +21,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   defaultStudyId,
   defaultSiteId
 }) => {
-  const { studies, loadTablePartial } = useContext(AdminContext)!;
+  const { studies, loadTablePartial, loadTable } = useContext(AdminContext)!;
   const { user } = useAuth();
   
   const [sites, setSites] = useState<StudySite[]>([]);
@@ -46,15 +46,18 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
 
       try {
         setLoading(true);
-        const studiesData = await loadTablePartial(Tables.STUDY, user.assigned_study_id);
+        await loadTable(Tables.STUDY);
+        if (!studies) {
+          return;
+        }
         //setStudies(studiesData);
         loadedStudiesRef.current = true;
         
         // Автовыбор при одном исследовании
-        if (studiesData?.length === 1 && !currentStudyID) {
-          setCurrentStudyID(studiesData[0].id);
-          onStudyChange?.(studiesData[0].id);
-        }
+        // if (studies && studies?.length === 1 && !currentStudyID) {
+        //   setCurrentStudyID(studies[0].id);
+        //   onStudyChange?.(studies[0].id);
+        // }
       } catch (error) {
         console.error('Error loading studies:', error);
       } finally {
@@ -76,7 +79,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
 
       try {
         setLoadingSites(true);
-        const sitesData = await loadTablePartial(Tables.SITE, user?.assigned_study_id);
+        const sitesData = await loadTablePartial(Tables.SITE, currentStudyID);
 
         // Фильтруем только ассигнированные центры. Пользователь увидит только те центры, которые ему присвоены
         const studySites = sitesData?.filter((site: StudySite) => {
@@ -145,7 +148,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   }
 
   return (
-    <Flex direction="column" gap="3" p="3" style={{ borderBottom: '1px solid var(--gray-5)' }}>
+    <Flex direction="column" gap="3" pb="3" style={{ borderBottom: '1px solid var(--gray-5)' }}>
       {/* Селект исследований */}
       <Flex direction="column" gap="1">
         <Text size="1" weight="medium" color="gray">Исследование</Text>
@@ -156,7 +159,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
           <Select.Trigger placeholder="Выберите исследование" />
           <Select.Content>
             {studies
-            .filter(study => user?.assigned_study_id == study.id)
+            .filter(study => user?.assigned_study_id.includes( study.id))
             .map((study) => (
                 <Select.Item key={study.id} value={study.id.toString()}>
                 {study.protocol}

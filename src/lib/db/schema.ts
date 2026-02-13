@@ -11,12 +11,12 @@ export const AuditTrialTable = `
         id BIGSERIAL PRIMARY KEY,
         audit_id UUID NOT NULL UNIQUE,
         created_at TIMESTAMPTZ NOT NULL,
-        user_id BIGINT NOT NULL,
+        user_id TEXT NOT NULL,
         user_email TEXT NOT NULL,
         user_role JSONB NOT NULL,
         action TEXT NOT NULL,
         entity_type TEXT NOT NULL,
-        entity_id BIGINT NOT NULL,
+        entity_id UUID NOT NULL,
         old_value JSONB,
         new_value JSONB,
         ip_address INET NOT NULL,
@@ -74,6 +74,7 @@ export const SiteTable = `
     CREATE TABLE IF NOT EXISTS site (
         id VARCHAR(100) PRIMARY KEY,
         study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        study_protocol TEXT NOT NULL,
         name TEXT NOT NULL,
         number INTEGER NOT NULL,
         country TEXT,
@@ -86,7 +87,7 @@ export const SiteTable = `
 
 export const DocumentTable = `
   CREATE TABLE IF NOT EXISTS document (
-      id SERIAL PRIMARY KEY,
+      id UUID PRIMARY KEY,
       study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
       site_id INTEGER REFERENCES site(id) ON DELETE SET NULL,
       file_name TEXT NOT NULL,
@@ -106,7 +107,7 @@ export const DocumentTable = `
 
 export const UserTable = `
   CREATE TABLE IF NOT EXISTS ${Tables.USERS} (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     name TEXT NOT NULL,

@@ -306,7 +306,7 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
             ) : (
               <div className="display-details">
                 <div className="study-header">
-                  <h3 className="study-title">{study.title}</h3>
+                  <h4 className="study-title">{study.title}</h4>
                   <span className="study-protocol">{study.protocol}</span>
                 </div>
                 <div className="study-meta">
@@ -403,7 +403,7 @@ const StudyManager: FC<StudyManagerProps> = () => {
 
   useEffect(() => {
     if (context.isModal) {
-      loadTable();
+      loadTable(Tables.STUDY);
     }
     
   }, []);
@@ -417,7 +417,7 @@ const StudyManager: FC<StudyManagerProps> = () => {
     countries: [] as string[]
   });
 
-  // Добавление исследования в конец списка
+  // Добавление исследования 
   const handleAddStudy = useCallback(async () => {
     if (!newStudyForm.title.trim() || !newStudyForm.protocol.trim()) {
       alert('Please fill at least study title and protocol number');
@@ -448,20 +448,6 @@ const StudyManager: FC<StudyManagerProps> = () => {
     setNewStudyForm({ title: '', protocol: '', sponsor: '', cro: '', countries: [] });
   }, [newStudyForm]);
 
-  // Создание и обновление исследования
-  // const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
-  //   setStudies(prev => 
-  //     prev.map(study => 
-  //       study.id === id 
-  //         ? { 
-  //             ...study, 
-  //             ...updates,
-  //           } 
-  //         : study
-  //     )
-  //   );
-  // }, []);
-
 const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
   setStudies(prev => {
     // Находим индекс обновляемого исследования
@@ -488,18 +474,7 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
     // Создаем копию массива и заменяем элемент
     const newStudies = [...prev];
     newStudies[studyIndex] = updatedStudy;
-    
-    // Логируем изменения (опционально, для отладки)
-    // console.log('Study updated:', {
-    //   id,
-    //   previous: currentStudy,
-    //   updates,
-    //   result: updatedStudy,
-    //   changedFields: Object.keys(updates).filter(key => 
-    //     JSON.stringify(currentStudy[key as keyof Study]) !== JSON.stringify(updates[key as keyof typeof updates])
-    //   ),
-    // });
-    
+
     return newStudies;
   });
 }, []);

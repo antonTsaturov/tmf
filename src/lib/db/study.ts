@@ -2,7 +2,7 @@ import { connectDB } from './index';
 import { Study } from '@/types/types';
 import { Tables } from './schema';
 
-export async function createOrUpdateRecord(table: Tables, id: number, updates: Partial<Study>) {
+export async function createOrUpdateRecord(table: Tables, id: number | string, updates: Partial<Study>) {
 
   if (!table || !id || !updates || Object.keys(updates).length === 0) {
     throw new Error('updateStudy: Table, ID and at least one field are required.');
