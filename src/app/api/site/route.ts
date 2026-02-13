@@ -6,7 +6,7 @@ import { Tables } from '@/lib/db/schema';
 const studyApiHandler = new StudyApiHandler();
 
 export async function GET(request: NextRequest) {
-  return studyApiHandler.getTablePartial(Tables.SITE, request);
+  return studyApiHandler.getTable(Tables.SITE);
 }
 
 export async function POST(request: NextRequest) {

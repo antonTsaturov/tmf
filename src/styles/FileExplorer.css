@@ -15,6 +15,7 @@
   font-weight: 600;
   color: #555;
   font-size: 14px;
+  min-height: 40px;
 }
 
 .header-name {

@@ -1,7 +1,4 @@
 import '@/styles/StructurePreview.css';
-import { Study, StudySite } from '@/types/types';
-import { useEffect, useState } from 'react';
-import { StudyUser } from './StudyManager';
 
 export const StructurePreview = ({structure} : { structure: any}) => {
 

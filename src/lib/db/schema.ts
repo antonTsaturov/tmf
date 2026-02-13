@@ -189,6 +189,13 @@ export const UserQueries = {
     ORDER BY name ASC
   `,
   
+  // Получить всех пользователей
+  getAllUsers: () => `
+    SELECT ${getSafeUserFields()}
+    FROM ${Tables.USERS}
+    ORDER BY id ASC
+  `,
+
   // Поиск пользователей по роли
   getUsersByRole: (role: string) => `
     SELECT ${getSafeUserFields()}

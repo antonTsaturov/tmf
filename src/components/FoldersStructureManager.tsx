@@ -42,12 +42,13 @@ interface ActionButtonProps {
 }
 
 interface FolderItemProps {
-  folder: Folder;
+  folder: Folder & { shouldEdit?: boolean }; // Добавляем shouldEdit
   depth?: number;
   onAddFolder: (folderId: string, position: 'before' | 'after') => void;
   onAddSubfolder: (folderId: string) => void;
   onDelete: (folderId: string) => void;
   onUpdateName: (folderId: string, newName: string) => void;
+  onEditComplete?: (folderId: string) => void; // Колбэк для очистки флага
 }
 
 interface FolderTreeProps {
@@ -58,12 +59,17 @@ interface FolderTreeProps {
 
 export const generateId = (): string => `folder-${uuidv4()}`;
 
-export const createNewFolder = (name: string = 'New Folder', type: FolderType = FolderType.FOLDER): Folder => ({
+export const createNewFolder = (
+  name: string = 'New Folder', 
+  type: FolderType = FolderType.FOLDER,
+  shouldEdit: boolean = false // Добавляем флаг
+): Folder & { shouldEdit?: boolean } => ({
   id: generateId(),
   name,
   type,
   status: FolderStatus.ACTIVE,
   children: [],
+  shouldEdit // Добавляем временный флаг
 });
 
 // Вспомогательный компонент для кнопок действий
@@ -84,9 +90,10 @@ const FolderItem: FC<FolderItemProps> = ({
   onAddFolder, 
   onAddSubfolder, 
   onDelete,
-  onUpdateName
+  onUpdateName,
+  onEditComplete
 }) => {
-  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [isEditing, setIsEditing] = useState<boolean>(folder.shouldEdit || false);
   const [editingName, setEditingName] = useState<string>(folder?.name);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
@@ -95,6 +102,7 @@ const FolderItem: FC<FolderItemProps> = ({
       onUpdateName(folder.id, editingName.trim());
     }
     setIsEditing(false);
+    onEditComplete?.(folder.id); // Очищаем флаг
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
@@ -103,6 +111,7 @@ const FolderItem: FC<FolderItemProps> = ({
     } else if (e.key === 'Escape') {
       setIsEditing(false);
       setEditingName(folder.name);
+      onEditComplete?.(folder.id); // Очищаем флаг при отмене
     }
   };
 
@@ -189,6 +198,7 @@ const FolderItem: FC<FolderItemProps> = ({
               onAddSubfolder={onAddSubfolder}
               onDelete={onDelete}
               onUpdateName={onUpdateName}
+              onEditComplete={onEditComplete}
             />
           ))}
         </div>
@@ -248,7 +258,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
 
       const { folder, parent } = result;
       const parentArray = parent ? parent.children : tree.children;
-      const newFolder = createNewFolder();
+      const newFolder = createNewFolder('New Folder', FolderType.FOLDER, true);
 
       const targetIndex = parentArray.findIndex(f => f.id === folder.id);
       
@@ -272,7 +282,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       if (!result) return;
 
       const { folder } = result;
-      const newSubfolder = createNewFolder('New Subfolder', FolderType.SUBFOLDER);
+      const newSubfolder = createNewFolder('New Subfolder', FolderType.SUBFOLDER, true);
       
       if (!folder.children) {
         folder.children = [];
@@ -316,6 +326,16 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
   const handleAddToRoot = useCallback(() => {
     updateTree((tree: Folder) => {
       tree.children.push(createNewFolder());
+    });
+  }, [updateTree, findFolderInTree]);
+
+  // Очистка флага редактирования
+  const handleEditComplete = useCallback((folderId: string) => {
+    updateTree((tree: Folder) => {
+      const result = findFolderInTree(folderId, tree);
+      if (!result) return;
+      const { folder } = result;
+      delete (folder as any).shouldEdit; // Удаляем временный флаг
     });
   }, [updateTree, findFolderInTree]);
 
@@ -479,6 +499,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
               onAddSubfolder={handleAddSubfolder}
               onDelete={handleDeleteFolder}
               onUpdateName={handleUpdateName}
+              onEditComplete={handleEditComplete}
             />
           </div>
 

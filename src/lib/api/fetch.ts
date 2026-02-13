@@ -84,7 +84,7 @@ export async function createOrUpdateTable(table: Tables, data: Partial<Study | S
 }
 
 // DELETE запрос: Удалить запись по id
-export async function deleteRecord(table: Tables, recordId: number) {
+export async function deleteRecord(table: Tables, recordId: string | number) {
   try {
     const response = await fetch(`/api/${table}`, {
       method: 'DELETE',

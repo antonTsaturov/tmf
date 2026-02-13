@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getTable, getTablePartial, createOrUpdateTable } from '@/lib/api/fetch';
 import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
+import { Table } from '@radix-ui/themes';
 
 
 
@@ -15,19 +16,37 @@ export function useStudies() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadTable = useCallback(async () => {
+  const loadTable = useCallback(async (table: Tables) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await getTable(Tables.STUDY);
-      setStudies(data);
+      const data = await getTable(table);
+      table === Tables.STUDY && setStudies(data);
+      return data;
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load studies');
-      console.error('Error loading studies:', err);
+      setError(err instanceof Error ? err.message : `Failed to load ${table}`);
+      console.error(`Error loading ${table}: `, err);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const loadAllUsers = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getTable(Tables.USERS);
+      return data;
+      //setStudies(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load users');
+      console.error('Error loading users table:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
 
   const loadTablePartial = useCallback(async <T>(table: Tables, id: number): Promise<T[]> => {
     try {
@@ -110,7 +129,7 @@ export function useStudies() {
   }, [sites]);
 
   useEffect(() => {
-    loadTable();
+    loadTable(Tables.STUDY);
   }, [loadTable]);
 
   return {
@@ -125,5 +144,6 @@ export function useStudies() {
     saveSite,
     saveUser,
     loadTablePartial,
+    loadAllUsers
   };
 }

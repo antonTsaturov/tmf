@@ -71,21 +71,25 @@
   height: 100%;
   overflow-y: auto;
   position: relative;
-  min-width: 500px;
-  max-width: 600px;
+  width: 400px;
+  display: flex; /* Добавить */
+  flex-direction: column; /* Добавить */  
 }
 
 .sidebar-content {
   padding: 20px;
+  flex: 1; /* Добавить - растягивается на всю высоту */
+  display: flex; /* Добавить */
+  flex-direction: column; /* Добавить */
+  min-height: 0; /* Добавить - важно для flex children */  
 }
 
 .sidebar-content-area {
-  min-height: 600px;
-  max-height: 700px;
-  flex-direction: column;
+  flex: 1;
   border: 2px dashed #ccc;
   border-radius: 8px;
   background-color: #fafafa;
+  overflow-y: auto;
 }
 
 .sidebar h2 {
@@ -118,10 +122,12 @@
 }
 
 .main-content {
+  background-color: #fff;
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-  background-color: #fff;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-content h1 {
@@ -129,11 +135,13 @@
   margin-top: 0;
 }
 .main-content-area {
-  min-height: 600px;
+  background-color: #fafafa;
   border: 2px dashed #ccc;
   border-radius: 8px;
-  background-color: #fafafa;
+  flex: 1;
+  display: flex;
 }
+
 .main-content-path {
   min-height: 60px;
   border: 2px dashed #ccc;

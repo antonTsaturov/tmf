@@ -1,7 +1,7 @@
 // hooks/useEntityState.ts
 import { useState, useCallback } from 'react';
 
-type Entity = { id: number };
+type Entity = { id: string | number };
 
 export function useEntityState<T extends Entity>(
   initialEntities: T[] = [],
@@ -10,7 +10,7 @@ export function useEntityState<T extends Entity>(
   const [entities, setEntities] = useState<T[]>(initialEntities);
 
   // Обновление одной сущности
-  const updateEntity = useCallback((id: number, updates: Partial<T>) => {
+  const updateEntity = useCallback((id: Entity['id'], updates: Partial<T>) => {
     setEntities(prev => {
       const entityIndex = prev.findIndex(entity => entity.id === id);
       
@@ -47,7 +47,7 @@ export function useEntityState<T extends Entity>(
   }, [saveFunction]);
 
   // Удаление сущности
-  const removeEntity = useCallback((id: number) => {
+  const removeEntity = useCallback((id: Entity['id']) => {
     setEntities(prev => prev.filter(entity => entity.id !== id));
     
   }, []);

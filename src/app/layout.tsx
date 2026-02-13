@@ -5,6 +5,7 @@ import { ContextProvider } from "@/wrappers/MainContext";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { AuthProvider } from "@/wrappers/AuthProvider";
+import { AdminContextProvider } from "@/wrappers/AdminContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,11 +31,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
-          <ContextProvider>
-            <Theme>
-              {children}
-            </Theme>
-          </ContextProvider>
+          <AdminContextProvider>
+            <ContextProvider>
+              <Theme>
+                {children}
+              </Theme>
+            </ContextProvider>
+          </AdminContextProvider>
         </AuthProvider>
       </body>
     </html>

@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import '../styles/FileExplorer.css';
+import { AdminContext } from '@/wrappers/AdminContext';
+import { Study } from '@/types/types';
 
 export interface FileNode {
   id: string;
   name: string;
-  type: 'folder' | 'file';
+  type: 'folder' | 'file' | 'root' | 'subfolder';
+  status?: string;
   children?: FileNode[];
   size?: string;
   modified?: string;
@@ -12,7 +15,6 @@ export interface FileNode {
 }
 
 export interface FileExplorerProps {
-  data: FileNode[];
   onSelect?: (node: FileNode) => void;
   onToggle?: (node: FileNode, isExpanded: boolean) => void;
   showFileIcons?: boolean;
@@ -20,7 +22,6 @@ export interface FileExplorerProps {
 }
 
 const FileExplorer: React.FC<FileExplorerProps> = ({
-  data,
   onSelect,
   onToggle,
   showFileIcons = true,
@@ -28,8 +29,38 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
+  const { studies, currentStudyID, currentSiteID } = useContext(AdminContext)!;
+
+  const [data, setData] = useState<FileNode[] | undefined>();
+
+  //Get folders structure from Study object
+  useEffect(() => {
+    const getFolders = () => {
+      if (!studies?.length || !currentStudyID) {
+        setData([]);
+        return;
+      }
+
+      // Находим текущее исследование
+      const currentStudy = studies.find(
+        (study: Study) => study.id === currentStudyID
+      );
+
+      // Получаем структуру папок из исследования
+      const folders = currentStudy?.folders_structure?.children || [];
+            
+      setData(folders as unknown as FileNode[]);
+    };
+
+    getFolders();
+  }, [studies, currentStudyID]); // Добавляем currentStudyID в зависимости
 
   const toggleFolder = (nodeId: string) => {
+
+    if (!data) {
+      return;
+    }
+
     const newExpanded = new Set(expandedFolders);
     if (newExpanded.has(nodeId)) {
       newExpanded.delete(nodeId);
@@ -75,6 +106,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     const isExpanded = expandedFolders.has(node.id);
     const isSelected = selectedNodes.has(node.id);
     const hasChildren = node.children && node.children.length > 0;
+    
+    // Определяем тип для отображения (folder для root и subfolder)
+    const displayType = (node.type === 'root' || node.type === 'subfolder') ? 'folder' : node.type;
 
     return (
       <div key={node.id} className="node-container">
@@ -84,34 +118,27 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           onClick={(e) => {
             e.stopPropagation();
             toggleFolder(node.id);
-            console.log(node.type)
           }}
         >
           {/* Стрелка для папок с содержимым */}
-          {node.type === 'folder' && hasChildren && (
-            <span 
-              className={`toggle-icon ${isExpanded ? 'expanded' : ''}`}
-              onClick={(e) => {
-                //e.stopPropagation();
-                //toggleFolder(node.id);
-              }}
-            >
+          {displayType === 'folder' && hasChildren && (
+            <span className={`toggle-icon ${isExpanded ? 'expanded' : ''}`}>
               ▸
             </span>
           )}
           
           {/* Пробел для файлов и пустых папок */}
-          {node.type === 'folder' && !hasChildren && (
+          {displayType === 'folder' && !hasChildren && (
             <span className="toggle-icon-placeholder">•</span>
           )}
-          {node.type === 'file' && (
+          {displayType === 'file' && (
             <span className="toggle-icon-placeholder"></span>
           )}
 
           {/* Иконка */}
           <span className="node-icon">
             {showFileIcons && (
-              node.type === 'folder' ? (
+              displayType === 'folder' ? (
                 isExpanded ? '📂' : '📁'
               ) : getFileIcon(node.extension)
             )}
@@ -120,15 +147,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           {/* Имя файла/папки */}
           <span className="node-name">{node.name}</span>
 
-          {/* Дополнительная информация */}
-          <span className="node-info">
-            {node.size && <span className="size">{node.size}</span>}
-            {node.modified && <span className="modified">{node.modified}</span>}
-          </span>
         </div>
 
         {/* Дочерние элементы */}
-        {node.type === 'folder' && isExpanded && hasChildren && (
+        {displayType === 'folder' && isExpanded && hasChildren && (
           <div className="children">
             {node.children!.map(child => renderNode(child, depth + 1))}
           </div>
@@ -152,15 +174,26 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     return iconMap[extension.toLowerCase()] || '📄';
   };
 
+  if (!Array.isArray(data)) {
+    //console.warn('FileExplorer: data is not an array', data);
+    return (
+      <div className="file-explorer">
+        <div className="tree-container">
+          <div className="empty-state">Нет данных</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="file-explorer">
       <div className="explorer-header">
-        <div className="header-name">Имя</div>
+        {/* <div className="header-name">Имя</div>
         <div className="header-size">Размер</div>
-        <div className="header-modified">Изменено</div>
+        <div className="header-modified">Изменено</div> */}
       </div>
       <div className="tree-container">
-        {data.map(node => renderNode(node))}
+        {currentSiteID && data?.map(node => renderNode(node))}
       </div>
     </div>
   );

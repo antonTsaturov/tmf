@@ -106,8 +106,13 @@ import { Tables } from '@/lib/db/schema';
 // Создаем экземпляр класса
 const studyApiHandler = new StudyApiHandler();
 
-export async function GET(request: NextRequest) {
-  return studyApiHandler.getTablePartial(Tables.USERS, request);
+export async function GET(request?: NextRequest) {
+  // console.log('request: ',request)
+  // if (request) {
+  //   return studyApiHandler.getTablePartial(Tables.USERS, request);
+  // } else {
+    return studyApiHandler.getTable(Tables.USERS);
+  // }
 
 }
 

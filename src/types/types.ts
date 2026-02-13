@@ -99,7 +99,7 @@ export interface Study {
 }
 
 export interface StudyUser {
-  id:   number;
+  id:   string;
   email: string;
   password_hash: string;
   name: string;

@@ -229,7 +229,10 @@ export class StudyApiHandler {
       client = await connectDB();
       
       try {
-        const result = await client.query(`SELECT * FROM ${table} ORDER BY id ASC`);
+        const queryText = table === Tables.USERS
+        ? UserQueries.getAllUsers()
+        : `SELECT * FROM ${table} ORDER BY id ASC`;
+        const result = await client.query(queryText);
         
         // Аудит для READ операции (массовое чтение)
         const auditMiddleware = withAudit({

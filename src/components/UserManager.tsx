@@ -7,9 +7,10 @@ import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, Stu
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './Preview';
 import { useEntityState } from '@/hooks/useEntityState';
-import { RoleSelector, SelectorValue, SiteSelector } from './PseudoSelector';
+import { RoleSelector, SelectorValue, SiteSelector, StudySelector } from './PseudoSelector';
 import { deleteRecord } from '@/lib/api/fetch';
 import { getPermissionsForRole} from '@/lib/auth/permissions';
+import { v4 as uuidv4 } from 'uuid';
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -22,8 +23,8 @@ interface UserItemProps {
   user: StudyUser;
   sites: StudySite[];
   index: number;
-  onUpdate: (id: number, updates: Partial<StudyUser>) => void;
-  onDelete: (id: number) => void;
+  onUpdate: (id: StudyUser['id'], updates: Partial<StudyUser>) => void;
+  onDelete: (id: StudyUser['id']) => void;
   onMove?: (fromIndex: number, toIndex: number) => void;
 }
 
@@ -32,9 +33,13 @@ interface UserManagerProps {
 }
 
 // Генерация ID пользователя
-const generateId = (currentStudyId:number): number => {
-  const random = Math.floor(Math.random() * 100000);
-  return parseInt(`${currentStudyId}${random}`);
+// const generateId = (currentStudyId:number): number => {
+//   const random = Math.floor(Math.random() * 100000);
+//   return parseInt(`${currentStudyId}${random}`);
+// };
+
+const generateId = (currentStudyId: number): string => {
+  return `${currentStudyId}-${uuidv4()}`;
 };
 
 // Компонент бейджа статуса
@@ -155,13 +160,6 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
     }));
   };
 
-  // const handleRoleToggle = (role: UserRole) => {
-  //   setSelectedRoles(prev => 
-  //     prev[0] === role 
-  //       ? [] // Снять выбор если уже выбрана
-  //       : [role] // Выбрать новую
-  //   );
-  // };
   const handleSave = () => {
     if (!editData.email || !editData.email.trim() || !editData.name || !editData.name.trim()) {
       alert('Email and Name are required fields.');
@@ -298,6 +296,7 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
                     onChange={handleSitesChange}
                     placeholder="Select sites..."
                     disabled={false}
+                    showSiteDetails={true}
                   />            
                 </div>
               ) : (
@@ -340,26 +339,6 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
                     <div className="site-meta-item">
                       <span className="meta-label">Sites: </span>
                       <span className="meta-value">
-{/* {sites && user
-  ? (() => {
-      // Отладка
-      console.log('User assigned_site_id:', user.assigned_site_id);
-      console.log('Available sites IDs:', sites.map(s => s.id));
-      
-      const filteredSites = sites.filter(site => user.assigned_site_id.includes(site.id));
-      console.log('Filtered sites:', filteredSites);
-      
-      return filteredSites.length > 0 
-        ? filteredSites.map((site) => (
-            <li key={site.id}>{site.name}</li>
-          ))
-        : <span style={{color: 'orange'}}>No matching sites found</span>;
-    })()
-  : (() => {
-      console.log('Missing data - sites:', !!sites, 'user:', !!user);
-      return 'No sites assigned';
-    })()
-} */}
                         {sites && user
                           ?
                           sites
@@ -433,7 +412,7 @@ const UserItem: FC<UserItemProps> = ({ user, sites, index, onUpdate, onDelete, o
 
 // Основной компонент
 const UserManager: FC<UserManagerProps> = () => {
-  const { studies, saveUser, loadTablePartial } = useContext(AdminContext)!;
+  const { studies, saveUser, loadTable, loadTablePartial, loadAllUsers } = useContext(AdminContext)!;
 
   const [currentStudyId, setCurrentStudyId] = useState<number | null>(null);
 
@@ -462,6 +441,7 @@ const UserManager: FC<UserManagerProps> = () => {
     organisation: OrganisationType;
     roles: UserRole[];
     assigned_site_id: number[]; // Только ID
+    assigned_study_id: number[],
     permissions: UserPermissions | undefined;
   }  
 
@@ -472,6 +452,7 @@ const UserManager: FC<UserManagerProps> = () => {
     organisation: 'CRO' as OrganisationType,
     roles: [],
     assigned_site_id: [],
+    assigned_study_id: [],
     permissions: undefined
   });
 
@@ -522,7 +503,7 @@ const UserManager: FC<UserManagerProps> = () => {
       status: UserStatus.PENDING,
       password_hash: '', // Будет установлен при активации
       permissions: getPermissionsForRole(newUserForm.roles),
-      assigned_study_id: [currentStudyId],
+      assigned_study_id: newUserForm.assigned_study_id,
       assigned_site_id: newUserForm.assigned_site_id,
       failed_login_attempts: 0,
       created_at: new Date().toISOString()
@@ -538,6 +519,7 @@ const UserManager: FC<UserManagerProps> = () => {
       organisation: 'CRO',
       roles: [],
       assigned_site_id: [],
+      assigned_study_id: [],
       permissions: undefined
     });
 
@@ -545,12 +527,12 @@ const UserManager: FC<UserManagerProps> = () => {
   }, [newUserForm, addUser]);
 
   // Обновление пользователя
-  const handleUpdateUser = useCallback((id: number, updates: Partial<StudyUser>) => {
+  const handleUpdateUser = useCallback((id: StudyUser['id'], updates: Partial<StudyUser>) => {
     updateUser(id, updates);
   }, [updateUser]);
 
   // Удаление пользователя
-  const handleDeleteUser = useCallback((id: number) => {
+  const handleDeleteUser = useCallback((id: StudyUser['id']) => {
     if (!window.confirm('Are you sure you want to delete this user?')) {
       return;
     }
@@ -580,13 +562,13 @@ const UserManager: FC<UserManagerProps> = () => {
   // Загрузка пользователей и списка центров по ID исследования
   useEffect(() => {
     const loadSitesForUser = async () => {
-      if (currentStudyId === null) {
-        setSites([]); // Очищаем сайты если исследование не выбрано
-        return;
-      }
+      // if (currentStudyId === null) {
+      //   setSites([]); // Очищаем сайты если исследование не выбрано
+      //   return;
+      // }
 
       try {
-        const loadedSites = await loadTablePartial(Tables.SITE, currentStudyId);
+        const loadedSites = await loadTable(Tables.SITE);
         
         const userSites = loadedSites as unknown as StudySite[]
 
@@ -603,16 +585,16 @@ const UserManager: FC<UserManagerProps> = () => {
     };
     
     const loadUsers = async () => {
-      if (currentStudyId === null) {
-        setManagedUsers([]); // Очищаем сайты если исследование не выбрано
-        return;
-      }
+      // if (currentStudyId === null) {
+      //   setManagedUsers([]); // Очищаем сайты если исследование не выбрано
+      //   return;
+      // }
 
       try {
-        const loadedUsers = await loadTablePartial(Tables.USERS, currentStudyId);
+        const loadedUsers = await loadAllUsers();
 
         const studyUsers = loadedUsers as unknown as StudyUser[];
-        //console.log('studyUsers: ', studyUsers)
+        console.log('studyUsers: ', studyUsers)
         if (studyUsers ) {
           setManagedUsers(studyUsers);
         } else {
@@ -643,6 +625,14 @@ const UserManager: FC<UserManagerProps> = () => {
     setNewUserForm(prev => ({
       ...prev,
       assigned_site_id: siteID
+    }));
+  };
+
+  const handleStudyChange = (studyID: number[]) => {
+    //const userRoles = roles as UserRole[];
+    setNewUserForm(prev => ({
+      ...prev,
+      assigned_study_id: studyID
     }));
   };
 
@@ -678,6 +668,7 @@ const UserManager: FC<UserManagerProps> = () => {
 
   const stats = getStats();
 
+  
   return (
     <div className="site-manager-container">
       <div className="site-manager-header">
@@ -698,11 +689,11 @@ const UserManager: FC<UserManagerProps> = () => {
           <h3>➕ New User</h3>
           <div className="site-form-grid">
 
-            <label>Study*</label>
-            <CustomSelect
+            
+            {/* <CustomSelect
               studies={studies}
               studyHandler={studyHandler}
-            />
+            /> */}
 
             <label>Full Name*</label>
             <input
@@ -712,7 +703,6 @@ const UserManager: FC<UserManagerProps> = () => {
               placeholder="Full name *"
               className="form-input"
               required
-              disabled={!currentStudyId ? true : false}
             />
             
             <label>Email*</label>
@@ -723,7 +713,6 @@ const UserManager: FC<UserManagerProps> = () => {
               placeholder="Email address *"
               className="form-input"
               required
-              disabled={!currentStudyId ? true : false}
             />
             
             <label>Job Title</label>
@@ -733,7 +722,6 @@ const UserManager: FC<UserManagerProps> = () => {
               onChange={(e) => setNewUserForm(prev => ({ ...prev, title: e.target.value }))}
               placeholder="Job title"
               className="form-input"
-              disabled={!currentStudyId ? true : false}
             />
             
             <label>Organisation*</label>
@@ -745,7 +733,6 @@ const UserManager: FC<UserManagerProps> = () => {
               }))}
               className="form-input"
               required
-              disabled={!currentStudyId ? true : false}
             >
               <option value="CRO">CRO</option>
               <option value="SPONSOR">Sponsor</option>
@@ -757,16 +744,25 @@ const UserManager: FC<UserManagerProps> = () => {
               selectedValues={newUserForm.roles}
               onChange={handleRolesChange}
               placeholder="Select user roles..."
-              disabled={!currentStudyId ? true : false}
-            />            
-            
+              disabled={false}
+            />
+
+            <label>Assigned Study</label>   
+            <StudySelector
+              availableOptions={studies}
+              selectedValues={newUserForm.assigned_study_id}
+              onChange={handleStudyChange}
+              placeholder="Select studies..."
+              disabled={false}
+              //multiple={true}
+            />
             <label>Assigned Sites</label>
             <SiteSelector 
               availableOptions={sites}
               selectedValues={newUserForm.assigned_site_id}
               onChange={handleSitesChange}
               placeholder="Select assigned sites..."
-              disabled={!currentStudyId ? true : false}
+              disabled={false}
             />            
  
             <button 
@@ -806,7 +802,18 @@ const UserManager: FC<UserManagerProps> = () => {
             )}
           </div> */}
           <div className="sites-list-items">
-            {currentStudyId === null ? (
+
+                {managedUsers?.map((user, index) => (
+                  <UserItem
+                    sites={sites}
+                    key={user.id}
+                    user={user}
+                    index={index}
+                    onUpdate={handleUpdateUser}
+                    onDelete={handleDeleteUser}
+                  />
+                ))}
+            {/* {currentStudyId === null ? (
               <div className="empty-state">
                 <div className="empty-icon">🔍</div>
                 <h3>Select a Study First</h3>
@@ -823,18 +830,8 @@ const UserManager: FC<UserManagerProps> = () => {
               </div>
             ) : (
               <>
-                {managedUsers.map((user, index) => (
-                  <UserItem
-                    sites={sites}
-                    key={user.id}
-                    user={user}
-                    index={index}
-                    onUpdate={handleUpdateUser}
-                    onDelete={handleDeleteUser}
-                  />
-                ))}
               </>
-            )}
+            )} */}
           </div>          
         </div>
       </div>

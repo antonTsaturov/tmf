@@ -15,6 +15,7 @@
   justify-content: space-between;
   align-items: center;
   min-height: 40px;
+  min-width: 300px;
 }
 
 .selector-trigger:hover {
@@ -68,7 +69,7 @@
 }
 
 .selector-dropdown {
-  position: absolute;
+  /* position: absolute; */
   top: 100%;
   left: 0;
   right: 0;
@@ -101,7 +102,9 @@
 .selector-item {
   padding: 8px 12px;
   cursor: pointer;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr 10fr auto;
+  justify-items: self-start;
   align-items: center;
   gap: 8px;
   transition: background-color 0.2s;
@@ -123,8 +126,12 @@
 }
 
 .selector-label {
-  flex: 1;
+white-space: nowrap;
+  text-overflow: ellipsis;
   font-size: 14px;
+  overflow: hidden;
+  display: block;
+  max-width: 182px;
 }
 
 .role-color-indicator {

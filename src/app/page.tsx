@@ -12,7 +12,8 @@ import SiteManager from '@/components/SiteManager';
 import StudyManager from '@/components/StudyManager';
 import UserManager from '@/components/UserManager';
 import { Button, Tabs, Box} from '@radix-ui/themes';
-import { AdminContext, AdminContextProvider } from "@/wrappers/AdminContext";
+import StudySiteNavigation from '@/components/Navigation';
+import { AdminContext } from '@/wrappers/AdminContext';
 
 
 interface MainWindowProps {
@@ -21,61 +22,12 @@ interface MainWindowProps {
   maxWidth?: number;
 }
 
-const Home: React.FC<MainWindowProps> = ({ initialWidth = 600, minWidth = 500, maxWidth = 600 }) => {
+const Home: React.FC<MainWindowProps> = () => {
 
-  const [sidebarWidth, setSidebarWidth] = useState<number>(initialWidth);
-  const [isResizing, setIsResizing] = useState<boolean>(false);
   const [showRightFrame, setShowRightFrame] = useState<boolean>(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const startXRef = useRef<number>(0);
-  const startWidthRef = useRef<number>(initialWidth);
   const { isOpen, openModal, closeModal, modalProps } = useModal();
-
-  const startResizing = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsResizing(true);
-    startXRef.current = e.clientX;
-    startWidthRef.current = sidebarWidth;
-    
-    // Блокируем выделение текста во время ресайза
-    document.body.style.userSelect = 'none';
-  }, [sidebarWidth]);
-
-  const stopResizing = useCallback(() => {
-    setIsResizing(false);
-    
-    // Восстанавливаем выделение текста
-    document.body.style.userSelect = '';
-  }, []);
-
-  const resize = useCallback((e: MouseEvent) => {
-    if (!isResizing) return;
-
-    const deltaX = e.clientX - startXRef.current;
-    const newWidth = startWidthRef.current + deltaX;
-    
-    // Ограничиваем ширину в заданных пределах
-    const clampedWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-    
-    setSidebarWidth(clampedWidth);
-  }, [isResizing, minWidth, maxWidth]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => resize(e);
-    const handleMouseUp = () => stopResizing();
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      // Восстанавливаем на всякий случай
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing, resize, stopResizing]);
+  const [foldersStructure, setFoldersStructure] = useState(undefined)
 
   return (
     <div className="sidebarresizable-root">
@@ -97,7 +49,6 @@ const Home: React.FC<MainWindowProps> = ({ initialWidth = 600, minWidth = 500, m
             </Tabs.Trigger>
           </Tabs.List>
           <Box pt="5">
-            <AdminContextProvider>
               <Tabs.Content value="tab1">
                   <StudyManager />
               </Tabs.Content>
@@ -111,7 +62,7 @@ const Home: React.FC<MainWindowProps> = ({ initialWidth = 600, minWidth = 500, m
                   <UserManager />
               </Tabs.Content>
 
-            </AdminContextProvider>
+            
           </Box>
         </Tabs.Root>
       </Modal>
@@ -130,24 +81,32 @@ const Home: React.FC<MainWindowProps> = ({ initialWidth = 600, minWidth = 500, m
         <div
           ref={sidebarRef}
           className="sidebar"
-          style={{ width: `${sidebarWidth}px` }}
         >
           <div className="sidebar-content">
+
+            <StudySiteNavigation 
+              onStudyChange={(studyId) => {
+                //console.log('Selected study:', studyId);
+                //setCurrentStudyId(studyId)
+                //setFoldersStructure(studyId.)
+                // Обновить FileExplorer, контекст и т.д.
+              }}
+              onSiteChange={(siteId) => {
+                //console.log('Selected site:', siteId);
+                // Обновить FileExplorer для конкретного центра
+              }}
+            />            
             <div className="sidebar-content-area">
-              {/* <FileExplorer
-                data={sampleData}
+              <FileExplorer
+                //siteId={}
+                //data={foldersStructure}
                 // onSelect={handleSelect}
                 // onToggle={handleToggle}
                 showFileIcons={true}
                 allowMultiSelect={true}
-              /> */}
+              />
             </div>
           </div>
-          <div
-            className="sidebar-resizer"
-            onMouseDown={startResizing}
-            title="Перетащите для изменения ширины"
-          />
         </div>
         <div className="main-content">
           <div className="main-content-path"></div>
