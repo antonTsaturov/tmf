@@ -162,3 +162,64 @@
 .tree-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+.level-indicator {
+  display: flex;
+  align-items: end;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.level-indicator.general {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.level-indicator.site {
+  background-color: #f1f8e9;
+  color: #558b2f;
+}
+
+.level-icon {
+  font-size: 16px;
+}
+
+.folder-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  margin-left: 6px;
+}
+
+.folder-badge.site-badge {
+  background-color: #f1f8e9;
+  color: #558b2f;
+  border: 1px solid #558b2f;
+}
+
+.folder-badge.general-badge {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #1976d2;
+}
+
+.node.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.empty-state {
+  padding: 20px;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
+}

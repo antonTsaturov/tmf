@@ -14,6 +14,7 @@ import UserManager from '@/components/UserManager';
 import { Button, Tabs, Box} from '@radix-ui/themes';
 import StudySiteNavigation from '@/components/Navigation';
 import { AdminContext } from '@/wrappers/AdminContext';
+import FolderContentViewer from '@/components/FolderContentViewer';
 
 
 interface MainWindowProps {
@@ -68,6 +69,7 @@ const Home: React.FC<MainWindowProps> = () => {
       </Modal>
 
       <header className="toolbar-header">
+        <StudySiteNavigation /> 
         <div className="toolbar-title"></div>
         <UserMenu />
         <Button color="gray"
@@ -84,18 +86,7 @@ const Home: React.FC<MainWindowProps> = () => {
         >
           <div className="sidebar-content">
 
-            <StudySiteNavigation 
-              onStudyChange={(studyId) => {
-                //console.log('Selected study:', studyId);
-                //setCurrentStudyId(studyId)
-                //setFoldersStructure(studyId.)
-                // Обновить FileExplorer, контекст и т.д.
-              }}
-              onSiteChange={(siteId) => {
-                //console.log('Selected site:', siteId);
-                // Обновить FileExplorer для конкретного центра
-              }}
-            />            
+                       
             <div className="sidebar-content-area">
               <FileExplorer
                 //siteId={}
@@ -110,7 +101,9 @@ const Home: React.FC<MainWindowProps> = () => {
         </div>
         <div className="main-content">
           <div className="main-content-path"></div>
-          <div className="main-content-area"></div>
+          <div className="main-content-area">
+            <FolderContentViewer />
+          </div>
         </div>
         {showRightFrame && (
           <div className="right-frame">

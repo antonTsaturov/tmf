@@ -2,6 +2,7 @@ export enum Tables {
   STUDY = 'study',
   SITE = 'site',
   DOCUMENT = 'document',
+  DOCUMENT_VERSION = 'document_version',
   USERS = 'users',
   AUDIT = 'audit',
 }
@@ -71,37 +72,62 @@ export const StudyTable = `
 `;
 
 export const SiteTable = `
-    CREATE TABLE IF NOT EXISTS site (
-        id VARCHAR(100) PRIMARY KEY,
-        study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
-        study_protocol TEXT NOT NULL,
-        name TEXT NOT NULL,
-        number INTEGER NOT NULL,
-        country TEXT,
-        city TEXT,
-        principal_investigator TEXT,
-        status TEXT NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-    );
+  CREATE TABLE IF NOT EXISTS site (
+    id VARCHAR(100) PRIMARY KEY,
+    study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+    study_protocol TEXT NOT NULL,
+    name TEXT NOT NULL,
+    number INTEGER NOT NULL,
+    country TEXT,
+    city TEXT,
+    principal_investigator TEXT,
+    status TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+  );
 `;
 
 export const DocumentTable = `
   CREATE TABLE IF NOT EXISTS document (
-      id UUID PRIMARY KEY,
-      study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
-      site_id INTEGER REFERENCES site(id) ON DELETE SET NULL,
-      file_name TEXT NOT NULL,
-      original_name TEXT NOT NULL,
-      file_path TEXT NOT NULL,
-      file_type TEXT NOT NULL,
-      file_size BIGINT NOT NULL,
-      tmf_zone TEXT,
-      tmf_artifact TEXT,
-      version INTEGER,
-      status TEXT,
-      uploaded_by TEXT,
-      uploaded_at TIMESTAMPTZ DEFAULT NOW(),
-      metadata JSONB
+    id UUID PRIMARY KEY,
+    study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+    site_id VARCHAR REFERENCES site(id) ON DELETE SET NULL,
+
+    folder_id TEXT NOT NULL,
+    folder_name TEXT NOT NULL,
+    tmf_zone TEXT,
+    tmf_artifact TEXT,
+
+    status TEXT NOT NULL,
+
+    current_version_id UUID,
+
+    created_by UUID NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    is_deleted BOOLEAN DEFAULT FALSE
+  );
+`;
+
+export const DocumentVersionTable = `
+  CREATE TABLE IF NOT EXISTS document_version (
+    id UUID PRIMARY KEY,
+    document_id UUID NOT NULL REFERENCES document(id) ON DELETE CASCADE,
+    document_number INTEGER NOT NULL,
+    document_name TEXT NOT NULL,
+
+    file_name TEXT NOT NULL,
+    file_path TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    file_size BIGINT NOT NULL,
+
+    checksum TEXT NOT NULL,
+
+    uploaded_by UUID NOT NULL,
+    uploaded_at TIMESTAMPTZ DEFAULT NOW(),
+
+    change_reason TEXT,
+
+    UNIQUE(document_id, document_number)
   );
 `;
 
@@ -288,6 +314,7 @@ export const tableSQLMap: Record<Tables, string> = {
   [Tables.STUDY]: StudyTable,
   [Tables.SITE]: SiteTable,
   [Tables.DOCUMENT]: DocumentTable,
+  [Tables.DOCUMENT_VERSION]: DocumentVersionTable,
   [Tables.USERS]: UserTable,
   [Tables.AUDIT]: AuditTrialTable
 };

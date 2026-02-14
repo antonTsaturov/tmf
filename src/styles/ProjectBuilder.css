@@ -62,20 +62,20 @@ display: grid;
   align-items: center;
   padding: 8px 12px;
   gap: 8px;
+  justify-content: space-between;
 }
 
 .expand-button {
   background: none;
   border: none;
   cursor: pointer;
-  width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #6c757d;
-  font-size: 12px;
+  font-size: 24px;
   transition: transform 0.2s;
+  margin: 9px 12px 0 0;
 }
 
 .expand-button:hover {
@@ -87,10 +87,11 @@ display: grid;
   font-size: 18px;
   width: 24px;
   text-align: center;
+  margin-right: 20px;
 }
 
 .folder-name {
-  flex-grow: 1;
+  /* flex-grow: 1; */
   padding: 6px 12px;
   border-radius: 4px;
   cursor: text;
@@ -305,4 +306,32 @@ display: grid;
   .folder-header {
     flex-wrap: wrap;
   }
+}
+
+.level-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  margin-left: 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.level-badge.site {
+  background-color: #558b2f;
+  color: white;
+}
+
+.level-badge.general {
+  background-color: #1976d2;
+  color: white;
+}
+
+.folder-item {
+  transition: background-color 0.2s ease;
+}
+
+.folder-item:hover {
+  background-color: rgba(0, 0, 0, 0.02);
 }

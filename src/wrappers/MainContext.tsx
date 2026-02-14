@@ -1,12 +1,17 @@
 // MainContext.tsx
 'use client'
 import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import { FileNode } from '@/components/FileExplorer';
+
+type ViewLevel = 'site' | 'general';
 
 export interface MainContextProps {
   isModal: boolean;
   currentProject: string | undefined;
   currentCountry: string | undefined;
   currentSite: string | undefined;
+  selectedFolder: FileNode | null; // Добавляем выбранную папку
+  currentLevel: ViewLevel | null;
 }
 
 interface MainContextType {
@@ -20,39 +25,14 @@ const defaultContext: MainContextProps = {
   currentProject: undefined,
   currentCountry: undefined,
   currentSite: undefined,
+  selectedFolder: null, // По умолчанию null
+  currentLevel: null
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
 
 export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [context, setContext] = useState<MainContextProps>(defaultContext);
-  //const [isLoaded, setIsLoaded] = useState(false);
-
-  // Загрузка настроек при монтировании
-//   useEffect(() => {
-//     const loadContext = () => {
-//       try {
-//         const saved = localStorage.getItem('main-context');
-//         if (saved) {
-//           const parsed = JSON.parse(saved);
-//           setSettings({ ...defaultContext, ...parsed });
-//         }
-//       } catch (error) {
-//         console.error('Ошибка загрузки контекста:', error);
-//       } finally {
-//         setIsLoaded(true);
-//       }
-//     };
-
-//     loadContext();
-//   }, []);
-
-  // Сохранение настроек при изменении
-//   useEffect(() => {
-//     if (isLoaded) {
-//       localStorage.setItem('abacus-settings', JSON.stringify(settings));
-//     }
-//   }, [settings, isLoaded]);
 
   const updateContext = (newContext: Partial<MainContextProps>) => {
     setContext(prev => ({ ...prev, ...newContext }));
@@ -61,10 +41,6 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
   const resetContext = () => {
     setContext(defaultContext);
   };
-  
-//   if (!isLoaded) {
-//     return <div>Загрузка контекста...</div>;
-//   }
 
   return (
     <MainContext.Provider value={{ context, updateContext, resetContext }}>

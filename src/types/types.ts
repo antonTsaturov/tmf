@@ -19,13 +19,21 @@ export enum FolderStatus {
   ARCHIVED = 'archived'
 }
 
+export enum FolderViewLevel {
+  SITE = 'site',
+  GENERAL = 'general',
+  ROOT = 'root'
+};
+
 
 export interface Folder {
   id: string;
   name: string;
   type: FolderType;
+  level: FolderViewLevel;
   status: FolderStatus;
   children: Folder[];
+  shouldEdit: boolean;
 }
 
 export enum SiteStatus {

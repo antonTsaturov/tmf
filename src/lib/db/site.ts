@@ -22,7 +22,7 @@ export async function bulkSaveData(sites: StudySite[]) {
         // Проверяем, существует ли уже такой сайт (по id или study_id + number)
         let existingSite;
         
-        if (site.id && site.id !== '') {
+        if (site.id && String(site.id) !== '') {
           // Если есть id, проверяем по нему
           const checkResult = await client.query(
             'SELECT id FROM site WHERE id = $1',
@@ -66,7 +66,7 @@ export async function bulkSaveData(sites: StudySite[]) {
         } else {
           // СОЗДАЕМ новый сайт
           // Генерируем id, если не указан
-          const siteId = site.id && site.id !== '' ? site.id : 
+          const siteId = site.id && String(site.id) !== '' ? site.id : 
             `site-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
           
           const allFields = ['id', ...fields];
