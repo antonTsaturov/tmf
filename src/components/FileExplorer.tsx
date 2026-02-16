@@ -1,3 +1,5 @@
+// FileExplorer.tsx 
+
 import React, { useContext, useEffect, useState } from 'react';
 import '../styles/FileExplorer.css';
 import { AdminContext } from '@/wrappers/AdminContext';
@@ -5,7 +7,7 @@ import { Study } from '@/types/types';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 import { MainContext } from '@/wrappers/MainContext';
 
-enum ViewLevel {
+export enum ViewLevel {
   SITE = 'site',
   GENERAL = 'general'
 };
@@ -36,8 +38,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 }) => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
-  const { studies, currentStudyID, currentSiteID } = useContext(AdminContext)!;
   const { context, updateContext } = useContext(MainContext)!;
+  const { currentStudy, currentSite, currentLevel, selectedFolder } = context;
 
   const [data, setData] = useState<FileNode[] | undefined>();
   const [filteredData, setFilteredData] = useState<FileNode[] | undefined>();
@@ -45,15 +47,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   // Get folders structure from Study object
   useEffect(() => {
     const getFolders = () => {
-      if (!studies?.length || !currentStudyID) {
+      if (!currentStudy) {
         setData([]);
         return;
       }
-
-      // Находим текущее исследование
-      const currentStudy = studies.find(
-        (study: Study) => study.id === currentStudyID
-      );
 
       // Получаем структуру папок из исследования
       const folders = currentStudy?.folders_structure?.children || [];
@@ -61,7 +58,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     };
 
     getFolders();
-  }, [studies, currentStudyID]);
+  }, [currentStudy]);
 
   // Фильтруем папки на основе currentLevel и currentSite
   useEffect(() => {
@@ -70,9 +67,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       return;
     }
 
-    // Если уровень не выбран, показываем все папки
+    // Если уровень не выбран, не показываем папки
     if (!context.currentLevel) {
-      setFilteredData(data);
+      setFilteredData([]);
       return;
     }
 
@@ -92,10 +89,11 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
         })
         .filter(node => {
           // Определяем, является ли папка специфичной для сайта
-          const isSiteSpecific = node.id.includes('site-') || 
-                                 node.name.toLowerCase().includes('site') ||
-                                 node.status === 'site-specific' ||
-                                 node.status?.includes('site-');
+          // Используем более надежный способ определения
+          const isSiteSpecific = 
+            node.id?.toLowerCase().includes('site') || 
+            node.name?.toLowerCase().includes('site') ||
+            (node.status?.toLowerCase() === 'site-specific');
           
           if (context.currentLevel === ViewLevel.GENERAL) {
             // В General уровне показываем ТОЛЬКО общие папки (не специфичные для сайтов)
@@ -103,16 +101,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           }
           
           if (context.currentLevel === ViewLevel.SITE) {
-            // Если сайт не выбран, ничего не показываем
-            if (!currentSiteID) {
-              return false;
-            }
-            
             // В Site уровне показываем ТОЛЬКО папки, связанные с сайтами
-            // Папка считается связанной с сайтом, если:
-            // 1. Содержит site- в id ИЛИ
-            // 2. Содержит "site" в названии ИЛИ
-            // 3. Имеет статус site-specific
+            // НЕ проверяем наличие выбранного сайта здесь!
             return isSiteSpecific;
           }
           
@@ -121,19 +111,19 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     };
 
     const filtered = filterFoldersByLevel(data);
-    console.log('Filtered folders for level:', context.currentLevel, filtered);
+    //console.log('Filtered folders for level:', context.currentLevel, filtered);
     setFilteredData(filtered);
     
-  }, [data, context.currentLevel, currentSiteID]);
+  }, [data, currentLevel, currentSite]); // Убрали currentSite из зависимостей? Нет, он нужен для сброса при смене сайта
 
   // Синхронизируем selectedNodes с контекстом при изменении
   useEffect(() => {
-    if (context.selectedFolder) {
-      setSelectedNodes(new Set([context.selectedFolder.id]));
+    if (selectedFolder) {
+      setSelectedNodes(new Set([selectedFolder.id]));
     } else {
       setSelectedNodes(new Set());
     }
-  }, [context.selectedFolder]);
+  }, [selectedFolder]);
 
   // Сбрасываем выбранную папку при смене исследования, сайта или уровня
   useEffect(() => {
@@ -141,7 +131,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       updateContext({ selectedFolder: null });
       setSelectedNodes(new Set());
     }
-  }, [currentStudyID, currentSiteID, context.currentLevel]);
+  }, [currentStudy, currentSite, currentLevel]);
 
   const toggleFolder = (nodeId: string) => {
     if (!filteredData) {
@@ -174,7 +164,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     // Проверяем, доступна ли папка для выбора в текущем уровне
     if (context.currentLevel === ViewLevel.GENERAL) {
       // В General уровне можно выбирать любые доступные папки
-    } else if (context.currentLevel === ViewLevel.SITE && !currentSiteID) {
+    } else if (context.currentLevel === ViewLevel.SITE && !currentSite) {
       // В Site уровне без выбранного сайта нельзя выбирать папки
       console.log('Please select a site first');
       return;
@@ -224,10 +214,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   };
 
   const renderNode = (node: FileNode, depth = 1) => {
-
-    console.log('Rendering node:', node.name, 'for site:', currentSiteID);
-    console.log('currentLevel: ', context.currentLevel);
-
     const isExpanded = expandedFolders.has(node.id);
     const isSelected = selectedNodes.has(node.id) || context.selectedFolder?.id === node.id;
     const hasChildren = node.children && node.children.length > 0;
@@ -237,52 +223,33 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     const isFolder = displayType === 'folder';
 
     // Определяем, является ли папка специфичной для сайта
-    const isSiteSpecific = node.id.includes('site-') || 
-                           node.name.toLowerCase().includes('site')
+    const isSiteSpecific = 
+      node.id?.toLowerCase().includes('site') || 
+      node.name?.toLowerCase().includes('site') ||
+      (node.status?.toLowerCase() === 'site-specific');
 
     // Определяем, доступна ли папка для текущего уровня
     const isAvailableForCurrentLevel = () => {
-      if (!context.currentLevel) return true;
+      if (!currentLevel) return false;
       
-      if (context.currentLevel === ViewLevel.GENERAL) {
-        // В General уровне показываем ТОЛЬКО общие папки (не специфичные для сайтов)
+      if (currentLevel === ViewLevel.GENERAL) {
+        // В General уровне показываем ТОЛЬКО общие папки
         return !isSiteSpecific;
       }
       
-      if (context.currentLevel === ViewLevel.SITE) {
-        // Проверяем, выбран ли сайт
-        if (!currentSiteID) {
-          return false; // Если сайт не выбран, ничего не показываем
-        }
-        
-        // В Site уровне показываем ВСЕ папки, связанные с сайтами
-        // (без привязки к конкретному ID сайта)
+      if (currentLevel === ViewLevel.SITE) {
+        // В Site уровне показываем ТОЛЬКО папки, связанные с сайтами
+        // Не проверяем наличие выбранного сайта здесь!
         return isSiteSpecific;
       }
       
-      return true;
+      return false;
     };
 
     // Если папка недоступна для текущего уровня, не рендерим её
     if (!isAvailableForCurrentLevel()) {
-      console.log('Folder not available:', node.name);
       return null;
     }
-
-    // // Добавляем индикатор типа папки
-    // const folderTypeIndicator = () => {
-    //   if (isSiteSpecific) {
-    //     // Для Site Level показываем индикатор сайта
-    //     if (context.currentLevel === ViewLevel.SITE) {
-    //       return <span className="folder-badge site-badge" title="Site folder">S</span>;
-    //     }
-    //     return <span className="folder-badge site-badge" title="Site-specific folder">SL</span>;
-    //   }
-    //   if (!isSiteSpecific && context.currentLevel === ViewLevel.GENERAL) {
-    //     return <span className="folder-badge general-badge" title="General folder">G</span>;
-    //   }
-    //   return null;
-    // };
 
     return (
       <div key={node.id} className="node-container">
@@ -335,8 +302,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           >
             {node.name}
           </span>
-
-          {/* Индикатор типа папки */}
         </div>
 
         {/* Дочерние элементы */}
@@ -374,31 +339,31 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     );
   }
 
+  // Добавляем отладочную информацию
+  // console.log('Current state:', {
+  //   currentLevel,
+  //   currentSite,
+  //   filteredDataLength: filteredData?.length,
+  //   filteredData
+  // });
+
   return (
     <div className="file-explorer">
-      {/* Индикатор текущего режима */}
-      {/* {context.currentLevel && (
-        <div className={`level-indicator ${context.currentLevel}`}>
-          <span className="level-icon">
-            {context.currentLevel === ViewLevel.GENERAL ? '📋' : '🏢'}
-          </span>
-          <span className="level-text">
-            {context.currentLevel === ViewLevel.GENERAL ? 'General View' : 'Site Level View'}
-          </span>
-        </div>
-      )} */}
-      
       <div className="tree-container">
-        {filteredData.length === 0 ? (
+        {!currentStudy || !currentLevel ? (
           <div className="empty-state">
-            {context.currentLevel === ViewLevel.GENERAL 
-              ? 'Нет папок уровня General'
-              : context.currentLevel === ViewLevel.SITE && !currentSiteID
-                ? 'Выберите центр для просмотра папок'
-                : context.currentLevel === ViewLevel.SITE && currentSiteID
-                  ? 'Нет папок, связанных с сайтами'
-                  : 'Нет доступных папок'
-            }
+            {!currentStudy && 'Выберите исследование'}
+            {currentStudy && !currentLevel && 'Выберите уровень просмотра'}
+          </div>
+        ) : currentLevel === ViewLevel.SITE && !currentSite ? (
+          <div className="empty-state">
+            Выберите центр для просмотра Site Level папок
+          </div>
+        ) : filteredData.length === 0 ? (
+          <div className="empty-state">
+            {currentLevel === ViewLevel.GENERAL 
+              ? 'Нет общих папок' 
+              : 'Нет папок для выбранного центра'}
           </div>
         ) : (
           filteredData.map(node => renderNode(node))

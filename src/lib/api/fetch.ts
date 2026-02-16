@@ -11,8 +11,6 @@ export async function getTable(table: Tables) {
     const tableName = String(table);
     const url = `/api/${tableName}`;
     
-    console.log('Fetching URL:', url);
-    
     const response = await fetch(url, {
       method: 'GET',
       headers: {

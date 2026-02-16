@@ -1,32 +1,56 @@
 // MainContext.tsx
 'use client'
-import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import { FileNode } from '@/components/FileExplorer';
+import React, { createContext, useState, ReactNode } from 'react';
+import { FileNode, ViewLevel } from '@/components/FileExplorer';
+import { Document } from '@/types/document';
+import { Study, StudySite } from '@/types/types';
 
-type ViewLevel = 'site' | 'general';
+//type ViewLevel = 'site' | 'general';
+
+// Интерфейс для предпросмотра файла перед загрузкой
+export interface FilePreview {
+  file: File;
+  customName: string;
+  size: number;
+  studyId: number;
+  siteId: string | number;
+  folderId: string;
+  folderName: string;
+  createdBy: string;
+}
 
 export interface MainContextProps {
   isModal: boolean;
-  currentProject: string | undefined;
+  currentStudy: Study | undefined;
   currentCountry: string | undefined;
-  currentSite: string | undefined;
-  selectedFolder: FileNode | null; // Добавляем выбранную папку
-  currentLevel: ViewLevel | null;
+  currentSite: StudySite | undefined;
+  selectedFolder: FileNode | null;
+  selectedDocument: Document | null;
+  currentLevel: ViewLevel | undefined;
+  // Новые поля для предпросмотра файла
+  filePreview: FilePreview | null;
+  isPreviewOpen: boolean;
 }
 
 interface MainContextType {
   context: MainContextProps;
   updateContext: (newContext: Partial<MainContextProps>) => void;
   resetContext: () => void;
+  // Новые методы для работы с предпросмотром
+  setFilePreview: (preview: FilePreview | null) => void;
+  clearFilePreview: () => void;
 }
 
 const defaultContext: MainContextProps = {
   isModal: false,
-  currentProject: undefined,
+  currentStudy: undefined,
   currentCountry: undefined,
   currentSite: undefined,
-  selectedFolder: null, // По умолчанию null
-  currentLevel: null
+  selectedFolder: null,
+  selectedDocument: null,
+  currentLevel: undefined,
+  filePreview: null,
+  isPreviewOpen: false
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -42,17 +66,31 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
     setContext(defaultContext);
   };
 
+  const setFilePreview = (preview: FilePreview | null) => {
+    setContext(prev => ({
+      ...prev,
+      filePreview: preview,
+      isPreviewOpen: !!preview
+    }));
+  };
+
+  const clearFilePreview = () => {
+    setContext(prev => ({
+      ...prev,
+      filePreview: null,
+      isPreviewOpen: false
+    }));
+  };
+
   return (
-    <MainContext.Provider value={{ context, updateContext, resetContext }}>
+    <MainContext.Provider value={{ 
+      context, 
+      updateContext, 
+      resetContext,
+      setFilePreview,
+      clearFilePreview
+    }}>
       {children}
     </MainContext.Provider>
   );
-};
-
-export const useMainContext = () => {
-  const context = useContext(MainContext);
-  if (!context) {
-    throw new Error('useMainContext must be used within ContextProvider');
-  }
-  return context;
 };

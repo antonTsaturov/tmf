@@ -15,6 +15,7 @@ import { Button, Tabs, Box} from '@radix-ui/themes';
 import StudySiteNavigation from '@/components/Navigation';
 import { AdminContext } from '@/wrappers/AdminContext';
 import FolderContentViewer from '@/components/FolderContentViewer';
+import DocumentActions from '@/components/DocumentActions';
 
 
 interface MainWindowProps {
@@ -89,10 +90,6 @@ const Home: React.FC<MainWindowProps> = () => {
                        
             <div className="sidebar-content-area">
               <FileExplorer
-                //siteId={}
-                //data={foldersStructure}
-                // onSelect={handleSelect}
-                // onToggle={handleToggle}
                 showFileIcons={true}
                 allowMultiSelect={true}
               />
@@ -100,7 +97,12 @@ const Home: React.FC<MainWindowProps> = () => {
           </div>
         </div>
         <div className="main-content">
-          <div className="main-content-path"></div>
+          <div className="main-content-path">
+            <DocumentActions
+              onAction={() => console.log('Hello)')}
+            />
+
+          </div>
           <div className="main-content-area">
             <FolderContentViewer />
           </div>

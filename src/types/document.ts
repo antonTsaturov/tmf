@@ -1,4 +1,26 @@
-export type DocumentStatus = 'draft' | 'on review' | 'approved' | 'rejected' | 'archived' | 'deleted';
+export enum DocumentAction {
+  CREATE_DOCUMENT = 'create_document',
+  SUBMIT_FOR_REVIEW = 'submit_for_review',
+  CANCEL_REVIEW = 'cancel_review',
+  APPROVE = 'approve',
+  REJECT = 'reject',
+  RETURN_TO_DRAFT = 'return_to_draft',
+  ARCHIVE = 'archive',
+  UNARCHIVE = 'unarchive',
+  SOFT_DELETE = 'soft_delete',
+  RESTORE = 'restore',
+  UPLOAD_NEW_VERSION = 'upload_new_version',
+  VIEW = 'view',
+  DOWNLOAD = 'download'
+}
+
+export enum DocumentStatus {
+  DRAFT = 'draft',
+  IN_REVIEW = 'in_review',
+  APPROVED = 'approved',
+  ARCHIVED = 'archived',
+  DELETED = 'deleted'
+}
 
 export type DocumentType = 'pdf';
 
@@ -30,4 +52,26 @@ export interface DocumentVersion {
   uploaded_by: string; // UUID
   uploaded_at: string;
   change_reason: string;
+}
+
+const transitions: Record<DocumentStatus, DocumentAction[]> = {
+  draft: [
+    DocumentAction.SUBMIT_FOR_REVIEW,
+    DocumentAction.SOFT_DELETE,
+    DocumentAction.UPLOAD_NEW_VERSION
+  ],
+  in_review: [
+    DocumentAction.APPROVE,
+    DocumentAction.REJECT,
+    DocumentAction.CANCEL_REVIEW
+  ],
+  approved: [
+    DocumentAction.ARCHIVE
+  ],
+  archived: [
+    DocumentAction.UNARCHIVE
+  ],
+  deleted: [
+    DocumentAction.RESTORE
+  ]
 }
