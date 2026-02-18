@@ -104,7 +104,11 @@ export const DocumentTable = `
     created_by UUID NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
-    is_deleted BOOLEAN DEFAULT FALSE
+    is_deleted BOOLEAN DEFAULT FALSE,
+    deleted_at TIMESTAMPTZ DEFAULT NOW(),
+    deleted_by TEXT NOT NULL,
+    restored_by TEXT NOT NULL,
+    restored_at TIMESTAMPTZ DEFAULT NOW()
   );
 `;
 

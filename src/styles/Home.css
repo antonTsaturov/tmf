@@ -24,10 +24,52 @@
   flex-direction: column;
   z-index: 20;
 }
+
+.right-frame-close-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #666;
+  border-radius: 4px;
+  display: flex;
+  align-self: baseline;
+  justify-content: center;
+}
+
+
+.right-frame-close-button:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
 .right-frame-content {
-  padding: 24px;
+  padding: 0 24px 24px;
   flex: 1;
-  overflow-y: auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.right-frame-tabs-root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.right-frame-tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.right-frame-tab-content[hidden] {
+  display: none !important;
 }
 .toolbar-header {
   width: 100%;
@@ -123,7 +165,7 @@
   background-color: #fff;
   flex: 1;
   padding: 20px;
-  overflow-y: auto;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -136,8 +178,10 @@
   background-color: #fafafa;
   border: 2px dashed #ccc;
   border-radius: 8px;
-  flex: 1;
   display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .main-content-path {

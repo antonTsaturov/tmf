@@ -3,10 +3,12 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback } from "react";
 import { Document } from "@/types/document";
 import FilePreviewPanel from "./FilePreviewPanel";
+import NewVersionUploadPanel from "./NewVersionUploadPanel";
 import "../styles/FolderContentViewer.css";
 import DocumentStatusIndicator from "./DocumentStatusIndicator";
 import { FaRegFilePdf } from "react-icons/fa6";
 import { BsFiletypeTxt } from "react-icons/bs";
+import { FileIcon } from 'react-file-icon';
 
 interface FolderContentViewerProps {
   onDocumentSelect?: (document: Document) => void;
@@ -38,7 +40,8 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   // Ref для контейнера с документами
   const contentRef = useRef<HTMLDivElement>(null);
   const folderRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
+  const folderHeaderRef = useRef<HTMLDivElement>(null);
+  const docHeaderRef = useRef<HTMLDivElement>(null);
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
@@ -94,10 +97,18 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     // Здесь можно добавить логирование или показ уведомления
   };
   
-  // Обработчик клика по свободному месту
+  // Обработчик клика вне документа
   const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
+
+    const target = e.target as Node;
+
+    // Проверяем, попал ли клик внутрь docHeaderRef или других служебных областей
+    const clickedOnHeader = docHeaderRef.current?.contains(target);
+    const clickedOnFolderInfo = folderHeaderRef.current?.contains(target);
+    const clickedOnEmptySpace = target === contentRef.current || target === folderRef.current;
+
     // Проверяем, что клик был именно по контейнеру, а не по его дочерним элементам
-    if (e.target === contentRef.current || e.target === folderRef.current || e.target === headerRef.current) {
+    if (clickedOnHeader || clickedOnFolderInfo || clickedOnEmptySpace) {
       // Удаляем документ из контекста - это сбрасывает выделение
       updateContext({ selectedDocument: null });
       onDocumentSelect?.(null as any); // Передаем null, если нужно уведомить родителя
@@ -216,15 +227,16 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
 
   const documents = documentsData?.documents || [];
   const documentsCount = documentsData?.count || 0;
+  console.log(folderHeaderRef.current, docHeaderRef)
   
   return (
     <div 
       className="folder-content-viewer" 
       ref={contentRef}
       onClick={handleContentClick}
-      >
+    >
       {/* Заголовок с информацией о папке */}
-      <div className="folder-header" ref={headerRef}>
+      <div className="folder-header" ref={folderHeaderRef}>
         <div className="folder-info">
           <span className="folder-icon">📂</span>
           <span className="folder-name">{selectedFolder.name}</span>
@@ -239,31 +251,27 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
               showLabel
               status={selectedDocument?.status}
             />
-            {/* <span className="filter-badge">Study ID: {documentsData.filters.study_id}</span>
-            <span className="filter-badge">Site ID: {documentsData.filters.site_id}</span> */}
           </div>
         )}
       </div>
-
+  
       {/* Содержимое папки */}
-      <div className="folder-content" ref={folderRef}>
-        {documents.length === 0 ? (
-          // Пустая папка
-          <div className="empty-folder">
-            <div className="empty-folder-icon">📭</div>
-            <div className="empty-folder-text">Папка пуста</div>
-            <div className="empty-folder-hint">В этой папке пока нет документов</div>
+      {documents.length === 0 ? (
+        <div className="empty-folder">
+          <div className="empty-folder-icon">📭</div>
+          <div className="empty-folder-text">Папка пуста</div>
+          <div className="empty-folder-hint">В этой папке пока нет документов</div>
+        </div>
+      ) : (
+        <div className="table-container">
+          <div className="documents-header" ref={docHeaderRef}>
+            <div className="col-name">Имя документа</div>
+            <div className="col-status">Статус</div>
+            <div className="col-version">Версия</div>
+            <div className="col-created">Создан</div>
           </div>
-        ) : (
-          // Список документов
+          
           <div className="documents-list">
-            <div className="documents-header">
-              <div className="col-name">Имя документа</div>
-              <div className="col-status">Статус</div>
-              <div className="col-version">Версия</div>
-              <div className="col-created">Создан</div>
-            </div>
-            
             {documents.map((doc) => (
               <div 
                 key={doc.id} 
@@ -273,10 +281,11 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
               >
                 <div className="col-name">
                   <span className="doc-icon">
-                    {doc.file_type.includes('txt')
-                      ? <FaRegFilePdf /> 
-                      : <BsFiletypeTxt />
-                    }
+                    {doc.file_type?.includes('pdf') ? (
+                      <FileIcon extension="pdf" labelColor="#D93831" type="acrobat" />
+                    ) : (
+                      <FileIcon extension="txt" type="document" />
+                    )}
                   </span>
                   <span className="doc-name" title={doc.document_name}>
                     {doc.document_name || 'Без названия'}
@@ -292,30 +301,40 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                   <span 
                     className={`status-badge ${doc.is_deleted ? 'deleted' : ''}`}
                     style={{ 
-                      backgroundColor: (doc.is_deleted ? '#c0392b' : getDocumentStatusDisplay(doc)) + '20', 
+                      backgroundColor: (doc.is_deleted ? '#c0392b' : getStatusColor(doc.status)) + '20', 
                       color: doc.is_deleted ? '#c0392b' : getStatusColor(doc.status) 
                     }}
                   >
-                    <span className="status-icon">{doc.is_deleted ? '🗑️' : getStatusIcon(doc.status)}</span>
-                    <span className="status-text">{doc.is_deleted ? 'deleted' : doc.status}</span>
+                    <span className="status-icon">
+                      {doc.is_deleted ? '🗑️' : getStatusIcon(doc.status)}
+                    </span>
+                    <span className="status-text">
+                      {doc.is_deleted ? 'deleted' : doc.status}
+                    </span>
                   </span>
                 </div>
-
+  
                 <div className="col-version">
                   {doc.document_number}
                 </div>
-
+  
                 <div className="col-created">
                   {formatDate(doc.created_at)}
                 </div>
               </div>
             ))}
           </div>
-        )}
-      </div>
-
+        </div>
+      )}
+  
       {/* Панель предпросмотра файла */}
       <FilePreviewPanel
+        onUploadSuccess={handleUploadSuccess}
+        onUploadError={handleUploadError}
+      />
+      
+      {/* Панель загрузки новой версии */}
+      <NewVersionUploadPanel
         onUploadSuccess={handleUploadSuccess}
         onUploadError={handleUploadError}
       />

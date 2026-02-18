@@ -1,5 +1,5 @@
 // components/PDFViewer.tsx
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX, FiDownload, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import { MdCached } from "react-icons/md";
@@ -10,7 +10,7 @@ interface PDFViewerProps {
   onClose?: () => void;
 }
 
-const PDFViewer: React.FC<PDFViewerProps> = ({ onClose }) => {
+const PDFViewer: React.FC<PDFViewerProps> = () => {
   const { context } = useContext(MainContext)!;
   const { selectedDocument } = context;
   
@@ -139,15 +139,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ onClose }) => {
     }
   };
 
-  const handleClose = () => {
-    if (pdfUrl && usingCache) {
-      URL.revokeObjectURL(pdfUrl);
+  useEffect(() => {
+    // Если панель закрывается
+    if (!context.isRightFrameOpen) {
+      // Очищаем URL если он существует
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+      setError(null);
+      setFullscreen(false);
     }
-    setPdfUrl(null);
-    setError(null);
-    setFullscreen(false);
-    onClose?.();
-  };
+  }, [context.isRightFrameOpen, pdfUrl]);
 
   const toggleFullscreen = () => {
     setFullscreen(!fullscreen);
@@ -182,9 +185,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ onClose }) => {
             title="Скачать"
           >
             <FiDownload />
-          </button>
-          <button className="close-button" onClick={handleClose}>
-            <FiX />
           </button>
         </div>
       </div>

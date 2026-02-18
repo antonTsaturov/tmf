@@ -18,7 +18,10 @@ import FolderContentViewer from '@/components/FolderContentViewer';
 import DocumentActions from '@/components/DocumentActions';
 import AuditTrailViewer from '@/components/AuditTrailViewer';
 import PDFViewer from '@/components/PDFViewer';
+import DocumentDetails from '@/components/DocumentDetails';
+import DeletedDocumentsViewer from '@/components/DeletedDocumentsViewer';
 import { MainContext } from '@/wrappers/MainContext';
+import { FiX } from 'react-icons/fi';
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -54,7 +57,9 @@ const Home: React.FC<MainWindowProps> = () => {
             <Tabs.Trigger value="tab5">
                 Audit Trail
             </Tabs.Trigger>
-
+            <Tabs.Trigger value="tab6">
+                Deleted documents
+            </Tabs.Trigger>
           </Tabs.List>
           <Box pt="5">
               <Tabs.Content value="tab1">
@@ -72,7 +77,9 @@ const Home: React.FC<MainWindowProps> = () => {
               <Tabs.Content  value="tab5">
                   <AuditTrailViewer />
               </Tabs.Content>
-            
+              <Tabs.Content value="tab6">
+                <DeletedDocumentsViewer />
+              </Tabs.Content>
           </Box>
         </Tabs.Root>
       </Modal>
@@ -111,17 +118,31 @@ const Home: React.FC<MainWindowProps> = () => {
         </div>
         {isRightFrameOpen && (
           <div className="right-frame">
+            <button className="right-frame-close-button" onClick={()=> updateContext({isRightFrameOpen: false})}>
+              <FiX />
+            </button>
             <div className="right-frame-content">
-              {selectedDocument ? (
-                <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
-              ) : (
-                <div className="right-frame-placeholder">
-                  <div className="placeholder-icon">📄</div>
-                  <div className="placeholder-text">
-                    Выберите документ для просмотра
-                  </div>
-                </div>
-              )}
+              <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
+                <Tabs.List>
+                  <Tabs.Trigger value="view">Document preview</Tabs.Trigger>
+                  <Tabs.Trigger value="tab2">Document metadata</Tabs.Trigger>
+                </Tabs.List>
+                <Tabs.Content value="view" className="right-frame-tab-content">
+                  {selectedDocument ? (
+                    <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
+                  ) : (
+                    <div className="right-frame-placeholder">
+                      <div className="placeholder-icon">📄</div>
+                      <div className="placeholder-text">
+                        Выберите документ для просмотра
+                      </div>
+                    </div>
+                  )}
+                </Tabs.Content>
+                <Tabs.Content value="tab2" className="right-frame-tab-content">
+                  <DocumentDetails />
+                </Tabs.Content>
+              </Tabs.Root>
             </div>
           </div>
         )}

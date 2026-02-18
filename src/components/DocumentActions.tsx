@@ -96,7 +96,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   onDocumentDeleted,
   onDocumentRestored
 }) => {
-  const { context, updateContext, setFilePreview } = useContext(MainContext)!;
+  const mainContext = useContext(MainContext);
+  if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
+  const { context, updateContext, setFilePreview, setNewVersionPreview } = mainContext;
   const { user } = useAuth();
   const { isUploading, progress } = useDocumentUpload();
   const { deleteDocument, restoreDocument, isDeleting, isRestoring, error } = useDocumentDelete();
@@ -248,9 +250,44 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
   };
 
+  const handleUploadNewVersion = () => {
+    if (!selectedDocument) return;
+    if (!user?.id && !user?.email) {
+      alert('Пользователь не авторизован');
+      return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,application/pdf,.txt,text/plain';
+    input.multiple = false;
+
+    input.onchange = (e) => {
+      const target = e.target as HTMLInputElement;
+      const files = target.files;
+      if (!files || files.length === 0) return;
+
+      const file = files[0];
+      const preview = { file, document: selectedDocument };
+      if (typeof setNewVersionPreview === 'function') {
+        setNewVersionPreview(preview);
+      } else {
+        updateContext({ newVersionPreview: preview, isNewVersionPanelOpen: true });
+      }
+      input.remove();
+    };
+
+    input.click();
+  };
+
   const handleActionClick = async (action: DocumentAction) => {
     if (action === DocumentAction.CREATE_DOCUMENT) {
       handleCreateDocument();
+      return;
+    }
+
+    if (action === DocumentAction.UPLOAD_NEW_VERSION) {
+      handleUploadNewVersion();
       return;
     }
 
@@ -283,36 +320,36 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     <>
       {/* Уведомления */}
       {notification && (
-        <div className={`notification ${notification.type}`}>
+        <div className={`doc-action-notification doc-action-notification--${notification.type}`}>
           {notification.message}
         </div>
       )}
 
-      {/* Индикатор загрузки при удалении/восстановлении */}
       {(isDeleting || isRestoring) && (
-        <div className="loading-overlay">
-          <div className="spinner"></div>
+        <div className="doc-action-loading">
+          <div className="doc-action-spinner"></div>
           <span>{isDeleting ? 'Удаление...' : 'Восстановление...'}</span>
         </div>
       )}
 
-      {/* Модальное окно подтверждения удаления */}
       {showDeleteConfirm && (
-        <div className="delete-confirm-modal">
-          <div className="delete-confirm-content">
-            <h3>Подтверждение удаления</h3>
-            <p>Вы уверены, что хотите удалить документ "{selectedDocument?.document_name}"?</p>
-            <p className="delete-warning">Документ будет перемещен в корзину и его можно будет восстановить позже.</p>
-            <div className="delete-confirm-actions">
-              <button 
-                className="cancel-button" 
+        <div className="doc-action-confirm-overlay">
+          <div className="doc-action-confirm">
+            <h3 className="doc-action-confirm-title">Подтверждение удаления</h3>
+            <p className="doc-action-confirm-text">Вы уверены, что хотите удалить документ &quot;{selectedDocument?.document_name}&quot;?</p>
+            <p className="doc-action-confirm-warning">Документ будет перемещен в корзину и его можно будет восстановить позже.</p>
+            <div className="doc-action-confirm-actions">
+              <button
+                type="button"
+                className="doc-action-btn doc-action-btn--cancel"
                 onClick={() => setShowDeleteConfirm(false)}
                 disabled={isDeleting}
               >
                 Отмена
               </button>
-              <button 
-                className="delete-button" 
+              <button
+                type="button"
+                className="doc-action-btn doc-action-btn--delete"
                 onClick={handleSoftDelete}
                 disabled={isDeleting}
               >
@@ -323,23 +360,20 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         </div>
       )}
 
-      <div className={`document-actions ${className}`}>
-        <div className="actions-container">
-          {currentLevel === ViewLevel.GENERAL  || currentSite &&  selectedFolder && availableActions.map((action) => (
+      <div className={`doc-action-root ${className}`}>
+        <div className="doc-action-container">
+          {currentLevel === ViewLevel.GENERAL || (currentSite && selectedFolder) && availableActions.map((action) => (
             <button
               key={action}
-              className={`action-button ${action} ${(isDeleting || isRestoring) ? 'disabled' : ''}`}
+              type="button"
+              className={`doc-action-btn doc-action-btn--${action.replace(/_/g, '-')} ${(isDeleting || isRestoring) ? 'doc-action-btn--disabled' : ''}`}
               onClick={() => handleActionClick(action)}
               title={actionConfig[action].label}
-              style={{ '--action-color': actionConfig[action].color } as React.CSSProperties}
+              style={{ '--doc-action-color': actionConfig[action].color } as React.CSSProperties}
               disabled={isDeleting || isRestoring}
             >
-              <span className="action-icon">
-                {actionConfig[action].icon}
-              </span>
-              <span className="action-label">
-                {actionConfig[action].label}
-              </span>
+              <span className="doc-action-icon">{actionConfig[action].icon}</span>
+              <span className="doc-action-label">{actionConfig[action].label}</span>
             </button>
           ))}
         </div>

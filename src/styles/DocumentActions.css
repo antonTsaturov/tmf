@@ -1,358 +1,191 @@
-/* styles/DocumentActions.css */
-.document-actions {
+/* DocumentActions.css - doc-action-* */
+.doc-action-root {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 20px;
+  padding: 8px 16px;
+  background: #fafbfc;
+  border: 1px solid #e1e4e8;
+  border-radius: 4px;
 }
 
-.actions-container {
+.doc-action-container {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
-.action-button {
+.doc-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
-  background: white;
-  color: #333;
-  font-size: 10px;
+  gap: 6px;
+  padding: 5px 12px 2px 12px;
+  border: 1px solid #d1d5da;
+  border-radius: 3px;
+  background: #fff;
+  color: #24292f;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: auto;
+  transition: border-color 0.15s, background 0.15s;
 }
 
-.action-button:hover {
-  background: #f5f5f5;
-  border-color: #d0d0d0;
-  /* transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1); */
+.doc-action-btn:hover:not(:disabled) {
+  background: #f6f8fa;
+  border-color: #8c959f;
 }
 
-.action-button:active {
-  transform: translateY(0);
-  box-shadow: none;
+.doc-action-btn:active:not(:disabled) {
+  background: #ebecf0;
 }
 
-.action-button .action-icon {
-  font-size: 18px;
-  color: var(--action-color, #666);
-  transition: color 0.2s ease;
+.doc-action-icon {
+  font-size: 14px;
+  color: var(--doc-action-color, #57606a);
 }
 
-.action-button:hover .action-icon {
-  color: var(--action-color, #333);
+.doc-action-btn:hover .doc-action-icon {
+  color: var(--doc-action-color, #24292f);
 }
 
-.action-button.create_document {
-  background: #e3f2fd;
-  border-color: #2196f3;
+.doc-action-btn--create-document {
+  border-color: #238636;
+  background: #f0fdf4;
 }
 
-.action-button.create_document .action-icon {
-  color: #2196f3;
+.doc-action-btn--create-document .doc-action-icon {
+  color: #238636;
 }
 
-.action-button.submit_for_review {
-  background: #e8f5e9;
-  border-color: #4caf50;
+.doc-action-btn--submit-for-review .doc-action-icon,
+.doc-action-btn--approve .doc-action-icon {
+  color: #1a7f37;
 }
 
-.action-button.submit_for_review .action-icon {
-  color: #4caf50;
+.doc-action-btn--reject .doc-action-icon,
+.doc-action-btn--soft-delete .doc-action-icon {
+  color: #cf222e;
 }
 
-.action-button.approve {
-  background: #e8f5e9;
-  border-color: #4caf50;
+.doc-action-btn--upload-new-version .doc-action-icon {
+  color: #0969da;
 }
 
-.action-button.approve .action-icon {
-  color: #4caf50;
+.doc-action-btn--view .doc-action-icon,
+.doc-action-btn--download .doc-action-icon {
+  color: #57606a;
 }
 
-.action-button.reject {
-  background: #ffebee;
-  border-color: #f44336;
+.doc-action-btn--archive .doc-action-icon,
+.doc-action-btn--unarchive .doc-action-icon,
+.doc-action-btn--restore .doc-action-icon {
+  color: #1a7f37;
 }
 
-.action-button.reject .action-icon {
-  color: #f44336;
-}
-
-.action-button.soft_delete {
-  background: #ffebee;
-  border-color: #f44336;
-}
-
-.action-button.soft_delete .action-icon {
-  color: #f44336;
-}
-
-.action-button.upload_new_version {
-  background: #e3f2fd;
-  border-color: #2196f3;
-}
-
-.action-button.upload_new_version .action-icon {
-  color: #2196f3;
-}
-
-.action-button:disabled {
-  opacity: 0.5;
+.doc-action-btn:disabled,
+.doc-action-btn--disabled {
+  opacity: 0.55;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* Информация о выборе */
-.selection-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-  background: #f8f9fa;
-  border-radius: 20px;
-  font-size: 13px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.info-item.folder {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.info-item.document {
-  background: #e8eaf6;
-  color: #3949ab;
-}
-
-.info-icon {
-  font-size: 14px;
-}
-
-.info-text {
-  font-weight: 500;
-}
-
-.info-separator {
-  color: #999;
-  font-size: 16px;
-}
-
-.status-indicator {
-  display: inline-block;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
-  text-transform: uppercase;
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-  .document-actions {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .actions-container {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .selection-info {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .action-button .action-label {
-    display: none;
-  }
-
-  .action-button {
-    padding: 8px;
-  }
-
-  .action-button .action-icon {
-    font-size: 20px;
-  }
-}
-
-/* styles/DocumentActions.css - добавить */
-
-.upload-progress {
+/* Confirm modal */
+.doc-action-confirm-overlay {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 300px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  padding: 16px;
-  z-index: 1000;
-}
-
-.progress-item {
-  margin-bottom: 12px;
-}
-
-.progress-item:last-child {
-  margin-bottom: 0;
-}
-
-.file-name {
-  display: block;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.progress-bar {
-  height: 4px;
-  background: #f0f0f0;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 4px;
-}
-
-.progress-fill {
-  height: 100%;
-  transition: width 0.3s ease;
-}
-
-.progress-fill.uploading {
-  background: #2196f3;
-}
-
-.progress-fill.success {
-  background: #4caf50;
-}
-
-.progress-fill.error {
-  background: #f44336;
-}
-
-.progress-status {
-  font-size: 11px;
-  color: #999;
-  float: right;
-}
-
-/* styles/DocumentActions.css */
-.delete-confirm-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(27, 31, 35, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
-.delete-confirm-content {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
+.doc-action-confirm {
+  background: #fff;
+  border: 1px solid #d1d5da;
+  border-radius: 6px;
+  padding: 20px 24px;
   max-width: 400px;
   width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 24px rgba(27, 31, 35, 0.12);
 }
 
-.delete-confirm-content h3 {
-  margin: 0 0 16px 0;
-  font-size: 18px;
-  color: #333;
-}
-
-.delete-confirm-content p {
+.doc-action-confirm-title {
   margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #24292f;
+}
+
+.doc-action-confirm-text {
+  margin: 0 0 8px 0;
   font-size: 14px;
-  color: #666;
+  color: #57606a;
 }
 
-.delete-warning {
-  color: #f39c12;
+.doc-action-confirm-warning {
+  margin: 0;
   font-size: 13px;
-  background-color: #fff3e0;
-  padding: 8px;
+  color: #876400;
+  background: #fff8c5;
+  padding: 8px 12px;
   border-radius: 4px;
+  border: 1px solid #d4a72c;
 }
 
-.delete-confirm-actions {
+.doc-action-confirm-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 8px;
+  margin-top: 20px;
 }
 
-.cancel-button {
-  padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
-  color: #666;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+.doc-action-btn--cancel {
+  border-color: #d1d5da;
 }
 
-.delete-button {
-  padding: 8px 16px;
-  border: none;
-  background: #F44336;
-  color: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
+.doc-action-btn--cancel:hover:not(:disabled) {
+  background: #f6f8fa;
 }
 
-.delete-button:hover {
-  background: #d32f2f;
+.doc-action-btn--delete {
+  background: #cf222e;
+  border-color: #cf222e;
+  color: #fff;
 }
 
-/* styles/DocumentActions.css (добавьте в конец файла) */
+.doc-action-btn--delete:hover:not(:disabled) {
+  background: #a40e26;
+  border-color: #a40e26;
+}
 
-.notification {
+.doc-action-btn--delete .doc-action-icon {
+  color: inherit;
+}
+
+/* Notification */
+.doc-action-notification {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 12px 24px;
+  top: 16px;
+  right: 16px;
+  padding: 10px 20px;
   border-radius: 4px;
-  color: white;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   z-index: 1100;
-  animation: slideIn 0.3s ease;
+  animation: doc-action-slideIn 0.2s ease;
 }
 
-.notification.success {
-  background-color: #4CAF50;
+.doc-action-notification--success {
+  background: #1a7f37;
+  color: #fff;
 }
 
-.notification.error {
-  background-color: #F44336;
+.doc-action-notification--error {
+  background: #cf222e;
+  color: #fff;
 }
 
-@keyframes slideIn {
+@keyframes doc-action-slideIn {
   from {
     transform: translateX(100%);
     opacity: 0;
@@ -363,42 +196,56 @@
   }
 }
 
-.loading-overlay {
+/* Loading overlay */
+.doc-action-loading {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  background: rgba(27, 31, 35, 0.6);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   z-index: 1200;
-  color: white;
-  font-size: 18px;
+  color: #fff;
+  font-size: 14px;
 }
 
-.loading-overlay .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
+.doc-action-spinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 16px;
+  border-top-color: #fff;
+  animation: doc-action-spin 0.8s linear infinite;
+  margin-bottom: 12px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes doc-action-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.action-button.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* Responsive */
+@media (max-width: 768px) {
+  .doc-action-root {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-.action-button.disabled:hover {
-  transform: none;
-  box-shadow: none;
+  .doc-action-container {
+    width: 100%;
+  }
+
+  .doc-action-label {
+    display: none;
+  }
+
+  .doc-action-btn {
+    padding: 6px 10px;
+  }
+
+  .doc-action-icon {
+    font-size: 16px;
+  }
 }

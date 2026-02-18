@@ -2,7 +2,7 @@
 'use client'
 import React, { createContext, useState, ReactNode } from 'react';
 import { FileNode, ViewLevel } from '@/components/FileExplorer';
-import { Document } from '@/types/document';
+import type { Document } from '@/types/document';
 import { Study, StudySite } from '@/types/types';
 
 // Интерфейс для предпросмотра файла перед загрузкой
@@ -17,6 +17,12 @@ export interface FilePreview {
   createdBy: string;
 }
 
+// Интерфейс для загрузки новой версии документа
+export interface NewVersionPreview {
+  file: File;
+  document: Document;
+}
+
 export interface MainContextProps {
   isModal: boolean;
   isRightFrameOpen: boolean;
@@ -29,15 +35,19 @@ export interface MainContextProps {
   currentLevel: ViewLevel | undefined;
   filePreview: FilePreview | null;
   isPreviewOpen: boolean;
+  newVersionPreview: NewVersionPreview | null;
+  isNewVersionPanelOpen: boolean;
 }
 
 interface MainContextType {
   context: MainContextProps;
   updateContext: (newContext: Partial<MainContextProps>) => void;
   resetContext: () => void;
-  // Новые методы для работы с предпросмотром
+  // Методы для предпросмотра
   setFilePreview: (preview: FilePreview | null) => void;
   clearFilePreview: () => void;
+  setNewVersionPreview: (preview: NewVersionPreview | null) => void;
+  clearNewVersionPreview: () => void;
 }
 
 const defaultContext: MainContextProps = {
@@ -51,7 +61,9 @@ const defaultContext: MainContextProps = {
   selectedDocument: null,
   currentLevel: undefined,
   filePreview: null,
-  isPreviewOpen: false
+  isPreviewOpen: false,
+  newVersionPreview: null,
+  isNewVersionPanelOpen: false
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -83,13 +95,31 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
+  const setNewVersionPreview = (preview: NewVersionPreview | null) => {
+    setContext(prev => ({
+      ...prev,
+      newVersionPreview: preview,
+      isNewVersionPanelOpen: !!preview
+    }));
+  };
+
+  const clearNewVersionPreview = () => {
+    setContext(prev => ({
+      ...prev,
+      newVersionPreview: null,
+      isNewVersionPanelOpen: false
+    }));
+  };
+
   return (
     <MainContext.Provider value={{ 
       context, 
       updateContext, 
       resetContext,
       setFilePreview,
-      clearFilePreview
+      clearFilePreview,
+      setNewVersionPreview,
+      clearNewVersionPreview
     }}>
       {children}
     </MainContext.Provider>

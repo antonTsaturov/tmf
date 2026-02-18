@@ -1,6 +1,7 @@
 // hooks/useDocumentUpload.ts
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { getDocumentVersionS3Key } from '@/lib/s3-path';
 
 interface UploadOptions {
   studyId: number | string; // Изменено с Study на number/string
@@ -51,8 +52,15 @@ export const useDocumentUpload = () => {
 
       const documentName = options.customFileName ? options.customFileName : '';
 
-      // Создаем путь в S3
-      const s3Key = `documents/${options.studyId}/site-${options.siteId}/${documentId}/v1/${versionId}.${fileExtension}`;
+      // S3: documents/{study_id}/{folder_id}/{document_id}/v{number}/{version_id}.{ext}
+      const s3Key = getDocumentVersionS3Key(
+        options.studyId,
+        options.folderId,
+        documentId,
+        1,
+        versionId,
+        fileExtension
+      );
 
       // Создаем FormData для отправки
       const formData = new FormData();
