@@ -1,10 +1,10 @@
 export enum DocumentAction {
   CREATE_DOCUMENT = 'create_document',
   SUBMIT_FOR_REVIEW = 'submit_for_review',
-  CANCEL_REVIEW = 'cancel_review',
+  // CANCEL_REVIEW = 'cancel_review',
   APPROVE = 'approve',
   REJECT = 'reject',
-  RETURN_TO_DRAFT = 'return_to_draft',
+  // RETURN_TO_DRAFT = 'return_to_draft',
   ARCHIVE = 'archive',
   UNARCHIVE = 'unarchive',
   SOFT_DELETE = 'soft_delete',
@@ -25,18 +25,30 @@ export enum DocumentStatus {
 export type DocumentType = 'pdf';
 
 export interface Document {
-  id: string; // UUID
-  study_id: number;
-  site_id: number | string;
-  folder_id: string;
+  // id: string; // UUID
+  // study_id: number;
+  // site_id: number | string;
+  // folder_id: string;
   folder_name: string;
   tmf_zone: string | null;
   tmf_artifact: string | null;
   status: DocumentStatus;
-  current_version_id: string; // UUID
+  // current_version_id: string; // UUID
   created_by: string; // UUID
   created_at: string;
   is_deleted: boolean;
+
+  id: string;
+  document_number: number;
+  document_name: string;
+  file_name: string;
+  file_path: string;
+  file_type: string;
+  file_size: number | string;
+  checksum: string;
+  uploaded_by: string;
+  uploaded_at: string;
+  change_reason: string;  
 }
 
 export interface DocumentVersion {
@@ -54,8 +66,9 @@ export interface DocumentVersion {
   change_reason: string;
 }
 
-const transitions: Record<DocumentStatus, DocumentAction[]> = {
+export const Transitions: Record<DocumentStatus, DocumentAction[]> = {
   draft: [
+    DocumentAction.CREATE_DOCUMENT,
     DocumentAction.SUBMIT_FOR_REVIEW,
     DocumentAction.SOFT_DELETE,
     DocumentAction.UPLOAD_NEW_VERSION
@@ -63,7 +76,7 @@ const transitions: Record<DocumentStatus, DocumentAction[]> = {
   in_review: [
     DocumentAction.APPROVE,
     DocumentAction.REJECT,
-    DocumentAction.CANCEL_REVIEW
+    // DocumentAction.CANCEL_REVIEW
   ],
   approved: [
     DocumentAction.ARCHIVE
@@ -72,6 +85,7 @@ const transitions: Record<DocumentStatus, DocumentAction[]> = {
     DocumentAction.UNARCHIVE
   ],
   deleted: [
+
     DocumentAction.RESTORE
   ]
 }

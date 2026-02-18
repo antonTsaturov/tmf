@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuditService } from './audit.service';
 import { AuditAction, AuditEntity, AuditStatus } from '@/types/types';
 
-interface AuditConfig {
+export interface AuditConfig {
   action: AuditAction;
   entityType: AuditEntity;
   getEntityId?: (req: NextRequest, body?: any) => number;
@@ -80,12 +80,18 @@ export function withAudit(config: AuditConfig) {
           newValue = requestBody;
         }
 
+        // Приводим все поля к правильным типам
         await AuditService.log({
-          ...user,
+          // Преобразуем user поля в строки где нужно
+          user_id: user.user_id?.toString() || '',
+          user_email: user.user_email || '',
+          user_role: user.user_role || [],
+          
           ...metadata,
+          
           action: config.action,
           entity_type: config.entityType,
-          entity_id: entityId,
+          entity_id: entityId.toString(), // Преобразуем number в string
           old_value: oldValue,
           new_value: newValue,
           status: 'SUCCESS',
@@ -106,11 +112,16 @@ export function withAudit(config: AuditConfig) {
         errorMessage = responseData.error || 'Request failed';
         
         await AuditService.log({
-          ...user,
+          // Преобразуем user поля в строки где нужно
+          user_id: user.user_id?.toString() || '',
+          user_email: user.user_email || '',
+          user_role: user.user_role || [],
+          
           ...metadata,
+          
           action: config.action,
           entity_type: config.entityType,
-          entity_id: entityId,
+          entity_id: entityId.toString(), // Преобразуем number в string
           old_value: oldValue,
           new_value: null,
           status: 'FAILURE',
@@ -126,11 +137,16 @@ export function withAudit(config: AuditConfig) {
       errorMessage = error.message || 'Internal server error';
       
       await AuditService.log({
-        ...user,
+        // Преобразуем user поля в строки где нужно
+        user_id: user.user_id?.toString() || '',
+        user_email: user.user_email || '',
+        user_role: user.user_role || [],
+        
         ...metadata,
+        
         action: config.action,
         entity_type: config.entityType,
-        entity_id: entityId,
+        entity_id: entityId.toString(), // Преобразуем number в string
         old_value: oldValue,
         new_value: null,
         status: 'FAILURE',

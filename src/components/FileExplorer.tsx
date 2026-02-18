@@ -6,6 +6,7 @@ import { AdminContext } from '@/wrappers/AdminContext';
 import { Study } from '@/types/types';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 import { MainContext } from '@/wrappers/MainContext';
+import { log } from 'console';
 
 export enum ViewLevel {
   SITE = 'site',
@@ -39,7 +40,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, currentLevel, selectedFolder } = context;
+  const { currentStudy, currentSite, currentLevel, selectedFolder, selectedDocument } = context;
 
   const [data, setData] = useState<FileNode[] | undefined>();
   const [filteredData, setFilteredData] = useState<FileNode[] | undefined>();
@@ -123,11 +124,12 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     } else {
       setSelectedNodes(new Set());
     }
-  }, [selectedFolder]);
+    updateContext({ selectedDocument: null });
+  }, [selectedFolder]);  
 
   // Сбрасываем выбранную папку при смене исследования, сайта или уровня
   useEffect(() => {
-    if (context.selectedFolder) {
+    if (selectedFolder) {
       updateContext({ selectedFolder: null });
       setSelectedNodes(new Set());
     }

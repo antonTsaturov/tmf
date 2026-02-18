@@ -666,14 +666,14 @@
   min-width: 85px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+  /* box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15); */
 }
 
-.action-button:hover {
+/* .action-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
-
+ */
 .action-button:active {
   transform: translateY(0);
 }

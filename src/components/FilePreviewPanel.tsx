@@ -5,9 +5,17 @@ import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { FiX, FiUpload, FiEdit2 } from 'react-icons/fi';
 import '../styles/FilePreviewPanel.css';
 
-const FilePreviewPanel: React.FC = () => {
+interface FilePreviewPanelProps {
+  onUploadSuccess?: () => void;
+  onUploadError?: (error: string) => void;
+}
+
+const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({ 
+  onUploadSuccess, 
+  onUploadError 
+}) => {
   const { context, clearFilePreview, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, currentLevel, selectedFolder } = context;
+  const { currentStudy, currentSite } = context;
 
   const { uploadFile, isUploading } = useDocumentUpload();
   const [isEditing, setIsEditing] = useState(false);
@@ -40,40 +48,12 @@ const FilePreviewPanel: React.FC = () => {
     }
   };
 
-  // const handleUpload = async () => {
-  //   try {
-  //     const result = await uploadFile(preview.file, {
-  //       studyId: preview.studyId,
-  //       siteId: preview.siteId,
-  //       folderId: preview.folderId,
-  //       folderName: preview.folderName,
-  //       createdBy: preview.createdBy,
-  //       tmfZone: null,
-  //       tmfArtifact: null
-  //     });
-
-  //     if (result.success && result.document) {
-  //       // Очищаем превью
-  //       clearFilePreview();
-        
-  //       // Обновляем выбранный документ
-  //       updateContext({ selectedDocument: result.document });
-        
-  //       // Можно показать уведомление об успехе
-  //       alert('Документ успешно загружен');
-  //     } else {
-  //       alert(`Ошибка при загрузке: ${result.error}`);
-  //     }
-  //   } catch (error) {
-  //     alert(`Ошибка при загрузке: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
-  //   }
-  // };
-
   const handleUpload = async () => {
     try {
-
       if (!currentStudy?.id || !currentSite?.id) {
-        alert('Ошибка: не указаны исследование или центр');
+        const errorMsg = 'Ошибка: не указаны исследование или центр';
+        alert(errorMsg);
+        onUploadError?.(errorMsg);
         return;
       }
 
@@ -91,12 +71,20 @@ const FilePreviewPanel: React.FC = () => {
       if (result.success && result.document) {
         clearFilePreview();
         updateContext({ selectedDocument: result.document });
+        
+        // Оповещаем родительский компонент об успешной загрузке
+        onUploadSuccess?.();
+        
         alert('Документ успешно загружен');
       } else {
-        alert(`Ошибка при загрузке: ${result.error}`);
+        const errorMsg = result.error || 'Неизвестная ошибка при загрузке';
+        alert(`Ошибка при загрузке: ${errorMsg}`);
+        onUploadError?.(errorMsg);
       }
     } catch (error) {
-      alert(`Ошибка при загрузке: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`);
+      const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      alert(`Ошибка при загрузке: ${errorMsg}`);
+      onUploadError?.(errorMsg);
     }
   };  
 
@@ -118,11 +106,8 @@ const FilePreviewPanel: React.FC = () => {
 
   // Вспомогательные функции для безопасного отображения значений
   const getSiteDisplay = (): string => {
-    // if (preview.siteId) {
-    //   return String(preview.siteId);
-    // }
     if (currentSite?.name) {
-      return currentSite.name ;
+      return currentSite.name;
     }
     return 'Не указан';
   };
@@ -156,7 +141,7 @@ const FilePreviewPanel: React.FC = () => {
           {/* Информация о файле */}
           <div className="file-info">
             <div className="info-row">
-              <span className="info-label">Исходное имя:</span>
+              <span className="info-label">Имя файла:</span>
               <span className="info-value">{preview.file.name}</span>
             </div>
             

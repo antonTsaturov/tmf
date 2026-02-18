@@ -1,11 +1,11 @@
 import React, { useState, useCallback, FC, KeyboardEvent, ChangeEvent, useEffect, useContext } from 'react';
-import '../styles/ProjectBuilder.css';
+import '../styles/FoldersStructureManager.css';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomSelect } from './Select'
 import { AdminContext } from '@/wrappers/AdminContext';
 import { FolderType, FolderStatus, FolderViewLevel, Folder } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
-import { StructurePreview } from './Preview';
+import { StructurePreview } from './StructurePreview';
 import { IoIosArrowDroprightCircle, IoIosArrowDropdownCircle } from "react-icons/io";
 
 export interface FolderPosition {

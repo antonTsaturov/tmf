@@ -1,7 +1,6 @@
 // hooks/useDocumentUpload.ts
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { Study, StudySite } from '@/types/types';
 
 interface UploadOptions {
   studyId: number | string; // Изменено с Study на number/string
@@ -24,10 +23,8 @@ export const useDocumentUpload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const uploadFile = async (
-    file: File,
-    options: UploadOptions
-  ): Promise<UploadResult> => {
+  const uploadFile = async (file: File, options: UploadOptions): Promise<UploadResult> => {
+
     setIsUploading(true);
     setProgress(0);
 
@@ -52,6 +49,8 @@ export const useDocumentUpload = () => {
         ? `${options.customFileName}.${fileExtension}`
         : file.name;
 
+      const documentName = options.customFileName ? options.customFileName : '';
+
       // Создаем путь в S3
       const s3Key = `documents/${options.studyId}/site-${options.siteId}/${documentId}/v1/${versionId}.${fileExtension}`;
 
@@ -67,6 +66,7 @@ export const useDocumentUpload = () => {
       formData.append('folderName', options.folderName);
       formData.append('createdBy', options.createdBy);
       formData.append('fileName', fileName);
+      formData.append('documentName', documentName);
       formData.append('fileSize', String(file.size));
       formData.append('fileType', file.type);
       

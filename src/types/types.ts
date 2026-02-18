@@ -42,6 +42,32 @@ export enum SiteStatus {
   CLOSED = 'closed',
 }
 
+export interface AuditFilters {
+  startDate?: string;
+  endDate?: string;
+  userId?: string;
+  userEmail?: string;
+  action?: AuditAction;
+  entityType?: AuditEntity;
+  entityId?: string;
+  status?: AuditStatus;
+  siteId?: string;
+  studyId?: string;
+  search?: string;
+}
+
+export interface AuditPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface AuditResponse {
+  logs: AuditLogEntry[];
+  pagination: AuditPagination;
+}
+
 export type AuditAction = 
   | 'CREATE'
   | 'READ'
@@ -55,7 +81,7 @@ export type AuditAction =
   | 'REJECT'
   | 'SUBMIT';
 
-export type AuditEntity = 'document' | 'user' | 'site' | 'study' | 'audit' ;
+export type AuditEntity = 'document' | 'document_version' | 'user' | 'site' | 'study' | 'audit' ;
 
 export type AuditStatus = 'SUCCESS' | 'FAILURE';
 

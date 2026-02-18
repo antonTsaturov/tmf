@@ -15,7 +15,7 @@
 }
 
 .right-frame {
-  width: 450px;
+  width: 470px;
   height: 100%;
   background: #f7fafd;
   border-left: 1px solid #c3c8d0;
@@ -141,7 +141,7 @@
 }
 
 .main-content-path {
-  min-height: 40px;
+  /* min-height: 40px; */
   border: 2px dashed #ccc;
   border-radius: 8px;
   margin-bottom: 16px;

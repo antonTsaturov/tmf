@@ -1,72 +1,3 @@
-// import { Metadata } from "next";
-
-// enum StudyStatus {
-//   PLANNED = 'planned',
-//   ONGOING = 'ongoing',
-//   COMPLETED = 'completed',
-//   TERMINATED = 'terminated',
-//   ARCHIVED = 'archived'
-// }
-
-// export enum UserRoles {
-//     ADMIN = 'admin',
-//     COORDINATOR = 'coordinator',
-//     INVESTIGATOR = 'investigator',
-//     MONITOR = 'monitor',
-//     DATA_MANAGER = 'data_manager',
-//     AUDITOR = 'auditor',
-//     PROJECT_MANAGER = 'project_manager'
-// }
-
-// export enum FileAction {
-//     UPLOADED = 'uploaded',
-//     APPROVED = 'approved',
-//     DISAPPROVED = 'disapproved',
-//     UPDATED = 'updated',
-//     DELETED = 'deleted',
-//     ARCHIVED = 'archived',
-//     RESTORED = 'restored'
-// }
-
-// interface AuditTrail {
-//     id: number;
-//     action: FileAction;
-//     performedBy: string;
-//     timestamp: string;
-//     details: string;
-// }
-
-// export interface StudyDocument {
-//     id: number;
-//     name: string;
-//     type: string;
-//     url: string;
-//     status: 'active' | 'archived' | 'deleted';
-//     metadata: Metadata[];
-//     language: string;
-//     auditTrail: AuditTrail[];
-// }
-
-// export interface StudyUsers {
-//   id: number;
-//   name: string;
-//   role: UserRoles;
-//   email: string;
-// }
-
-// interface Study {
-//   id: number;
-//   title: string;
-//   protocol: string;
-//   sponsor: string;
-//   cro: string;
-//   countries: string[];
-//   status: StudyStatus;
-//   documents: StudyDocument[] | null;
-//   users: StudyUsers[] | null;
-//   auditTrail: AuditTrail[];
-// }
-
 import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
 import '../styles/StudyManager.css';
 import { Study, StudyStatus } from '@/types/types';
@@ -74,17 +5,7 @@ import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
 import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
-import { useModal } from '@/hooks/useModal';
 import { MainContext } from '@/wrappers/MainContext';
-
-// Enum для статусов исследования
-// export enum StudyStatus {
-//   PLANNED = 'planned',
-//   ONGOING = 'ongoing',
-//   COMPLETED = 'completed',
-//   TERMINATED = 'terminated',
-//   ARCHIVED = 'archived'
-// }
 
 
 // Пропсы компонентов

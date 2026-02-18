@@ -1,12 +1,6 @@
 import { MainContext } from '@/wrappers/MainContext';
 import { useState, useCallback, useContext } from 'react';
 
-/**
- * Custom hook to control Modal open/close state and handlers.
- * Usage:
- *   const { isOpen, openModal, closeModal, modalProps } = useModal();
- *   <Modal {...modalProps}>...</Modal>
- */
 export function useModal() {
 
     const context = useContext(MainContext);

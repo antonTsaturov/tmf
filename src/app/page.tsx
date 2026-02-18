@@ -16,7 +16,9 @@ import StudySiteNavigation from '@/components/Navigation';
 import { AdminContext } from '@/wrappers/AdminContext';
 import FolderContentViewer from '@/components/FolderContentViewer';
 import DocumentActions from '@/components/DocumentActions';
-
+import AuditTrailViewer from '@/components/AuditTrailViewer';
+import PDFViewer from '@/components/PDFViewer';
+import { MainContext } from '@/wrappers/MainContext';
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -26,10 +28,10 @@ interface MainWindowProps {
 
 const Home: React.FC<MainWindowProps> = () => {
 
-  const [showRightFrame, setShowRightFrame] = useState<boolean>(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { isOpen, openModal, closeModal, modalProps } = useModal();
-  const [foldersStructure, setFoldersStructure] = useState(undefined)
+  const { context, updateContext } = useContext(MainContext)!;
+  const { selectedDocument, isRightFrameOpen } = context;
 
   return (
     <div className="sidebarresizable-root">
@@ -49,6 +51,10 @@ const Home: React.FC<MainWindowProps> = () => {
             <Tabs.Trigger value="tab4">
                 Users Management
             </Tabs.Trigger>
+            <Tabs.Trigger value="tab5">
+                Audit Trail
+            </Tabs.Trigger>
+
           </Tabs.List>
           <Box pt="5">
               <Tabs.Content value="tab1">
@@ -63,7 +69,9 @@ const Home: React.FC<MainWindowProps> = () => {
               <Tabs.Content  value="tab4">
                   <UserManager />
               </Tabs.Content>
-
+              <Tabs.Content  value="tab5">
+                  <AuditTrailViewer />
+              </Tabs.Content>
             
           </Box>
         </Tabs.Root>
@@ -73,12 +81,6 @@ const Home: React.FC<MainWindowProps> = () => {
         <StudySiteNavigation /> 
         <div className="toolbar-title"></div>
         <UserMenu />
-        <Button color="gray"
-          //className="toolbar-toggle-frame-btn"
-          onClick={() => setShowRightFrame((v) => !v)}
-        >
-          {showRightFrame ? 'Hide Frame' : 'Show Frame'}
-        </Button>
       </header>
       <div className="sidebar-layout">
         <div
@@ -99,7 +101,7 @@ const Home: React.FC<MainWindowProps> = () => {
         <div className="main-content">
           <div className="main-content-path">
             <DocumentActions
-              onAction={() => console.log('Hello)')}
+              onAction={() => console.log()}
             />
 
           </div>
@@ -107,10 +109,19 @@ const Home: React.FC<MainWindowProps> = () => {
             <FolderContentViewer />
           </div>
         </div>
-        {showRightFrame && (
+        {isRightFrameOpen && (
           <div className="right-frame">
             <div className="right-frame-content">
-              <h2>Right Frame</h2>
+              {selectedDocument ? (
+                <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
+              ) : (
+                <div className="right-frame-placeholder">
+                  <div className="placeholder-icon">📄</div>
+                  <div className="placeholder-text">
+                    Выберите документ для просмотра
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -5,8 +5,6 @@ import { FileNode, ViewLevel } from '@/components/FileExplorer';
 import { Document } from '@/types/document';
 import { Study, StudySite } from '@/types/types';
 
-//type ViewLevel = 'site' | 'general';
-
 // Интерфейс для предпросмотра файла перед загрузкой
 export interface FilePreview {
   file: File;
@@ -21,13 +19,14 @@ export interface FilePreview {
 
 export interface MainContextProps {
   isModal: boolean;
+  isRightFrameOpen: boolean;
+  docWasDeleted: boolean;
   currentStudy: Study | undefined;
   currentCountry: string | undefined;
   currentSite: StudySite | undefined;
   selectedFolder: FileNode | null;
   selectedDocument: Document | null;
   currentLevel: ViewLevel | undefined;
-  // Новые поля для предпросмотра файла
   filePreview: FilePreview | null;
   isPreviewOpen: boolean;
 }
@@ -43,6 +42,8 @@ interface MainContextType {
 
 const defaultContext: MainContextProps = {
   isModal: false,
+  isRightFrameOpen: false,
+  docWasDeleted: false,
   currentStudy: undefined,
   currentCountry: undefined,
   currentSite: undefined,

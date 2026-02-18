@@ -5,7 +5,7 @@ import { AdminContext } from '@/wrappers/AdminContext';
 import { CustomSelect } from './Select';
 import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
-import { StructurePreview } from './Preview';
+import { StructurePreview } from './StructurePreview';
 import { useEntityState } from '@/hooks/useEntityState';
 import { RoleSelector, SelectorValue, SiteSelector, StudySelector } from './PseudoSelector';
 import { deleteRecord } from '@/lib/api/fetch';

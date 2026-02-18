@@ -1,5 +1,5 @@
 import { FC, useState, ChangeEvent } from "react";
-import '../styles/SiteManager.css';
+//import '../styles/SiteManager.css';
 import '../styles/PresudoSelector.css';
 import { UserRole, StudySite, SiteStatus, Study, StudyUser } from "@/types/types";
 

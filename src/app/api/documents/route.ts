@@ -4,11 +4,155 @@ import { connectDB, createTable } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { v4 as uuidv4 } from 'uuid';
 
+// export async function GET(request: NextRequest) {
+//   const searchParams = request.nextUrl.searchParams;
+//   const study_id = searchParams.get('study_id');
+//   const site_id = searchParams.get('site_id');
+//   const folder_id = searchParams.get('folder_id');
+  
+//   // Валидация обязательных параметров
+//   if (!study_id) {
+//     return NextResponse.json(
+//       { error: 'study_id is required' },
+//       { status: 400 }
+//     );
+//   }
+
+//   if (!site_id) {
+//     return NextResponse.json(
+//       { error: 'site_id is required' },
+//       { status: 400 }
+//     );
+//   }
+
+//   if (!folder_id) {
+//     return NextResponse.json(
+//       { error: 'folder_id is required' },
+//       { status: 400 }
+//     );
+//   }
+
+//   const client = await connectDB();
+  
+//   try {
+//     // Проверяем и создаем таблицы если их нет
+//     await ensureTablesExist();
+
+//     // Получаем документы с их последними версиями
+//     const { rows: documents } = await client.query(`
+//       WITH latest_versions AS (
+//         SELECT DISTINCT ON (dv.document_id)
+//           dv.document_id,
+//           dv.id as version_id,
+//           dv.document_number,
+//           dv.document_name,
+//           dv.file_name,
+//           dv.file_path,
+//           dv.file_type,
+//           dv.file_size,
+//           dv.checksum,
+//           dv.uploaded_by,
+//           dv.uploaded_at,
+//           dv.change_reason
+//         FROM document_version dv
+//         ORDER BY dv.document_id, dv.document_number DESC
+//       )
+//       SELECT 
+//         d.*,
+//         lv.version_id,
+//         lv.document_number,
+//         lv.document_name,
+//         lv.file_name,
+//         lv.file_path,
+//         lv.file_type,
+//         lv.file_size,
+//         lv.checksum,
+//         lv.uploaded_by as last_uploaded_by,
+//         lv.uploaded_at as last_uploaded_at,
+//         lv.change_reason as last_change_reason,
+//         CASE 
+//           WHEN lv.document_id IS NOT NULL THEN json_build_object(
+//             'id', lv.version_id,
+//             'document_number', lv.document_number,
+//             'document_name', lv.document_name,
+//             'file_name', lv.file_name,
+//             'file_path', lv.file_path,
+//             'file_type', lv.file_type,
+//             'file_size', lv.file_size,
+//             'checksum', lv.checksum,
+//             'uploaded_by', lv.uploaded_by,
+//             'uploaded_at', lv.uploaded_at,
+//             'change_reason', lv.change_reason
+//           )
+//           ELSE NULL
+//         END as latest_version
+//       FROM document d
+//       LEFT JOIN latest_versions lv ON d.id = lv.document_id
+//       WHERE 
+//         d.study_id = $1 AND
+//         d.site_id = $2 AND
+//         d.folder_id = $3 AND
+//         d.is_deleted = false
+//       ORDER BY d.created_at DESC
+//     `, [parseInt(study_id), parseInt(site_id), folder_id]);
+
+//     // Получаем все версии для каждого документа
+//     const documentsWithVersions = await Promise.all(
+//       documents.map(async (doc) => {
+//         const { rows: versions } = await client.query(`
+//           SELECT 
+//             id,
+//             document_number,
+//             document_name,
+//             file_name,
+//             file_path,
+//             file_type,
+//             file_size,
+//             checksum,
+//             uploaded_by,
+//             uploaded_at,
+//             change_reason
+//           FROM document_version
+//           WHERE document_id = $1
+//           ORDER BY document_number DESC
+//         `, [doc.id]);
+
+//         return {
+//           ...doc,
+//           versions: versions,
+//           total_versions: versions.length
+//         };
+//       })
+//     );
+
+//     return NextResponse.json({
+//       documents: documentsWithVersions,
+//       count: documentsWithVersions.length,
+//       filters: {
+//         study_id: parseInt(study_id),
+//         site_id: parseInt(site_id),
+//         folder_id
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error('Error fetching documents:', error);
+//     return NextResponse.json(
+//       { error: 'Internal server error' },
+//       { status: 500 }
+//     );
+//   } finally {
+//     client.release();
+//   }
+// }
+
+// app/api/documents/route.ts (фрагмент с обновленным GET запросом)
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const study_id = searchParams.get('study_id');
   const site_id = searchParams.get('site_id');
   const folder_id = searchParams.get('folder_id');
+  const include_deleted = searchParams.get('include_deleted') === 'true';
   
   // Валидация обязательных параметров
   if (!study_id) {
@@ -38,7 +182,7 @@ export async function GET(request: NextRequest) {
     // Проверяем и создаем таблицы если их нет
     await ensureTablesExist();
 
-    // Получаем документы с их последними версиями
+    // Добавляем поле deleted_at в запрос
     const { rows: documents } = await client.query(`
       WITH latest_versions AS (
         SELECT DISTINCT ON (dv.document_id)
@@ -92,7 +236,7 @@ export async function GET(request: NextRequest) {
         d.study_id = $1 AND
         d.site_id = $2 AND
         d.folder_id = $3 AND
-        d.is_deleted = false
+        (${include_deleted ? 'TRUE' : 'd.is_deleted = false'})
       ORDER BY d.created_at DESC
     `, [parseInt(study_id), parseInt(site_id), folder_id]);
 
@@ -120,7 +264,9 @@ export async function GET(request: NextRequest) {
         return {
           ...doc,
           versions: versions,
-          total_versions: versions.length
+          total_versions: versions.length,
+          is_deleted: doc.is_deleted || false,
+          deleted_at: doc.deleted_at || null
         };
       })
     );
@@ -131,7 +277,8 @@ export async function GET(request: NextRequest) {
       filters: {
         study_id: parseInt(study_id),
         site_id: parseInt(site_id),
-        folder_id
+        folder_id,
+        include_deleted
       }
     });
 
