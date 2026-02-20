@@ -29,6 +29,7 @@ interface DocumentActionsProps {
   className?: string;
   onDocumentDeleted?: () => void; // Колбэк для обновления списка после удаления
   onDocumentRestored?: () => void; // Колбэк для обновления списка после восстановления
+  onSubmitReview?: () => void; // Колбэк отправки на ревью
 }
 
 // Маппинг действий на иконки и текст
@@ -94,21 +95,23 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   onAction, 
   className = '',
   onDocumentDeleted,
-  onDocumentRestored
+  onDocumentRestored,
+  onSubmitReview
 }) => {
   const mainContext = useContext(MainContext);
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
   const { context, updateContext, setFilePreview, setNewVersionPreview } = mainContext;
+  const { selectedFolder, selectedDocument, currentStudy, currentSite, currentLevel} = context;
+
   const { user } = useAuth();
-  const { isUploading, progress } = useDocumentUpload();
+  //const { isUploading, progress } = useDocumentUpload();
   const { deleteDocument, restoreDocument, isDeleting, isRestoring, error } = useDocumentDelete();
   const {getAllCachedPDFs} = usePDFCache();
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
-  // Получаем выбранную папку и выбранный документ из контекста
-  const { selectedFolder, selectedDocument, currentStudy, currentSite, currentLevel} = context;
+  
 
   // Автоматически скрываем уведомление через 3 секунды
   useEffect(() => {
@@ -304,10 +307,13 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     if (action === DocumentAction.VIEW) {
       // PDFViewer сам отреагирует на selectedDocument
       updateContext({ isRightFrameOpen: true});
-      const chache = await getAllCachedPDFs();
-      console.log('chache: ', chache);
-      
     }
+
+    if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
+      //onSubmitReview?.();
+      updateContext({ isSubmittingToReview: true});
+      return;
+    }    
 
     onAction(action);
   };

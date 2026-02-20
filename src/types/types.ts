@@ -1,4 +1,3 @@
-// Enum для статусов исследования
 export enum StudyStatus {
   PLANNED = 'planned',
   ONGOING = 'ongoing',

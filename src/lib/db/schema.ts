@@ -131,7 +131,12 @@ export const DocumentVersionTable = `
 
     change_reason TEXT,
 
-    UNIQUE(document_id, document_number)
+    UNIQUE(document_id, document_number),
+    review_status TEXT,
+    review_submitted_at TIMESTAMPTZ,
+    reviewed_by TEXT,
+    reviewed_at TIMESTAMPTZ,
+    review_comment TEXT
   );
 `;
 

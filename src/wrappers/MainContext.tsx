@@ -37,6 +37,7 @@ export interface MainContextProps {
   isPreviewOpen: boolean;
   newVersionPreview: NewVersionPreview | null;
   isNewVersionPanelOpen: boolean;
+  isSubmittingToReview: boolean;
 }
 
 interface MainContextType {
@@ -63,7 +64,8 @@ const defaultContext: MainContextProps = {
   filePreview: null,
   isPreviewOpen: false,
   newVersionPreview: null,
-  isNewVersionPanelOpen: false
+  isNewVersionPanelOpen: false,
+  isSubmittingToReview: false
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -119,7 +121,8 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
       setFilePreview,
       clearFilePreview,
       setNewVersionPreview,
-      clearNewVersionPreview
+      clearNewVersionPreview,
+      
     }}>
       {children}
     </MainContext.Provider>

@@ -1,7 +1,7 @@
 // components/FolderContentViewer.tsx
 import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback } from "react";
-import { Document } from "@/types/document";
+import { Document, DocumentAction } from "@/types/document";
 import FilePreviewPanel from "./FilePreviewPanel";
 import NewVersionUploadPanel from "./NewVersionUploadPanel";
 import "../styles/FolderContentViewer.css";
@@ -9,6 +9,8 @@ import DocumentStatusIndicator from "./DocumentStatusIndicator";
 import { FaRegFilePdf } from "react-icons/fa6";
 import { BsFiletypeTxt } from "react-icons/bs";
 import { FileIcon } from 'react-file-icon';
+import SubmitToReviewPanel from "./SubmitToReviewPanel";
+import { useAuth } from "@/wrappers/AuthProvider";
 
 interface FolderContentViewerProps {
   onDocumentSelect?: (document: Document) => void;
@@ -36,7 +38,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  
+
   // Ref для контейнера с документами
   const contentRef = useRef<HTMLDivElement>(null);
   const folderRef = useRef<HTMLDivElement>(null);
@@ -152,37 +154,38 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     return statusColors[status] || '#666';
   };
 
-  const getDocumentStatusDisplay = (doc: Document): { text: string; icon: string; color: string } => {
-    if (doc.is_deleted) {
-      return {
-        text: 'Удален',
-        icon: '🗑️',
-        color: '#c0392b'
-      };
-    }
+  // const getDocumentStatusDisplay = (doc: Document): { text: string; icon: string; color: string } => {
+  //   if (doc.is_deleted) {
+  //     return {
+  //       text: 'Удален',
+  //       icon: '🗑️',
+  //       color: '#c0392b'
+  //     };
+  //   }
     
-    const statusColors: Record<Document['status'], string> = {
-      'draft': '#666',
-      'in_review': '#f39c12',
-      'approved': '#27ae60',
-      'archived': '#7f8c8d',
-      'deleted': '#c0392b'
-    };
+  //   const statusColors: Record<Document['status'], string> = {
+  //     'draft': '#666',
+  //     'in_review': '#f39c12',
+  //     'approved': '#27ae60',
+  //     'archived': '#7f8c8d',
+  //     'deleted': '#c0392b'
+  //   };
     
-    const statusIcons: Record<Document['status'], string> = {
-      'draft': '📝',
-      'in_review': '👀',
-      'approved': '✅',
-      'archived': '📦',
-      'deleted': '🗑️'
-    };
+  //   const statusIcons: Record<Document['status'], string> = {
+  //     'draft': '📝',
+  //     'in_review': '👀',
+  //     'approved': '✅',
+  //     'archived': '📦',
+  //     'deleted': '🗑️'
+  //   };
     
-    return {
-      text: doc.is_deleted ? 'deleted' : doc.status,
-      icon: doc.is_deleted ? '🗑️' : statusIcons[doc.status],
-      color: doc.is_deleted ? '#c0392b' : statusColors[doc.status]
-    };
-  };
+  //   return {
+  //     text: doc.is_deleted ? 'deleted' : doc.status,
+  //     icon: doc.is_deleted ? '🗑️' : statusIcons[doc.status],
+  //     color: doc.is_deleted ? '#c0392b' : statusColors[doc.status]
+  //   };
+  // };
+
 
   // Форматирование даты
   const formatDate = (dateString: string): string => {
@@ -227,7 +230,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
 
   const documents = documentsData?.documents || [];
   const documentsCount = documentsData?.count || 0;
-  console.log(folderHeaderRef.current, docHeaderRef)
   
   return (
     <div 
@@ -337,6 +339,12 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       <NewVersionUploadPanel
         onUploadSuccess={handleUploadSuccess}
         onUploadError={handleUploadError}
+      />
+
+      {/* Панель отправки документа на ревью */}
+      <SubmitToReviewPanel
+        studyId={currentStudy?.id || 0}
+        siteId={currentSite?.id || ''}
       />
     </div>
   );

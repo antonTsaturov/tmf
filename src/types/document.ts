@@ -26,8 +26,8 @@ export type DocumentType = 'pdf';
 
 export interface Document {
   // id: string; // UUID
-  // study_id: number;
-  // site_id: number | string;
+  study_id: number;
+  site_id: number | string;
   // folder_id: string;
   folder_name: string;
   tmf_zone: string | null;
