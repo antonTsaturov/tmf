@@ -150,8 +150,8 @@ async function uploadHandler(request: NextRequest, preloadedData?: any) {
     const { rows: [newDocument] } = await client.query(`
       INSERT INTO document (
         id, study_id, site_id, folder_id, folder_name, 
-        tmf_zone, tmf_artifact, status, created_by, created_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        tmf_zone, tmf_artifact, created_by, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *
     `, [
       documentId,
@@ -161,7 +161,6 @@ async function uploadHandler(request: NextRequest, preloadedData?: any) {
       folderName,
       tmfZone || null,
       tmfArtifact || null,
-      'draft',
       createdBy,
       new Date().toISOString()
     ]);

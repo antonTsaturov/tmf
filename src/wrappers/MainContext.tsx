@@ -14,7 +14,7 @@ export interface FilePreview {
   siteId: string | number;
   folderId: string;
   folderName: string;
-  createdBy: string;
+  createdBy: string | number;
 }
 
 // Интерфейс для загрузки новой версии документа

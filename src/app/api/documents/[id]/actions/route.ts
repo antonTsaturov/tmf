@@ -13,19 +13,17 @@ interface ActionRequest {
   userId: string;
   userRole: UserRole;
   comment?: string;
+  reviewerId: string;
 }
 
-async function applyDocumentActionHandler(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+async function applyDocumentActionHandler(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const client = await connectDB();
   
   try {
     // Парсим тело запроса
     const body: ActionRequest = await request.json();
-    const { action, userId, userRole, comment } = body;
+    const { action, userId, userRole, comment, reviewerId } = body;
 
     if (!action || !userId || !userRole) {
       return NextResponse.json(
@@ -132,40 +130,90 @@ async function applyDocumentActionHandler(
     const updatedDocument = updatedDocs[0];
 
     // Если статус изменился, записываем в document_version (опционально)
-    if (newStatus !== currentStatus && 
-        [DocumentAction.SUBMIT_FOR_REVIEW, DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
+    // if (newStatus !== currentStatus && 
+    //     [DocumentAction.SUBMIT_FOR_REVIEW, DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
       
-      await client.query(`
-        UPDATE document_version 
-        SET 
-          review_status = $2,
-          review_submitted_at = NOW(),
-          reviewed_by = $3,
-          reviewed_at = NOW(),
-          review_comment = $4
-        WHERE id = $5
-      `, [
-        document.id,
-        newStatus === DocumentStatus.APPROVED ? 'approved' : 
-        newStatus === DocumentStatus.IN_REVIEW ? 'submitted' : 'rejected',
-        userId,
-        comment || null,
-        document.current_version_id
-      ]);
+    //   await client.query(`
+    //     UPDATE document_version 
+    //     SET 
+    //       review_status = $2,
+    //       review_submitted_at = NOW(),
+    //       reviewed_by = $3,
+    //       reviewed_at = NOW(),
+    //       review_comment = $4
+    //     WHERE id = $5
+    //   `, [
+    //     document.id,
+    //     newStatus === DocumentStatus.APPROVED ? 'approved' : 
+    //     newStatus === DocumentStatus.IN_REVIEW ? 'submitted' : 'rejected',
+    //     userId,
+    //     comment || null,
+    //     document.current_version_id
+    //   ]);
+    // }
+
+    // 5. Обновление расширенных данных в document_version
+    if (newStatus !== currentStatus) {
+      if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
+        // Фиксируем КТО отправил и КОГДА
+        await client.query(`
+          UPDATE document_version 
+          SET 
+            review_status = 'submitted',
+            review_submitted_at = NOW(),
+            review_submitted_by = $1,   -- Автор запроса
+            review_submitted_to = $2,   -- Кому назначено (новое поле)
+            review_comment = $3
+          WHERE id = $4
+        `, [userId, reviewerId || null, comment || null, document.current_version_id]);
+      } 
+      else if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
+        // Фиксируем КТО утвердил/отклонил и КОГДА
+        await client.query(`
+          UPDATE document_version 
+          SET 
+            review_status = $1,
+            reviewed_at = NOW(),
+            reviewed_by = $2,
+            review_comment = $3
+          WHERE id = $4
+        `, [
+          action === DocumentAction.APPROVE ? 'approved' : 'rejected',
+          userId,
+          comment || null,
+          document.current_version_id
+        ]);
+      }
     }
 
     // 5. Возвращаем результат с данными для аудита
+    // return NextResponse.json({
+    //   success: true,
+    //   document: updatedDocs,
+    //   previousStatus: currentStatus,
+    //   newStatus,
+    //   action,
+    //   _auditData: {
+    //     oldValue: { status: currentStatus },
+    //     newValue: { status: newStatus, comment },
+    //     studyId: document.study_id,
+    //     siteId: document.site_id,
+    //     entityId: document.id
+    //   }
+    // });
+
+    // 6. Возвращаем расширенный объект для аудита
     return NextResponse.json({
       success: true,
       document: updatedDocument,
-      previousStatus: currentStatus,
-      newStatus,
-      action,
       _auditData: {
         oldValue: { status: currentStatus },
-        newValue: { status: newStatus, comment },
-        studyId: document.study_id,
-        siteId: document.site_id,
+        newValue: { 
+          status: newStatus, 
+          reviewerId: reviewerId, // Логируем, кому назначено
+          fileName: document.file_name, // Логируем, какой файл
+          comment 
+        },
         entityId: document.id
       }
     });

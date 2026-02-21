@@ -1,25 +1,11 @@
-import { FC, useState, ChangeEvent } from "react";
-//import '../styles/SiteManager.css';
+import { FC, useState } from "react";
 import '../styles/PresudoSelector.css';
-import { UserRole, StudySite, SiteStatus, Study, StudyUser } from "@/types/types";
+import { UserRole, StudySite, SiteStatus, Study, StudyUser, ROLE_CONFIG } from "@/types/types";
 
 // Список доступных стран
 const COUNTRIES_LIST = [
   'Russia', 'Australia', 'China', 'India', 'Brazil', 'Mexico', 'South Korea', 'USA'
 ];
-
-// Конфигурация для ролей (красивые названия и цвета)
-const ROLE_CONFIG = {
-  [UserRole.ADMIN]: { label: 'Administrator', color: '#e64980' },
-  [UserRole.STUDY_MANAGER]: { label: 'Study Manager', color: '#228be6' },
-  [UserRole.DATA_MANAGER]: { label: 'Data Manager', color: '#20c997' },
-  [UserRole.MONITOR]: { label: 'Monitor', color: '#fd7e14' },
-  [UserRole.INVESTIGATOR]: { label: 'Investigator', color: '#be4bdb' },
-  [UserRole.COORDINATOR]: { label: 'Coordinator', color: '#15aabf' },
-  [UserRole.AUDITOR]: { label: 'Auditor', color: '#fab005' },
-  [UserRole.QUALITY_ASSURANCE]: { label: 'Quality Assurance', color: '#40c057' },
-  [UserRole.READ_ONLY]: { label: 'Read Only', color: '#868e96' },
-};
 
 // Конфигурация для статусов центров
 const SITE_STATUS_CONFIG = {

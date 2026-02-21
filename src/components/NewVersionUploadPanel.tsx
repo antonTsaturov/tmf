@@ -26,6 +26,10 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({
     }
   };
   const { user } = useAuth();
+  if (!user) {
+    console.log('User is null')
+    return;
+  }
   const { uploadNewVersion, isUploading } = useDocumentNewVersion();
   const [changeReason, setChangeReason] = useState('');
 
@@ -35,7 +39,7 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({
   if (!isOpen || !preview) return null;
 
   const { file, document } = preview;
-  const createdBy = (user as any)?.email ?? (user as any)?.id ?? '';
+  const createdBy = String(user.id);
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';

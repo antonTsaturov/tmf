@@ -89,6 +89,7 @@ export const SiteTable = `
 export const DocumentTable = `
   CREATE TABLE IF NOT EXISTS document (
     id UUID PRIMARY KEY,
+
     study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
     site_id VARCHAR REFERENCES site(id) ON DELETE SET NULL,
 
@@ -97,24 +98,25 @@ export const DocumentTable = `
     tmf_zone TEXT,
     tmf_artifact TEXT,
 
-    status TEXT NOT NULL,
+    current_version_id UUID, 
+    -- FK добавляется позже через ALTER TABLE (из-за циклической зависимости)
 
-    current_version_id UUID,
-
-    created_by UUID NOT NULL,
+    created_by UUID NOT NULL REFERENCES users(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
 
     is_deleted BOOLEAN DEFAULT FALSE,
-    deleted_at TIMESTAMPTZ DEFAULT NOW(),
-    deleted_by TEXT NOT NULL,
-    restored_by TEXT NOT NULL,
-    restored_at TIMESTAMPTZ DEFAULT NOW()
+    deleted_at TIMESTAMPTZ,
+    deleted_by UUID REFERENCES users(id),
+
+    restored_by UUID REFERENCES users(id),
+    restored_at TIMESTAMPTZ
   );
 `;
 
 export const DocumentVersionTable = `
   CREATE TABLE IF NOT EXISTS document_version (
     id UUID PRIMARY KEY,
+
     document_id UUID NOT NULL REFERENCES document(id) ON DELETE CASCADE,
     document_number INTEGER NOT NULL,
     document_name TEXT NOT NULL,
@@ -126,17 +128,24 @@ export const DocumentVersionTable = `
 
     checksum TEXT NOT NULL,
 
-    uploaded_by UUID NOT NULL,
+    uploaded_by UUID NOT NULL REFERENCES users(id),
     uploaded_at TIMESTAMPTZ DEFAULT NOW(),
 
     change_reason TEXT,
 
-    UNIQUE(document_id, document_number),
     review_status TEXT,
+
+    review_submitted_by UUID REFERENCES users(id),
     review_submitted_at TIMESTAMPTZ,
-    reviewed_by TEXT,
+
+    review_submitted_to UUID REFERENCES users(id),
+
+    reviewed_by UUID REFERENCES users(id),
     reviewed_at TIMESTAMPTZ,
-    review_comment TEXT
+
+    review_comment TEXT,
+
+    UNIQUE(document_id, document_number)
   );
 `;
 
@@ -326,4 +335,8 @@ export const tableSQLMap: Record<Tables, string> = {
   [Tables.DOCUMENT_VERSION]: DocumentVersionTable,
   [Tables.USERS]: UserTable,
   [Tables.AUDIT]: AuditTrialTable
+};
+
+export const tableSQLDepend: Partial<Record<Tables, Tables[]>> = {
+  [Tables.DOCUMENT]: [Tables.DOCUMENT_VERSION],
 };

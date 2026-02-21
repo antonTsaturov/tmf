@@ -17,7 +17,6 @@ import {
 import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction, DocumentStatus } from '@/types/document';
 import '../styles/DocumentActions.css';
-import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from './FileExplorer';
@@ -197,7 +196,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         siteId: currentSite?.id!,
         folderId: selectedFolder.id,
         folderName: selectedFolder.name,
-        createdBy: user.email
+        createdBy: user.id
       });
       
       input.remove();

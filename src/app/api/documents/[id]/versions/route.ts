@@ -8,6 +8,7 @@ import { getDocumentVersionS3Key } from '@/lib/s3-path';
 import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditAction, AuditEntity } from '@/types/types';
 import { AuditConfig } from '@/lib/audit/audit.middleware';
+import { DocumentStatus } from '@/types/document';
 
 function encodeMetadata(value: string): string {
   return Buffer.from(value).toString('base64');
@@ -52,12 +53,47 @@ export async function GET(
   const client = await connectDB();
 
   try {
+    // Получаем версии с информацией о пользователях
     const { rows } = await client.query(
-      `SELECT id, document_id, document_number, document_name, file_name, file_path,
-              file_type, file_size, checksum, uploaded_by, uploaded_at, change_reason
-       FROM document_version
-       WHERE document_id = $1
-       ORDER BY document_number DESC`,
+      `SELECT 
+        dv.id, 
+        dv.document_id, 
+        dv.document_number, 
+        dv.document_name, 
+        dv.file_name, 
+        dv.file_path,
+        dv.file_type, 
+        dv.file_size, 
+        dv.checksum, 
+        dv.uploaded_by, 
+        dv.uploaded_at, 
+        dv.change_reason,
+        dv.review_status,
+        dv.review_submitted_by,
+        dv.review_submitted_at,
+        dv.review_submitted_to,
+        dv.reviewed_by,
+        dv.reviewed_at,
+        dv.review_comment,
+        -- Информация о загрузившем
+        uploader.name as uploader_name,
+        uploader.email as uploader_email,
+        -- Информация о ревьюере
+        reviewer.name as reviewer_name,
+        reviewer.email as reviewer_email,
+        -- Информация об утверждающем
+        approver.name as approver_name,
+        approver.email as approver_email,
+        -- Информация о назначенном ревьюере
+        assigned.name as assigned_name,
+        assigned.email as assigned_email
+       FROM document_version dv
+       LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
+       LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
+       LEFT JOIN users approver ON dv.reviewed_by = approver.id
+       LEFT JOIN users assigned ON dv.review_submitted_to = assigned.id
+       WHERE dv.document_id = $1
+       ORDER BY dv.document_number DESC`,
       [id]
     );
 
@@ -68,7 +104,47 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ versions: rows });
+    // Форматируем ответ с пользовательскими данными
+    const formattedVersions = rows.map(v => ({
+      id: v.id,
+      document_id: v.document_id,
+      document_number: v.document_number,
+      document_name: v.document_name,
+      file_name: v.file_name,
+      file_path: v.file_path,
+      file_type: v.file_type,
+      file_size: v.file_size,
+      checksum: v.checksum,
+      uploaded_by: v.uploaded_by,
+      uploaded_at: v.uploaded_at,
+      change_reason: v.change_reason,
+      review_status: v.review_status,
+      review_submitted_at: v.review_submitted_at,
+      reviewed_at: v.reviewed_at,
+      review_comment: v.review_comment,
+      uploader: v.uploader_name ? {
+        id: v.uploaded_by,
+        name: v.uploader_name,
+        email: v.uploader_email
+      } : null,
+      reviewer: v.reviewer_name ? {
+        id: v.review_submitted_by,
+        name: v.reviewer_name,
+        email: v.reviewer_email
+      } : null,
+      approver: v.approver_name ? {
+        id: v.reviewed_by,
+        name: v.approver_name,
+        email: v.approver_email
+      } : null,
+      assigned_reviewer: v.assigned_name ? {
+        id: v.review_submitted_to,
+        name: v.assigned_name,
+        email: v.assigned_email
+      } : null
+    }));
+
+    return NextResponse.json({ versions: formattedVersions });
   } catch (error) {
     console.error('Error fetching versions:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -90,7 +166,8 @@ async function uploadVersionHandler(
     const formData = preloadedData?.formData || (await request.formData());
     const file = formData.get('file') as File;
     const changeReason = (formData.get('changeReason') as string) || undefined;
-    const resetStatusToDraft = formData.get('resetStatusToDraft') !== 'false';
+    // При загрузке новой версии статус всегда сбрасывается в draft
+    const resetStatusToDraft = true; // Всегда сбрасываем статус при новой версии
     const uploadedBy = formData.get('uploadedBy') as string;
 
     if (!file || !uploadedBy) {
@@ -156,12 +233,14 @@ async function uploadVersionHandler(
 
     const fileUrl = `https://storage.yandexcloud.net/${process.env.YC_BUCKET_NAME}/${s3Key}`;
 
+    // Новая версия всегда создается со статусом null (не на ревью)
     const { rows: [newVersion] } = await client.query(
       `INSERT INTO document_version (
         id, document_id, document_number, document_name,
         file_name, file_path, file_type, file_size, checksum,
-        uploaded_by, change_reason, uploaded_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        uploaded_by, change_reason, uploaded_at,
+        review_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *`,
       [
         versionId,
@@ -175,24 +254,50 @@ async function uploadVersionHandler(
         checksum,
         uploadedBy,
         changeReason || `Version ${nextNumber} upload`,
-        new Date().toISOString()
+        new Date().toISOString(),
+        null // review_status = null для новой версии
       ]
     );
 
-    const statusUpdate = resetStatusToDraft ? ", status = 'draft'" : '';
+    // Обновляем current_version_id в документе
     await client.query(
-      `UPDATE document SET current_version_id = $1 ${statusUpdate}
-       WHERE id = $2`,
+      `UPDATE document SET current_version_id = $1 WHERE id = $2`,
       [versionId, id]
     );
 
-    const { rows: [updatedDoc] } = await client.query('SELECT * FROM document WHERE id = $1', [id]);
+    // Получаем обновленный документ со статусом из последней версии
+    const { rows: [updatedDoc] } = await client.query(`
+      SELECT 
+        d.*,
+        lv.review_status,
+        lv.document_number,
+        lv.document_name,
+        lv.file_name,
+        lv.file_path,
+        lv.file_type,
+        lv.file_size,
+        lv.checksum,
+        lv.uploaded_at,
+        lv.change_reason,
+        -- Определяем статус документа на основе review_status
+        CASE 
+          WHEN lv.review_status = 'approved' THEN 'approved'
+          WHEN lv.review_status = 'submitted' THEN 'in_review'
+          WHEN lv.review_status = 'rejected' THEN 'draft'
+          ELSE 'draft'
+        END as document_status
+      FROM document d
+      LEFT JOIN document_version lv ON d.current_version_id = lv.id
+      WHERE d.id = $1
+    `, [id]);
 
     return NextResponse.json(
       {
-        document: updatedDoc,
+        document: {
+          ...updatedDoc,
+          status: updatedDoc.document_status || 'draft'
+        },
         version: newVersion,
-        versions: [newVersion],
       },
       { status: 201 }
     );

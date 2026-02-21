@@ -1,16 +1,18 @@
 // components/FolderContentViewer.tsx
 import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback } from "react";
-import { Document, DocumentAction } from "@/types/document";
+import { Document } from "@/types/document";
 import FilePreviewPanel from "./FilePreviewPanel";
 import NewVersionUploadPanel from "./NewVersionUploadPanel";
 import "../styles/FolderContentViewer.css";
 import DocumentStatusIndicator from "./DocumentStatusIndicator";
-import { FaRegFilePdf } from "react-icons/fa6";
-import { BsFiletypeTxt } from "react-icons/bs";
 import { FileIcon } from 'react-file-icon';
 import SubmitToReviewPanel from "./SubmitToReviewPanel";
-import { useAuth } from "@/wrappers/AuthProvider";
+
+import { RiDraftLine } from "react-icons/ri";
+import { MdOutlinePreview } from "react-icons/md";
+import { FcApproval } from "react-icons/fc";
+import { PiArchiveDuotone } from "react-icons/pi";
 
 interface FolderContentViewerProps {
   onDocumentSelect?: (document: Document) => void;
@@ -130,18 +132,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     onDocumentPreview?.(doc);
   };
 
-  // Функция для получения иконки в зависимости от статуса документа
-  const getStatusIcon = (status: Document['status']): string => {
-    const statusIcons: Record<Document['status'], string> = {
-      'draft': '📝',
-      'in_review': '👀',
-      'approved': '✅',
-      'archived': '📦',
-      'deleted': '🗑️'
-    };
-    return statusIcons[status] || '📄';
-  };
-
   // Функция для получения цвета статуса
   const getStatusColor = (status: Document['status']): string => {
     const statusColors: Record<Document['status'], string> = {
@@ -154,37 +144,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     return statusColors[status] || '#666';
   };
 
-  // const getDocumentStatusDisplay = (doc: Document): { text: string; icon: string; color: string } => {
-  //   if (doc.is_deleted) {
-  //     return {
-  //       text: 'Удален',
-  //       icon: '🗑️',
-  //       color: '#c0392b'
-  //     };
-  //   }
-    
-  //   const statusColors: Record<Document['status'], string> = {
-  //     'draft': '#666',
-  //     'in_review': '#f39c12',
-  //     'approved': '#27ae60',
-  //     'archived': '#7f8c8d',
-  //     'deleted': '#c0392b'
-  //   };
-    
-  //   const statusIcons: Record<Document['status'], string> = {
-  //     'draft': '📝',
-  //     'in_review': '👀',
-  //     'approved': '✅',
-  //     'archived': '📦',
-  //     'deleted': '🗑️'
-  //   };
-    
-  //   return {
-  //     text: doc.is_deleted ? 'deleted' : doc.status,
-  //     icon: doc.is_deleted ? '🗑️' : statusIcons[doc.status],
-  //     color: doc.is_deleted ? '#c0392b' : statusColors[doc.status]
-  //   };
-  // };
 
 
   // Форматирование даты
@@ -307,9 +266,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                       color: doc.is_deleted ? '#c0392b' : getStatusColor(doc.status) 
                     }}
                   >
-                    <span className="status-icon">
-                      {doc.is_deleted ? '🗑️' : getStatusIcon(doc.status)}
-                    </span>
                     <span className="status-text">
                       {doc.is_deleted ? 'deleted' : doc.status}
                     </span>

@@ -1,6 +1,7 @@
 /* styles/DocumentStatusIndicator.css */
 .status-indicator {
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
 }
@@ -23,9 +24,10 @@
 }
 
 .status-label {
-  font-size: 11px;
+  font-size: 14px;
   color: #666;
-  line-height: 2;
+  font-variant-caps: all-petite-caps;
+  font-weight: 600;  
 }
 
 /* Анимация при наведении */
@@ -41,17 +43,6 @@
 }
 
 /* styles/DocumentStatusIndicator.css */
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.status-circles {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 
 .status-circle {
   border-radius: 50%;

@@ -8,7 +8,7 @@ interface UploadOptions {
   siteId: number | string;   // Изменено с StudySite на number/string
   folderId: string;
   folderName: string;
-  createdBy: string;
+  createdBy: string | number;
   tmfZone: string | null;
   tmfArtifact: string | null;
   customFileName?: string;
@@ -72,7 +72,7 @@ export const useDocumentUpload = () => {
       formData.append('siteId', String(options.siteId));   // Приводим к строке
       formData.append('folderId', options.folderId);
       formData.append('folderName', options.folderName);
-      formData.append('createdBy', options.createdBy);
+      formData.append('createdBy', String(options.createdBy));
       formData.append('fileName', fileName);
       formData.append('documentName', documentName);
       formData.append('fileSize', String(file.size));

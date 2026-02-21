@@ -171,6 +171,19 @@ export enum UserRole {
   READ_ONLY = 'read_only',
 }
 
+export const ROLE_CONFIG = {
+  [UserRole.ADMIN]: { label: 'Administrator', color: '#e64980' },
+  [UserRole.STUDY_MANAGER]: { label: 'Study Manager', color: '#228be6' },
+  [UserRole.DATA_MANAGER]: { label: 'Data Manager', color: '#20c997' },
+  [UserRole.MONITOR]: { label: 'Monitor', color: '#fd7e14' },
+  [UserRole.INVESTIGATOR]: { label: 'Investigator', color: '#be4bdb' },
+  [UserRole.COORDINATOR]: { label: 'Coordinator', color: '#15aabf' },
+  [UserRole.AUDITOR]: { label: 'Auditor', color: '#fab005' },
+  [UserRole.QUALITY_ASSURANCE]: { label: 'Quality Assurance', color: '#40c057' },
+  [UserRole.READ_ONLY]: { label: 'Read Only', color: '#868e96' },
+};
+
+
 export interface UserPermissions {
   canViewDocument: boolean;
   canUploadDocument: boolean;

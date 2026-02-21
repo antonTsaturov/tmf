@@ -3,7 +3,7 @@ import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useCo
 import '../styles/SiteManager.css'; // Можно создать отдельный стиль UserManager.css
 import { AdminContext } from '@/wrappers/AdminContext';
 import { CustomSelect } from './Select';
-import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study } from '@/types/types';
+import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study, ROLE_CONFIG as roleConfig } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
 import { useEntityState } from '@/hooks/useEntityState';
@@ -96,17 +96,17 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
 
 // Компонент бейджа роли
 const RoleBadge: FC<{ role: UserRole }> = ({ role }) => {
-  const roleConfig = {
-    [UserRole.ADMIN]: { label: 'Admin', color: '#e64980' },
-    [UserRole.STUDY_MANAGER]: { label: 'Study Manager', color: '#228be6' },
-    [UserRole.DATA_MANAGER]: { label: 'Data Manager', color: '#20c997' },
-    [UserRole.MONITOR]: { label: 'Monitor', color: '#fd7e14' },
-    [UserRole.INVESTIGATOR]: { label: 'Investigator', color: '#be4bdb' },
-    [UserRole.COORDINATOR]: { label: 'Coordinator', color: '#15aabf' },
-    [UserRole.AUDITOR]: { label: 'Auditor', color: '#fab005' },
-    [UserRole.QUALITY_ASSURANCE]: { label: 'QA', color: '#40c057' },
-    [UserRole.READ_ONLY]: { label: 'Read Only', color: '#868e96' },
-  };
+  // const roleConfig = {
+  //   [UserRole.ADMIN]: { label: 'Admin', color: '#e64980' },
+  //   [UserRole.STUDY_MANAGER]: { label: 'Study Manager', color: '#228be6' },
+  //   [UserRole.DATA_MANAGER]: { label: 'Data Manager', color: '#20c997' },
+  //   [UserRole.MONITOR]: { label: 'Monitor', color: '#fd7e14' },
+  //   [UserRole.INVESTIGATOR]: { label: 'Investigator', color: '#be4bdb' },
+  //   [UserRole.COORDINATOR]: { label: 'Coordinator', color: '#15aabf' },
+  //   [UserRole.AUDITOR]: { label: 'Auditor', color: '#fab005' },
+  //   [UserRole.QUALITY_ASSURANCE]: { label: 'QA', color: '#40c057' },
+  //   [UserRole.READ_ONLY]: { label: 'Read Only', color: '#868e96' },
+  // };
 
   const config = roleConfig[role];
 

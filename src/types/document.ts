@@ -37,6 +37,10 @@ export interface Document {
   created_by: string; // UUID
   created_at: string;
   is_deleted: boolean;
+  deleted_at: string;
+  deleted_by: string;
+  restored_by: string;
+  restored_at: string;
 
   id: string;
   document_number: number;
@@ -46,9 +50,10 @@ export interface Document {
   file_type: string;
   file_size: number | string;
   checksum: string;
-  uploaded_by: string;
-  uploaded_at: string;
-  change_reason: string;  
+  // uploaded_by: string;
+  // uploaded_at: string;
+  // change_reason: string;  
+
 }
 
 export interface DocumentVersion {
@@ -64,6 +69,13 @@ export interface DocumentVersion {
   uploaded_by: string; // UUID
   uploaded_at: string;
   change_reason: string;
+  review_status: string;
+  review_submitted_by: string;
+  review_submitted_at: string;
+  review_submitted_to: string;
+  reviewed_by: string;
+  reviewed_at: string;
+  review_comment: string;
 }
 
 export const Transitions: Record<DocumentStatus, DocumentAction[]> = {

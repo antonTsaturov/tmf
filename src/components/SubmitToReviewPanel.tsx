@@ -1,12 +1,12 @@
 // components/SubmitToReviewPanel.tsx
 import React, { useState, useEffect, useContext } from 'react';
 import { FiX, FiSend, FiUser, FiSearch } from 'react-icons/fi';
-import { Document } from '@/types/document';
-import { StudyUser, UserRole } from '@/types/types';
+import { ROLE_CONFIG, StudyUser, UserRole } from '@/types/types';
 import '../styles/SubmitToReviewPanel.css';
 import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
-import { useAuth } from '@/wrappers/AuthProvider';
+import { useAuth } from "@/wrappers/AuthProvider";
+
 
 interface SubmitToReviewPanelProps {
   studyId: number;
@@ -24,22 +24,20 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { context, updateContext } = useContext(MainContext)!;
   const { selectedDocument, isSubmittingToReview } = context;
-  const { user } = useAuth();
+  const [reviewers, setReviewers] = useState<StudyUser[]>([]);
+  const { user } = useAuth()!;
+
   const {
     isReviewModalOpen,
     documentForReview,
-    reviewers,
-    loadingReviewers,
     submitting,
-    openReviewModal,
-    closeReviewModal,
-    loadReviewers,
     submitForReview,
     resetError
   } = useDocumentToReview();
 
   const document = selectedDocument;
   const isOpen = isSubmittingToReview;
+
   // Загрузка доступных рецензентов
   useEffect(() => {
     const loadReviewers = async () => {
@@ -58,7 +56,8 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
         }
 
         const data = await response.json();
-        // setReviewers(data.users || []);
+        //console.log(data)
+        setReviewers(data.users || []);
         
         // Автоматически выбираем первого, если есть
         if (data.users?.length > 0) {
@@ -76,17 +75,22 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
   }, [isOpen, document, studyId, siteId]);
 
   const handleSubmit = async () => {
-    if (!selectedReviewer) {
+    if (!selectedReviewer || !user) {
       setError('Выберите рецензента');
       return;
     }
 
-    // setSubmitting(true);
     setError(null);
 
     try {
-      await submitForReview(selectedReviewer, comment.trim());
-      updateContext({ isSubmittingToReview: false });
+      if (selectedDocument?.id) {
+        const result = await submitForReview(selectedDocument?.id, selectedReviewer, comment.trim(), String(user?.id), String(user?.role));
+        console.log('handleSubmit result: ', result)
+        if (result) {
+          updateContext({ isSubmittingToReview: false });
+        }
+      }
+     
     } catch (err) {
       console.error('Error submitting for review:', err);
       setError('Ошибка при отправке на ревью');
@@ -102,7 +106,7 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
 
 
   if (!isOpen || !document) return null;
-
+  
   return (
     <div className="submit-review-overlay" onClick={()=> updateContext({ isSubmittingToReview: false })}>
       <div className="submit-review-modal" onClick={e => e.stopPropagation()}>
@@ -178,7 +182,26 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
                   <div className="submit-review-item-info">
                     <div className="submit-review-item-name">{reviewer.name}</div>
                     <div className="submit-review-item-email">{reviewer.email}</div>
-                    <div className="submit-review-item-role">{reviewer.role.join(', ')}</div>
+                    
+                    {/* Роли рецензента */}
+                    <div className="submit-review-item-roles">
+                      {reviewer.role.map((role: UserRole) => {
+                        const config = ROLE_CONFIG[role];
+                        return config ? (
+                          <span
+                            key={role}
+                            className="submit-review-item-role"
+                            style={{ 
+                              backgroundColor: config.color + '20', // 20% прозрачности
+                              color: config.color,
+                              borderColor: config.color + '40'
+                            }}
+                          >
+                            {config.label}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
                 </label>
               ))
