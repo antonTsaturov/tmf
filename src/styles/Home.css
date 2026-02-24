@@ -126,7 +126,7 @@
 
 .sidebar-content-area {
   flex: 1;
-  border: 2px dashed #ccc;
+  border: 2px solid #cccccc70;
   border-radius: 8px;
   background-color: #fafafa;
   overflow-y: auto;
@@ -176,7 +176,7 @@
 }
 .main-content-area {
   background-color: #fafafa;
-  border: 2px dashed #ccc;
+  border: 2px solid #cccccc70;
   border-radius: 8px;
   display: flex;
   flex: 1;
@@ -186,9 +186,10 @@
 
 .main-content-path {
   /* min-height: 40px; */
-  border: 2px dashed #ccc;
+  border: 2px solid #cccccc70;
   border-radius: 8px;
   margin-bottom: 16px;
   font-size: 0.9rem;
   color: #555;
+  background: #fafbfc;
 }

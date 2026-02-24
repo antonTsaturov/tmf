@@ -16,23 +16,20 @@ const statusOrder: DocumentStatus[] = [
   DocumentStatus.IN_REVIEW,
   DocumentStatus.APPROVED,
   DocumentStatus.ARCHIVED,
-  DocumentStatus.DELETED
 ];
 
-const statusLabels: Record<DocumentStatus, string> = {
+const statusLabels: Partial<Record<DocumentStatus, string>> = {
   [DocumentStatus.DRAFT]: 'Draft',
   [DocumentStatus.IN_REVIEW]: 'In review',
   [DocumentStatus.APPROVED]: 'Approved',
   [DocumentStatus.ARCHIVED]: 'Archived',
-  [DocumentStatus.DELETED]: 'Deleted'
 };
 
-const statusColors: Record<DocumentStatus, { active: string; inactive: string }> = {
+const statusColors: Partial<Record<DocumentStatus, { active: string; inactive: string }>> = {
   [DocumentStatus.DRAFT]: { active: '#2196F3', inactive: '#9ed5fd' }, // синий
   [DocumentStatus.IN_REVIEW]: { active: '#FF9800', inactive: '#ffd693' }, // оранжевый
   [DocumentStatus.APPROVED]: { active: '#4CAF50', inactive: '#adffb4' }, // зеленый
   [DocumentStatus.ARCHIVED]: { active: '#9E9E9E', inactive: '#aeaeae' }, // серый
-  [DocumentStatus.DELETED]: { active: '#F44336', inactive: '#ffa8b5' } // красный
 };
 
 const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
@@ -70,9 +67,12 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
         {statusOrder.map((s, index) => {
           const isActive = index <= currentIndex;
           const isCurrent = s === status;
-          const color = isActive 
-            ? statusColors[s].active 
-            : statusColors[s].inactive;
+          const colorConfig = statusColors[s];
+          if (!colorConfig) {
+            // Возвращаем дефолтный цвет или null
+            return null; // или дефолтный компонент
+          }
+          const color = isActive ? colorConfig.active : colorConfig.inactive;
 
           return (
             <div

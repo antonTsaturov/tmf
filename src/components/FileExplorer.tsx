@@ -2,11 +2,8 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import '../styles/FileExplorer.css';
-import { AdminContext } from '@/wrappers/AdminContext';
-import { Study } from '@/types/types';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 import { MainContext } from '@/wrappers/MainContext';
-import { log } from 'console';
 
 export enum ViewLevel {
   SITE = 'site',
@@ -89,6 +86,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           return filteredNode;
         })
         .filter(node => {
+          
           // Определяем, является ли папка специфичной для сайта
           // Используем более надежный способ определения
           const isSiteSpecific = 
@@ -156,8 +154,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const handleSelect = (node: FileNode, event: React.MouseEvent) => {
     event.stopPropagation();
     
-    // Разрешаем выбор только папок (root, subfolder, folder)
-    const isFolder = node.type === 'folder' || node.type === 'root' || node.type === 'subfolder';
+    // Разрешаем выбор только папок с типом subfolder и без "детей"
+    const isFolder = node.type === 'subfolder' && node.children?.length === 0 ;
     
     if (!isFolder) {
       return; // Не выбираем файлы
@@ -260,7 +258,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           style={{ paddingLeft: `${depth * 10}px` }}
           onClick={(e) => {
             if (isFolder && isAvailableForCurrentLevel()) {
-              toggleFolder(node.id);
+              if (hasChildren) {
+                toggleFolder(node.id);
+              }
+              handleSelect(node, e)
             }
           }}
           onDoubleClick={(e) => {
@@ -272,7 +273,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           {/* Стрелка для папок с содержимым */}
           {isFolder && hasChildren && (
             <span className={`toggle-icon ${isExpanded ? 'expanded' : ''}`}>
-              ▸
+              ▶
             </span>
           )}
           
@@ -300,7 +301,14 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           <span 
             className="node-name" 
             title={node.name}
-            onClick={(e) => isFolder && isAvailableForCurrentLevel() && handleSelect(node, e)}
+            onClick={(e) => {
+              if (isFolder && isAvailableForCurrentLevel()) {
+                if (hasChildren) {
+                  toggleFolder(node.id);
+                }
+                
+              }
+            }}
           >
             {node.name}
           </span>

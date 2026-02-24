@@ -26,6 +26,7 @@ export interface NewVersionPreview {
 export interface MainContextProps {
   isModal: boolean;
   isRightFrameOpen: boolean;
+  isFolderContentLoading: boolean;
   docWasDeleted: boolean;
   currentStudy: Study | undefined;
   currentCountry: string | undefined;
@@ -38,6 +39,8 @@ export interface MainContextProps {
   newVersionPreview: NewVersionPreview | null;
   isNewVersionPanelOpen: boolean;
   isSubmittingToReview: boolean;
+  isAcceptedForReview: boolean;
+  
 }
 
 interface MainContextType {
@@ -52,20 +55,23 @@ interface MainContextType {
 }
 
 const defaultContext: MainContextProps = {
-  isModal: false,
-  isRightFrameOpen: false,
+  isModal: false, // Флаг открытия админ панели
+  isRightFrameOpen: false, // Флаг состояния правой панели
+  isFolderContentLoading: false,
   docWasDeleted: false,
   currentStudy: undefined,
   currentCountry: undefined,
   currentSite: undefined,
-  selectedFolder: null,
-  selectedDocument: null,
-  currentLevel: undefined,
-  filePreview: null,
-  isPreviewOpen: false,
-  newVersionPreview: null,
-  isNewVersionPanelOpen: false,
-  isSubmittingToReview: false
+  selectedFolder: null, // ID выбрабранной пользователем папки
+  selectedDocument: null, // Объект выбрабранного пользователем документа
+  currentLevel: undefined, // Текущий уровень просмотра папок (General либо Site Level)
+  filePreview: null, // Объект нового документа
+  isPreviewOpen: false, // Флаг для открытия окна для загрузки нового документа
+  newVersionPreview: null, // Объект новой версии документа
+  isNewVersionPanelOpen: false, // Флаг для открытия окна загрузки новой ВЕРСИИ документа
+  isSubmittingToReview: false, // Флаг для открытия окна отправки документа на ревью
+  isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
+  
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);

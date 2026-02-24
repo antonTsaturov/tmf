@@ -13,10 +13,324 @@ interface ActionRequest {
   userId: string;
   userRole: UserRole;
   comment?: string;
-  reviewerId: string;
+  reviewerId?: string; // Для отправки на ревью
 }
 
-async function applyDocumentActionHandler(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+// Функция для определения статуса документа на основе review_status
+function getDocumentStatusFromReview(reviewStatus: string | null): DocumentStatus {
+  switch (reviewStatus) {
+    case 'approved':
+      return DocumentStatus.APPROVED;
+    case 'submitted':
+      return DocumentStatus.IN_REVIEW;
+    case 'rejected':
+      return DocumentStatus.DRAFT;
+    default:
+      return DocumentStatus.DRAFT;
+  }
+}
+
+// Функция для отправки документа на ревью
+// async function applyDocumentActionHandler(
+//   request: NextRequest, 
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
+//   const { id } = await params;
+//   const client = await connectDB();
+  
+//   try {
+//     // Парсим тело запроса
+//     const body: ActionRequest = await request.json();
+//     const { action, userId, userRole, comment, reviewerId } = body;
+
+//     if (!action || !userId || !userRole) {
+//       return NextResponse.json(
+//         { error: 'Missing required fields: action, userId, userRole' },
+//         { status: 400 }
+//       );
+//     }
+
+//     // 1. Получаем текущую версию документа со статусом из document_version
+//     const { rows: documents } = await client.query(`
+//       SELECT 
+//         d.*,
+//         dv.id as current_version_id,
+//         dv.document_number,
+//         dv.document_name,
+//         dv.file_name,
+//         dv.file_path,
+//         dv.file_type,
+//         dv.file_size,
+//         dv.checksum,
+//         dv.uploaded_by,
+//         dv.uploaded_at,
+//         dv.review_status,
+//         dv.review_submitted_by,
+//         dv.review_submitted_at,
+//         dv.review_submitted_to,
+//         dv.reviewed_by,
+//         dv.reviewed_at,
+//         dv.review_comment
+//       FROM document d
+//       LEFT JOIN document_version dv ON d.current_version_id = dv.id
+//       WHERE d.id = $1 AND d.is_deleted = false
+//     `, [id]);
+
+//     if (documents.length === 0) {
+//       return NextResponse.json(
+//         { error: 'Document not found' },
+//         { status: 404 }
+//       );
+//     }
+
+//     const document = documents[0];
+//     const currentReviewStatus = document.review_status;
+//     const currentStatus = getDocumentStatusFromReview(currentReviewStatus);
+
+//     // 2. Проверяем разрешён ли переход для данного статуса
+//     const allowedActions = Transitions[currentStatus] || [];
+//     if (!allowedActions.includes(action)) {
+//       return NextResponse.json(
+//         { 
+//           error: 'Action not allowed for current document status',
+//           currentStatus,
+//           allowedActions 
+//         },
+//         { status: 403 }
+//       );
+//     }
+
+//     // 3. Проверяем права пользователя на выполнение действия
+//     const allowedRoles = ActionRoleMap[action] || [];
+//     if (!allowedRoles.includes(userRole)) {
+//       return NextResponse.json(
+//         { 
+//           error: 'User role not authorized to perform this action',
+//           requiredRoles: allowedRoles 
+//         },
+//         { status: 403 }
+//       );
+//     }
+
+//     // Определяем новый review_status на основе действия
+//     let newReviewStatus: string | null = currentReviewStatus;
+//     let newDocumentStatus: DocumentStatus = currentStatus;
+
+//     switch (action) {
+//       case DocumentAction.SUBMIT_FOR_REVIEW:
+//         newReviewStatus = 'submitted';
+//         newDocumentStatus = DocumentStatus.IN_REVIEW;
+//         break;
+//       case DocumentAction.APPROVE:
+//         newReviewStatus = 'approved';
+//         newDocumentStatus = DocumentStatus.APPROVED;
+//         break;
+//       case DocumentAction.REJECT:
+//         newReviewStatus = 'rejected';
+//         newDocumentStatus = DocumentStatus.DRAFT;
+//         break;
+//       case DocumentAction.ARCHIVE:
+//         // Архивация не меняет review_status, только статус документа
+//         newDocumentStatus = DocumentStatus.ARCHIVED;
+//         break;
+//       case DocumentAction.UNARCHIVE:
+//         newDocumentStatus = DocumentStatus.DRAFT;
+//         break;
+//       case DocumentAction.SOFT_DELETE:
+//         newDocumentStatus = DocumentStatus.DELETED;
+//         break;
+//       case DocumentAction.RESTORE:
+//         newDocumentStatus = DocumentStatus.DRAFT;
+//         break;
+//       default:
+//         // Для действий, не меняющих статус (VIEW, DOWNLOAD, UPLOAD_NEW_VERSION)
+//         newDocumentStatus = currentStatus;
+//     }
+
+//     // 4. Обновляем поля в зависимости от действия
+//     let updateQuery = '';
+//     const updateParams: any[] = [];
+
+//     // Обновление документа (мягкое удаление/восстановление)
+//     if (action === DocumentAction.SOFT_DELETE) {
+//       await client.query(`
+//         UPDATE document 
+//         SET 
+//           is_deleted = true,
+//           deleted_at = NOW(),
+//           deleted_by = $2
+//         WHERE id = $1
+//       `, [id, userId]);
+//     } 
+//     else if (action === DocumentAction.RESTORE) {
+//       await client.query(`
+//         UPDATE document 
+//         SET 
+//           is_deleted = false,
+//           deleted_at = NULL,
+//           deleted_by = NULL,
+//           restored_at = NOW(),
+//           restored_by = $2
+//         WHERE id = $1
+//       `, [id, userId]);
+//     }
+
+//     // 5. Обновление расширенных данных в document_version
+//     if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
+//       // Отправка на ревью
+//       await client.query(`
+//         UPDATE document_version 
+//         SET 
+//           review_status = $1,
+//           review_submitted_at = NOW(),
+//           review_submitted_by = $2,
+//           review_submitted_to = $3,
+//           review_comment = $4
+//         WHERE id = $5
+//       `, [
+//         newReviewStatus,
+//         userId,
+//         reviewerId || null,
+//         comment || null,
+//         document.current_version_id
+//       ]);
+//     } 
+//     else if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
+//       // Утверждение или отклонение
+//       await client.query(`
+//         UPDATE document_version 
+//         SET 
+//           review_status = $1,
+//           reviewed_at = NOW(),
+//           reviewed_by = $2,
+//           review_comment = $3
+//         WHERE id = $4
+//       `, [
+//         newReviewStatus,
+//         userId,
+//         comment || null,
+//         document.current_version_id
+//       ]);
+//     }
+//     else if (action === DocumentAction.ARCHIVE || action === DocumentAction.UNARCHIVE) {
+//       // Архивация не меняет review_status, только документ
+//       // Ничего не делаем с document_version
+//     }
+
+//     // 6. Получаем обновленный документ со всеми полями
+//     const { rows: updatedDocs } = await client.query(`
+//       SELECT 
+//         d.*,
+//         dv.id as current_version_id,
+//         dv.document_number,
+//         dv.document_name,
+//         dv.file_name,
+//         dv.file_path,
+//         dv.file_type,
+//         dv.file_size,
+//         dv.checksum,
+//         dv.uploaded_by,
+//         dv.uploaded_at,
+//         dv.review_status,
+//         dv.review_submitted_by,
+//         dv.review_submitted_at,
+//         dv.review_submitted_to,
+//         dv.reviewed_by,
+//         dv.reviewed_at,
+//         dv.review_comment,
+//         -- Информация о пользователях
+//         creator.name as creator_name,
+//         creator.email as creator_email,
+//         uploader.name as uploader_name,
+//         uploader.email as uploader_email,
+//         reviewer.name as reviewer_name,
+//         reviewer.email as reviewer_email,
+//         approver.name as approver_name,
+//         approver.email as approver_email,
+//         assigned.name as assigned_name,
+//         assigned.email as assigned_email
+//       FROM document d
+//       LEFT JOIN document_version dv ON d.current_version_id = dv.id
+//       LEFT JOIN users creator ON d.created_by = creator.id
+//       LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
+//       LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
+//       LEFT JOIN users approver ON dv.reviewed_by = approver.id
+//       LEFT JOIN users assigned ON dv.review_submitted_to = assigned.id
+//       WHERE d.id = $1
+//     `, [id]);
+
+//     const updatedDocument = updatedDocs[0];
+//     const finalStatus = getDocumentStatusFromReview(updatedDocument.review_status);
+
+//     // 7. Формируем расширенный объект для ответа
+//     const enrichedDocument = {
+//       ...updatedDocument,
+//       status: finalStatus,
+//       document_status: finalStatus,
+//       creator: updatedDocument.creator_name ? {
+//         id: updatedDocument.created_by,
+//         name: updatedDocument.creator_name,
+//         email: updatedDocument.creator_email
+//       } : null,
+//       last_uploader: updatedDocument.uploader_name ? {
+//         id: updatedDocument.uploaded_by,
+//         name: updatedDocument.uploader_name,
+//         email: updatedDocument.uploader_email
+//       } : null,
+//       reviewer: updatedDocument.reviewer_name ? {
+//         id: updatedDocument.review_submitted_by,
+//         name: updatedDocument.reviewer_name,
+//         email: updatedDocument.reviewer_email
+//       } : null,
+//       approver: updatedDocument.approver_name ? {
+//         id: updatedDocument.reviewed_by,
+//         name: updatedDocument.approver_name,
+//         email: updatedDocument.approver_email
+//       } : null,
+//       assigned_reviewer: updatedDocument.assigned_name ? {
+//         id: updatedDocument.review_submitted_to,
+//         name: updatedDocument.assigned_name,
+//         email: updatedDocument.assigned_email
+//       } : null
+//     };
+
+//     // 8. Возвращаем расширенный объект для аудита
+//     return NextResponse.json({
+//       success: true,
+//       document: enrichedDocument,
+//       _auditData: {
+//         oldValue: { 
+//           status: currentStatus,
+//           review_status: currentReviewStatus 
+//         },
+//         newValue: { 
+//           status: finalStatus,
+//           review_status: newReviewStatus,
+//           reviewerId: reviewerId,
+//           comment 
+//         },
+//         studyId: document.study_id,
+//         siteId: document.site_id,
+//         entityId: document.id
+//       }
+//     });
+
+//   } catch (error) {
+//     console.error('Error applying document action:', error);
+//     return NextResponse.json(
+//       { error: 'Internal server error' },
+//       { status: 500 }
+//     );
+//   } finally {
+//     client.release();
+//   }
+// }
+
+// Функция для отправки документа на ревью
+async function applyDocumentActionHandler(
+  request: NextRequest, 
+  { params }: { params: Promise<{ id: string }> }
+) {
   const { id } = await params;
   const client = await connectDB();
   
@@ -32,10 +346,27 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
       );
     }
 
-    // 1. Получаем текущую версию документа
+    // 1. Получаем текущую версию документа со статусом из document_version
     const { rows: documents } = await client.query(`
-      SELECT d.*, dv.document_number, dv.document_name, dv.file_name, dv.file_path,
-             dv.file_type, dv.file_size, dv.checksum, dv.uploaded_by, dv.uploaded_at
+      SELECT 
+        d.*,
+        dv.id as current_version_id,
+        dv.document_number,
+        dv.document_name,
+        dv.file_name,
+        dv.file_path,
+        dv.file_type,
+        dv.file_size,
+        dv.checksum,
+        dv.uploaded_by,
+        dv.uploaded_at,
+        dv.review_status,
+        dv.review_submitted_by,
+        dv.review_submitted_at,
+        dv.review_submitted_to,
+        dv.reviewed_by,
+        dv.reviewed_at,
+        dv.review_comment
       FROM document d
       LEFT JOIN document_version dv ON d.current_version_id = dv.id
       WHERE d.id = $1 AND d.is_deleted = false
@@ -49,7 +380,8 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
     }
 
     const document = documents[0];
-    const currentStatus = document.status as DocumentStatus;
+    const currentReviewStatus = document.review_status;
+    const currentStatus = getDocumentStatusFromReview(currentReviewStatus);
 
     // 2. Проверяем разрешён ли переход для данного статуса
     const allowedActions = Transitions[currentStatus] || [];
@@ -76,144 +408,234 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
       );
     }
 
-    // Определяем новый статус на основе действия
-    let newStatus: DocumentStatus;
-    switch (action) {
-      case DocumentAction.SUBMIT_FOR_REVIEW:
-        newStatus = DocumentStatus.IN_REVIEW;
-        break;
-      case DocumentAction.APPROVE:
-        newStatus = DocumentStatus.APPROVED;
-        break;
-      case DocumentAction.REJECT:
-        newStatus = DocumentStatus.DRAFT; // или другой статус по вашему выбору
-        break;
-      case DocumentAction.ARCHIVE:
-        newStatus = DocumentStatus.ARCHIVED;
-        break;
-      case DocumentAction.UNARCHIVE:
-        newStatus = DocumentStatus.DRAFT;
-        break;
-      case DocumentAction.SOFT_DELETE:
-        newStatus = DocumentStatus.DELETED;
-        break;
-      case DocumentAction.RESTORE:
-        newStatus = DocumentStatus.DRAFT;
-        break;
-      default:
-        // Для действий, не меняющих статус (VIEW, DOWNLOAD, UPLOAD_NEW_VERSION)
-        newStatus = currentStatus;
-    }
+    // 👇 ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ APPROVE
+    // Проверяем, что пользователь является назначенным ревьюером
+    if (action === DocumentAction.APPROVE || action === DocumentAction.REJECT) {
+      // Получаем информацию о том, кому назначено ревью
+      const { rows: reviewInfo } = await client.query(`
+        SELECT review_submitted_to 
+        FROM document_version 
+        WHERE id = $1
+      `, [document.current_version_id]);
 
-    // 4. Обновляем статус документа
-    let updateQuery = `
-      UPDATE document 
-      SET status = $2
-    `;
-    const queryParams: any[] = [id, newStatus];
+      const assignedReviewerId = reviewInfo[0]?.review_submitted_to;
 
-    // Если документ удаляется, обновляем deleted_at и deleted_by
-    if (action === DocumentAction.SOFT_DELETE) {
-      updateQuery += `, deleted_at = NOW(), deleted_by = $3`;
-      queryParams.push(userId);
-    }
-    
-    // Если документ восстанавливается, сбрасываем deleted_at
-    if (action === DocumentAction.RESTORE) {
-      updateQuery += `, deleted_at = NULL, deleted_by = NULL, restored_at = NOW(), restored_by = $3`;
-      queryParams.push(userId);
-    }
+      // Если есть назначенный ревьюер, проверяем что текущий пользователь - это он
+      if (assignedReviewerId && assignedReviewerId !== userId) {
+        return NextResponse.json(
+          { 
+            error: 'Only the assigned reviewer can approve/reject this document',
+            assignedReviewerId 
+          },
+          { status: 403 }
+        );
+      }
 
-    updateQuery += ` WHERE id = $1 RETURNING *`;
-
-    const { rows: updatedDocs } = await client.query(updateQuery, queryParams);
-    const updatedDocument = updatedDocs[0];
-
-    // Если статус изменился, записываем в document_version (опционально)
-    // if (newStatus !== currentStatus && 
-    //     [DocumentAction.SUBMIT_FOR_REVIEW, DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
-      
-    //   await client.query(`
-    //     UPDATE document_version 
-    //     SET 
-    //       review_status = $2,
-    //       review_submitted_at = NOW(),
-    //       reviewed_by = $3,
-    //       reviewed_at = NOW(),
-    //       review_comment = $4
-    //     WHERE id = $5
-    //   `, [
-    //     document.id,
-    //     newStatus === DocumentStatus.APPROVED ? 'approved' : 
-    //     newStatus === DocumentStatus.IN_REVIEW ? 'submitted' : 'rejected',
-    //     userId,
-    //     comment || null,
-    //     document.current_version_id
-    //   ]);
-    // }
-
-    // 5. Обновление расширенных данных в document_version
-    if (newStatus !== currentStatus) {
-      if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
-        // Фиксируем КТО отправил и КОГДА
-        await client.query(`
-          UPDATE document_version 
-          SET 
-            review_status = 'submitted',
-            review_submitted_at = NOW(),
-            review_submitted_by = $1,   -- Автор запроса
-            review_submitted_to = $2,   -- Кому назначено (новое поле)
-            review_comment = $3
-          WHERE id = $4
-        `, [userId, reviewerId || null, comment || null, document.current_version_id]);
-      } 
-      else if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
-        // Фиксируем КТО утвердил/отклонил и КОГДА
-        await client.query(`
-          UPDATE document_version 
-          SET 
-            review_status = $1,
-            reviewed_at = NOW(),
-            reviewed_by = $2,
-            review_comment = $3
-          WHERE id = $4
-        `, [
-          action === DocumentAction.APPROVE ? 'approved' : 'rejected',
-          userId,
-          comment || null,
-          document.current_version_id
-        ]);
+      // Проверяем, что документ действительно на ревью
+      if (currentReviewStatus !== 'submitted') {
+        return NextResponse.json(
+          { 
+            error: 'Document is not in review status',
+            currentReviewStatus 
+          },
+          { status: 400 }
+        );
       }
     }
 
-    // 5. Возвращаем результат с данными для аудита
-    // return NextResponse.json({
-    //   success: true,
-    //   document: updatedDocs,
-    //   previousStatus: currentStatus,
-    //   newStatus,
-    //   action,
-    //   _auditData: {
-    //     oldValue: { status: currentStatus },
-    //     newValue: { status: newStatus, comment },
-    //     studyId: document.study_id,
-    //     siteId: document.site_id,
-    //     entityId: document.id
-    //   }
-    // });
+    // Определяем новый review_status на основе действия
+    let newReviewStatus: string | null = currentReviewStatus;
+    let newDocumentStatus: DocumentStatus = currentStatus;
 
-    // 6. Возвращаем расширенный объект для аудита
+    switch (action) {
+      case DocumentAction.SUBMIT_FOR_REVIEW:
+        newReviewStatus = 'submitted';
+        newDocumentStatus = DocumentStatus.IN_REVIEW;
+        break;
+      case DocumentAction.APPROVE:
+        newReviewStatus = 'approved';
+        newDocumentStatus = DocumentStatus.APPROVED;
+        break;
+      case DocumentAction.REJECT:
+        newReviewStatus = 'rejected';
+        newDocumentStatus = DocumentStatus.DRAFT;
+        break;
+      case DocumentAction.ARCHIVE:
+        newDocumentStatus = DocumentStatus.ARCHIVED;
+        break;
+      case DocumentAction.UNARCHIVE:
+        newDocumentStatus = DocumentStatus.DRAFT;
+        break;
+      case DocumentAction.SOFT_DELETE:
+        newDocumentStatus = DocumentStatus.DELETED;
+        break;
+      case DocumentAction.RESTORE:
+        newDocumentStatus = DocumentStatus.DRAFT;
+        break;
+      default:
+        newDocumentStatus = currentStatus;
+    }
+
+    // 4. Обновление документа (мягкое удаление/восстановление)
+    if (action === DocumentAction.SOFT_DELETE) {
+      await client.query(`
+        UPDATE document 
+        SET 
+          is_deleted = true,
+          deleted_at = NOW(),
+          deleted_by = $2
+        WHERE id = $1
+      `, [id, userId]);
+    } 
+    else if (action === DocumentAction.RESTORE) {
+      await client.query(`
+        UPDATE document 
+        SET 
+          is_deleted = false,
+          deleted_at = NULL,
+          deleted_by = NULL,
+          restored_at = NOW(),
+          restored_by = $2
+        WHERE id = $1
+      `, [id, userId]);
+    }
+
+    // 5. 👇 ОБНОВЛЕНИЕ ДЛЯ APPROVE И REJECT
+    if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
+      // Утверждение или отклонение
+      await client.query(`
+        UPDATE document_version 
+        SET 
+          review_status = $1,
+          reviewed_at = NOW(),
+          reviewed_by = $2,
+          review_comment = $3
+        WHERE id = $4
+      `, [
+        newReviewStatus,        // 'approved' или 'rejected'
+        userId,                 // Кто утвердил/отклонил
+        comment || null,        // Комментарий (опционально)
+        document.current_version_id
+      ]);
+
+      // 👇 ЛОГИРУЕМ ДЕЙСТВИЕ В AUDIT (дополнительно к withAudit)
+      console.log(`Document ${id} ${action}d by user ${userId}`);
+    }
+    else if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
+      // Отправка на ревью (уже есть)
+      await client.query(`
+        UPDATE document_version 
+        SET 
+          review_status = $1,
+          review_submitted_at = NOW(),
+          review_submitted_by = $2,
+          review_submitted_to = $3,
+          review_comment = $4
+        WHERE id = $5
+      `, [
+        newReviewStatus,
+        userId,
+        reviewerId || null,
+        comment || null,
+        document.current_version_id
+      ]);
+    }
+
+    // 6. Получаем обновленный документ со всеми полями
+    const { rows: updatedDocs } = await client.query(`
+      SELECT 
+        d.*,
+        dv.id as current_version_id,
+        dv.document_number,
+        dv.document_name,
+        dv.file_name,
+        dv.file_path,
+        dv.file_type,
+        dv.file_size,
+        dv.checksum,
+        dv.uploaded_by,
+        dv.uploaded_at,
+        dv.review_status,
+        dv.review_submitted_by,
+        dv.review_submitted_at,
+        dv.review_submitted_to,
+        dv.reviewed_by,
+        dv.reviewed_at,
+        dv.review_comment,
+        creator.name as creator_name,
+        creator.email as creator_email,
+        uploader.name as uploader_name,
+        uploader.email as uploader_email,
+        reviewer.name as reviewer_name,
+        reviewer.email as reviewer_email,
+        approver.name as approver_name,
+        approver.email as approver_email,
+        assigned.name as assigned_name,
+        assigned.email as assigned_email
+      FROM document d
+      LEFT JOIN document_version dv ON d.current_version_id = dv.id
+      LEFT JOIN users creator ON d.created_by = creator.id
+      LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
+      LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
+      LEFT JOIN users approver ON dv.reviewed_by = approver.id
+      LEFT JOIN users assigned ON dv.review_submitted_to = assigned.id
+      WHERE d.id = $1
+    `, [id]);
+
+    const updatedDocument = updatedDocs[0];
+    const finalStatus = getDocumentStatusFromReview(updatedDocument.review_status);
+
+    // 7. Формируем расширенный объект для ответа
+    const enrichedDocument = {
+      ...updatedDocument,
+      status: finalStatus,
+      document_status: finalStatus,
+      creator: updatedDocument.creator_name ? {
+        id: updatedDocument.created_by,
+        name: updatedDocument.creator_name,
+        email: updatedDocument.creator_email
+      } : null,
+      last_uploader: updatedDocument.uploader_name ? {
+        id: updatedDocument.uploaded_by,
+        name: updatedDocument.uploader_name,
+        email: updatedDocument.uploader_email
+      } : null,
+      reviewer: updatedDocument.reviewer_name ? {
+        id: updatedDocument.review_submitted_by,
+        name: updatedDocument.reviewer_name,
+        email: updatedDocument.reviewer_email
+      } : null,
+      approver: updatedDocument.approver_name ? {
+        id: updatedDocument.reviewed_by,
+        name: updatedDocument.approver_name,
+        email: updatedDocument.approver_email
+      } : null,
+      assigned_reviewer: updatedDocument.assigned_name ? {
+        id: updatedDocument.review_submitted_to,
+        name: updatedDocument.assigned_name,
+        email: updatedDocument.assigned_email
+      } : null
+    };
+
+    // 8. Возвращаем расширенный объект для аудита
     return NextResponse.json({
       success: true,
-      document: updatedDocument,
+      document: enrichedDocument,
       _auditData: {
-        oldValue: { status: currentStatus },
+        oldValue: { 
+          status: currentStatus,
+          review_status: currentReviewStatus,
+          assigned_reviewer: document.review_submitted_to
+        },
         newValue: { 
-          status: newStatus, 
-          reviewerId: reviewerId, // Логируем, кому назначено
-          fileName: document.file_name, // Логируем, какой файл
+          status: finalStatus,
+          review_status: newReviewStatus,
+          reviewed_by: userId,
+          reviewed_at: new Date().toISOString(),
           comment 
         },
+        studyId: document.study_id,
+        siteId: document.site_id,
         entityId: document.id
       }
     });

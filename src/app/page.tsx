@@ -107,9 +107,7 @@ const Home: React.FC<MainWindowProps> = () => {
         </div>
         <div className="main-content">
           <div className="main-content-path">
-            <DocumentActions
-              onAction={() => console.log()}
-            />
+            <DocumentActions />
 
           </div>
           <div className="main-content-area">

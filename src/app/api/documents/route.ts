@@ -5,8 +5,6 @@ import { Tables } from '@/lib/db/schema';
 import { v4 as uuidv4 } from 'uuid';
 
 // Получение документов при просмотре содержимого папки
-// app/api/documents/route.ts - обновленный GET метод
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const study_id = searchParams.get('study_id');
@@ -126,6 +124,11 @@ export async function GET(request: NextRequest) {
       assigned.id as assigned_reviewer_id,
       assigned.name as assigned_reviewer_name,
       assigned.email as assigned_reviewer_email,
+      -- ДОБАВЛЯЕМ ИНФОРМАЦИЮ О СОЗДАТЕЛЕ
+      creator.id as creator_id,
+      creator.name as creator_name,
+      creator.email as creator_email,
+      creator.role as creator_role,      
       CASE 
         WHEN lv.version_id IS NOT NULL THEN json_build_object(
           'id', lv.version_id,

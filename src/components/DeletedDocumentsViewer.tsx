@@ -28,7 +28,6 @@ const DeletedDocumentsViewer: React.FC = () => {
 
   const isAdmin = user?.role?.some(item => item.includes(UserRole.ADMIN));
 
-  console.log(user, isAdmin)
   const loadDeletedDocuments = useCallback(async () => {
     if (!isAdmin) return;
 

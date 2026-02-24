@@ -15,20 +15,20 @@ import {
   FiUploadCloud
 } from 'react-icons/fi';
 import { MainContext } from '@/wrappers/MainContext';
-import { DocumentAction, DocumentStatus } from '@/types/document';
+import { DocumentAction, DocumentStatus, Transitions as transitions } from '@/types/document';
 import '../styles/DocumentActions.css';
 import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from './FileExplorer';
-import { Transitions as transitions } from '@/types/document';
-import { usePDFCache } from '@/hooks/usePDFCache';
+//import { usePDFCache } from '@/hooks/usePDFCache';
+import { ActionRoleMap } from '@/domain/document/document.policy';
+import { UserRole } from '@/types/types';
 
 interface DocumentActionsProps {
-  onAction: (action: DocumentAction) => void;
+  onAction?: (action: DocumentAction) => void;
   className?: string;
   onDocumentDeleted?: () => void; // Колбэк для обновления списка после удаления
   onDocumentRestored?: () => void; // Колбэк для обновления списка после восстановления
-  onSubmitReview?: () => void; // Колбэк отправки на ревью
 }
 
 // Маппинг действий на иконки и текст
@@ -95,7 +95,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   className = '',
   onDocumentDeleted,
   onDocumentRestored,
-  onSubmitReview
 }) => {
   const mainContext = useContext(MainContext);
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
@@ -105,13 +104,11 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const { user } = useAuth();
   //const { isUploading, progress } = useDocumentUpload();
   const { deleteDocument, restoreDocument, isDeleting, isRestoring, error } = useDocumentDelete();
-  const {getAllCachedPDFs} = usePDFCache();
+  //const {getAllCachedPDFs} = usePDFCache();
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
-  
-
   // Автоматически скрываем уведомление через 3 секунды
   useEffect(() => {
     if (notification) {
@@ -129,7 +126,24 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
   }, [error]);
 
-  // Определяем доступные действия
+  // Функция проверки прав для конкретного действия
+  const hasPermissionForAction = (action: DocumentAction, userRoles: UserRole[]): boolean => {
+    const allowedRoles = ActionRoleMap[action] || [];
+    return userRoles.some(role => allowedRoles.includes(role));
+  };
+
+  const getBaseActions = (): DocumentAction[] => {
+    if (!user?.role) return [];
+    
+    const userRoles = user.role as UserRole[];
+    
+    return [
+      DocumentAction.CREATE_DOCUMENT,
+      DocumentAction.VIEW,
+      DocumentAction.DOWNLOAD
+    ].filter(action => hasPermissionForAction(action, userRoles));
+  };
+
   const getAvailableActions = (): DocumentAction[] => {
     if (!selectedFolder) {
       return [DocumentAction.CREATE_DOCUMENT];
@@ -140,23 +154,31 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
 
     // Базовые действия, доступные для всех документов
-    const baseActions = [
-      DocumentAction.VIEW,
-      DocumentAction.DOWNLOAD
-    ];
+    const baseActions = getBaseActions();
 
-    // Получаем действия на основе статуса
-    const statusActions = transitions[selectedDocument.status as DocumentStatus] || [];
+    const currentStatus = selectedDocument.status as DocumentStatus;
     
-    // Для не удаленных и не архивированных документов добавляем возможность загрузки новой версии
-    if (selectedDocument.status !== 'deleted' && selectedDocument.status !== 'archived') {
-      // Используем Set для удаления дубликатов
-      const allActions = [...statusActions, ...baseActions, DocumentAction.UPLOAD_NEW_VERSION];
-      return [...new Set(allActions)];
+    // Получаем действия на основе статуса из Transitions
+    const statusActions = transitions[currentStatus] || [];
+    
+    // Определяем, можно ли загружать новую версию
+    // Загрузка новой версии разрешена ТОЛЬКО для черновиков
+    const canUploadNewVersion = currentStatus === DocumentStatus.DRAFT;
+    
+    // Определяем, нужно ли добавлять действия для удаленных/архивированных
+    const isSpecialStatus = 
+      currentStatus === DocumentStatus.DELETED || 
+      currentStatus === DocumentStatus.ARCHIVED;
+
+    let allActions: DocumentAction[] = [...baseActions, ...statusActions];
+    
+    // Добавляем UPLOAD_NEW_VERSION только для черновиков
+    if (canUploadNewVersion) {
+      allActions.push(DocumentAction.UPLOAD_NEW_VERSION);
     }
 
-    // Для удаленных и архивированных - только статусные действия и базовые
-    const allActions = [...statusActions, ...baseActions];
+    // Для специальных статусов оставляем только статусные действия и базовые
+    // (без UPLOAD_NEW_VERSION, который уже мог быть добавлен выше для draft)
     return [...new Set(allActions)];
   };
 
@@ -312,9 +334,15 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       //onSubmitReview?.();
       updateContext({ isSubmittingToReview: true});
       return;
+    }
+
+    if (action === DocumentAction.APPROVE || action === DocumentAction.REJECT) {
+      // Открываем модальное окно ревью
+      updateContext({ isAcceptedForReview: true });
+      return;
     }    
 
-    onAction(action);
+    onAction?.(action);
   };
 
   if (availableActions.length === 0) {
@@ -367,36 +395,33 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
 
       <div className={`doc-action-root ${className}`}>
         <div className="doc-action-container">
-          {currentLevel === ViewLevel.GENERAL || (currentSite && selectedFolder) && availableActions.map((action) => (
-            <button
-              key={action}
-              type="button"
-              className={`doc-action-btn doc-action-btn--${action.replace(/_/g, '-')} ${(isDeleting || isRestoring) ? 'doc-action-btn--disabled' : ''}`}
-              onClick={() => handleActionClick(action)}
-              title={actionConfig[action].label}
-              style={{ '--doc-action-color': actionConfig[action].color } as React.CSSProperties}
-              disabled={isDeleting || isRestoring}
-            >
-              <span className="doc-action-icon">{actionConfig[action].icon}</span>
-              <span className="doc-action-label">{actionConfig[action].label}</span>
-            </button>
-          ))}
+          {(() => {
+            // Определяем, нужно ли показывать кнопки
+            const shouldShowActions = 
+              (currentLevel === ViewLevel.GENERAL && selectedFolder) ||
+              (currentLevel === ViewLevel.SITE && currentSite && selectedFolder);
+            
+            if (!shouldShowActions) return null;
+            
+            return availableActions.map((action) => (
+              <button
+                key={action}
+                type="button"
+                className={`doc-action-btn doc-action-btn--${action.replace(/_/g, '-')} ${(isDeleting || isRestoring) ? 'doc-action-btn--disabled' : ''}`}
+                onClick={() => handleActionClick(action)}
+                title={actionConfig[action].label}
+                style={{ '--doc-action-color': actionConfig[action].color } as React.CSSProperties}
+                disabled={isDeleting || isRestoring}
+              >
+                <span className="doc-action-icon">{actionConfig[action].icon}</span>
+                <span className="doc-action-label">{actionConfig[action].label}</span>
+              </button>
+            ));
+          })()}
         </div>
       </div>
     </>
   );
-};
-
-// Вспомогательная функция для получения цвета статуса
-const getStatusColor = (status: DocumentStatus): string => {
-  const statusColors: Record<DocumentStatus, string> = {
-    'draft': '#666',
-    'in_review': '#f39c12',
-    'approved': '#27ae60',
-    'archived': '#7f8c8d',
-    'deleted': '#c0392b'
-  };
-  return statusColors[status] || '#666';
 };
 
 export default DocumentActions;

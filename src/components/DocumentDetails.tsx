@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { Document } from '@/types/document';
+import { Document, DocumentStatus } from '@/types/document';
 import { StudyUser } from '@/types/types';
 import { ROLE_CONFIG } from '@/types/types';
 import '../styles/DocumentDetails.css';
@@ -187,6 +187,7 @@ const DocumentDetails: React.FC = () => {
     review_comment?: string | null;
   };
 
+  //console.log('doc: ', doc)
   return (
     <div className="document-details">
       <div className="document-details-content">
@@ -259,10 +260,6 @@ const DocumentDetails: React.FC = () => {
             <div className="metadata-row">
               <dt>Кем загружено</dt>
               <dd>{renderUserInfo(doc.last_uploader)}</dd>
-            </div>
-            <div className="metadata-row">
-              <dt>Причина изменения</dt>
-              <dd>{ '—'}</dd>
             </div>
             <div className="metadata-row">
               <dt>Checksum</dt>
@@ -438,7 +435,7 @@ const DocumentDetails: React.FC = () => {
                     >
                       Скачать
                     </button>
-                    {v.document_number !== doc.document_number && (
+                    {v.document_number !== doc.document_number && doc.status !== DocumentStatus.APPROVED && (
                       <button
                         type="button"
                         className="version-action-btn version-action-restore"

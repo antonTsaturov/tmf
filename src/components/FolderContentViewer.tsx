@@ -8,11 +8,7 @@ import "../styles/FolderContentViewer.css";
 import DocumentStatusIndicator from "./DocumentStatusIndicator";
 import { FileIcon } from 'react-file-icon';
 import SubmitToReviewPanel from "./SubmitToReviewPanel";
-
-import { RiDraftLine } from "react-icons/ri";
-import { MdOutlinePreview } from "react-icons/md";
-import { FcApproval } from "react-icons/fc";
-import { PiArchiveDuotone } from "react-icons/pi";
+import DocumentReviewPanel from "./DocumentReviewPanel";
 
 interface FolderContentViewerProps {
   onDocumentSelect?: (document: Document) => void;
@@ -46,6 +42,21 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const folderRef = useRef<HTMLDivElement>(null);
   const folderHeaderRef = useRef<HTMLDivElement>(null);
   const docHeaderRef = useRef<HTMLDivElement>(null);
+  const documentListRef = useRef<HTMLDivElement>(null);
+
+  // Функция для поиска родительской папки
+  // const findParentFolder = useCallback((folders: FolderNode[], targetId: string, parent: FolderNode | null = null): FolderNode | null => {
+  //   for (const folder of folders) {
+  //     if (folder.id === targetId) {
+  //       return parent;
+  //     }
+  //     if (folder.children && folder.children.length > 0) {
+  //       const found = findParentFolder(folder.children, targetId, folder);
+  //       if (found) return found;
+  //     }
+  //   }
+  //   return null;
+  // }, []);
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
@@ -81,6 +92,8 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     loadFolderContents();
   }, [loadFolderContents]);
 
+  console.log('documentsData: ', documentsData)
+
   // Перезагрузка при успешной загрузке документа или удалении документа
   useEffect(() => {
     if (uploadSuccess || docWasDeleted) {
@@ -109,7 +122,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     // Проверяем, попал ли клик внутрь docHeaderRef или других служебных областей
     const clickedOnHeader = docHeaderRef.current?.contains(target);
     const clickedOnFolderInfo = folderHeaderRef.current?.contains(target);
-    const clickedOnEmptySpace = target === contentRef.current || target === folderRef.current;
+    const clickedOnEmptySpace = target === contentRef.current || target === folderRef.current || target === documentListRef.current;
 
     // Проверяем, что клик был именно по контейнеру, а не по его дочерним элементам
     if (clickedOnHeader || clickedOnFolderInfo || clickedOnEmptySpace) {
@@ -145,6 +158,11 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   };
 
 
+  // Oбработчик для обновления после ревью
+  const handleReviewComplete = () => {
+    // Обновляем список документов после утверждения/отклонения
+    setUploadSuccess(true);
+  };
 
   // Форматирование даты
   const formatDate = (dateString: string): string => {
@@ -232,7 +250,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
             <div className="col-created">Создан</div>
           </div>
           
-          <div className="documents-list">
+          <div className="documents-list" ref={documentListRef}>
             {documents.map((doc) => (
               <div 
                 key={doc.id} 
@@ -301,6 +319,11 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       <SubmitToReviewPanel
         studyId={currentStudy?.id || 0}
         siteId={currentSite?.id || ''}
+      />
+
+      {/* Панель ревью документа */}
+      <DocumentReviewPanel
+        onReviewComplete={handleReviewComplete}
       />
     </div>
   );

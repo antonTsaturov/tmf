@@ -48,20 +48,61 @@
   align-items: center;
   padding: 6px 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease-in-out; /* Улучшенная анимация для всех свойств */
   font-size: 14px;
   border: 2px solid transparent;
   margin: 2px 4px;
   border-radius: 4px;
+  will-change: transform, background-color, border-color; /* Оптимизация для анимации */
 }
 
 .node:hover {
-  background-color: #f0f0f091;;
+  background-color: #dedede91;
+  box-shadow: 0 2px 4px rgba(44, 44, 44, 0.05); /* Тень при наведении */
 }
 
 .node.selected {
   background-color: #e3f2fd;
   border-color: #2196f3;
+  animation: softSelect 0.3s ease-out; /* Анимация пульсации при выделении */
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2); /* Внешнее свечение */
+}
+
+/* Анимация пульсации при выделении */
+@keyframes selectPulse {
+  0% {
+    /* transform: scale(1); */
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4);
+  }
+  50% {
+    /* transform: scale(1.02); */
+    box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+  }
+  100% {
+    /* transform: scale(1); */
+    box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  }
+}
+
+/* Альтернативная более мягкая анимация */
+@keyframes softSelect {
+  0% {
+    background-color: #f5f5f5;
+    border-color: transparent;
+  }
+  100% {
+    background-color: #e3f2fd;
+    border-color: #2196f3;
+  }
+}
+
+/* Применяем мягкую анимацию для.selected */
+.node.selected {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+  animation: softSelect 0.2s ease-out;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+  transform: translateY(-1px);
 }
 
 .toggle-icon {
@@ -71,44 +112,51 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Более плавная анимация */
   font-size: 12px;
   color: #666;
   margin-right: 4px;
+  transform: rotate(0deg); /* Начальное состояние */
+}
+
+.toggle-icon-placeholder {
+  font-size: 16px;
+  color: #686868;
+  margin: 0 12px 2px;
 }
 
 .toggle-icon.expanded {
   transform: rotate(90deg);
 }
 
-/* .toggle-icon:hover {
-  color: #2196f3;
-  background-color: rgba(33, 150, 243, 0.1);
-  border-radius: 3px;
-}
- */
-.toggle-icon-placeholder {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-  margin-right: 4px;
-  text-align: center;
-  color: #ccc;
-}
-
+/* Анимация для иконки папки */
 .node-icon {
   margin-right: 8px;
   font-size: 16px;
   width: 24px;
   text-align: center;
+  transition: transform 0.2s ease, color 0.2s;
 }
 
+.node.selected .node-icon {
+  /* transform: scale(1.2); */
+  color: #2196f3;
+}
+
+/* Анимация для текста */
 .node-name {
   flex: 3;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: #333;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.node.selected .node-name {
+  color: #1976d2;
+  font-weight: 500;
+  /* transform: translateX(2px); */
 }
 
 .node-info {
@@ -144,6 +192,22 @@
   z-index: 0;
 }
 
+/* Анимация появления дочерних элементов */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.children .node-container {
+  animation: slideIn 0.2s ease-out;
+}
+
 /* Полоса прокрутки */
 .tree-container::-webkit-scrollbar {
   width: 8px;
@@ -157,6 +221,7 @@
 .tree-container::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 4px;
+  transition: background-color 0.2s ease;
 }
 
 .tree-container::-webkit-scrollbar-thumb:hover {
