@@ -41,6 +41,7 @@ export interface Document {
   deleted_by: string;
   restored_by: string;
   restored_at: string;
+  deletion_reason: string;
 
   id: string;
   document_number: number;

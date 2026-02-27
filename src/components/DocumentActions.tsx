@@ -22,6 +22,7 @@ import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from './FileExplorer';
 //import { usePDFCache } from '@/hooks/usePDFCache';
 import { ActionRoleMap } from '@/domain/document/document.policy';
+import { getAvailableDocumentActions } from '@/domain/document/document.logic';
 import { UserRole } from '@/types/types';
 
 interface DocumentActionsProps {
@@ -32,7 +33,7 @@ interface DocumentActionsProps {
 }
 
 // Маппинг действий на иконки и текст
-const actionConfig: Record<DocumentAction, { icon: React.ReactNode; label: string; color?: string }> = {
+export const actionConfig: Record<DocumentAction, { icon: React.ReactNode; label: string; color?: string }> = {
   [DocumentAction.CREATE_DOCUMENT]: { 
     icon: <FiFilePlus />, 
     label: 'Создать',
@@ -126,64 +127,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
   }, [error]);
 
-  // Функция проверки прав для конкретного действия
-  const hasPermissionForAction = (action: DocumentAction, userRoles: UserRole[]): boolean => {
-    const allowedRoles = ActionRoleMap[action] || [];
-    return userRoles.some(role => allowedRoles.includes(role));
-  };
-
-  const getBaseActions = (): DocumentAction[] => {
-    if (!user?.role) return [];
-    
-    const userRoles = user.role as UserRole[];
-    
-    return [
-      DocumentAction.CREATE_DOCUMENT,
-      DocumentAction.VIEW,
-      DocumentAction.DOWNLOAD
-    ].filter(action => hasPermissionForAction(action, userRoles));
-  };
-
-  const getAvailableActions = (): DocumentAction[] => {
-    if (!selectedFolder) {
-      return [DocumentAction.CREATE_DOCUMENT];
-    }
-
-    if (!selectedDocument) {
-      return [DocumentAction.CREATE_DOCUMENT];
-    }
-
-    // Базовые действия, доступные для всех документов
-    const baseActions = getBaseActions();
-
-    const currentStatus = selectedDocument.status as DocumentStatus;
-    
-    // Получаем действия на основе статуса из Transitions
-    const statusActions = transitions[currentStatus] || [];
-    
-    // Определяем, можно ли загружать новую версию
-    // Загрузка новой версии разрешена ТОЛЬКО для черновиков
-    const canUploadNewVersion = currentStatus === DocumentStatus.DRAFT;
-    
-    // Определяем, нужно ли добавлять действия для удаленных/архивированных
-    const isSpecialStatus = 
-      currentStatus === DocumentStatus.DELETED || 
-      currentStatus === DocumentStatus.ARCHIVED;
-
-    let allActions: DocumentAction[] = [...baseActions, ...statusActions];
-    
-    // Добавляем UPLOAD_NEW_VERSION только для черновиков
-    if (canUploadNewVersion) {
-      allActions.push(DocumentAction.UPLOAD_NEW_VERSION);
-    }
-
-    // Для специальных статусов оставляем только статусные действия и базовые
-    // (без UPLOAD_NEW_VERSION, который уже мог быть добавлен выше для draft)
-    return [...new Set(allActions)];
-  };
-
-  const availableActions = getAvailableActions();
-
+  const availableActions = getAvailableDocumentActions(selectedDocument, user?.role as unknown as UserRole[]);
   // Обработчик выбора файлов
   const handleFileSelect = () => {
     if (!selectedFolder) {
@@ -232,47 +176,47 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   };
 
   // Обработчик мягкого удаления
-  const handleSoftDelete = async () => {
-    if (!selectedDocument) return;
+  // const handleSoftDelete = async () => {
+  //   if (!selectedDocument) return;
     
-    try {
-      const result = await deleteDocument(selectedDocument.id);
+  //   try {
+  //     const result = await deleteDocument(selectedDocument.id);
       
-      if (result.success) {
-        setNotification({ type: 'success', message: 'Документ успешно удален' });
-        setShowDeleteConfirm(false);
-        // Сбрасываем выделение после удаления
-        updateContext({ selectedDocument: null });
-        // Вызываем колбэк для обновления списка
-        onDocumentDeleted?.();
-      } else {
-        setNotification({ type: 'error', message: result.error || 'Ошибка при удалении документа' });
-      }
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      setNotification({ type: 'error', message: 'Ошибка при удалении документа' });
-    }
-  };
+  //     if (result.success) {
+  //       setNotification({ type: 'success', message: 'Документ успешно удален' });
+  //       setShowDeleteConfirm(false);
+  //       // Сбрасываем выделение после удаления
+  //       updateContext({ selectedDocument: null });
+  //       // Вызываем колбэк для обновления списка
+  //       onDocumentDeleted?.();
+  //     } else {
+  //       setNotification({ type: 'error', message: result.error || 'Ошибка при удалении документа' });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error deleting document:', error);
+  //     setNotification({ type: 'error', message: 'Ошибка при удалении документа' });
+  //   }
+  // };
 
   // Обработчик восстановления
-  const handleRestore = async () => {
-    if (!selectedDocument) return;
+  // const handleRestore = async () => {
+  //   if (!selectedDocument) return;
     
-    try {
-      const result = await restoreDocument(selectedDocument.id);
+  //   try {
+  //     const result = await restoreDocument(selectedDocument.id);
       
-      if (result.success) {
-        setNotification({ type: 'success', message: 'Документ успешно восстановлен' });
-        // Вызываем колбэк для обновления списка
-        onDocumentRestored?.();
-      } else {
-        setNotification({ type: 'error', message: result.error || 'Ошибка при восстановлении документа' });
-      }
-    } catch (error) {
-      console.error('Error restoring document:', error);
-      setNotification({ type: 'error', message: 'Ошибка при восстановлении документа' });
-    }
-  };
+  //     if (result.success) {
+  //       setNotification({ type: 'success', message: 'Документ успешно восстановлен' });
+  //       // Вызываем колбэк для обновления списка
+  //       onDocumentRestored?.();
+  //     } else {
+  //       setNotification({ type: 'error', message: result.error || 'Ошибка при восстановлении документа' });
+  //     }
+  //   } catch (error) {
+  //     console.error('Error restoring document:', error);
+  //     setNotification({ type: 'error', message: 'Ошибка при восстановлении документа' });
+  //   }
+  // };
 
   const handleUploadNewVersion = () => {
     if (!selectedDocument) return;
@@ -316,14 +260,16 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
 
     if (action === DocumentAction.SOFT_DELETE) {
-      setShowDeleteConfirm(true);
+      updateContext({ isDeletePanelOpen: true });
       return;
+      
+      //setShowDeleteConfirm(true);
     }
 
-    if (action === DocumentAction.RESTORE) {
-      await handleRestore();
-      return;
-    }
+    // if (action === DocumentAction.RESTORE) {
+    //   await handleRestore();
+    //   return;
+    // }
 
     if (action === DocumentAction.VIEW) {
       // PDFViewer сам отреагирует на selectedDocument
@@ -358,7 +304,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         </div>
       )}
 
-      {(isDeleting || isRestoring) && (
+      {/* {(isDeleting || isRestoring) && (
         <div className="doc-action-loading">
           <div className="doc-action-spinner"></div>
           <span>{isDeleting ? 'Удаление...' : 'Восстановление...'}</span>
@@ -368,9 +314,10 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       {showDeleteConfirm && (
         <div className="doc-action-confirm-overlay">
           <div className="doc-action-confirm">
-            <h3 className="doc-action-confirm-title">Подтверждение удаления</h3>
-            <p className="doc-action-confirm-text">Вы уверены, что хотите удалить документ &quot;{selectedDocument?.document_name}&quot;?</p>
-            <p className="doc-action-confirm-warning">Документ будет перемещен в корзину и его можно будет восстановить позже.</p>
+            <h3 className="doc-action-confirm-title">Delete confirmation</h3>
+            <p className="doc-action-confirm-text">Mark &quot;{selectedDocument?.document_name}&quot; as "deleted"?</p>
+            <p className="doc-action-confirm-warning">The document and its versions will no longer be visible in active folders.
+The record will be retained in the system and can be restored by an authorized user.</p>
             <div className="doc-action-confirm-actions">
               <button
                 type="button"
@@ -391,7 +338,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       <div className={`doc-action-root ${className}`}>
         <div className="doc-action-container">
@@ -403,9 +350,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
             
             if (!shouldShowActions) return null;
             
-            return availableActions.map((action) => (
+            return availableActions.map((action, i) => (
               <button
-                key={action}
+                key={`${action}-${i}`}
                 type="button"
                 className={`doc-action-btn doc-action-btn--${action.replace(/_/g, '-')} ${(isDeleting || isRestoring) ? 'doc-action-btn--disabled' : ''}`}
                 onClick={() => handleActionClick(action)}

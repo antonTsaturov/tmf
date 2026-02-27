@@ -1,7 +1,7 @@
 // components/FolderContentViewer.tsx
 import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback } from "react";
-import { Document } from "@/types/document";
+import { Document, DocumentAction } from "@/types/document";
 import FilePreviewPanel from "./FilePreviewPanel";
 import NewVersionUploadPanel from "./NewVersionUploadPanel";
 import "../styles/FolderContentViewer.css";
@@ -9,6 +9,8 @@ import DocumentStatusIndicator from "./DocumentStatusIndicator";
 import { FileIcon } from 'react-file-icon';
 import SubmitToReviewPanel from "./SubmitToReviewPanel";
 import DocumentReviewPanel from "./DocumentReviewPanel";
+import DocumentContextMenu from './DocumentContextMenu';
+import DeleteDocumentPanel from "./DeleteDocumentPanel";
 
 interface FolderContentViewerProps {
   onDocumentSelect?: (document: Document) => void;
@@ -44,20 +46,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const docHeaderRef = useRef<HTMLDivElement>(null);
   const documentListRef = useRef<HTMLDivElement>(null);
 
-  // Функция для поиска родительской папки
-  // const findParentFolder = useCallback((folders: FolderNode[], targetId: string, parent: FolderNode | null = null): FolderNode | null => {
-  //   for (const folder of folders) {
-  //     if (folder.id === targetId) {
-  //       return parent;
-  //     }
-  //     if (folder.children && folder.children.length > 0) {
-  //       const found = findParentFolder(folder.children, targetId, folder);
-  //       if (found) return found;
-  //     }
-  //   }
-  //   return null;
-  // }, []);
-
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
     if (!selectedFolder || !currentStudy || !currentSite) {
@@ -91,8 +79,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   useEffect(() => {
     loadFolderContents();
   }, [loadFolderContents]);
-
-  console.log('documentsData: ', documentsData)
 
   // Перезагрузка при успешной загрузке документа или удалении документа
   useEffect(() => {
@@ -143,6 +129,32 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const handleDocumentDoubleClick = (e: React.MouseEvent<HTMLDivElement>, doc: Document) => {
     e.stopPropagation(); // Предотвращаем всплытие до контейнера
     onDocumentPreview?.(doc);
+  };
+
+  // Обработчик контекстного меню
+  const handleContextMenuAction = (action: DocumentAction, doc: Document) => {
+
+    switch (action) {
+        case DocumentAction.VIEW:
+          updateContext({ isRightFrameOpen: true });
+          break;
+        case DocumentAction.SUBMIT_FOR_REVIEW:
+          updateContext({ isSubmittingToReview: true });
+          break;
+        case DocumentAction.APPROVE:
+        case DocumentAction.REJECT:
+          updateContext({ isAcceptedForReview: true });
+          break;
+        case DocumentAction.DOWNLOAD:
+          // Логика скачивания
+          break;
+        case DocumentAction.SOFT_DELETE:
+          // В идеале вызвать метод из хука useDocumentDelete здесь 
+          // или просто открыть модалку подтверждения через контекст
+          break;
+        default:
+          console.log('Action not implemented in context menu:', action);
+      }
   };
 
   // Функция для получения цвета статуса
@@ -243,15 +255,20 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
         </div>
       ) : (
         <div className="table-container">
-          <div className="documents-header" ref={docHeaderRef}>
+          <div className="documents-header" ref={docHeaderRef} onContextMenu={(e) => (e.preventDefault())}>
             <div className="col-name">Имя документа</div>
             <div className="col-status">Статус</div>
             <div className="col-version">Версия</div>
             <div className="col-created">Создан</div>
           </div>
           
-          <div className="documents-list" ref={documentListRef}>
+          <div className="documents-list" ref={documentListRef} onContextMenu={(e) => (e.preventDefault())}>
             {documents.map((doc) => (
+              <DocumentContextMenu
+                document={doc}
+                key={doc.id}
+                onAction={(e) => handleContextMenuAction(e, doc)}
+              >              
               <div 
                 key={doc.id} 
                 className={`document-row ${selectedDocument?.id === doc.id ? 'selected' : ''}`}
@@ -298,6 +315,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                   {formatDate(doc.created_at)}
                 </div>
               </div>
+              </DocumentContextMenu>
             ))}
           </div>
         </div>
@@ -325,6 +343,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       <DocumentReviewPanel
         onReviewComplete={handleReviewComplete}
       />
+
+      {/* Панель удаления документа (soft deletes)*/}
+      <DeleteDocumentPanel />
     </div>
   );
 };

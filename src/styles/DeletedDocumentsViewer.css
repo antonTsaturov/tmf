@@ -138,3 +138,261 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+
+.deleted-docs-viewer {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.deleted-docs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.deleted-docs-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.deleted-docs-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.deleted-docs-count {
+  color: #666;
+  font-size: 14px;
+  background: #e9ecef;
+  padding: 4px 8px;
+  border-radius: 16px;
+}
+
+.deleted-docs-refresh {
+  padding: 8px 16px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.deleted-docs-refresh:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.deleted-docs-refresh:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.deleted-docs-error {
+  padding: 12px;
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.deleted-docs-loading {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.deleted-docs-empty {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-style: italic;
+}
+
+.deleted-docs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deleted-docs-item {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.deleted-docs-item.expanded {
+  border-color: #007bff;
+  box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+}
+
+.deleted-docs-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deleted-docs-item-header:hover {
+  background: #e9ecef;
+}
+
+.deleted-docs-item-main {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  min-width: 0;
+}
+
+.deleted-docs-name {
+  font-weight: 500;
+  color: #333;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deleted-docs-folder {
+  color: #666;
+  font-size: 13px;
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.deleted-docs-date {
+  color: #999;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.deleted-docs-size {
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.deleted-docs-restore-btn {
+  padding: 6px 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  margin-left: 16px;
+}
+
+.deleted-docs-restore-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.deleted-docs-restore-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.deleted-docs-item-details {
+  padding: 20px;
+  background: white;
+  border-top: 1px solid #e9ecef;
+}
+
+.deleted-docs-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.deleted-docs-detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.detail-row-full {
+  grid-column: 1 / -1;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 120px;
+  font-size: 13px;
+}
+
+.detail-value {
+  color: #666;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.detail-value-reason {
+  background: #fff3cd;
+  padding: 6px 10px;
+  border-radius: 4px;
+  color: #856404;
+  flex: 1;
+}
+
+.deleted-docs-deletion-info,
+.deleted-docs-restoration-info {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e9ecef;
+}
+
+.deleted-docs-deletion-info h4,
+.deleted-docs-restoration-info h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.deleted-docs-access-denied {
+  text-align: center;
+  padding: 40px;
+  color: #dc3545;
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .deleted-docs-item-main {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .deleted-docs-name {
+    max-width: 100%;
+    width: 100%;
+  }
+  
+  .deleted-docs-details-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-label {
+    min-width: 100px;
+  }
+}

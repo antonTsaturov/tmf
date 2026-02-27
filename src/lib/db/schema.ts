@@ -107,6 +107,7 @@ export const DocumentTable = `
     is_deleted BOOLEAN DEFAULT FALSE,
     deleted_at TIMESTAMPTZ,
     deleted_by UUID REFERENCES users(id),
+    deletion_reason TEXT,
 
     restored_by UUID REFERENCES users(id),
     restored_at TIMESTAMPTZ

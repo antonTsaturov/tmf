@@ -2,6 +2,7 @@
 import { useState, useCallback, useContext } from 'react';
 import { Document } from '@/types/document';
 import { MainContext} from '@/wrappers/MainContext';
+import { useAuth } from '@/wrappers/AuthProvider';
 
 interface DeleteResult {
   success: boolean;
@@ -10,7 +11,7 @@ interface DeleteResult {
 }
 
 interface UseDocumentDeleteReturn {
-  deleteDocument: (documentId: string) => Promise<DeleteResult>;
+  deleteDocument: (documentId: string, reason: string) => Promise<DeleteResult>;
   restoreDocument: (documentId: string) => Promise<DeleteResult>;
   isDeleting: boolean;
   isRestoring: boolean;
@@ -22,9 +23,10 @@ export const useDocumentDelete = (): UseDocumentDeleteReturn => {
   const [isRestoring, setIsRestoring] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { updateContext } = useContext(MainContext)!;
+  const { user } = useAuth()!;
 
   // Мягкое удаление документа
-  const deleteDocument = useCallback(async (documentId: string): Promise<DeleteResult> => {
+  const deleteDocument = useCallback(async (documentId: string, reason: string): Promise<DeleteResult> => {
     setIsDeleting(true);
     setError(null);
 
@@ -34,6 +36,10 @@ export const useDocumentDelete = (): UseDocumentDeleteReturn => {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ 
+          reason: reason,
+          userId: user?.id // Передаем ID текущего пользователя
+        }),
       });
 
       const data = await response.json();

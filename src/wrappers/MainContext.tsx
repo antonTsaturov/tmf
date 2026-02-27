@@ -40,6 +40,7 @@ export interface MainContextProps {
   isNewVersionPanelOpen: boolean;
   isSubmittingToReview: boolean;
   isAcceptedForReview: boolean;
+  isDeletePanelOpen: boolean;
   
 }
 
@@ -71,7 +72,7 @@ const defaultContext: MainContextProps = {
   isNewVersionPanelOpen: false, // Флаг для открытия окна загрузки новой ВЕРСИИ документа
   isSubmittingToReview: false, // Флаг для открытия окна отправки документа на ревью
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
-  
+  isDeletePanelOpen:false     // Флаг для открытия окна удаления документа
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
