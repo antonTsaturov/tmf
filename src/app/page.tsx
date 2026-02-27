@@ -22,6 +22,8 @@ import DocumentDetails from '@/components/DocumentDetails';
 import DeletedDocumentsViewer from '@/components/DeletedDocumentsViewer';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
+import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
+import { DocumentWorkFlowStatus } from '@/types/document';
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -34,7 +36,7 @@ const Home: React.FC<MainWindowProps> = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { isOpen, openModal, closeModal, modalProps } = useModal();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedDocument, isRightFrameOpen } = context;
+  const { selectedDocument, isRightFrameOpen } = context!;
 
   return (
     <div className="sidebarresizable-root">
@@ -106,10 +108,22 @@ const Home: React.FC<MainWindowProps> = () => {
           </div>
         </div>
         <div className="main-content">
-          <div className="main-content-path">
-            <DocumentActions />
+          <div className="main-content-row">
+            <div className="main-content--buttons">
+              <DocumentActions />
 
+            </div>
+            <div className="main-content--status">
+              {selectedDocument?.status && (
+                <DocumentStatusIndicator
+                  size="big" 
+                  //showLabel={false}
+                  status={selectedDocument?.status}
+                />
+              )}
+            </div>
           </div>
+          
           <div className="main-content-area">
             <FolderContentViewer />
           </div>

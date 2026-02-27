@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { Document, DocumentStatus } from '@/types/document';
+import { Document, DocumentWorkFlowStatus } from '@/types/document';
 import { StudyUser } from '@/types/types';
 import { ROLE_CONFIG } from '@/types/types';
 import '../styles/DocumentDetails.css';
@@ -435,7 +435,7 @@ const DocumentDetails: React.FC = () => {
                     >
                       Скачать
                     </button>
-                    {v.document_number !== doc.document_number && doc.status !== DocumentStatus.APPROVED && (
+                    {v.document_number !== doc.document_number && doc.status !== DocumentWorkFlowStatus.APPROVED && (
                       <button
                         type="button"
                         className="version-action-btn version-action-restore"

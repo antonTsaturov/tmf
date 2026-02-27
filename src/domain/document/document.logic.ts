@@ -1,5 +1,5 @@
 // @/domain/document/document.logic.ts (или аналогичный путь)
-import { Document, DocumentAction, DocumentStatus, Transitions as transitions } from '@/types/document';
+import { Document, DocumentAction, DocumentWorkFlowStatus, Transitions as transitions } from '@/types/document';
 import { UserRole } from '@/types/types';
 import { ActionRoleMap } from '@/domain/document/document.policy';
 
@@ -33,19 +33,19 @@ import { ActionRoleMap } from '@/domain/document/document.policy';
     // Базовые действия, доступные для всех документов с учетом роли пользователя
     const baseActions = getBaseActions(userRole);
 
-    const currentStatus = selectedDocument.status as DocumentStatus;
+    const currentStatus = selectedDocument.status as DocumentWorkFlowStatus;
     
     // Получаем действия на основе статуса из Transitions
     const statusActions = transitions[currentStatus] || [];
     
     // Определяем, можно ли загружать новую версию
     // Загрузка новой версии разрешена ТОЛЬКО для черновиков
-    const canUploadNewVersion = currentStatus === DocumentStatus.DRAFT;
+    const canUploadNewVersion = currentStatus === DocumentWorkFlowStatus.DRAFT;
     
     // Определяем, нужно ли добавлять действия для удаленных/архивированных
     const isSpecialStatus = 
-      currentStatus === DocumentStatus.DELETED || 
-      currentStatus === DocumentStatus.ARCHIVED;
+      currentStatus === DocumentWorkFlowStatus.DELETED || 
+      currentStatus === DocumentWorkFlowStatus.ARCHIVED;
 
     let allActions: DocumentAction[] = [...baseActions, ...statusActions];
     

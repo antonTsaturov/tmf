@@ -15,7 +15,7 @@ import {
   FiUploadCloud
 } from 'react-icons/fi';
 import { MainContext } from '@/wrappers/MainContext';
-import { DocumentAction, DocumentStatus, Transitions as transitions } from '@/types/document';
+import { DocumentAction, DocumentWorkFlowStatus, Transitions as transitions } from '@/types/document';
 import '../styles/DocumentActions.css';
 import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
@@ -262,14 +262,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     if (action === DocumentAction.SOFT_DELETE) {
       updateContext({ isDeletePanelOpen: true });
       return;
-      
-      //setShowDeleteConfirm(true);
     }
-
-    // if (action === DocumentAction.RESTORE) {
-    //   await handleRestore();
-    //   return;
-    // }
 
     if (action === DocumentAction.VIEW) {
       // PDFViewer сам отреагирует на selectedDocument
@@ -277,7 +270,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
 
     if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
-      //onSubmitReview?.();
       updateContext({ isSubmittingToReview: true});
       return;
     }
@@ -286,7 +278,13 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       // Открываем модальное окно ревью
       updateContext({ isAcceptedForReview: true });
       return;
-    }    
+    }
+
+    if (action === DocumentAction.ARCHIVE) {
+      updateContext({ isArchivePanelOpen: true});
+      return;
+    }
+
 
     onAction?.(action);
   };

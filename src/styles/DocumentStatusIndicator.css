@@ -1,9 +1,8 @@
 /* styles/DocumentStatusIndicator.css */
 .status-indicator {
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
+  padding: 12px 20px;
+  display: flex;
 }
 
 .status-circles {
@@ -14,13 +13,30 @@
 
 .status-circle {
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s ease;
   border: 1px solid transparent;
+}
+
+.status-circle.active {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .status-circle.current {
   transform: scale(1.2);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.status-circle.empty {
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.status-circle.empty:hover {
+  opacity: 0.8;
 }
 
 .status-label {
@@ -30,67 +46,11 @@
   font-weight: 600;  
 }
 
-/* Анимация при наведении */
-.status-circle:not(.current):hover {
-  transform: scale(1.1);
-  opacity: 0.9;
+.status-circles:hover .status-circle:not(:hover) {
+  opacity: 0.7;
 }
 
-/* Размеры для medium (если добавить) */
-.status-indicator.medium .status-circle {
-  width: 10px;
-  height: 10px;
-}
-
-/* styles/DocumentStatusIndicator.css */
-
-.status-circle {
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.status-circle.active {
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.status-circle.current {
-  border-color: #333;
-  transform: scale(1.1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.status-circle:not(.active) {
-  opacity: 0.5;
-}
-
-/* Анимация при наведении */
-/* .status-circle:hover {
-  transform: scale(1.15);
+.status-circle:hover {
+  transform: scale(1.2);
   z-index: 1;
-} */
-
-/* Разные размеры
-.status-indicator.small .status-circle {
-  width: 20px;
-  height: 20px;
 }
-
-.status-indicator.medium .status-circle {
-  width: 24px;
-  height: 24px;
-}
-
-.status-indicator.compact .status-circle {
-  width: 16px;
-  height: 16px;
-}
-
-.status-indicator.compact .status-label {
-  font-size: 10px;
-} */

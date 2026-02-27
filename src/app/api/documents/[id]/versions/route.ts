@@ -8,7 +8,7 @@ import { getDocumentVersionS3Key } from '@/lib/s3-path';
 import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditAction, AuditEntity } from '@/types/types';
 import { AuditConfig } from '@/lib/audit/audit.middleware';
-import { DocumentStatus } from '@/types/document';
+import { DocumentWorkFlowStatus } from '@/types/document';
 
 function encodeMetadata(value: string): string {
   return Buffer.from(value).toString('base64');

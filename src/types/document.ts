@@ -1,10 +1,8 @@
 export enum DocumentAction {
   CREATE_DOCUMENT = 'create_document',
   SUBMIT_FOR_REVIEW = 'submit_for_review',
-  // CANCEL_REVIEW = 'cancel_review',
   APPROVE = 'approve',
   REJECT = 'reject',
-  // RETURN_TO_DRAFT = 'return_to_draft',
   ARCHIVE = 'archive',
   UNARCHIVE = 'unarchive',
   SOFT_DELETE = 'soft_delete',
@@ -14,10 +12,16 @@ export enum DocumentAction {
   DOWNLOAD = 'download'
 }
 
-export enum DocumentStatus {
+export enum DocumentWorkFlowStatus {
   DRAFT = 'draft',
   IN_REVIEW = 'in_review',
   APPROVED = 'approved',
+  ARCHIVED = 'archived',  // Удалить позднее
+  DELETED = 'deleted' // Удалить позднее
+}
+
+export enum DocumentLifeCycleStatus {
+  ACTIVE = 'active',
   ARCHIVED = 'archived',
   DELETED = 'deleted'
 }
@@ -32,16 +36,22 @@ export interface Document {
   folder_name: string;
   tmf_zone: string | null;
   tmf_artifact: string | null;
-  status: DocumentStatus;
+  status: DocumentWorkFlowStatus;
   // current_version_id: string; // UUID
   created_by: string; // UUID
   created_at: string;
+
   is_deleted: boolean;
   deleted_at: string;
   deleted_by: string;
+  deletion_reason: string;
+
   restored_by: string;
   restored_at: string;
-  deletion_reason: string;
+
+  is_archived: boolean;
+  archived_at: string;
+  archived_by: string;
 
   id: string;
   document_number: number;
@@ -79,7 +89,7 @@ export interface DocumentVersion {
   review_comment: string;
 }
 
-export const Transitions: Record<DocumentStatus, DocumentAction[]> = {
+export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
   draft: [
     DocumentAction.CREATE_DOCUMENT,
     DocumentAction.SUBMIT_FOR_REVIEW,

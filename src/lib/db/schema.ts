@@ -110,7 +110,11 @@ export const DocumentTable = `
     deletion_reason TEXT,
 
     restored_by UUID REFERENCES users(id),
-    restored_at TIMESTAMPTZ
+    restored_at TIMESTAMPTZ,
+
+    is_archived BOOLEAN DEFAULT FALSE,
+    archived_at TIMESTAMPTZ,
+    archived_by UUID REFERENCES users(id)
   );
 `;
 

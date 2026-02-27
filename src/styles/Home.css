@@ -184,7 +184,14 @@
   min-height: 0;
 }
 
-.main-content-path {
+.main-content-row {
+  flex-direction: row;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;  
+}
+
+.main-content--buttons, .main-content--status {
   /* min-height: 40px; */
   border: 2px solid #cccccc70;
   border-radius: 8px;
@@ -192,4 +199,12 @@
   font-size: 0.9rem;
   color: #555;
   background: #fafbfc;
+}
+
+.main-content--buttons {
+  width: 100%;
+}
+
+.main-content--status {
+  width: 200px;
 }
