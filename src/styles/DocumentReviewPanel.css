@@ -1,4 +1,7 @@
 /* styles/DocumentReviewPanel.css */
+
+
+/* styles/DocumentReviewPanel.css */
 .review-overlay {
   position: fixed;
   top: 0;
@@ -20,7 +23,7 @@
 
 .review-modal {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   width: 90%;
   max-width: 520px;
   max-height: 90vh;
@@ -46,7 +49,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .review-title {
@@ -87,11 +90,13 @@
 
 .review-doc-info {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 20px 0;
   padding: 16px;
-  background-color: #f8f9fa;
+  background: #f8f9fa;
   border-radius: 8px;
-  margin-bottom: 20px;
+  border-left: 4px solid #6eb76a;
 }
 
 .review-doc-icon {
@@ -105,57 +110,56 @@
 }
 
 .review-doc-name {
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 4px;
+  font-size: 16px;
+  margin-bottom: 6px;
   word-break: break-word;
 }
 
 .review-doc-meta {
   display: flex;
-  align-items: center;
   gap: 8px;
-  font-size: 12px;
-  color: #666;
-  margin-bottom: 6px;
   flex-wrap: wrap;
+  margin-bottom: 0;
 }
 
 .review-doc-meta-separator {
-  color: #ccc;
+  display: none;
 }
 
 .review-doc-tag {
-  display: inline-block;
   background-color: #e3f2fd;
   color: #1976d2;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 16px;
+  font-size: 12px;
   font-weight: 500;
+  display: inline-block;
 }
 
 .reviewer-info {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 12px;
   padding: 12px 16px;
-  background-color: #fff3e0;
-  border-radius: 8px;
+  background: #fff3e0;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
   margin-bottom: 20px;
   font-size: 14px;
   color: #666;
 }
 
 .reviewer-icon {
-  color: #f39c12;
+  color: #ffc107;
   font-size: 18px;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 0;
 }
 
 .review-comment-section {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .review-comment-label {
@@ -169,23 +173,24 @@
 .review-comment-input {
   width: 100%;
   padding: 12px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
   font-size: 14px;
   resize: vertical;
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
+  background: #fff;
 }
 
 .review-comment-input:focus {
   outline: none;
   border-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
 }
 
 .review-comment-input.reject {
   border-color: #f44336;
-  background-color: #ffebee;
+  background-color: #fff8f8;
 }
 
 .review-comment-input.reject:focus {
@@ -194,10 +199,12 @@
 }
 
 .review-error {
-  padding: 12px 14px;
-  background-color: #ffebee;
-  color: #f44336;
-  border-radius: 8px;
+  margin: 16px 0;
+  padding: 12px 16px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  color: #721c24;
   font-size: 14px;
 }
 
@@ -206,9 +213,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-top: 1px solid #e0e0e0;
-  background-color: #f8f9fa;
-  border-radius: 0 0 12px 12px;
+  border-top: 1px solid #e9ecef;
+  background: #fff;
+  border-radius: 0 0 8px 8px;
 }
 
 .review-actions {
@@ -217,67 +224,81 @@
 }
 
 .review-btn {
-  display: inline-flex;
+  cursor: pointer;
+  background: #fff;
+  border: 1px solid #d1d5da;
+  border-radius: 3px;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 5px 12px 2px;
+  font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color .15s, background .15s;
+  display: inline-flex;
   white-space: nowrap;
+  color: #212529;
+  line-height: 1.5;
 }
 
 .review-btn--cancel {
-  background-color: #f5f5f5;
-  color: #666;
+  background: #fff;
+  border: 1px solid #d1d5da;
+  color: #212529;
 }
 
 .review-btn--cancel:hover:not(:disabled) {
-  background-color: #e0e0e0;
+  background-color: #f6f8fa;
+  border-color: #d1d5da;
 }
 
 .review-btn--approve {
   background-color: #4CAF50;
   color: white;
+  border: none;
 }
 
 .review-btn--approve:hover:not(:disabled) {
   background-color: #45a049;
+  border: none;
 }
 
 .review-btn--reject {
   background-color: #f44336;
   color: white;
+  border: none;
 }
 
 .review-btn--reject:hover:not(:disabled) {
   background-color: #d32f2f;
+  border: none;
 }
 
 .review-btn--back {
   background-color: #9e9e9e;
   color: white;
+  border: none;
 }
 
 .review-btn--back:hover:not(:disabled) {
   background-color: #757575;
+  border: none;
 }
 
 .review-btn--confirm-reject {
   background-color: #f44336;
   color: white;
+  border: none;
 }
 
 .review-btn--confirm-reject:hover:not(:disabled) {
-  background-color: #d32f2f;
+  background-color: #e0a800;
+  border: none;
 }
 
 .review-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Адаптивность */

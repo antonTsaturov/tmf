@@ -117,8 +117,6 @@ const Home: React.FC<MainWindowProps> = () => {
               {selectedDocument?.status && (
                 <DocumentStatusIndicator
                   size="big" 
-                  //showLabel={false}
-                  status={selectedDocument?.status}
                 />
               )}
             </div>
@@ -140,17 +138,26 @@ const Home: React.FC<MainWindowProps> = () => {
                   <Tabs.Trigger value="tab2">Document metadata</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="view" className="right-frame-tab-content">
-                  {selectedDocument ? (
-                    <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
-                  ) : (
-                    <div className="right-frame-placeholder">
-                      <div className="placeholder-icon">📄</div>
-                      <div className="placeholder-text">
-                        Выберите документ для просмотра
-                      </div>
-                    </div>
-                  )}
-                </Tabs.Content>
+{selectedDocument ? (
+  selectedDocument.is_deleted ? (
+    <div className="right-frame-placeholder">
+      <div className="placeholder-icon">🔒</div>
+      <div className="placeholder-text">
+        Документ "{selectedDocument.document_name}" был удален<br />
+        <span style={{fontSize: '13px', color: '#6c757d'}}>Просмотр недоступен</span>
+      </div>
+    </div>
+  ) : (
+    <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
+  )
+) : (
+  <div className="right-frame-placeholder">
+    <div className="placeholder-icon">📄</div>
+    <div className="placeholder-text">
+      Выберите документ для просмотра
+    </div>
+  </div>
+)}                </Tabs.Content>
                 <Tabs.Content value="tab2" className="right-frame-tab-content">
                   <DocumentDetails />
                 </Tabs.Content>

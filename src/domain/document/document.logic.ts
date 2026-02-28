@@ -22,12 +22,13 @@ import { ActionRoleMap } from '@/domain/document/document.policy';
   };
 
   export const getAvailableDocumentActions = (selectedDocument: Document | null, userRole: UserRole[]): DocumentAction[] => {
-    // if (!selectedFolder) {
-    //   return [DocumentAction.CREATE_DOCUMENT];
-    // }
 
     if (!selectedDocument) {
       return [DocumentAction.CREATE_DOCUMENT];
+    }
+
+    if (selectedDocument.is_deleted) {
+      return [DocumentAction.CREATE_DOCUMENT, DocumentAction.VIEW];
     }
 
     // Базовые действия, доступные для всех документов с учетом роли пользователя
@@ -42,11 +43,6 @@ import { ActionRoleMap } from '@/domain/document/document.policy';
     // Загрузка новой версии разрешена ТОЛЬКО для черновиков
     const canUploadNewVersion = currentStatus === DocumentWorkFlowStatus.DRAFT;
     
-    // Определяем, нужно ли добавлять действия для удаленных/архивированных
-    const isSpecialStatus = 
-      currentStatus === DocumentWorkFlowStatus.DELETED || 
-      currentStatus === DocumentWorkFlowStatus.ARCHIVED;
-
     let allActions: DocumentAction[] = [...baseActions, ...statusActions];
     
     // Добавляем UPLOAD_NEW_VERSION только для черновиков

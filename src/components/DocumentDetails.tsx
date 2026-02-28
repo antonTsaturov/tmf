@@ -2,10 +2,12 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { Document, DocumentWorkFlowStatus } from '@/types/document';
-import { StudyUser } from '@/types/types';
-import { ROLE_CONFIG } from '@/types/types';
+import { Document, DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document';
+import DocumentStatusBadge from './DocumentStatusBadge';
+// import { StudyUser } from '@/types/types';
+// import { ROLE_CONFIG } from '@/types/types';
 import '../styles/DocumentDetails.css';
+
 
 interface DocumentVersionRow {
   id: string;
@@ -133,30 +135,30 @@ const DocumentDetails: React.FC = () => {
     );
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; color: string }> = {
-      draft: { label: 'DRAFT', color: '#666' },
-      in_review: { label: 'IN REVIEW', color: '#f39c12' },
-      approved: { label: 'APPROVED', color: '#27ae60' },
-      archived: { label: 'ARCHIVED', color: '#7f8c8d' },
-      deleted: { label: 'DELETED', color: '#c0392b' },
-    };
+  // const getStatusBadge = (status: string) => {
+  //   const statusConfig: Record<string, { label: string; color: string }> = {
+  //     draft: { label: 'DRAFT', color: '#666' },
+  //     in_review: { label: 'IN REVIEW', color: '#f39c12' },
+  //     approved: { label: 'APPROVED', color: '#27ae60' },
+  //     archived: { label: 'ARCHIVED', color: '#7f8c8d' },
+  //     deleted: { label: 'DELETED', color: '#c0392b' },
+  //   };
     
-    const config = statusConfig[status] || { label: status, color: '#666' };
+  //   const config = statusConfig[status] || { label: status, color: '#666' };
     
-    return (
-      <span 
-        className="status-badge"
-        style={{ 
-          backgroundColor: config.color + '20',
-          color: config.color,
-          borderColor: config.color + '40'
-        }}
-      >
-        {config.label}
-      </span>
-    );
-  };
+  //   return (
+  //     <span 
+  //       className="status-badge"
+  //       style={{ 
+  //         backgroundColor: config.color + '20',
+  //         color: config.color,
+  //         borderColor: config.color + '40'
+  //       }}
+  //     >
+  //       {config.label}
+  //     </span>
+  //   );
+  // };
 
   if (!selectedDocument) {
     return (
@@ -187,7 +189,6 @@ const DocumentDetails: React.FC = () => {
     review_comment?: string | null;
   };
 
-  //console.log('doc: ', doc)
   return (
     <div className="document-details">
       <div className="document-details-content">
@@ -205,7 +206,17 @@ const DocumentDetails: React.FC = () => {
             </div>
             <div className="metadata-row">
               <dt>Статус</dt>
-              <dd>{getStatusBadge(doc.status)}</dd>
+              <dd>
+                <DocumentStatusBadge
+                  status={
+                    doc.is_archived
+                    ? DocumentLifeCycleStatus.ARCHIVED 
+                    : doc.is_deleted
+                    ? DocumentLifeCycleStatus.DELETED 
+                    : doc.status
+                  }
+                />
+              </dd>
             </div>
             <div className="metadata-row">
               <dt>Папка</dt>

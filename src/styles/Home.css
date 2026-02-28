@@ -188,7 +188,8 @@
   flex-direction: row;
   display: flex;
   gap: 20px;
-  justify-content: space-between;  
+  justify-content: space-between;
+  min-height: 60px;
 }
 
 .main-content--buttons, .main-content--status {

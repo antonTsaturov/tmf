@@ -21,7 +21,6 @@ import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from './FileExplorer';
 //import { usePDFCache } from '@/hooks/usePDFCache';
-import { ActionRoleMap } from '@/domain/document/document.policy';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
 import { UserRole } from '@/types/types';
 
@@ -175,48 +174,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     handleFileSelect();
   };
 
-  // Обработчик мягкого удаления
-  // const handleSoftDelete = async () => {
-  //   if (!selectedDocument) return;
-    
-  //   try {
-  //     const result = await deleteDocument(selectedDocument.id);
-      
-  //     if (result.success) {
-  //       setNotification({ type: 'success', message: 'Документ успешно удален' });
-  //       setShowDeleteConfirm(false);
-  //       // Сбрасываем выделение после удаления
-  //       updateContext({ selectedDocument: null });
-  //       // Вызываем колбэк для обновления списка
-  //       onDocumentDeleted?.();
-  //     } else {
-  //       setNotification({ type: 'error', message: result.error || 'Ошибка при удалении документа' });
-  //     }
-  //   } catch (error) {
-  //     console.error('Error deleting document:', error);
-  //     setNotification({ type: 'error', message: 'Ошибка при удалении документа' });
-  //   }
-  // };
-
-  // Обработчик восстановления
-  // const handleRestore = async () => {
-  //   if (!selectedDocument) return;
-    
-  //   try {
-  //     const result = await restoreDocument(selectedDocument.id);
-      
-  //     if (result.success) {
-  //       setNotification({ type: 'success', message: 'Документ успешно восстановлен' });
-  //       // Вызываем колбэк для обновления списка
-  //       onDocumentRestored?.();
-  //     } else {
-  //       setNotification({ type: 'error', message: result.error || 'Ошибка при восстановлении документа' });
-  //     }
-  //   } catch (error) {
-  //     console.error('Error restoring document:', error);
-  //     setNotification({ type: 'error', message: 'Ошибка при восстановлении документа' });
-  //   }
-  // };
 
   const handleUploadNewVersion = () => {
     if (!selectedDocument) return;
@@ -301,42 +258,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
           {notification.message}
         </div>
       )}
-
-      {/* {(isDeleting || isRestoring) && (
-        <div className="doc-action-loading">
-          <div className="doc-action-spinner"></div>
-          <span>{isDeleting ? 'Удаление...' : 'Восстановление...'}</span>
-        </div>
-      )}
-
-      {showDeleteConfirm && (
-        <div className="doc-action-confirm-overlay">
-          <div className="doc-action-confirm">
-            <h3 className="doc-action-confirm-title">Delete confirmation</h3>
-            <p className="doc-action-confirm-text">Mark &quot;{selectedDocument?.document_name}&quot; as "deleted"?</p>
-            <p className="doc-action-confirm-warning">The document and its versions will no longer be visible in active folders.
-The record will be retained in the system and can be restored by an authorized user.</p>
-            <div className="doc-action-confirm-actions">
-              <button
-                type="button"
-                className="doc-action-btn doc-action-btn--cancel"
-                onClick={() => setShowDeleteConfirm(false)}
-                disabled={isDeleting}
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                className="doc-action-btn doc-action-btn--delete"
-                onClick={handleSoftDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? 'Удаление...' : 'Удалить'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )} */}
 
       <div className={`doc-action-root ${className}`}>
         <div className="doc-action-container">

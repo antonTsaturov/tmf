@@ -18,13 +18,13 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [comment, setComment] = useState('');
-  const [showRejectReason, setShowRejectReason] = useState(false);
+  const [rejectDocument, setRejectDocument] = useState(false);
 
   // Сбрасываем состояние при закрытии
   useEffect(() => {
     if (!isAcceptedForReview) {
       setComment('');
-      setShowRejectReason(false);
+      setRejectDocument(false);
       setError(null);
     }
   }, [isAcceptedForReview]);
@@ -164,27 +164,29 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
             <FiInfo className="reviewer-icon" />
             <span>
               Вы действуете как <strong>рецензент</strong>. 
-              Пожалуйста, внимательно проверьте документ перед утверждением.
+              {!rejectDocument 
+                ? ' Пожалуйста, внимательно проверьте документ перед утверждением.'
+                : ' Пожалуйста, внимательно проверьте документ перед перед отклонением, а также укажите причину.'}
             </span>
           </div>
 
           {/* Поле для комментария */}
           <div className="review-comment-section">
             <label htmlFor="review-comment" className="review-comment-label">
-              {showRejectReason ? 'Причина отклонения' : 'Комментарий (необязательно)'}
+              {rejectDocument ? 'Причина отклонения' : 'Комментарий'}
             </label>
             <textarea
               id="review-comment"
-              className={`review-comment-input ${showRejectReason ? 'reject' : ''}`}
+              className={`review-comment-input ${rejectDocument ? 'reject' : ''}`}
               rows={4}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder={showRejectReason 
+              placeholder={rejectDocument 
                 ? "Укажите причину отклонения документа..." 
                 : "Добавьте комментарий (необязательно)"
               }
               disabled={loading}
-              autoFocus={showRejectReason}
+              autoFocus={rejectDocument}
             />
           </div>
 
@@ -207,15 +209,15 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
           </button>
           
           <div className="review-actions">
-            {!showRejectReason ? (
+            {!rejectDocument ? (
               <>
                 <button
                   type="button"
                   className="review-btn review-btn--reject"
-                  onClick={() => setShowRejectReason(true)}
+                  onClick={() => setRejectDocument(true)}
                   disabled={loading}
                 >
-                  <FiXCircle /> Отклонить
+                  Отклонить
                 </button>
                 <button
                   type="button"
@@ -223,7 +225,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                   onClick={handleApprove}
                   disabled={loading}
                 >
-                  <FiCheckCircle /> {loading ? 'Утверждение...' : 'Утвердить'}
+                  {loading ? 'Утверждение...' : 'Утвердить'}
                 </button>
               </>
             ) : (
@@ -232,7 +234,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                   type="button"
                   className="review-btn review-btn--back"
                   onClick={() => {
-                    setShowRejectReason(false);
+                    setRejectDocument(false);
                     setComment('');
                   }}
                   disabled={loading}

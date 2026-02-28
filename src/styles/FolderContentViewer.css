@@ -122,6 +122,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0; /* Важно для корректного обрезания текста */
+  color: #666;
+  font-size: 13px;
+
 }
 
 .doc-icon {
@@ -137,6 +140,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  
 }
 
 .artifact-tag {
@@ -153,18 +157,10 @@
   display: flex;
   align-items: center;
   min-width: 0;
+  color: #666;
+  font-size: 13px;
 }
 
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-}
 
 .status-icon {
   font-size: 14px;
@@ -414,35 +410,6 @@
   color: #666;
 }
 
-/* Статус документа в строке */
-.document-row.deleted {
-  opacity: 0.7;
-  background-color: #fff5f5;
-}
-
-.document-row.archived {
-  opacity: 0.7;
-  background-color: #f8f9fa;
-}
-
-.status-badge-small {
-  font-size: 10px;
-  margin-left: 6px;
-  padding: 2px 4px;
-  border-radius: 3px;
-  background: #f0f0f0;
-  color: #666;
-}
-
-.status-badge-small.deleted {
-  background: #c0392b;
-  color: white;
-}
-
-.status-badge-small.archived {
-  background: #7f8c8d;
-  color: white;
-}
 
 /* Обновление заголовка для размещения фильтра */
 .folder-header .folder-info {

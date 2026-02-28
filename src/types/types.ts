@@ -1,3 +1,11 @@
+export enum Colors {
+  GRAY = '#9E9E9E',
+  BLUE = '#2196F3',
+  GREEN = '#4CAF50',
+  YELLOW = '#d6a309',
+  RED = '#c0392b'
+}
+
 export enum StudyStatus {
   PLANNED = 'planned',
   ONGOING = 'ongoing',

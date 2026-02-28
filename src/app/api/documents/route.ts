@@ -560,6 +560,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, createTable } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { v4 as uuidv4 } from 'uuid';
+import { DocumentLifeCycleStatus } from '@/types/document';
 
 // Получение документов при просмотре содержимого папки
 export async function GET(request: NextRequest) {
@@ -883,7 +884,12 @@ export async function GET(request: NextRequest) {
           
           // Текущая версия и статус
           current_version: doc.latest_version,
-          status: doc.document_status || 'draft',
+          //status: doc.document_status || 'draft',
+          status: doc.is_archived
+          ? DocumentLifeCycleStatus.ARCHIVED
+          : doc.is_deleted
+          ? DocumentLifeCycleStatus.DELETED
+          : doc.document_status,
           
           // Поля последней версии (для обратной совместимости)
           document_number: doc.document_number,

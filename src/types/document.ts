@@ -16,8 +16,8 @@ export enum DocumentWorkFlowStatus {
   DRAFT = 'draft',
   IN_REVIEW = 'in_review',
   APPROVED = 'approved',
-  ARCHIVED = 'archived',  // Удалить позднее
-  DELETED = 'deleted' // Удалить позднее
+  ARCHIVED = 'archived',  // Удалить позднее, use DocumentLifeCycleStatus
+  DELETED = 'deleted' // Удалить позднее, use DocumentLifeCycleStatus
 }
 
 export enum DocumentLifeCycleStatus {
@@ -98,17 +98,16 @@ export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
   ],
   in_review: [
     DocumentAction.APPROVE,
-    DocumentAction.REJECT,
+    //DocumentAction.REJECT, // Отклонение через форму одобрения
     // DocumentAction.CANCEL_REVIEW
   ],
   approved: [
     DocumentAction.ARCHIVE
   ],
   archived: [
-    DocumentAction.UNARCHIVE
+    //DocumentAction.UNARCHIVE
   ],
   deleted: [
-
-    DocumentAction.RESTORE
+    //DocumentAction.RESTORE
   ]
 }
