@@ -22,51 +22,22 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   onSiteChange,
   onViewLevelChange,
 }) => {
-  const { user } = useAuth();
-  const { studies, loadTablePartial, loadTable } = useContext(AdminContext)!;
+  const { user, loading: authLoading } = useAuth()!;
+  const { studies, loadTablePartial } = useContext(AdminContext)!;
   
   const [sites, setSites] = useState<StudySite[]>([]);
-  const [loading, setLoading] = useState(true);
   const [loadingSites, setLoadingSites] = useState(false);
   const { context, updateContext } = useContext(MainContext)!;
   const { currentSite, currentStudy, currentLevel } = context;
 
   // Refs для предотвращения повторных загрузок
-  const loadedStudiesRef = useRef(false);
   const loadedSitesRef = useRef<Record<number, boolean>>({});
-
-  // Загружаем исследования один раз при монтировании
-  useEffect(() => {
-    const loadAllStudies = async () => {
-      if (!user?.assigned_study_id || loadedStudiesRef.current) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        await loadTable(Tables.STUDY);
-        loadedStudiesRef.current = true;
-      } catch (error) {
-        console.error('Error loading studies:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAllStudies();
-  }, [user?.assigned_study_id, loadTable]); // Добавлена зависимость loadTable
 
   // Загружаем центры только при выборе уровня SITE
   useEffect(() => {
     const loadStudySites = async () => {
       if (!currentStudy || !user?.assigned_site_id) {
         setSites([]);
-        return;
-      }
-
-      // Проверяем, загружали ли уже центры для этого исследования
-      if (loadedSitesRef.current[currentStudy.id]) {
         return;
       }
 
@@ -145,7 +116,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
     }
   }, [sites, updateContext, onSiteChange]);
 
-  if (loading) {
+  if (authLoading) {
     return (
       <Flex p="3" justify="center" align="center" gap="2">
         <Spinner size="2" />
@@ -153,6 +124,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
       </Flex>
     );
   }
+
 
   if (!studies?.length) {
     return (

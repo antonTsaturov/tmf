@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AUTH_DISABLED } from '@/proxy';
+import { Spinner, Flex, Text } from '@radix-ui/themes';
 
 
 interface User {
@@ -39,7 +40,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/check', {
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store' // Запрет кэширования
       });
       
       if (response.ok) {
@@ -70,6 +72,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         setUser(data.user);
+        // ВАЖНО: Вызываем проверку авторизации еще раз, 
+        // чтобы обновить все состояния и убедиться, что сессия активна        
+        await checkAuth();
+        router.refresh();
         return true;
       } else {
         return false;
@@ -88,7 +94,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     
     setUser(null);
-    router.push('/login');
+    //router.push('/login');
+    window.location.href = '/login'; // Жесткая перезагрузка страницы
   };
 
   // Автоматический редирект на логин, если пользователь не авторизован
@@ -100,16 +107,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, loading, pathname, router]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-        isAuthenticated: !!user
-      }}
-    >
-      {children}
+    <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
+      {/* Ключевое изменение: если мы еще грузимся (loading === true), 
+        мы не рендерим children. Это предотвращает ситуацию, когда 
+        компоненты внутри (как Navigation) видят user === null во время загрузки.
+      */}
+      {!loading ? children : (
+        <>
+          <Flex p="3" justify="center" align="center" gap="2" height="100vh">
+            <Spinner size="3" style={{ color: 'gray' }} />
+            <Text size="1" weight="medium">Loaging...</Text>
+          </Flex>
+        </>
+      )}
     </AuthContext.Provider>
   );
 }

@@ -36,9 +36,9 @@ export default function LoginPage() {
       }
 
       // Перенаправление после успешного входа
-      router.push('/');
       router.refresh();
-
+      //router.push('/');
+      window.location.href = '/';
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {

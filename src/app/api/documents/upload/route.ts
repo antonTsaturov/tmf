@@ -165,6 +165,7 @@ async function uploadHandler(request: NextRequest, preloadedData?: any) {
       new Date().toISOString()
     ]);
 
+    // Обновляем таблицу версий документа
     const { rows: existingVersions } = await client.query(`
       SELECT COUNT(*) as count FROM document_version WHERE document_id = $1
     `, [documentId]);

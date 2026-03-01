@@ -106,7 +106,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const { deleteDocument, restoreDocument, isDeleting, isRestoring, error } = useDocumentDelete();
   //const {getAllCachedPDFs} = usePDFCache();
   
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
   // Автоматически скрываем уведомление через 3 секунды

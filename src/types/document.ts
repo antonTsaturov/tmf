@@ -91,7 +91,7 @@ export interface DocumentVersion {
 
 export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
   draft: [
-    DocumentAction.CREATE_DOCUMENT,
+    //DocumentAction.CREATE_DOCUMENT,
     DocumentAction.SUBMIT_FOR_REVIEW,
     DocumentAction.SOFT_DELETE,
     DocumentAction.UPLOAD_NEW_VERSION

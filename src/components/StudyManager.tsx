@@ -319,15 +319,9 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
 // Основной компонент
 const StudyManager: FC<StudyManagerProps> = () => {
 
-  const { studies, setStudies, loadTable, error, saveStudy } = useContext(AdminContext)!;
+  const { studies, setStudies, error, saveStudy } = useContext(AdminContext)!;
   const { context } = useContext(MainContext)!;
 
-  useEffect(() => {
-    if (context.isModal) {
-      loadTable(Tables.STUDY);
-    }
-    
-  }, []);
 
   const [studyObject, setStudyObject] = useState<Study[]>([]);
   const [newStudyForm, setNewStudyForm] = useState({

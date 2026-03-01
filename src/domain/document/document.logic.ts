@@ -5,6 +5,11 @@ import { ActionRoleMap } from '@/domain/document/document.policy';
 
   //Функция проверки прав для конкретного действия
   const hasPermissionForAction = (action: DocumentAction, userRoles: UserRole[]): boolean => {
+
+    if (!userRoles || !Array.isArray(userRoles)) {
+      return false;
+    }
+        
     const allowedRoles = ActionRoleMap[action] || [];
     return userRoles.some(role => allowedRoles.includes(role));
   };
@@ -24,11 +29,12 @@ import { ActionRoleMap } from '@/domain/document/document.policy';
   export const getAvailableDocumentActions = (selectedDocument: Document | null, userRole: UserRole[]): DocumentAction[] => {
 
     if (!selectedDocument) {
-      return [DocumentAction.CREATE_DOCUMENT];
+      return [DocumentAction.CREATE_DOCUMENT].filter(action => hasPermissionForAction(action, userRole));
     }
 
     if (selectedDocument.is_deleted) {
-      return [DocumentAction.CREATE_DOCUMENT, DocumentAction.VIEW];
+      return [DocumentAction.CREATE_DOCUMENT, DocumentAction.VIEW]
+      .filter(action => hasPermissionForAction(action, userRole));
     }
 
     // Базовые действия, доступные для всех документов с учетом роли пользователя
@@ -41,14 +47,15 @@ import { ActionRoleMap } from '@/domain/document/document.policy';
     
     // Определяем, можно ли загружать новую версию
     // Загрузка новой версии разрешена ТОЛЬКО для черновиков
-    const canUploadNewVersion = currentStatus === DocumentWorkFlowStatus.DRAFT;
+    // const canUploadNewVersion = currentStatus === DocumentWorkFlowStatus.DRAFT;
     
-    let allActions: DocumentAction[] = [...baseActions, ...statusActions];
+    let allActions: DocumentAction[] = [...baseActions, ...statusActions]
+    .filter(action => hasPermissionForAction(action, userRole));
     
     // Добавляем UPLOAD_NEW_VERSION только для черновиков
-    if (canUploadNewVersion) {
-      allActions.push(DocumentAction.UPLOAD_NEW_VERSION);
-    }
+    // if (canUploadNewVersion) {
+    //   allActions.push(DocumentAction.UPLOAD_NEW_VERSION);
+    // }
 
     // Для специальных статусов оставляем только статусные действия и базовые
     // (без UPLOAD_NEW_VERSION, который уже мог быть добавлен выше для draft)

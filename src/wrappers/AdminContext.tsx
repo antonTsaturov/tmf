@@ -18,6 +18,8 @@ interface AdminContextType {
     saveStudy: (table: Tables, studyData: Study) => Promise<Study>;
     saveSite: (table: Tables, siteData: StudySite) => Promise<StudySite>;
     saveUser: (table: Tables, siteData: StudyUser) => Promise<StudyUser>;
+    loading: boolean;
+    isAuthenticated: boolean;
     currentStudyID: number | null;
     setCurrentStudyID: React.Dispatch<React.SetStateAction<number | null>>;
     currentSiteID: number | null;
@@ -28,7 +30,7 @@ interface AdminContextType {
 export const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export const AdminContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { studies, sites, setStudies, setSites, loadTable, loadTablePartial, loadAllUsers, error, saveStudy, saveSite, saveUser } = useStudies();
+    const { studies, sites, setStudies, setSites, loadTable, loadTablePartial, loadAllUsers, error, saveStudy, saveSite, saveUser, loading, isAuthenticated } = useStudies();
 
     const [currentStudyID, setCurrentStudyID] = useState<number | null>(null);
     const [currentSiteID, setCurrentSiteID] = useState<number | null>(null);
@@ -44,7 +46,15 @@ export const AdminContextProvider: React.FC<{ children: ReactNode }> = ({ childr
       loadAllUsers,
       error,
       saveStudy,
-      saveSite, saveUser, currentStudyID, setCurrentStudyID, currentSiteID, setCurrentSiteID }}>
+      saveSite,
+      saveUser,
+      currentStudyID,
+      setCurrentStudyID,
+      currentSiteID,
+      setCurrentSiteID,
+      loading,
+      isAuthenticated,
+    }}>
       {children}
     </AdminContext>
   );

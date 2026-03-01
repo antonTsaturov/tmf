@@ -206,53 +206,6 @@ async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResp
   });
 }
 
-  // POST: bulk create or update. Используется для пакетного обновления/сохранения данных в БД.
-  // async bulkCreateOrUpdateTable(table: Tables, request: NextRequest) {
-  //   try {
-  //     const data = await request.json();
-      
-  //     if (!Array.isArray(data)) {
-  //       return NextResponse.json(
-  //         { error: `Expected an array of ${table}` },
-  //         { status: 400 }
-  //       );
-  //     }
-
-  //     // Аудит для массовой операции
-  //     const savedSites = await bulkSaveData(data);
-      
-  //     // Логируем массовую операцию (одна запись на весь bulk)
-  //     const auditMiddleware = withAudit({
-  //       action: data.length > 0 && data[0].id ? 'UPDATE' : 'CREATE',
-  //       entityType: this.mapTableToEntity(table),
-  //       getEntityId: () => 0, // 0 означает массовую операцию
-  //       getStudyId: (req) => {
-  //         const firstItem = data[0];
-  //         return firstItem?.study_id || firstItem?.studyId || '';
-  //       },
-  //       getNewValue: () => ({ 
-  //         count: savedSites.length,
-  //         ids: savedSites.map(s => s.id)
-  //       })
-  //     });
-
-  //     return auditMiddleware(request, async () => {
-  //       return NextResponse.json({
-  //         message: `Successfully saved ${savedSites.length} ${table}`,
-  //         savedSites,
-  //         total: savedSites.length
-  //       }, { status: 200 });
-  //     });
-
-  //   } catch (error) {
-  //     console.error(`POST /api/${table} error:`, error);
-  //     return NextResponse.json(
-  //       { error: `Failed to save ${table}`, details: String(error) },
-  //       { status: 500 }
-  //     );
-  //   }
-  // }
-
   // DELETE: delete any record by id с поддержкой каскадного удаления для сайтов
   async deleteRecord(table: Tables, request: NextRequest): Promise<NextResponse> {
     const auditMiddleware = withAudit({
