@@ -3,7 +3,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { useDocumentNewVersion } from '@/hooks/useDocumentNewVersion';
 import { FiX, FiUpload } from 'react-icons/fi';
-import '../styles/FilePreviewPanel.css';
+import '@/styles/FilePreviewPanel.css';
 
 interface NewVersionUploadPanelProps {
   onUploadSuccess?: () => void;

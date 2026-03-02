@@ -2,7 +2,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentArchive } from "@/hooks/useDocumentArchive";
-import "../styles/ArchiveDocumentPanel.css";
+import "@/styles/ArchiveDocumentPanel.css";
 
 interface ArchiveDocumentPanelProps {
   onDocumentArchived?: () => void; // Колбэк для обновления списка после архивации

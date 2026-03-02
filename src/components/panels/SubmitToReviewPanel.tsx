@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { FiX, FiSend, FiUser, FiSearch } from 'react-icons/fi';
 import { ROLE_CONFIG, StudyUser, UserRole } from '@/types/types';
-import '../styles/SubmitToReviewPanel.css';
+import '@/styles/SubmitToReviewPanel.css';
 import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { useAuth } from "@/wrappers/AuthProvider";

@@ -3,7 +3,7 @@ import React, { useContext, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { FiX, FiUpload, FiEdit2 } from 'react-icons/fi';
-import '../styles/FilePreviewPanel.css';
+import '@/styles/FilePreviewPanel.css';
 
 interface FilePreviewPanelProps {
   onUploadSuccess?: () => void;

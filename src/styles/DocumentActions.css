@@ -246,3 +246,38 @@
     font-size: 16px;
   }
 }
+
+/* styles/DocumentActions.css */
+.document-actions-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.action-button-wrapper {
+  flex-shrink: 0;
+}
+
+.more-actions-button {
+  flex-shrink: 0;
+}
+
+.more-action-item {
+  width: 100%;
+  padding: 8px 12px;
+}
+
+.more-action-item:hover {
+  background-color: var(--gray-3);
+}
+
+/* Анимация для появления/исчезновения */
+.action-button-wrapper {
+  transition: opacity 0.2s ease;
+}
+
+/* Для мобильных устройств */
+@media (max-width: 768px) {
+  .document-actions-container {
+    padding: 4px;
+  }
+}

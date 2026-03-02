@@ -1,65 +1,61 @@
 import { useModal } from "@/hooks/useModal"
+import { UserRole } from "@/types/types";
 import { useAuth } from "@/wrappers/AuthProvider";
 import { Button, DropdownMenu } from "@radix-ui/themes";
-import { useRouter } from 'next/navigation';
-
+import { useState } from "react";
+import { FaUser } from "react-icons/fa";
+import UserSettings from "./UserSettings";
 
 export default function UserDropdownMenu() {
-	const router = useRouter();
-    const { isOpen, openModal, closeModal, modalProps } = useModal();
-	const { logout } = useAuth()!;
-	// const logout = async () => {
-	// 	//setLoading(true);
+  const { openModal } = useModal();
+	const { user, logout } = useAuth()!;
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-	// 	try {
-	// 	const response = await fetch('/api/auth/logout', {
-	// 		method: 'POST',
-	// 		headers: {
-	// 		'Content-Type': 'application/json',
-	// 		},
-	// 	});
+  const userRole = String(user?.role);
 
-	// 	const data = await response.json();
+  if (!userRole) {
+    return null;
+  }
 
-	// 	if (!response.ok) {
-	// 		throw new Error(data.error || 'Login failed');
-	// 	}
+  return (
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          <Button  color="gray" >
+            <FaUser /> {user?.name}
+          </Button>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content>
+          {userRole === UserRole.ADMIN && (
+            <><DropdownMenu.Item onClick={openModal}>
+                Admin Dashboard
+              </DropdownMenu.Item>
+              <DropdownMenu.Separator />
+            </>)
+          }
+          <DropdownMenu.Item>Study Metrics</DropdownMenu.Item>
+          
+          <DropdownMenu.Item
+            onClick={() => setSettingsOpen(true)}
+          >
+            User Settings
+          </DropdownMenu.Item>
 
-	// 	// Перенаправление после успешного входа
-	// 	router.push('/login');
-	// 	router.refresh();
+          {<>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item onClick={() => logout()}>
+              Exit
+            </DropdownMenu.Item>
+          </>}
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
 
-	// 	} catch (err: any) {
-	// 	//setError(err.message || 'Invalid email or password');
-	// 	} finally {
-	// 	//setLoading(false);
-	// 	}
-	// }
+      {/* Модальное окно настроек */}
+      <UserSettings 
+        open={settingsOpen} 
+        onOpenChange={setSettingsOpen} 
+      />
 
-    return (
-        <>
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					<Button  color="gray" >
-						Options
-					</Button>
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Item onClick={openModal}>
-						Admin
-					</DropdownMenu.Item>
-
-					<DropdownMenu.Item >Duplicate</DropdownMenu.Item>
-					<DropdownMenu.Separator />
-					<DropdownMenu.Item>Archive</DropdownMenu.Item>
-
-
-					<DropdownMenu.Separator />
-					<DropdownMenu.Item onClick={() => logout()}>
-						Exit
-					</DropdownMenu.Item>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-        </>
-    )
+    </>
+  )
 }

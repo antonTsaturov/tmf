@@ -4,7 +4,7 @@ import { FiX, FiCheckCircle, FiXCircle, FiInfo } from 'react-icons/fi';
 import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
 import { useAuth } from '@/wrappers/AuthProvider';
-import '../styles/DocumentReviewPanel.css';
+import '@/styles/DocumentReviewPanel.css';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;

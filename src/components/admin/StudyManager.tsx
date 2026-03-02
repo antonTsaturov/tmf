@@ -1,5 +1,5 @@
 import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
-import '../styles/StudyManager.css';
+import '@/styles/StudyManager.css';
 import { Study, StudyStatus } from '@/types/types';
 import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';

@@ -2,8 +2,7 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useDocumentDelete } from "@/hooks/useDocumentDelete";
 import { MainContext } from "@/wrappers/MainContext";
-import "../styles/DeleteDocumentPanel.css";
-import { useAuth } from "@/wrappers/AuthProvider";
+import "@/styles/DeleteDocumentPanel.css";
 
 interface DeleteDocumentPanelProps {
   onDocumentDeleted?: () => void; // Колбэк для обновления списка после удаления
@@ -24,13 +23,13 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
 
   const { context, updateContext } = mainContext;
-  const { isDeletePanelOpen, selectedDocument, currentStudy, currentSite, currentLevel } = context;
+  const { isDeletePanelOpen, selectedDocument } = context;
 
   const [deletionReason, setDeletionReason] = useState("");
   const [reasonError, setReasonError] = useState("");
   const [isReasonTouched, setIsReasonTouched] = useState(false);
 
-  const { deleteDocument, restoreDocument, isDeleting, isRestoring, error } = useDocumentDelete();
+  const { deleteDocument, isDeleting, isRestoring, error } = useDocumentDelete();
 
   // Сброс состояния при открытии панели
   useEffect(() => {

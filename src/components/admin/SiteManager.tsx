@@ -2,9 +2,9 @@
 
 'use client'
 import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
-import '../styles/SiteManager.css';
+import '@/styles/SiteManager.css';
 import { AdminContext } from '@/wrappers/AdminContext';
-import { CustomSelect } from './Select';
+import { CustomSelect } from '../Select';
 import { StudySite, SiteStatus, Study } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';

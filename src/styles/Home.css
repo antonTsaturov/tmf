@@ -102,7 +102,7 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  font-family: Arial, sans-serif;
+  /* font-family: Arial, sans-serif; */
 }
 
 .sidebar {
@@ -197,9 +197,8 @@
   border: 2px solid #cccccc70;
   border-radius: 8px;
   margin-bottom: 16px;
-  font-size: 0.9rem;
-  color: #555;
   background: #fafbfc;
+  display: flex;  
 }
 
 .main-content--buttons {

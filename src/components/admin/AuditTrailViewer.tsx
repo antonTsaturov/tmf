@@ -1,7 +1,7 @@
 // components/AuditTrailViewer.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { AuditLogEntry, AuditFilters, AuditResponse } from '@/types/types';
-import '../styles/AuditTrailViewer.css';
+import '@/styles/AuditTrailViewer.css';
 
 interface AuditTrailViewerProps {
   entityType?: string;

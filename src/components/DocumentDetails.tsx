@@ -108,23 +108,23 @@ const DocumentDetails: React.FC = () => {
     );
   };
 
-  const handleRestoreVersion = async (version: DocumentVersionRow) => {
-    if (!selectedDocument) return;
-    try {
-      const res = await fetch(
-        `/api/documents/${selectedDocument.id}/versions/${version.document_number}/restore`,
-        { method: 'PUT' }
-      );
-      if (!res.ok) throw new Error('Ошибка восстановления');
-      const data = await res.json();
-      if (data.document) {
-        updateContext({ selectedDocument: data.document });
-      }
-      window.location.reload();
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Ошибка восстановления');
-    }
-  };
+  // const handleRestoreVersion = async (version: DocumentVersionRow) => {
+  //   if (!selectedDocument) return;
+  //   try {
+  //     const res = await fetch(
+  //       `/api/documents/${selectedDocument.id}/versions/${version.document_number}/restore`,
+  //       { method: 'PUT' }
+  //     );
+  //     if (!res.ok) throw new Error('Ошибка восстановления');
+  //     const data = await res.json();
+  //     if (data.document) {
+  //       updateContext({ selectedDocument: data.document });
+  //     }
+  //     window.location.reload();
+  //   } catch (err) {
+  //     alert(err instanceof Error ? err.message : 'Ошибка восстановления');
+  //   }
+  // };
 
   const renderUserInfo = (user?: { name?: string; email?: string } | null) => {
     if (!user) return '—';
@@ -446,15 +446,6 @@ const DocumentDetails: React.FC = () => {
                     >
                       Скачать
                     </button>
-                    {v.document_number !== doc.document_number && doc.status !== DocumentWorkFlowStatus.APPROVED && (
-                      <button
-                        type="button"
-                        className="version-action-btn version-action-restore"
-                        onClick={() => handleRestoreVersion(v)}
-                      >
-                        Восстановить
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
