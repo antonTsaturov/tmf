@@ -1,11 +1,36 @@
 // components/ArchiveDocumentPanel.tsx
 import React, { useContext, useState, useEffect } from "react";
+import { 
+  Dialog, 
+  Flex, 
+  Text, 
+  Button, 
+  Box, 
+  Card,
+  Badge,
+  Spinner,
+  IconButton,
+  Separator,
+  AlertDialog,
+  Tooltip,
+  DataList
+} from '@radix-ui/themes';
+import { 
+  FiX, 
+  FiArchive, 
+  FiFolder, 
+  FiCalendar,
+  FiHash,
+  FiInfo,
+  FiAlertTriangle,
+  FiFileText
+} from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentArchive } from "@/hooks/useDocumentArchive";
-import "@/styles/ArchiveDocumentPanel.css";
+import { useNotification } from '@/wrappers/NotificationContext';
 
 interface ArchiveDocumentPanelProps {
-  onDocumentArchived?: () => void; // Колбэк для обновления списка после архивации
+  onDocumentArchived?: () => void;
 }
 
 const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({ 
@@ -15,18 +40,26 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({
   if (!mainContext) throw new Error('ArchiveDocumentPanel must be used within MainContext Provider');
 
   const { context, updateContext } = mainContext;
-  const { isArchivePanelOpen, selectedDocument, currentStudy, currentSite } = context;
+  const { isArchivePanelOpen, selectedDocument, currentStudy, currentSite, currentLevel } = context;
+  const { addNotification } = useNotification();
 
   const { archiveDocument, isArchiving, error } = useDocumentArchive();
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  // Сброс состояния при открытии панели
+  // Сброс состояния при закрытии
   useEffect(() => {
-    if (isArchivePanelOpen) {
-      // Дополнительные действия при открытии, если нужны
+    if (!isArchivePanelOpen) {
+      setShowConfirmDialog(false);
     }
   }, [isArchivePanelOpen]);
 
-  // Обработчик архивации
+  // Показываем ошибку через уведомление
+  useEffect(() => {
+    if (error) {
+      addNotification('error', error);
+    }
+  }, [error, addNotification]);
+
   const handleArchive = async () => {
     if (!selectedDocument) return;
     
@@ -34,25 +67,25 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({
       const result = await archiveDocument(selectedDocument.id);
       
       if (result.success) {
+        addNotification('success', 'Документ успешно архивирован');
         updateContext({ isArchivePanelOpen: false });
         updateContext({ selectedDocument: null });
         onDocumentArchived?.();
-      } else {
-        console.error('Archive error:', result.error);
       }
     } catch (error) {
       console.error('Error archiving document:', error);
+      addNotification('error', 'Ошибка при архивации документа');
     }
   };
 
-  // Обработчик отмены
+  const handleArchiveClick = () => {
+    setShowConfirmDialog(true);
+  };
+
   const handleCancel = () => {
     updateContext({ isArchivePanelOpen: false });
   };
 
-  if (!isArchivePanelOpen || !selectedDocument) return null;
-
-  // Форматирование даты для отображения
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—';
     return new Date(dateString).toLocaleString('ru-RU', {
@@ -64,99 +97,282 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({
     });
   };
 
+  if (!isArchivePanelOpen || !selectedDocument) return null;
+
   return (
     <>
-      {isArchiving && (
-        <div className="doc-action-loading">
-          <div className="doc-action-spinner"></div>
-          <span>Archiving document...</span>
-        </div>
-      )}
-      
-      {isArchivePanelOpen && (
-        <div className="doc-action-confirm-overlay">
-          <div className="doc-action-confirm archive-panel">
-            <h3 className="doc-action-confirm-title">Archive Document</h3>
-            
-            <div className="archive-document-info">
-              <div className="archive-info-icon">📦</div>
-              <div className="archive-info-details">
-                <div className="archive-info-name">{selectedDocument.document_name || selectedDocument.file_name}</div>
-                <div className="archive-info-meta">
-                  <span className="archive-info-badge" title={selectedDocument.id}>
-                    ID: {selectedDocument.id}
-                  </span>
-                  {selectedDocument.document_number && (
-                    <span className="archive-info-badge">TMF Document Version: {selectedDocument.document_number}</span>
-                  )}
-                </div>
-              </div>
-            </div>
+      <Dialog.Root open={isArchivePanelOpen} onOpenChange={(open) => !open && !isArchiving && handleCancel()}>
+        <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+          {/* Header */}
+          <Flex 
+            justify="between" 
+            align="center" 
+            p="4" 
+            style={{ borderBottom: '1px solid var(--gray-5)' }}
+          >
+            <Flex align="center" gap="2">
+              <Box className="rt-AvatarRoot" style={{ width: 32, height: 32 }}>
+                <FiArchive size={20} color="var(--amber-9)" />
+              </Box>
+              <Dialog.Title size="4" style={{ margin: 0 }}>
+                Архивация документа
+              </Dialog.Title>
+            </Flex>
+            <Dialog.Close disabled={isArchiving}>
+              <IconButton variant="ghost" size="2" disabled={isArchiving}>
+                <FiX />
+              </IconButton>
+            </Dialog.Close>
+          </Flex>
 
-            <div className="archive-context-info">
-              <div className="archive-context-row">
-                <span className="archive-context-label">Study:</span>
-                <span className="archive-context-value" title={currentStudy?.title || `ID: ${selectedDocument.study_id}`}>
-                    {currentStudy?.title || `ID: ${selectedDocument.study_id}`}
-                </span>
-              </div>
-              
+          {/* Document Info Card */}
+          <Box p="4">
+            <Card size="1" variant="surface">
+              <Flex gap="3" align="start">
+                <Box 
+                  className="rt-AvatarRoot" 
+                  style={{ 
+                    width: 48, 
+                    height: 48, 
+                    borderRadius: 'var(--radius-2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <FiFileText size={24} />
+                </Box>
+                <Box style={{ flex: 1 }}>
+                  <Text size="3" weight="bold">
+                    {selectedDocument.document_name || selectedDocument.file_name}
+                  </Text>
+                  <Flex gap="2" mt="2" wrap="wrap">
+                    <Tooltip content={selectedDocument.id}>
+                      <Badge size="1" variant="soft" color="gray">
+                        ID: {selectedDocument.id.substring(0, 8)}...
+                      </Badge>
+                    </Tooltip>
+                    {selectedDocument.document_number && (
+                      <Badge size="1" variant="soft" color="blue">
+                        Версия: {selectedDocument.document_number}
+                      </Badge>
+                    )}
+                  </Flex>
+                </Box>
+              </Flex>
+            </Card>
+          </Box>
+
+          <Separator size="4" />
+
+          {/* Context Information */}
+          <Box p="4">
+            <Box mb="3">
+              <Text size="2" weight="medium">Информация о документе</Text>
+            </Box>
+            <DataList.Root>
+              <DataList.Item>
+                <DataList.Label minWidth="80px">
+                  <Flex align="center" gap="1">
+                    <Text size="2">Исследование</Text>
+                  </Flex>
+                </DataList.Label>
+                <DataList.Value>
+                  <Tooltip content={currentStudy?.title || `ID: ${selectedDocument.study_id}`}>
+                    <Text size="2" style={{ maxWidth: 250 }} truncate>
+                      {currentStudy?.title || `ID: ${selectedDocument.study_id}`}
+                    </Text>
+                  </Tooltip>
+                </DataList.Value>
+              </DataList.Item>
+
+              <DataList.Item>
+                <DataList.Label minWidth="80px">
+                  <Flex align="center" gap="1">
+                    <Text size="2">Протокол</Text>
+                  </Flex>
+                </DataList.Label>
+                <DataList.Value>
+                  <Tooltip content={currentStudy?.protocol || `ID: ${selectedDocument.study_id}`}>
+                    <Text size="2" style={{ maxWidth: 250 }} truncate>
+                      {currentStudy?.protocol}
+                    </Text>
+                  </Tooltip>
+                </DataList.Value>
+              </DataList.Item>
+
               {currentSite && (
-                <div className="archive-context-row">
-                  <span className="archive-context-label">Site:</span>
-                  <span className="archive-context-value" title={currentSite.name || `ID: ${selectedDocument.site_id}`}>
-                    {currentSite.name || `ID: ${selectedDocument.site_id}`}
-                </span>
-                </div>
+                <DataList.Item>
+                  <DataList.Label minWidth="80px">
+                    <Flex align="center" gap="1">
+                      <Text size="2">Центр</Text>
+                    </Flex>
+                  </DataList.Label>
+                  <DataList.Value>
+                    <Tooltip content={currentSite.name || `ID: ${selectedDocument.site_id}`}>
+                      <Text size="2" style={{ maxWidth: 250 }} truncate>
+                        {currentSite.name || `ID: ${selectedDocument.site_id}`}
+                      </Text>
+                    </Tooltip>
+                  </DataList.Value>
+                </DataList.Item>
               )}
-              
-              <div className="archive-context-row">
-                <span className="archive-context-label">Folder:</span>
-                <span className="archive-context-value">{selectedDocument.folder_name || '—'}</span>
-              </div>
-              
-              <div className="archive-context-row">
-                <span className="archive-context-label">Created:</span>
-                <span className="archive-context-value">{formatDate(selectedDocument.created_at)}</span>
-              </div>
+
+              <DataList.Item>
+                <DataList.Label minWidth="80px">
+                  <Flex align="center" gap="1">
+                    <Text size="2">Раздел</Text>
+                  </Flex>
+                </DataList.Label>
+                <DataList.Value>
+                  <Text size="2">{`${currentLevel === 'site' ? 'Site level' : 'General'}`}</Text>
+                </DataList.Value>
+              </DataList.Item>
+
+              <DataList.Item>
+                <DataList.Label minWidth="80px">
+                  <Flex align="center" gap="1">
+                    <Text size="2">Папка</Text>
+                  </Flex>
+                </DataList.Label>
+                <DataList.Value>
+                  <Text size="2">{selectedDocument.folder_name || '—'}</Text>
+                </DataList.Value>
+              </DataList.Item>
+
+              <DataList.Item>
+                <DataList.Label minWidth="80px">
+                  <Flex align="center" gap="1">
+                    <Text size="2">Создан</Text>
+                  </Flex>
+                </DataList.Label>
+                <DataList.Value>
+                  <Text size="2">{formatDate(selectedDocument.created_at)}</Text>
+                </DataList.Value>
+              </DataList.Item>
+            </DataList.Root>
+          </Box>
+
+          <Separator size="4" />
+
+          {/* Warning Message */}
+          <Box px="4" pb="2" mt="2">
+            <Flex 
+              gap="2" 
+              p="3" 
+              style={{ 
+                backgroundColor: 'var(--amber-1)', 
+                borderRadius: 'var(--radius-2)',
+                border: '1px solid var(--amber-6)'
+              }}
+            >
+              <FiAlertTriangle size={18} color="var(--amber-10)" style={{ marginTop: 3 }} />
+              <Box>
+                <Text size="2" style={{ color: 'var(--amber-12)' }} mt="2">
+                  Документ будет помечен как архивный.
+                </Text>
+              </Box>
+            </Flex>
+          </Box>
+
+          <Separator size="4" />
+
+          {/* Footer */}
+          <Flex justify="end" gap="3" p="4">
+            <Button 
+              variant="soft" 
+              color="gray" 
+              onClick={handleCancel}
+              disabled={isArchiving}
+            >
+              Отмена
+            </Button>
+            <Button 
+              color="amber" 
+              onClick={handleArchiveClick}
+              disabled={isArchiving}
+            >
+              {isArchiving ? (
+                <Flex align="center" gap="2">
+                  <Spinner size="1" />
+                  <Text>Архивация...</Text>
+                </Flex>
+              ) : (
+                <Flex align="center" gap="2">
+                  <FiArchive size={16} />
+                  <Text>Архивировать</Text>
+                </Flex>
+              )}
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog.Root open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialog.Content style={{ maxWidth: 400 }}>
+          <AlertDialog.Title>Подтверждение архивации</AlertDialog.Title>
+
+          <AlertDialog.Description size="2" >
+            <div>
+              Вы уверены, что хотите архивировать документ "{selectedDocument?.document_name || selectedDocument?.file_name}"?
+              <Box mt="3" p="2" style={{ backgroundColor: 'var(--amber-3)', borderRadius: 'var(--radius-2)' }}>
+                <Flex align="center" gap="2">
+                  <FiInfo size={16} color="var(--amber-9)" />
+                  <Text size="1" style={{ color: 'var(--amber-12)' }}>
+                    После подтверждения отменить это действие будет невозможно.
+                  </Text>
+                </Flex>
+              </Box>
             </div>
+          </AlertDialog.Description>
 
-            <p className="archive-confirm-text">
-              Are you sure you want to archive this document?
-            </p>
-            
-            <p className="archive-confirm-warning">
-              The document will be marked as archived and will no longer be visible in active folders.
-              This action can be undone by an administrator.
-            </p>
-
-            {/* Отображение ошибки от сервера */}
-            {error && (
-              <div className="archive-server-error">
-                <span className="error-text">Error: {error}</span>
-              </div>
-            )}
-
-            <div className="doc-action-confirm-actions">
-              <button
-                type="button"
-                className="archive-doc-action-btn archive-doc-action-btn--cancel"
-                onClick={handleCancel}
-                disabled={isArchiving}
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
+                Отмена
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button 
+                variant="solid" 
+                color="amber" 
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  handleArchive();
+                }}
               >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="archive-doc-action-btn archive-doc-action-btn--archive"
-                onClick={handleArchive}
-                disabled={isArchiving}
-              >
-                {isArchiving ? 'Archiving...' : 'Confirm Archive'}
-              </button>
-            </div>
-          </div>
-        </div>
+                Архивировать
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* Loading Overlay (optional) */}
+      {isArchiving && (
+        <Box 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            pointerEvents: 'none'
+          }}
+        >
+          <Card style={{ padding: 20 }}>
+            <Flex direction="column" align="center" gap="3">
+              <Spinner size="3" />
+              <Text size="2">Архивация документа...</Text>
+            </Flex>
+          </Card>
+        </Box>
       )}
     </>
   );

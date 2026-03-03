@@ -1,15 +1,37 @@
 // components/DeleteDocumentPanel.tsx
 import React, { useContext, useState, useEffect } from "react";
+import { 
+  Dialog, 
+  Flex, 
+  Text, 
+  Button, 
+  Box, 
+  Card,
+  Badge,
+  TextArea,
+  Spinner,
+  IconButton,
+  Separator,
+  AlertDialog,
+  Tooltip
+} from '@radix-ui/themes';
+import { 
+  FiX, 
+  FiTrash2, 
+  FiAlertTriangle,
+  FiInfo,
+  FiFileText
+} from 'react-icons/fi';
 import { useDocumentDelete } from "@/hooks/useDocumentDelete";
 import { MainContext } from "@/wrappers/MainContext";
-import "@/styles/DeleteDocumentPanel.css";
+import { useNotification } from '@/wrappers/NotificationContext';
 
 interface DeleteDocumentPanelProps {
-  onDocumentDeleted?: () => void; // Колбэк для обновления списка после удаления
-  onDocumentRestored?: () => void; // Колбэк для обновления списка после восстановления
-  requireReason?: boolean; // Сделать причину обязательной (по умолчанию true)
-  maxReasonLength?: number; // Максимальная длина причины
-  reasonPlaceholder?: string; // Плейсхолдер для поля причины
+  onDocumentDeleted?: () => void;
+  onDocumentRestored?: () => void;
+  requireReason?: boolean;
+  maxReasonLength?: number;
+  reasonPlaceholder?: string;
 }
 
 const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({ 
@@ -20,14 +42,16 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
   reasonPlaceholder = "Enter reason for deletion..."
 }) => {
   const mainContext = useContext(MainContext);
-  if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
+  if (!mainContext) throw new Error('DeleteDocumentPanel must be used within MainContext Provider');
 
   const { context, updateContext } = mainContext;
   const { isDeletePanelOpen, selectedDocument } = context;
+  const { addNotification } = useNotification();
 
   const [deletionReason, setDeletionReason] = useState("");
   const [reasonError, setReasonError] = useState("");
   const [isReasonTouched, setIsReasonTouched] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const { deleteDocument, isDeleting, isRestoring, error } = useDocumentDelete();
 
@@ -37,8 +61,16 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
       setDeletionReason("");
       setReasonError("");
       setIsReasonTouched(false);
+      setShowConfirmDialog(false);
     }
   }, [isDeletePanelOpen]);
+
+  // Показываем ошибку через уведомление
+  useEffect(() => {
+    if (error) {
+      addNotification('error', error);
+    }
+  }, [error, addNotification]);
 
   // Валидация причины удаления
   const validateReason = (reason: string): boolean => {
@@ -94,25 +126,29 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
     try {
       const result = await deleteDocument(
         selectedDocument.id,
-        deletionReason.trim() // Передаем причину удаления
+        deletionReason.trim()
       );
       
       if (result.success) {
+        addNotification('success', 'Документ успешно удален');
         updateContext({ isDeletePanelOpen: false });
         updateContext({ selectedDocument: null });
         onDocumentDeleted?.();
-        // Очищаем причину после успешного удаления
         setDeletionReason("");
-      } else {
-        // Обработка ошибки
-        console.error('Delete error:', result.error);
       }
     } catch (error) {
       console.error('Error deleting document:', error);
+      addNotification('error', 'Ошибка при удалении документа');
     }
   };
 
-  // Обработчик отмены
+  const handleDeleteClick = () => {
+    if (requireReason && !validateReason(deletionReason)) {
+      return;
+    }
+    setShowConfirmDialog(true);
+  };
+
   const handleCancel = () => {
     setDeletionReason("");
     setReasonError("");
@@ -127,85 +163,256 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
 
   return (
     <>
-      {(isDeleting || isRestoring) && (
-        <div className="doc-action-loading">
-          <div className="doc-action-spinner"></div>
-          <span>{isDeleting ? 'Deleting...' : 'Restoring...'}</span>
-        </div>
-      )}
-      
-      {isDeletePanelOpen && (
-        <div className="doc-action-confirm-overlay">
-          <div className="doc-action-confirm">
-            <h3 className="doc-action-confirm-title">Delete Confirmation</h3>
-            
-            <p className="doc-action-confirm-text">
-              Mark document <strong>"{selectedDocument?.document_name}"</strong> as "deleted"?
-            </p>
-            
-            <p className="doc-action-confirm-warning">
-              The document and its versions will no longer be visible in active folders.
-              But the record will be retained in the system and can be restored/viewed by an authorized user.
-            </p>
+      <Dialog.Root open={isDeletePanelOpen} onOpenChange={(open) => !open && !isDeleting && handleCancel()}>
+        <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+          {/* Header */}
+          <Flex 
+            justify="between" 
+            align="center" 
+            p="4" 
+            style={{ borderBottom: '1px solid var(--gray-5)' }}
+          >
+            <Flex align="center" gap="2">
+              <Box className="rt-AvatarRoot" style={{ width: 32, height: 32 }}>
+                <FiTrash2 size={20} color="var(--red-9)" />
+              </Box>
+              <Dialog.Title size="4" style={{ margin: 0 }}>
+                Delete Confirmation
+              </Dialog.Title>
+            </Flex>
+            <Dialog.Close disabled={isDeleting}>
+              <IconButton variant="ghost" size="2" disabled={isDeleting}>
+                <FiX />
+              </IconButton>
+            </Dialog.Close>
+          </Flex>
 
-            {/* Поле для указания причины удаления */}
-            <div className="doc-action-reason-container">
-              <label htmlFor="deletionReason" className="doc-action-reason-label">
-                Reason for deletion {requireReason && <span className="required-field">*</span>}
-              </label>
-              
-              <textarea
-                id="deletionReason"
-                className={`doc-action-reason-input ${reasonError ? 'error' : ''}`}
-                value={deletionReason}
-                onChange={handleReasonChange}
-                onBlur={handleReasonBlur}
-                placeholder={reasonPlaceholder}
-                disabled={isDeleting}
-                rows={4}
-                maxLength={maxReasonLength}
-                autoFocus
-              />
-              
-              <div className="doc-action-reason-footer">
-                <div className="doc-action-reason-error">
-                  {reasonError && <span className="error-text">{reasonError}</span>}
-                </div>
-                <div className="doc-action-reason-counter">
-                  <span className={deletionReason.length > maxReasonLength ? 'error-text' : ''}>
+          {/* Document Info Card */}
+          <Box p="4">
+            <Card size="1" variant="surface">
+              <Flex gap="3" align="start">
+                <Box 
+                  className="rt-AvatarRoot" 
+                  style={{ 
+                    width: 48, 
+                    height: 48, 
+                    borderRadius: 'var(--radius-2)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <FiFileText size={24} />
+                </Box>
+                <Box style={{ flex: 1 }}>
+                  <Text size="3" weight="bold">
+                    {selectedDocument?.document_name}
+                  </Text>
+                  <Flex gap="2" mt="2" wrap="wrap">
+                    <Badge size="1" variant="soft" color="gray">
+                      ID: {selectedDocument.id.substring(0, 8)}...
+                    </Badge>
+                    {selectedDocument.document_number && (
+                      <Badge size="1" variant="soft" color="blue">
+                        Version: {selectedDocument.document_number}
+                      </Badge>
+                    )}
+                  </Flex>
+                </Box>
+              </Flex>
+            </Card>
+          </Box>
+
+          <Separator size="4" />
+
+          {/* Content */}
+          <Box p="4">
+            <Flex direction="column" gap="4">
+              {/* Warning Message */}
+              <Box style={{ 
+                backgroundColor: 'var(--red-2)', 
+                padding: '12px', 
+                borderRadius: 'var(--radius-2)',
+                border: '1px solid var(--red-6)'
+              }}>
+                <Flex gap="2" align="start">
+                  <FiAlertTriangle size={18} color="var(--red-9)" style={{ flexShrink: 0, marginTop: 2 }} />
+                  <Box>
+                    <Text size="1" style={{ color: 'var(--red-11)' }} mt="1">
+                      The document and its versions will no longer be visible in active folders.
+                      But the record will be retained in the system and can be restored/viewed by an authorized user.
+                    </Text>
+                  </Box>
+                </Flex>
+              </Box>
+
+              {/* Reason Field */}
+              <Box>
+                <Flex align="center" gap="2" mb="1">
+                  <Text as="label" size="2" weight="medium" htmlFor="deletionReason">
+                    Reason for deletion
+                  </Text>
+                  {requireReason && (
+                    <Badge size="1" variant="solid" color="red">Required</Badge>
+                  )}
+                  <Tooltip content="Please provide a detailed reason for deleting this document">
+                    <FiInfo size={14} color="var(--gray-9)" />
+                  </Tooltip>
+                </Flex>
+                
+                <TextArea
+                  id="deletionReason"
+                  value={deletionReason}
+                  onChange={handleReasonChange}
+                  onBlur={handleReasonBlur}
+                  placeholder={reasonPlaceholder}
+                  disabled={isDeleting}
+                  rows={4}
+                  maxLength={maxReasonLength}
+                  autoFocus
+                  variant={reasonError ? 'soft' : 'surface'}
+                />
+                
+                <Flex justify="between" align="center" mt="1">
+                  <Box>
+                    {reasonError && (
+                      <Text size="1" color="red">
+                        {reasonError}
+                      </Text>
+                    )}
+                  </Box>
+                  <Text 
+                    size="1" 
+                    color={deletionReason.length > maxReasonLength ? 'red' : 'gray'}
+                  >
                     {deletionReason.length}/{maxReasonLength}
-                  </span>
-                </div>
-              </div>
+                  </Text>
+                </Flex>
+              </Box>
+
+              {/* Server Error */}
+              {error && (
+                <Box style={{ 
+                  backgroundColor: 'var(--red-3)', 
+                  padding: '8px 12px', 
+                  borderRadius: 'var(--radius-2)',
+                  border: '1px solid var(--red-6)'
+                }}>
+                  <Text size="2" color="red">
+                    Error: {error}
+                  </Text>
+                </Box>
+              )}
+            </Flex>
+          </Box>
+
+          <Separator size="4" />
+
+          {/* Footer */}
+          <Flex justify="end" gap="3" p="4">
+            <Button 
+              variant="soft" 
+              color="gray" 
+              onClick={handleCancel}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              color="red" 
+              onClick={handleDeleteClick}
+              disabled={isSubmitDisabled}
+            >
+              {isDeleting ? (
+                <Flex align="center" gap="2">
+                  <Spinner size="1" />
+                  <Text>Deleting...</Text>
+                </Flex>
+              ) : (
+                <Flex align="center" gap="2">
+                  <FiTrash2 size={16} />
+                  <Text>Delete</Text>
+                </Flex>
+              )}
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog.Root open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialog.Content style={{ maxWidth: 400 }}>
+          <AlertDialog.Title>Confirm Deletion</AlertDialog.Title>
+          <AlertDialog.Description>
+            <div>
+              <Text as="div" size="2">
+                Are you sure you want to delete "{selectedDocument?.document_name}"?
+              </Text>
+              
+              {deletionReason && (
+                <Box mt="3" p="2" style={{ backgroundColor: 'var(--red-3)', borderRadius: 'var(--radius-2)' }}>
+                  <Text size="1" weight="bold" color="red">Reason: </Text>
+                  <Text size="1" color="red">{deletionReason}</Text>
+                </Box>
+              )}
+
+              <Box mt="3" p="2" style={{ backgroundColor: 'var(--amber-3)', borderRadius: 'var(--radius-2)' }}>
+                <Flex align="center" gap="2">
+                  <FiInfo size={16} color="var(--amber-9)" />
+                  <Text size="1" style={{ color: 'var(--amber-11)' }}>
+                    This action can be undone by the eTMF system administraor only.
+                  </Text>
+                </Flex>
+              </Box>
             </div>
+          </AlertDialog.Description>
 
-            {/* Отображение ошибки от сервера */}
-            {error && (
-              <div className="doc-action-server-error">
-                <span className="error-text">Error: {error}</span>
-              </div>
-            )}
-
-            <div className="doc-action-confirm-actions">
-              <button
-                type="button"
-                className="doc-action-btn doc-action-btn--cancel"
-                onClick={handleCancel}
-                disabled={isDeleting}
-              >
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
                 Cancel
-              </button>
-              <button
-                type="button"
-                className="doc-action-btn doc-action-btn--delete"
-                onClick={handleSoftDelete}
-                disabled={isSubmitDisabled}
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button 
+                variant="solid" 
+                color="red" 
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  handleSoftDelete();
+                }}
               >
-                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
+                Confirm Delete
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+
+      {/* Loading Overlay */}
+      {isDeleting && (
+        <Box 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            pointerEvents: 'none'
+          }}
+        >
+          <Card style={{ padding: 20 }}>
+            <Flex direction="column" align="center" gap="3">
+              <Spinner size="3" />
+              <Text size="2">Deleting document...</Text>
+            </Flex>
+          </Card>
+        </Box>
       )}
     </>
   );

@@ -1,15 +1,37 @@
 // components/SubmitToReviewPanel.tsx
 import React, { useState, useEffect, useContext } from 'react';
-import { FiX, FiSend, FiUser, FiSearch } from 'react-icons/fi';
+import { 
+  Dialog, 
+  Flex, 
+  Text, 
+  Button, 
+  Box, 
+  Card,
+  Avatar,
+  Badge,
+  TextField,
+  TextArea,
+  RadioGroup,
+  Spinner,
+  Separator,
+  ScrollArea,
+  IconButton,
+  Tooltip
+} from '@radix-ui/themes';
+import { 
+  FiX, 
+  FiSend, 
+  FiUser, 
+  FiSearch,
+  FiFileText,
+  FiInfo
+} from 'react-icons/fi';
 import { ROLE_CONFIG, StudyUser, UserRole } from '@/types/types';
-import '@/styles/SubmitToReviewPanel.css';
 import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { useAuth } from "@/wrappers/AuthProvider";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
-
-
 
 interface SubmitToReviewPanelProps {
   studyId: number;
@@ -17,7 +39,7 @@ interface SubmitToReviewPanelProps {
   onSuccess?: (updatedDoc: Document) => void;
 }
 
-const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({studyId, siteId, onSuccess}) => {
+const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, siteId, onSuccess }) => {
   const { addNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [selectedReviewer, setSelectedReviewer] = useState<string>('');
@@ -30,11 +52,8 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({studyId, siteI
   const { user } = useAuth()!;
 
   const {
-    isReviewModalOpen,
-    documentForReview,
     submitting,
     submitForReview,
-    resetError
   } = useDocumentToReview();
 
   const document = selectedDocument;
@@ -58,7 +77,6 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({studyId, siteI
         }
 
         const data = await response.json();
-        //console.log(data)
         setReviewers(data.users || []);
         
         // Автоматически выбираем первого, если есть
@@ -86,24 +104,34 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({studyId, siteI
 
     try {
       if (selectedDocument?.id) {
-        const result = await submitForReview(selectedDocument?.id, selectedReviewer, comment.trim(), String(user?.id), String(user?.role));
-        console.log('handleSubmit result: ', result)
+        const result = await submitForReview(
+          selectedDocument?.id, 
+          selectedReviewer, 
+          comment.trim(), 
+          String(user?.id), 
+          String(user?.role)
+        );
+        
         if (result) {
-          addNotification('success', 'Submitted to review');
+          addNotification('success', 'Документ отправлен на ревью');
           if (typeof result === 'object' && result !== null && onSuccess) {
-                onSuccess(result); 
-              }
+            onSuccess(result); 
+          }
           updateContext({ isSubmittingToReview: false });
         }
       }
-     
     } catch (err) {
-      addNotification('error', 'Error submitting for review')
+      addNotification('error', 'Ошибка при отправке на ревью');
       console.error('Error submitting for review:', err);
       setError('Ошибка при отправке на ревью');
-    } finally {
-      // setSubmitting(false);
     }
+  };
+
+  const handleClose = () => {
+    updateContext({ isSubmittingToReview: false });
+    setSearchTerm('');
+    setComment('');
+    setError(null);
   };
 
   const filteredReviewers = reviewers.filter(reviewer =>
@@ -111,155 +139,231 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({studyId, siteI
     reviewer.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const getRoleColor = (role: UserRole): string => {
+    const config = ROLE_CONFIG[role];
+    return config?.color || 'gray';
+  };
 
-  if (!isOpen || !document) return null;
-  
   return (
-    <div className="submit-review-overlay" onClick={()=> updateContext({ isSubmittingToReview: false })}>
-      <div className="submit-review-modal" onClick={e => e.stopPropagation()}>
-        <div className="submit-review-header">
-          <h3 className="submit-review-title">Отправить на ревью</h3>
-          <button
-            type="button"
-            className="submit-review-close"
-            onClick={() => updateContext({ isSubmittingToReview: false })}
-            disabled={submitting}
-          >
-            <FiX />
-          </button>
-        </div>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+        {/* Header */}
+        <Flex 
+          justify="between" 
+          align="center" 
+          p="4" 
+          style={{ borderBottom: '1px solid var(--gray-5)' }}
+        >
+          <Flex align="center" gap="2">
+            <Box className="rt-AvatarRoot" style={{ width: 32, height: 32 }}>
+              <FiSend size={20} />
+            </Box>
+            <Dialog.Title size="4" style={{ margin: 0 }}>
+              Отправить на ревью
+            </Dialog.Title>
+          </Flex>
+          <Dialog.Close>
+            <IconButton variant="ghost" size="2">
+              <FiX />
+            </IconButton>
+          </Dialog.Close>
+        </Flex>
 
-        <div className="submit-review-content">
-          {/* Информация о документе */}
-          <div className="submit-review-doc-info">
-            <div className="submit-review-doc-icon">📄</div>
-            <div className="submit-review-doc-details">
-              <div className="submit-review-doc-name">{document.document_name}</div>
-              <div className="submit-review-doc-meta">
-                Версия: {document.document_number} • Статус: {document.status}
-              </div>
-            </div>
-          </div>
+        {/* Document Info Card */}
+        {document && (
+          <Box p="4">
+            <Card size="1" variant="surface">
+              <Flex gap="3" align="start">
+                <Box className="rt-AvatarRoot" style={{ width: 40, height: 40 }}>
+                  <FiFileText size={24} />
+                </Box>
+                <Box style={{ flex: 1 }}>
+                  <Text size="3" weight="bold">
+                    {document.document_name}
+                  </Text>
+                  <Flex gap="2" mt="1" align="center">
+                    <Badge size="1" variant="soft" color="gray">
+                      Версия: {document.document_number || '1'}
+                    </Badge>
+                    <Badge size="1" variant="soft" color="blue">
+                      Статус: {document.status === 'draft' ? 'Черновик' : document.status}
+                    </Badge>
+                  </Flex>
+                </Box>
+              </Flex>
+            </Card>
+          </Box>
+        )}
 
-          {/* Поиск рецензентов */}
-          <div className="submit-review-search">
-            <FiSearch className="submit-review-search-icon" />
-            <input
-              type="text"
-              className="submit-review-search-input"
-              placeholder="Поиск рецензента по имени или email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              disabled={loading || submitting}
-            />
-          </div>
+        <Separator size="4" />
 
-          {/* Список рецензентов */}
-          <div className="submit-review-list">
-            {loading ? (
-              <div className="submit-review-loading">
-                <div className="submit-review-spinner"></div>
-                <span>Загрузка рецензентов...</span>
-              </div>
-            ) : filteredReviewers.length === 0 ? (
-              <div className="submit-review-empty">
-                <FiUser size={32} />
-                <p>Нет доступных рецензентов</p>
-                {reviewers.length === 0 && (
-                  <p className="submit-review-empty-hint">
-                    Убедитесь, что в исследовании и центре есть пользователи с ролью STUDY_MANAGER
-                  </p>
-                )}
-              </div>
-            ) : (
-              filteredReviewers.map(reviewer => (
-                <label
-                  key={reviewer.id}
-                  className={`submit-review-item ${selectedReviewer === reviewer.id ? 'selected' : ''}`}
-                >
-                  <input
-                    type="radio"
-                    name="reviewer"
-                    value={reviewer.id}
-                    checked={selectedReviewer === reviewer.id}
-                    onChange={(e) => setSelectedReviewer(e.target.value)}
-                    disabled={submitting}
-                    className="submit-review-radio"
-                  />
-                  <div className="submit-review-item-info">
-                    <div className="submit-review-item-name">{reviewer.name}</div>
-                    <div className="submit-review-item-email">{reviewer.email}</div>
-                    
-                    {/* Роли рецензента */}
-                    <div className="submit-review-item-roles">
-                      {reviewer.role.map((role: UserRole) => {
-                        const config = ROLE_CONFIG[role];
-                        return config ? (
-                          <span
-                            key={role}
-                            className="submit-review-item-role"
-                            style={{ 
-                              backgroundColor: config.color + '20', // 20% прозрачности
-                              color: config.color,
-                              borderColor: config.color + '40'
-                            }}
-                          >
-                            {config.label}
-                          </span>
-                        ) : null;
-                      })}
-                    </div>
-                  </div>
-                </label>
-              ))
+        {/* Content */}
+        <Box p="4">
+          <Flex direction="column" gap="4">
+            {/* Search */}
+            <Box>
+              <Text as="label" size="2" weight="medium" mb="1" style={{ display: 'block' }}>
+                Поиск рецензента
+              </Text>
+              <TextField.Root
+                placeholder="Поиск по имени или email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                disabled={loading || submitting}
+              >
+                <TextField.Slot>
+                  <FiSearch size={16} />
+                </TextField.Slot>
+              </TextField.Root>
+            </Box>
+
+            {/* Reviewers List */}
+            <Box>
+              <Flex justify="between" align="center" mb="2">
+                <Text size="2" weight="medium">Доступные рецензенты</Text>
+                <Badge size="1" variant="soft" color="blue">
+                  {filteredReviewers.length} из {reviewers.length}
+                </Badge>
+              </Flex>
+
+              <ScrollArea type="always" scrollbars="vertical" style={{ height: 140 }}>
+                <Box pr="3">
+                  {loading ? (
+                    <Flex direction="column" align="center" justify="center" py="6" gap="2">
+                      <Spinner size="2" />
+                      <Text size="2" color="gray">Загрузка рецензентов...</Text>
+                    </Flex>
+                  ) : filteredReviewers.length === 0 ? (
+                    <Flex direction="column" align="center" justify="center" py="6" gap="2">
+                      <FiUser size={32} color="var(--gray-8)" />
+                      <Text size="2" color="gray" align="center">
+                        {reviewers.length === 0 
+                          ? 'Нет доступных рецензентов'
+                          : 'Ничего не найдено'}
+                      </Text>
+                      {reviewers.length === 0 && (
+                        <Text size="1" color="gray" align="center">
+                          Убедитесь, что в исследовании и центре<br />
+                          есть пользователи с ролью STUDY_MANAGER
+                        </Text>
+                      )}
+                    </Flex>
+                  ) : (
+                    <RadioGroup.Root
+                      value={selectedReviewer}
+                      onValueChange={setSelectedReviewer}
+                    >
+                      <Flex direction="column" gap="2">
+                        {filteredReviewers.map(reviewer => (
+                          <Card key={reviewer.id} size="1" variant="surface">
+                            <RadioGroup.Item value={reviewer.id}>
+                              <Flex gap="3" align="start">
+                                <Avatar
+                                  size="2"
+                                  fallback={reviewer.name.charAt(0).toUpperCase()}
+                                  color="blue"
+                                />
+                                <Box style={{ flex: 1 }}>
+                                  <Flex justify="between" align="center">
+                                    <Text size="2" weight="bold">
+                                      {reviewer.name}
+                                    </Text>
+                                  </Flex>
+                                  <Text size="1" color="gray">
+                                    {reviewer.email}
+                                  </Text>
+                                  <Flex gap="1" mt="2" wrap="wrap">
+                                    {reviewer.role.map((role: UserRole) => {
+                                      const config = ROLE_CONFIG[role];
+                                      return config ? (
+                                        <Badge
+                                          key={role}
+                                          size="1"
+                                          variant="soft"
+                                          color={getRoleColor(role) as any}
+                                        >
+                                          {config.label}
+                                        </Badge>
+                                      ) : null;
+                                    })}
+                                  </Flex>
+                                </Box>
+                              </Flex>
+                            </RadioGroup.Item>
+                          </Card>
+                        ))}
+                      </Flex>
+                    </RadioGroup.Root>
+                  )}
+                </Box>
+              </ScrollArea>
+            </Box>
+
+            {/* Comment */}
+            <Box>
+              <Flex align="center" gap="2" mb="1">
+                <Text as="label" size="2" weight="medium" htmlFor="review-comment">
+                  Комментарий
+                </Text>
+                <Tooltip content="Необязательное поле. Добавьте пояснения для рецензента">
+                  <FiInfo size={14} color="var(--gray-9)" />
+                </Tooltip>
+              </Flex>
+              <TextArea
+                id="review-comment"
+                placeholder="Добавьте комментарий для рецензента..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                disabled={submitting}
+                size="2"
+              />
+            </Box>
+
+            {/* Error */}
+            {error && (
+              <Box style={{ 
+                backgroundColor: 'var(--red-3)', 
+                padding: '8px 12px', 
+                borderRadius: 'var(--radius-2)',
+                border: '1px solid var(--red-6)'
+              }}>
+                <Text size="2" color="red">
+                  {error}
+                </Text>
+              </Box>
             )}
-          </div>
+          </Flex>
+        </Box>
 
-          {/* Комментарий */}
-          <div className="submit-review-comment">
-            <label htmlFor="review-comment" className="submit-review-comment-label">
-              Комментарий (необязательно)
-            </label>
-            <textarea
-              id="review-comment"
-              className="submit-review-comment-input"
-              rows={3}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Добавьте комментарий для рецензента..."
-              disabled={submitting}
-            />
-          </div>
+        <Separator size="4" />
 
-          {/* Ошибка */}
-          {error && (
-            <div className="submit-review-error">
-              {error}
-            </div>
-          )}
-        </div>
-
-        <div className="submit-review-footer">
-          <button
-            type="button"
-            className="submit-review-btn submit-review-btn--cancel"
-            onClick={() => updateContext({ isSubmittingToReview: false })}
-            disabled={submitting}
-          >
-            Отмена
-          </button>
-          <button
-            type="button"
-            className="submit-review-btn submit-review-btn--submit"
+        {/* Footer */}
+        <Flex justify="end" gap="3" p="4">
+          <Dialog.Close>
+            <Button variant="soft" color="gray" disabled={submitting}>
+              Отмена
+            </Button>
+          </Dialog.Close>
+          <Button
             onClick={handleSubmit}
             disabled={!selectedReviewer || loading || submitting}
+            size="2"
           >
-            <FiSend />
-            {submitting ? 'Отправка...' : 'Отправить на ревью'}
-          </button>
-        </div>
-      </div>
-    </div>
+            {submitting ? (
+              <Flex align="center" gap="2">
+                <Spinner size="1" />
+                <Text>Отправка...</Text>
+              </Flex>
+            ) : (
+              <Flex align="center" gap="2">
+                <FiSend size={16} />
+                <Text>Отправить на ревью</Text>
+              </Flex>
+            )}
+          </Button>
+        </Flex>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 };
 

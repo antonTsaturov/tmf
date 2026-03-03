@@ -1,10 +1,35 @@
 // components/FilePreviewPanel.tsx
 import React, { useContext, useState } from 'react';
+import { 
+  Dialog, 
+  Flex, 
+  Text, 
+  Button, 
+  Box, 
+  Card,
+  Badge,
+  TextField,
+  Spinner,
+  IconButton,
+  Separator,
+  Tooltip,
+  DataList,
+  Avatar
+} from '@radix-ui/themes';
+import { 
+  FiX, 
+  FiUpload, 
+  FiEdit2, 
+  FiSave,
+  FiFile,
+  FiFileText,
+  FiFolder,
+  FiHardDrive
+} from 'react-icons/fi';
 import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
-import { FiX, FiUpload, FiEdit2 } from 'react-icons/fi';
-import '@/styles/FilePreviewPanel.css';
 import { useNotification } from '@/wrappers/NotificationContext';
+import { FaClinicMedical, FaRegBuilding } from 'react-icons/fa';
 
 interface FilePreviewPanelProps {
   onUploadSuccess?: () => void;
@@ -37,16 +62,26 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  // Получить иконку для типа файла
-  const getFileIcon = (fileName: string): string => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
+  // Получить расширение файла
+  const getFileExtension = (fileName: string): string => {
+    return fileName.split('.').pop()?.toLowerCase() || 'unknown';
+  };
+
+  // Получить цвет для расширения
+  const getFileColor = (extension: string): string => {
     switch (extension) {
       case 'pdf':
-        return '📕';
+        return 'red';
       case 'txt':
-        return '📄';
+        return 'blue';
+      case 'doc':
+      case 'docx':
+        return 'blue';
+      case 'xls':
+      case 'xlsx':
+        return 'green';
       default:
-        return '📄';
+        return 'gray';
     }
   };
 
@@ -54,7 +89,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
     try {
       if (!currentStudy?.id || !currentSite?.id) {
         const errorMsg = 'Ошибка: не указаны исследование или центр';
-        alert(errorMsg);
+        addNotification('error', errorMsg);
         onUploadError?.(errorMsg);
         return;
       }
@@ -73,22 +108,16 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
       if (result.success && result.document) {
         clearFilePreview();
         updateContext({ selectedDocument: result.document });
-        
-        // Оповещаем родительский компонент об успешной загрузке
-        onUploadSuccess?.();
-        
-        //alert('Документ успешно загружен');
         addNotification('success', 'Документ успешно загружен');
+        onUploadSuccess?.();
       } else {
         const errorMsg = result.error || 'Неизвестная ошибка при загрузке';
         addNotification('error', `Ошибка при загрузке: ${errorMsg}`);
-        //alert(`Ошибка при загрузке: ${errorMsg}`);
         onUploadError?.(errorMsg);
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
       addNotification('error', `Ошибка при загрузке: ${errorMsg}`);
-      //alert(`Ошибка при загрузке: ${errorMsg}`);
       onUploadError?.(errorMsg);
     }
   };  
@@ -109,116 +138,290 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
     setIsEditing(false);
   };
 
-  // Вспомогательные функции для безопасного отображения значений
-  const getSiteDisplay = (): string => {
-    if (currentSite?.name) {
-      return currentSite.name;
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      saveName();
     }
-    return 'Не указан';
+    if (e.key === 'Escape') {
+      setIsEditing(false);
+      setCustomName(preview.customName);
+    }
   };
 
-  const getStudyDisplay = (): string => {
-    if (currentStudy?.protocol) {
-      return currentStudy.protocol;
-    }
-    if (currentStudy?.title) {
-      return currentStudy.title;
-    }
-    return 'Не указано';
-  };
+  const fileExtension = getFileExtension(preview.file.name);
+  const fileColor = getFileColor(fileExtension);
 
   return (
-    <div className="file-preview-overlay">
-      <div className="file-preview-panel">
-        <div className="preview-header">
-          <h3>Предпросмотр документа</h3>
-          <button className="close-button" onClick={handleCancel} disabled={isUploading}>
-            <FiX />
-          </button>
-        </div>
+    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && !isUploading && handleCancel()}>
+      <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+        {/* Header */}
+        <Flex 
+          justify="between" 
+          align="center" 
+          p="4" 
+          style={{ borderBottom: '1px solid var(--gray-5)' }}
+        >
+          <Flex align="center" gap="2">
+            <Box className="rt-AvatarRoot" style={{ width: 32, height: 32 }}>
+              <FiFile size={20} color="var(--blue-9)" />
+            </Box>
+            <Dialog.Title size="4" style={{ margin: 0 }}>
+              Предпросмотр документа
+            </Dialog.Title>
+          </Flex>
+          <Dialog.Close disabled={isUploading}>
+            <IconButton variant="ghost" size="2" disabled={isUploading}>
+              <FiX />
+            </IconButton>
+          </Dialog.Close>
+        </Flex>
 
-        <div className="preview-content">
-          {/* Иконка файла */}
-          <div className="file-icon-large">
-            {getFileIcon(preview.file.name)}
-          </div>
+        {/* File Icon and Basic Info */}
+        <Box p="4">
+          <Card size="1" variant="surface">
+            <Flex gap="4" align="center">
+              <Box 
+                style={{ 
+                  width: 64, 
+                  height: 64, 
+                  backgroundColor: `var(--${fileColor}-3)`, 
+                  borderRadius: 'var(--radius-3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '32px'
+                }}
+              >
+                {fileExtension === 'pdf' ? '📕' : '📄'}
+              </Box>
+              <Box style={{ flex: 1 }}>
+                <Text size="3" weight="bold">
+                  {preview.file.name}
+                </Text>
+                <Flex gap="2" mt="2" wrap="wrap">
+                  <Badge size="1" variant="soft" color={fileColor as any}>
+                    .{fileExtension}
+                  </Badge>
+                  <Badge size="1" variant="soft" color="gray">
+                    {formatFileSize(preview.size)}
+                  </Badge>
+                </Flex>
+              </Box>
+            </Flex>
+          </Card>
+        </Box>
 
-          {/* Информация о файле */}
-          <div className="file-info">
-            <div className="info-row">
-              <span className="info-label">Имя файла:</span>
-              <span className="info-value">{preview.file.name}</span>
-            </div>
-            
-            <div className="info-row">
-              <span className="info-label">Тип:</span>
-              <span className="info-value">{preview.file.type || 'Неизвестно'}</span>
-            </div>
-            
-            <div className="info-row">
-              <span className="info-label">Размер:</span>
-              <span className="info-value">{formatFileSize(preview.size)}</span>
-            </div>
-            
-            <div className="info-row">
-              <span className="info-label">Папка:</span>
-              <span className="info-value">{preview.folderName}</span>
-            </div>
+        <Separator size="4" />
 
-            <div className="info-row">
-              <span className="info-label">Центр:</span>
-              <span className="info-value">{getSiteDisplay()}</span>
-            </div>
+        {/* File Details */}
+        <Box p="4">
+          <Box mb="4">
+          <Text size="2" weight="medium" mb="3">Информация о файле</Text>
+          </Box>
+          <DataList.Root>
+            <DataList.Item>
+              <DataList.Label minWidth="100px">
+                <Flex align="center" gap="1">
+                  <FiFileText size={14} />
+                  <Text size="2">Тип</Text>
+                </Flex>
+              </DataList.Label>
+              <DataList.Value>
+                <Text size="2">{preview.file.type || 'Неизвестно'}</Text>
+              </DataList.Value>
+            </DataList.Item>
 
-            <div className="info-row">
-              <span className="info-label">Исследование:</span>
-              <span className="info-value">{getStudyDisplay()}</span>
-            </div>
-          </div>
+            <DataList.Item>
+              <DataList.Label minWidth="100px">
+                <Flex align="center" gap="1">
+                  <FiHardDrive size={14} />
+                  <Text size="2">Размер</Text>
+                </Flex>
+              </DataList.Label>
+              <DataList.Value>
+                <Text size="2">{formatFileSize(preview.size)}</Text>
+              </DataList.Value>
+            </DataList.Item>
 
-          {/* Редактирование имени */}
-          <div className="name-edit-section">
-            <label>Название документа:</label>
-            {isEditing ? (
-              <div className="edit-controls">
-                <input
-                  type="text"
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="Введите название документа"
-                  autoFocus
-                  className="name-input"
-                />
-                <button onClick={saveName} className="save-button">Сохранить</button>
-              </div>
-            ) : (
-              <div className="name-display">
-                <span className="display-name">{preview.customName}</span>
-                <button onClick={startEditing} className="edit-button" disabled={isUploading}>
-                  <FiEdit2 /> Изменить
-                </button>
-              </div>
-            )}
-            <small className="hint">
-              *Расширение .{preview.file.name.split('.').pop()} будет добавлено автоматически
-            </small>
-          </div>
-        </div>
+            <DataList.Item>
+              <DataList.Label minWidth="100px">
+                <Flex align="center" gap="1">
+                  <FiFolder size={14} />
+                  <Text size="2">Папка</Text>
+                </Flex>
+              </DataList.Label>
+              <DataList.Value>
+                <Badge size="1" variant="soft" color="blue">
+                  {preview.folderName}
+                </Badge>
+              </DataList.Value>
+            </DataList.Item>
 
-        <div className="preview-footer">
-          <button className="cancel-button" onClick={handleCancel} disabled={isUploading}>
-            Отмена
-          </button>
-          <button 
-            className="upload-button" 
-            onClick={handleUpload}
+            <DataList.Item>
+              <DataList.Label minWidth="100px">
+                <Flex align="center" gap="1">
+                  <FaRegBuilding size={14} />
+                  <Text size="2">Центр</Text>
+                </Flex>
+              </DataList.Label>
+              <DataList.Value>
+                <Tooltip content={currentSite?.name || 'Не указан'}>
+                  <Text size="2" style={{ maxWidth: 250 }} truncate>
+                    {currentSite?.name || 'Не указан'}
+                  </Text>
+                </Tooltip>
+              </DataList.Value>
+            </DataList.Item>
+
+            <DataList.Item>
+              <DataList.Label minWidth="100px">
+                <Flex align="center" gap="1">
+                  <FaClinicMedical size={14} />
+                  <Text size="2">Исследование</Text>
+                </Flex>
+              </DataList.Label>
+              <DataList.Value>
+                <Tooltip content={currentStudy?.protocol || currentStudy?.title || 'Не указано'}>
+                  <Text size="2" style={{ maxWidth: 250 }} truncate>
+                    {currentStudy?.protocol || currentStudy?.title || 'Не указано'}
+                  </Text>
+                </Tooltip>
+              </DataList.Value>
+            </DataList.Item>
+          </DataList.Root>
+        </Box>
+
+        <Separator size="4" />
+
+        {/* Name Editing Section */}
+        <Box p="4">
+          <Text size="2" weight="medium" mb="2">Название документа</Text>
+          
+          <Card size="1" variant="surface">
+            <Box p="3">
+              {isEditing ? (
+                <Flex direction="column" gap="3">
+                  <TextField.Root
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value)}
+                      placeholder="Введите название документа"
+                      onKeyDown={handleKeyDown}
+                      disabled={isUploading}
+                      autoFocus
+                      size="2"
+                    >
+                  </TextField.Root>
+                  <Flex gap="2" justify="end">
+                    <Button 
+                      size="1" 
+                      variant="soft" 
+                      color="gray" 
+                      onClick={() => {
+                        setIsEditing(false);
+                        setCustomName(preview.customName);
+                      }}
+                      disabled={isUploading}
+                    >
+                      Отмена
+                    </Button>
+                    <Button 
+                      size="1" 
+                      onClick={saveName}
+                      disabled={isUploading || !customName.trim()}
+                    >
+                      <Flex align="center" gap="1">
+                        <FiSave size={14} />
+                        <Text>Сохранить</Text>
+                      </Flex>
+                    </Button>
+                  </Flex>
+                </Flex>
+              ) : (
+                <Flex justify="between" align="center">
+                  <Box>
+                    <Text size="2" weight="bold">
+                      {preview.customName}
+                    </Text>
+                  </Box>
+                  <Tooltip content="Изменить название">
+                    <Button 
+                      size="1" 
+                      variant="soft" 
+                      onClick={startEditing}
+                      disabled={isUploading}
+                    >
+                      <Flex align="center" gap="1">
+                        <FiEdit2 size={14} />
+                        <Text>Изменить</Text>
+                      </Flex>
+                    </Button>
+                  </Tooltip>
+                </Flex>
+              )}
+            </Box>
+          </Card>
+        </Box>
+
+        <Separator size="4" />
+
+        {/* Footer */}
+        <Flex justify="end" gap="3" p="4">
+          <Button 
+            variant="soft" 
+            color="gray" 
+            onClick={handleCancel}
             disabled={isUploading}
           >
-            <FiUpload /> {isUploading ? 'Загрузка...' : 'Загрузить документ'}
-          </button>
-        </div>
-      </div>
-    </div>
+            Отмена
+          </Button>
+          <Button 
+            color="green" 
+            onClick={handleUpload}
+            disabled={isUploading}
+            size="2"
+          >
+            {isUploading ? (
+              <Flex align="center" gap="2">
+                <Spinner size="1" />
+                <Text>Загрузка...</Text>
+              </Flex>
+            ) : (
+              <Flex align="center" gap="2">
+                <FiUpload size={16} />
+                <Text>Загрузить документ</Text>
+              </Flex>
+            )}
+          </Button>
+        </Flex>
+      </Dialog.Content>
+
+      {/* Loading Overlay */}
+      {isUploading && (
+        <Box 
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0, 
+            backgroundColor: 'rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            pointerEvents: 'none'
+          }}
+        >
+          <Card style={{ padding: 20 }}>
+            <Flex direction="column" align="center" gap="3">
+              <Spinner size="3" />
+              <Text size="2">Загрузка документа...</Text>
+            </Flex>
+          </Card>
+        </Box>
+      )}
+    </Dialog.Root>
   );
 };
 
