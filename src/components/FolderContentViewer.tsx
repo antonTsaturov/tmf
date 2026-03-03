@@ -1,7 +1,7 @@
 // components/FolderContentViewer.tsx
 import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { Document, DocumentAction, DocumentLifeCycleStatus, DocumentWorkFlowStatus } from "@/types/document";
+import { Document, DocumentAction, DocumentLifeCycleStatus, DocumentType, DocumentWorkFlowStatus } from "@/types/document";
 import FilePreviewPanel from "./panels/FilePreviewPanel";
 import NewVersionUploadPanel from "./panels/NewVersionUploadPanel";
 import SubmitToReviewPanel from "./panels/SubmitToReviewPanel";
@@ -34,7 +34,6 @@ import {
   FiInbox,
   FiAlertCircle 
 } from 'react-icons/fi';
-//import '@/styles/FolderContentViewer.css';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 
 
@@ -72,6 +71,32 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const contentRef = useRef<HTMLDivElement>(null);
   const folderHeaderRef = useRef<HTMLTableSectionElement>(null);
   const documentListRef = useRef<HTMLDivElement>(null);
+
+  // функцию для точечного обновления документа в стейте
+  const updateSingleDocumentInState = useCallback((updatedDoc: Document) => {
+    setDocumentsData(prevData => {
+      if (!prevData) return null;
+      
+      return {
+        ...prevData,
+        documents: prevData.documents.map(doc => 
+          doc.id === updatedDoc.id ? { ...doc, ...updatedDoc } : doc
+        )
+      };
+    });
+  }, []);
+
+  // 2. Обновляем обработчик завершения ревью (вместо handleReviewComplete)
+  const handleReviewSuccess = (updatedDoc: Document) => {
+    // Вместо setUploadSuccess(true), который триггерит loadFolderContents,
+    // обновляем только один документ
+    updateSingleDocumentInState(updatedDoc);
+    
+    // Если документ был выделен, обновляем и выделение в контексте
+    if (selectedDocument?.id === updatedDoc.id) {
+      updateContext({ selectedDocument: updatedDoc });
+    }
+  };  
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
@@ -263,9 +288,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
             </Flex>
 
             {/* Фильтр документов */}
-            <Popover.Root>
+            {filteredDocuments.length !== 0 && <Popover.Root>
               <Popover.Trigger>
-                <Button variant="ghost" size="2">
+                <Button variant="ghost" size="2" color="gray">
                   {activeFilter !== 'all' && <FiFilter />}
                   {filterOptions.find(f => f.value === activeFilter)?.label}
                   <FiChevronDown />
@@ -287,6 +312,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                 </Flex>
               </Popover.Content>
             </Popover.Root>
+            }
           </Flex>
       </Section>
             {/* Список документов */}
@@ -404,6 +430,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       <SubmitToReviewPanel
         studyId={currentStudy?.id || 0}
         siteId={currentSite?.id || ''}
+        onSuccess={(updatedDoc) => handleReviewSuccess(updatedDoc)}
       />
 
       <DocumentReviewPanel onReviewComplete={handleReviewComplete} />

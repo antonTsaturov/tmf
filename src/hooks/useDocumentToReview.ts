@@ -7,8 +7,6 @@ interface UseDocumentToReviewReturn {
   // Состояния
   isReviewModalOpen: boolean;
   documentForReview: Document | null;
-  // reviewers: StudyUser[];
-  // loadingReviewers: boolean;
   submitting: boolean;
   error: string | null;
   
@@ -22,7 +20,7 @@ interface UseDocumentToReviewReturn {
     comment?: string,
     userId?: string,
     userRole?: string
-  ) => Promise<boolean>;
+  ) => Promise<Document | boolean>;
   resetError: () => void;
 }
 
@@ -30,7 +28,6 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
   const [reviewers, setReviewers] = useState<StudyUser[]>([]);
-  const [loadingReviewers, setLoadingReviewers] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +38,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     comment?: string,
     userId?: string, // Кто отправил на ревью
     userRole?: string 
-  ): Promise<boolean> => {
+  ): Promise<Document | boolean> => {
+
     if (!documentId || !reviewerId || !userId || !userRole) {
       console.log('Отсутствуют необходимые данные');
       return false;
@@ -72,14 +70,14 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
         throw new Error(errorData.error || 'Failed to submit for review');
       }
 
-      //const result = await response.json();
+      const result = await response.json();
       
       // Закрываем модальное окно после успешной отправки
       setIsReviewModalOpen(false);
       setDocumentForReview(null);
       setReviewers([]);
       
-      return true;
+      return result.document;
     } catch (err) {
       console.error('Error submitting for review:', err);
       setError(err instanceof Error ? err.message : 'Ошибка при отправке на ревью');

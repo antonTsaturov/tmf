@@ -370,7 +370,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           </div>
         ) : currentLevel === ViewLevel.SITE && !currentSite ? (
           <div className="empty-state">
-            Выберите центр для просмотра Site Level папок
+            Выберите центр
           </div>
         ) : filteredData.length === 0 ? (
           <div className="empty-state">

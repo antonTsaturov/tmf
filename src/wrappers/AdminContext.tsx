@@ -1,4 +1,4 @@
-// AdminContext.tsx
+// src/wrappers/AdminContext.tsx
 'use client'
 import { useStudies } from '@/hooks/useStudies';
 import React, { useState } from 'react';

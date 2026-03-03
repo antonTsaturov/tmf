@@ -1,3 +1,4 @@
+// src/wrappers/NotificationContext.tsx
 'use client';
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Callout } from '@radix-ui/themes';
@@ -24,7 +25,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     }, 400);
   }, []);
 
-  const addNotification = useCallback((message: string, type: 'success' | 'error' | 'info') => {
+  const addNotification = useCallback((type: Notification['type'], message: string) => {
     const id = Math.random().toString(36).substring(2, 9);
     setNotifications(prev => [...prev, { id, message, type }]);
     
@@ -36,8 +37,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
       {children}
       <div style={{ 
         position: 'fixed', 
-        bottom: '20px', 
-        right: '20px', 
+        bottom: '30px', 
+        right: '30px', 
         zIndex: 10000, 
         display: 'flex', 
         flexDirection: 'column', 

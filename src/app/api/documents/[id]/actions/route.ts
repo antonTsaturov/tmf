@@ -31,10 +31,8 @@ function getDocumentStatusFromReview(reviewStatus: string | null): DocumentWorkF
 }
 
 // Функция для отправки документа на ревью
-async function applyDocumentActionHandler(
-  request: NextRequest, 
-  { params }: { params: Promise<{ id: string }> }
-) {
+async function applyDocumentActionHandler(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  
   const { id } = await params;
   const client = await connectDB();
   

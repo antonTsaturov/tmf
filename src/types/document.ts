@@ -89,6 +89,7 @@ export interface DocumentVersion {
   review_comment: string;
 }
 
+// Используется в DocumentAction и app/api/documents/[id]/actions/route.ts
 export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
   draft: [
     //DocumentAction.CREATE_DOCUMENT,
@@ -98,7 +99,7 @@ export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
   ],
   in_review: [
     DocumentAction.APPROVE,
-    //DocumentAction.REJECT, // Отклонение через форму одобрения
+    DocumentAction.REJECT,
     // DocumentAction.CANCEL_REVIEW
   ],
   approved: [

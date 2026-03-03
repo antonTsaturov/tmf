@@ -4,6 +4,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { FiX, FiUpload, FiEdit2 } from 'react-icons/fi';
 import '@/styles/FilePreviewPanel.css';
+import { useNotification } from '@/wrappers/NotificationContext';
 
 interface FilePreviewPanelProps {
   onUploadSuccess?: () => void;
@@ -14,6 +15,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
   onUploadSuccess, 
   onUploadError 
 }) => {
+  const { addNotification } = useNotification();
   const { context, clearFilePreview, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite } = context;
 
@@ -75,15 +77,18 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
         // Оповещаем родительский компонент об успешной загрузке
         onUploadSuccess?.();
         
-        alert('Документ успешно загружен');
+        //alert('Документ успешно загружен');
+        addNotification('success', 'Документ успешно загружен');
       } else {
         const errorMsg = result.error || 'Неизвестная ошибка при загрузке';
-        alert(`Ошибка при загрузке: ${errorMsg}`);
+        addNotification('error', `Ошибка при загрузке: ${errorMsg}`);
+        //alert(`Ошибка при загрузке: ${errorMsg}`);
         onUploadError?.(errorMsg);
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      alert(`Ошибка при загрузке: ${errorMsg}`);
+      addNotification('error', `Ошибка при загрузке: ${errorMsg}`);
+      //alert(`Ошибка при загрузке: ${errorMsg}`);
       onUploadError?.(errorMsg);
     }
   };  

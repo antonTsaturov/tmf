@@ -6,17 +6,19 @@ import '@/styles/SubmitToReviewPanel.css';
 import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { useAuth } from "@/wrappers/AuthProvider";
+import { useNotification } from '@/wrappers/NotificationContext';
+import { Document } from '@/types/document';
+
 
 
 interface SubmitToReviewPanelProps {
   studyId: number;
   siteId: string | number;
+  onSuccess?: (updatedDoc: Document) => void;
 }
 
-const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
-  studyId,
-  siteId,
-}) => {
+const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({studyId, siteId, onSuccess}) => {
+  const { addNotification } = useNotification();
   const [loading, setLoading] = useState(false);
   const [selectedReviewer, setSelectedReviewer] = useState<string>('');
   const [comment, setComment] = useState('');
@@ -87,11 +89,16 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({
         const result = await submitForReview(selectedDocument?.id, selectedReviewer, comment.trim(), String(user?.id), String(user?.role));
         console.log('handleSubmit result: ', result)
         if (result) {
+          addNotification('success', 'Submitted to review');
+          if (typeof result === 'object' && result !== null && onSuccess) {
+                onSuccess(result); 
+              }
           updateContext({ isSubmittingToReview: false });
         }
       }
      
     } catch (err) {
+      addNotification('error', 'Error submitting for review')
       console.error('Error submitting for review:', err);
       setError('Ошибка при отправке на ревью');
     } finally {
