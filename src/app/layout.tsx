@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+import "./home/globals.css";
 import { ContextProvider } from "@/wrappers/MainContext";
 import "@radix-ui/themes/styles.css";
 import { Theme } from "@radix-ui/themes";
 import { AuthProvider } from "@/wrappers/AuthProvider";
 import { AdminContextProvider } from "@/wrappers/AdminContext";
+import { NotificationProvider } from "@/wrappers/NotificationContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,13 +33,15 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
       <Theme>
         <AuthProvider>
-          <AdminContextProvider>
-            <ContextProvider>
-              
-                {children}
-              
-            </ContextProvider>
-          </AdminContextProvider>
+          <NotificationProvider>
+            <AdminContextProvider>
+              <ContextProvider>
+                
+                  {children}
+                
+              </ContextProvider>
+            </AdminContextProvider>
+          </NotificationProvider>  
         </AuthProvider>
       </Theme>
       </body>

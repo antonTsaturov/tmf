@@ -1,118 +1,48 @@
-// // hooks/useResizeObserver.ts
-// import { useEffect, useState, RefObject } from 'react';
-
-// interface Size {
-//   width: number;
-//   height: number;
-// }
-
-
-// export function useResizeObserver<T extends HTMLElement>(ref: React.RefObject<HTMLDivElement | null>): Size {
-//   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-
-//   useEffect(() => {
-//     // Проверяем, что ref существует и имеет текущий элемент
-//     if (!ref?.current) {
-//       return;
-//     }
-
-//     const element = ref.current;
-
-//     const resizeObserver = new ResizeObserver((entries) => {
-//       // Используем requestAnimationFrame для оптимизации производительности
-//       console.log('hello')
-//       window.requestAnimationFrame(() => {
-//         if (!Array.isArray(entries) || !entries.length) {
-//           return;
-//         }
-
-//         const entry = entries[0];
-//         const { width, height } = entry.contentRect;
-
-//         setSize({ width, height });
-//       });
-//     });
-
-//     resizeObserver.observe(element);
-
-//     // Получаем начальные размеры
-//     const { width, height } = element.getBoundingClientRect();
-//     setSize({ width, height });
-
-//     return () => {
-//       resizeObserver.disconnect();
-//     };
-//   }, [ref]); // Зависимость от ref
-
-//   return size;
-// }
-
 // hooks/useResizeObserver.ts
-import { useEffect, useState, RefObject } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 interface Size {
   width: number;
   height: number;
 }
 
-export function useResizeObserver<T extends HTMLElement>(
-  ref: React.RefObject<HTMLElement | null>
-): Size {
+export function useResizeObserver<T extends HTMLElement>() {
   const [size, setSize] = useState<Size>({ width: 0, height: 0 });
-
-  useEffect(() => {
-    // Проверяем, что ref существует и имеет текущий элемент
-    if (!ref?.current) {
-      return;
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  
+  // Используем callback ref вместо useRef
+  const ref = useCallback((node: T | null) => {
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
     }
 
-    const element = ref.current;
-    
-    // Функция для обновления размеров
-    const updateSize = () => {
-      if (element) {
-        const { width, height } = element.getBoundingClientRect();
-        setSize({ width, height });
-      }
-    };
+    if (node !== null) {
+      const observer = new ResizeObserver((entries) => {
+        if (!entries || entries.length === 0) return;
+        
+        window.requestAnimationFrame(() => {
+          const entry = entries[0];
+          let { width, height } = entry.contentRect;
 
-    // Устанавливаем начальные размеры
-    updateSize();
+          // Если размеры по нулям, пробуем через getBoundingClientRect
+          if (width === 0 || height === 0) {
+            const rect = node.getBoundingClientRect();
+            width = rect.width;
+            height = rect.height;
+          }
 
-    // Создаем ResizeObserver
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (!entries || entries.length === 0) return;
-      
-      // Используем requestAnimationFrame для оптимизации
-      window.requestAnimationFrame(() => {
-        const entry = entries[0];
-        
-        // Берем размеры из contentRect
-        let width = entry.contentRect.width;
-        let height = entry.contentRect.height;
-        
-        // Если contentRect дает 0, пробуем getBoundingClientRect
-        if (width === 0 || height === 0) {
-          const rect = element.getBoundingClientRect();
-          width = rect.width;
-          height = rect.height;
-        }
-        
-        setSize({ width, height });
+          setSize({ width, height });
+        });
       });
-    });
 
-    // Наблюдаем за элементом
-    resizeObserver.observe(element);
+      observer.observe(node);
+      resizeObserverRef.current = observer;
+      
+      // Сразу замеряем начальный размер
+      const initialRect = node.getBoundingClientRect();
+      setSize({ width: initialRect.width, height: initialRect.height });
+    }
+  }, []);
 
-    // Также наблюдаем за окном на случай изменения размеров
-    window.addEventListener('resize', updateSize);
-
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', updateSize);
-    };
-  }, [ref]); // Зависимость от ref
-
-  return size;
+  return [ref, size] as const;
 }

@@ -12,9 +12,17 @@ import {
   Button, 
   Box,
   IconButton,
-  Separator
+  Separator,
+  DataList,
+  Badge,
+  Card,
+  Avatar
 } from '@radix-ui/themes';
 import { EyeOpenIcon, EyeClosedIcon, Cross2Icon } from '@radix-ui/react-icons';
+import { useAuth } from '@/wrappers/AuthProvider';
+import { FaUser } from "react-icons/fa";
+import { AdminContext } from '@/wrappers/AdminContext';
+
 
 interface UserSettingsProps {
   open: boolean;
@@ -153,46 +161,71 @@ const UserPassword: React.FC = () => {
 };
 
 const UserProfile: React.FC = () => {
-  const [name, setName] = useState('John Doe');
-  const [email, setEmail] = useState('john.doe@example.com');
+
+  const { user } = useAuth()!;
 
   return (
     <Flex direction="column" gap="4">
       <Text size="4" weight="bold" mb="2">Profile Information</Text>
       
-      {/* Name field */}
-      <Box>
-        <Text as="label" size="2" weight="medium" mb="1" style={{ display: 'block' }}>
-          Full Name
-        </Text>
-        <TextField.Root
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your full name"
-            disabled
-          >
-        </TextField.Root>
+      {/* Card */}
+      <Box maxWidth="240px" >
+        <Card variant="classic" >
+          <Flex gap="3" align="center">
+            <Avatar fallback={<FaUser />} />
+            <Box>
+              <Text as="div" size="2" weight="bold">
+                {user?.name}
+              </Text>
+              <Text as="div" size="2" color="gray">
+                {user?.role}
+              </Text>
+            </Box>
+          </Flex>
+        </Card>
       </Box>
 
-      {/* Email field */}
+      {/* Data List */}
       <Box>
-        <Text as="label" size="2" weight="medium" mb="1" style={{ display: 'block' }}>
-          Email Address
-        </Text>
-        <TextField.Root
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-            disabled
-          >
-        </TextField.Root>
+        <DataList.Root>
+          <DataList.Item align="center">
+            <DataList.Label minWidth="88px">User ID</DataList.Label>
+            <DataList.Value>
+              <Badge color="jade" variant="soft" radius="full">
+                {user?.id}
+              </Badge>
+            </DataList.Value>
+
+            <DataList.Label minWidth="88px">Email</DataList.Label>
+            <DataList.Value>
+                {user?.email}
+            </DataList.Value>
+
+            <DataList.Label minWidth="88px">Assigned Studies</DataList.Label>
+            <DataList.Value>
+                {user?.assigned_study_id.length}
+            </DataList.Value>
+
+            <DataList.Label minWidth="88px">Assigned Sites</DataList.Label>
+            <DataList.Value>
+                {user?.assigned_site_id.length}
+            </DataList.Value>
+
+          </DataList.Item>
+        </DataList.Root>
       </Box>
     </Flex>
   );
 };
 
 const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
+  
+  const [activeTab, setActiveTab] = useState('profile');
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+  };
+  
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content style={{ maxWidth: 500 }}>
@@ -205,7 +238,11 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
           </Dialog.Close>
         </Flex>
                 
-        <Tabs.Root defaultValue="profile">
+        <Tabs.Root
+          defaultValue="profile" 
+          value={activeTab}
+          onValueChange={handleTabChange}        
+        >
           <Tabs.List>
             <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
             <Tabs.Trigger value="password">Password</Tabs.Trigger>
@@ -227,12 +264,14 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
         <Flex gap="3" justify="end" align="center">
           <Dialog.Close>
             <Button variant="soft" color="gray">
-              Cancel
+              {`${activeTab === 'password' ? 'Cancel' : 'Close'}`}
             </Button>
           </Dialog.Close>
-          <Button type="submit" size="2">
-            Update Password
-          </Button>
+          {activeTab === 'password' && 
+            <Button type="submit" size="2">
+              Update Password
+            </Button>
+          }
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

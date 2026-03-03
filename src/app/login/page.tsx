@@ -38,7 +38,7 @@ export default function LoginPage() {
       // Перенаправление после успешного входа
       router.refresh();
       //router.push('/');
-      window.location.href = '/';
+      window.location.href = '/home';
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
     } finally {

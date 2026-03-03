@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback, useContext } from 'react';
-import '../styles/Home.css';
-import FileExplorer, { FileNode } from '../components/FileExplorer';
-import { sampleData } from '../utils/data';
+import '../../styles/Home.css';
+import FileExplorer, { FileNode } from '../../components/FileExplorer';
+import { sampleData } from '../../utils/data';
 import UserMenu from '@/components/UserMenu';
 import Modal from '@/components/Modal';
 import { useModal } from '@/hooks/useModal';

@@ -1,9 +1,10 @@
-// FileExplorer.tsx 
+// src/components/FileExplorer.tsx 
 
 import React, { useContext, useEffect, useState } from 'react';
 import '../styles/FileExplorer.css';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 import { MainContext } from '@/wrappers/MainContext';
+import { useNotification } from '@/wrappers/NotificationContext';
 
 export enum ViewLevel {
   SITE = 'site',
@@ -41,6 +42,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   const [data, setData] = useState<FileNode[] | undefined>();
   const [filteredData, setFilteredData] = useState<FileNode[] | undefined>();
+  const { addNotification } = useNotification();
 
   // Get folders structure from Study object
   useEffect(() => {
@@ -56,6 +58,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     };
 
     getFolders();
+    
   }, [currentStudy]);
 
   // Фильтруем папки на основе currentLevel и currentSite
