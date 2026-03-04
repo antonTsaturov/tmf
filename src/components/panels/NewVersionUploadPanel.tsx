@@ -29,16 +29,15 @@ import { MainContext } from '@/wrappers/MainContext';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { useDocumentNewVersion } from '@/hooks/useDocumentNewVersion';
 import { useNotification } from '@/wrappers/NotificationContext';
+import { Document } from '@/types/document';
 
 interface NewVersionUploadPanelProps {
-  onUploadSuccess?: () => void;
+  //onUploadSuccess?: () => void;
   onUploadError?: (error: string) => void;
+  onSuccess?: (updatedDoc: Document) => void;
 }
 
-const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({
-  onUploadSuccess,
-  onUploadError,
-}) => {
+const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadError, onSuccess}) => {
   const mainContext = useContext(MainContext);
   if (!mainContext) return null;
   const { context, clearNewVersionPreview, updateContext } = mainContext;
@@ -89,8 +88,11 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({
     if (result.success && result.document) {
       clearPanel();
       updateContext({ selectedDocument: result.document });
+      if (typeof result === 'object' && result !== null && onSuccess) {
+        onSuccess(result.document); 
+      }
       addNotification('success', 'Новая версия успешно загружена');
-      onUploadSuccess?.();
+      //onUploadSuccess?.();
     } else {
       const err = result.error || 'Неизвестная ошибка';
       addNotification('error', `Ошибка: ${err}`);

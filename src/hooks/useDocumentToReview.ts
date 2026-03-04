@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import { Document, DocumentAction } from '@/types/document';
 import { StudyUser, UserRole } from '@/types/types';
+import React from 'react';
 
 interface UseDocumentToReviewReturn {
   // Состояния
@@ -22,6 +23,12 @@ interface UseDocumentToReviewReturn {
     userRole?: string
   ) => Promise<Document | boolean>;
   resetError: () => void;
+  approveDocument: (
+    documentId: string,
+    comment?: string,
+    userId?: string,
+    userRole?: string 
+  ) => Promise<Document | boolean>;
 }
 
 export const useDocumentToReview = (): UseDocumentToReviewReturn => {
@@ -63,7 +70,6 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
         }),
       });
 
-      console.log(response)
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -92,6 +98,49 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     setError(null);
   }, []);
 
+  const approveDocument = useCallback(async (
+    documentId: string,
+    comment?: string,
+    userId?: string,
+    userRole?: string 
+  ): Promise<Document | boolean> => {
+
+    if (!documentId ) {
+      console.log('Отсутствуют необходимые данные');
+      return false;
+    }
+        
+    try {
+      const response = await fetch(`/api/documents/${documentId}/actions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: DocumentAction.APPROVE,
+          userId: userId,
+          userRole: userRole,
+          comment: comment?.trim() || undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to approve document');
+      }
+      const result = await response.json();
+      return result.document;
+
+    } catch (err) {
+      console.error('Error approving document:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка при утверждении документа');
+      return false;
+    } finally {
+      //setLoading(false);
+    
+    }
+  }, [])
+
   return {
     // Состояния
     isReviewModalOpen,
@@ -106,6 +155,7 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     // closeReviewModal,
     // loadReviewers,
     submitForReview,
+    approveDocument,
     resetError,
   };
 };

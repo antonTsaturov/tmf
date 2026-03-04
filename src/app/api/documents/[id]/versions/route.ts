@@ -8,7 +8,6 @@ import { getDocumentVersionS3Key } from '@/lib/s3-path';
 import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditAction, AuditEntity } from '@/types/types';
 import { AuditConfig } from '@/lib/audit/audit.middleware';
-import { DocumentWorkFlowStatus } from '@/types/document';
 
 function encodeMetadata(value: string): string {
   return Buffer.from(value).toString('base64');
@@ -53,7 +52,6 @@ export async function GET(
   const client = await connectDB();
 
   try {
-    // Получаем версии с информацией о пользователях
     const { rows } = await client.query(
       `SELECT 
         dv.id, 
@@ -75,16 +73,12 @@ export async function GET(
         dv.reviewed_by,
         dv.reviewed_at,
         dv.review_comment,
-        -- Информация о загрузившем
         uploader.name as uploader_name,
         uploader.email as uploader_email,
-        -- Информация о ревьюере
         reviewer.name as reviewer_name,
         reviewer.email as reviewer_email,
-        -- Информация об утверждающем
         approver.name as approver_name,
         approver.email as approver_email,
-        -- Информация о назначенном ревьюере
         assigned.name as assigned_name,
         assigned.email as assigned_email
        FROM document_version dv
@@ -104,7 +98,6 @@ export async function GET(
       }
     }
 
-    // Форматируем ответ с пользовательскими данными
     const formattedVersions = rows.map(v => ({
       id: v.id,
       document_id: v.document_id,
@@ -166,9 +159,8 @@ async function uploadVersionHandler(
     const formData = preloadedData?.formData || (await request.formData());
     const file = formData.get('file') as File;
     const changeReason = (formData.get('changeReason') as string) || undefined;
-    // При загрузке новой версии статус всегда сбрасывается в draft
-    const resetStatusToDraft = true; // Всегда сбрасываем статус при новой версии
     const uploadedBy = formData.get('uploadedBy') as string;
+    const customFileName = formData.get('customFileName') as string | undefined;
 
     if (!file || !uploadedBy) {
       return NextResponse.json(
@@ -177,8 +169,11 @@ async function uploadVersionHandler(
       );
     }
 
+    // Получаем текущий документ (без document_name, так как его нет в таблице document)
     const { rows: docRows } = await client.query(
-      'SELECT id, study_id, site_id, folder_id, folder_name FROM document WHERE id = $1 AND is_deleted = false',
+      `SELECT id, study_id, site_id, folder_id, folder_name 
+       FROM document 
+       WHERE id = $1 AND is_deleted = false`,
       [id]
     );
 
@@ -190,6 +185,22 @@ async function uploadVersionHandler(
     const studyId = doc.study_id;
     const folderId = doc.folder_id;
 
+    // Получаем document_name из текущей (последней) версии документа
+    const { rows: currentVersionRows } = await client.query(
+      `SELECT document_name 
+       FROM document_version 
+       WHERE document_id = $1 
+       ORDER BY document_number DESC 
+       LIMIT 1`,
+      [id]
+    );
+
+    // Если есть текущая версия, берем document_name из нее, иначе используем имя файла
+    const documentName = currentVersionRows.length > 0 
+      ? currentVersionRows[0].document_name 
+      : file.name.replace(/\.[^/.]+$/, '');
+
+    // Получаем следующий номер версии
     const { rows: countRows } = await client.query(
       'SELECT COALESCE(MAX(document_number), 0) as max_num FROM document_version WHERE document_id = $1',
       [id]
@@ -212,8 +223,14 @@ async function uploadVersionHandler(
     }
 
     const checksum = createHash('sha256').update(buffer).digest('hex');
-    const fileName = formData.get('fileName') as string || file.name;
-    const documentName = (formData.get('documentName') as string) || file.name.replace(/\.[^/.]+$/, '');
+    
+    // Определяем имя файла для сохранения
+    let fileNameToSave = customFileName || file.name;
+    
+    // Если указано кастомное имя, добавляем расширение если его нет
+    if (customFileName && !customFileName.includes('.')) {
+      fileNameToSave = `${customFileName}.${ext}`;
+    }
 
     await uploadFileWithIAM(
       process.env.YC_BUCKET_NAME!,
@@ -226,14 +243,14 @@ async function uploadVersionHandler(
         studyid: String(studyId),
         siteid: String(doc.site_id || ''),
         folderid: folderId,
-        filename: fileName,
+        filename: fileNameToSave,
         uploadedby: uploadedBy,
       }
     );
 
     const fileUrl = `https://storage.yandexcloud.net/${process.env.YC_BUCKET_NAME}/${s3Key}`;
 
-    // Новая версия всегда создается со статусом null (не на ревью)
+    // Создаем новую версию с document_name из текущей версии
     const { rows: [newVersion] } = await client.query(
       `INSERT INTO document_version (
         id, document_id, document_number, document_name,
@@ -246,8 +263,8 @@ async function uploadVersionHandler(
         versionId,
         id,
         nextNumber,
-        documentName,
-        fileName,
+        documentName, // Используем document_name из текущей версии
+        fileNameToSave,
         fileUrl,
         file.type,
         file.size,
@@ -265,7 +282,7 @@ async function uploadVersionHandler(
       [versionId, id]
     );
 
-    // Получаем обновленный документ со статусом из последней версии
+    // Получаем обновленный документ
     const { rows: [updatedDoc] } = await client.query(`
       SELECT 
         d.*,
@@ -279,7 +296,6 @@ async function uploadVersionHandler(
         lv.checksum,
         lv.uploaded_at,
         lv.change_reason,
-        -- Определяем статус документа на основе review_status
         CASE 
           WHEN lv.review_status = 'approved' THEN 'approved'
           WHEN lv.review_status = 'submitted' THEN 'in_review'
@@ -330,12 +346,9 @@ export const POST = async (
   const auditConfig: AuditConfig = {
     action: 'UPDATE' as AuditAction,
     entityType: 'document' as AuditEntity,
-
     getEntityId: () => 0,
-
     getStudyId: (_req, body?: any) => (body?.studyId ? parseInt(body.studyId) : 0),
     getSiteId: (_req, body?: any) => body?.siteId ?? '',
-
     getNewValue: (_req, body?: any) => body || null,
     getOldValue: async () => null,
   };

@@ -1,10 +1,10 @@
 // app/api/documents/[id]/versions/[number]/route.ts
-// GET - скачать конкретную версию
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/index';
 import { getIAMToken } from '@/lib/yc-iam';
 import { createHash } from 'crypto';
 
+// скачать конкретную версию
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; number: string }> }

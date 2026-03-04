@@ -27,12 +27,15 @@ import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { useNotification } from '@/wrappers/NotificationContext';
+import { useDocumentToReview } from '@/hooks/useDocumentToReview';
+import { Document } from '@/types/document';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;
+  onSuccess?: (updatedDoc: Document) => void;
 }
 
-const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewComplete }) => {
+const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewComplete, onSuccess }) => {
   const { context, updateContext } = useContext(MainContext)!;
   const { user } = useAuth();
   const { addNotification } = useNotification();
@@ -43,6 +46,8 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   const [comment, setComment] = useState('');
   const [rejectMode, setRejectMode] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const { approveDocument } = useDocumentToReview();
 
   // Сбрасываем состояние при закрытии
   useEffect(() => {
@@ -65,25 +70,17 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     setError(null);
 
     try {
-      const response = await fetch(`/api/documents/${selectedDocument.id}/actions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: DocumentAction.APPROVE,
-          userId: user.id,
-          userRole: user.role?.[0],
-          comment: comment.trim() || undefined,
-        }),
-      });
+      const result = await approveDocument(
+        selectedDocument?.id, 
+        comment.trim(), 
+        String(user?.id), 
+        String(user?.role)        
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to approve document');
-      }
-
-      addNotification('success', 'Документ успешно утвержден');
+      if (typeof result === 'object' && result !== null && onSuccess) {
+        onSuccess(result); 
+      }      
+      addNotification('success', 'Документ утвержден');
       
       // Сбрасываем selectedDocument чтобы обновить кнопки
       updateContext({ selectedDocument: null });

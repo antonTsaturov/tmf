@@ -4,8 +4,6 @@ import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { Document, DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document';
 import DocumentStatusBadge from './DocumentStatusBadge';
-// import { StudyUser } from '@/types/types';
-// import { ROLE_CONFIG } from '@/types/types';
 import '../styles/DocumentDetails.css';
 
 
@@ -108,23 +106,6 @@ const DocumentDetails: React.FC = () => {
     );
   };
 
-  // const handleRestoreVersion = async (version: DocumentVersionRow) => {
-  //   if (!selectedDocument) return;
-  //   try {
-  //     const res = await fetch(
-  //       `/api/documents/${selectedDocument.id}/versions/${version.document_number}/restore`,
-  //       { method: 'PUT' }
-  //     );
-  //     if (!res.ok) throw new Error('Ошибка восстановления');
-  //     const data = await res.json();
-  //     if (data.document) {
-  //       updateContext({ selectedDocument: data.document });
-  //     }
-  //     window.location.reload();
-  //   } catch (err) {
-  //     alert(err instanceof Error ? err.message : 'Ошибка восстановления');
-  //   }
-  // };
 
   const renderUserInfo = (user?: { name?: string; email?: string } | null) => {
     if (!user) return '—';
@@ -135,30 +116,6 @@ const DocumentDetails: React.FC = () => {
     );
   };
 
-  // const getStatusBadge = (status: string) => {
-  //   const statusConfig: Record<string, { label: string; color: string }> = {
-  //     draft: { label: 'DRAFT', color: '#666' },
-  //     in_review: { label: 'IN REVIEW', color: '#f39c12' },
-  //     approved: { label: 'APPROVED', color: '#27ae60' },
-  //     archived: { label: 'ARCHIVED', color: '#7f8c8d' },
-  //     deleted: { label: 'DELETED', color: '#c0392b' },
-  //   };
-    
-  //   const config = statusConfig[status] || { label: status, color: '#666' };
-    
-  //   return (
-  //     <span 
-  //       className="status-badge"
-  //       style={{ 
-  //         backgroundColor: config.color + '20',
-  //         color: config.color,
-  //         borderColor: config.color + '40'
-  //       }}
-  //     >
-  //       {config.label}
-  //     </span>
-  //   );
-  // };
 
   if (!selectedDocument) {
     return (

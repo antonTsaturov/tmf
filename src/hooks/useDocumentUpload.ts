@@ -97,6 +97,7 @@ export const useDocumentUpload = () => {
         });
       }, 200);
 
+
       // Отправляем запрос
       const response = await fetch('/api/documents/upload', {
         method: 'POST',

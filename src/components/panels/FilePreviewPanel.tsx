@@ -30,9 +30,10 @@ import { MainContext } from '@/wrappers/MainContext';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { FaClinicMedical, FaRegBuilding } from 'react-icons/fa';
+import { Document } from '@/types/document';
 
 interface FilePreviewPanelProps {
-  onUploadSuccess?: () => void;
+  onUploadSuccess?: (updatedDoc: Document) => void;
   onUploadError?: (error: string) => void;
 }
 
@@ -109,7 +110,8 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
         clearFilePreview();
         updateContext({ selectedDocument: result.document });
         addNotification('success', 'Документ успешно загружен');
-        onUploadSuccess?.();
+        console.log(result.document)
+        onUploadSuccess?.(result.document);
       } else {
         const errorMsg = result.error || 'Неизвестная ошибка при загрузке';
         addNotification('error', `Ошибка при загрузке: ${errorMsg}`);
@@ -295,73 +297,91 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
         <Separator size="4" />
 
         {/* Name Editing Section */}
-        <Box p="4">
-          <Text size="2" weight="medium" mb="2">Название документа</Text>
-          
-          <Card size="1" variant="surface">
-            <Box p="3">
-              {isEditing ? (
-                <Flex direction="column" gap="3">
-                  <TextField.Root
-                      value={customName}
-                      onChange={(e) => setCustomName(e.target.value)}
-                      placeholder="Введите название документа"
-                      onKeyDown={handleKeyDown}
-                      disabled={isUploading}
-                      autoFocus
-                      size="2"
-                    >
-                  </TextField.Root>
-                  <Flex gap="2" justify="end">
-                    <Button 
-                      size="1" 
-                      variant="soft" 
-                      color="gray" 
-                      onClick={() => {
-                        setIsEditing(false);
-                        setCustomName(preview.customName);
-                      }}
-                      disabled={isUploading}
-                    >
-                      Отмена
-                    </Button>
-                    <Button 
-                      size="1" 
-                      onClick={saveName}
-                      disabled={isUploading || !customName.trim()}
-                    >
-                      <Flex align="center" gap="1">
-                        <FiSave size={14} />
-                        <Text>Сохранить</Text>
-                      </Flex>
-                    </Button>
-                  </Flex>
-                </Flex>
-              ) : (
-                <Flex justify="between" align="center">
-                  <Box>
-                    <Text size="2" weight="bold">
-                      {preview.customName}
-                    </Text>
-                  </Box>
-                  <Tooltip content="Изменить название">
-                    <Button 
-                      size="1" 
-                      variant="soft" 
-                      onClick={startEditing}
-                      disabled={isUploading}
-                    >
-                      <Flex align="center" gap="1">
-                        <FiEdit2 size={14} />
-                        <Text>Изменить</Text>
-                      </Flex>
-                    </Button>
-                  </Tooltip>
-                </Flex>
-              )}
-            </Box>
-          </Card>
-        </Box>
+<Box p="4">
+  <Text size="2" weight="medium" mb="2">Название документа</Text>
+  
+  <Card size="1" variant="surface">
+    <Box p="3">
+      {isEditing ? (
+        <Flex direction="column" gap="3">
+          <TextField.Root
+            value={customName}
+            onChange={(e) => setCustomName(e.target.value)}
+            placeholder="Введите название документа"
+            onKeyDown={handleKeyDown}
+            disabled={isUploading}
+            autoFocus
+            size="2"
+          />
+          <Flex gap="2" justify="end">
+            <Button 
+              size="1" 
+              variant="soft" 
+              color="gray" 
+              onClick={() => {
+                setIsEditing(false);
+                setCustomName(preview.customName);
+              }}
+              disabled={isUploading}
+            >
+              Отмена
+            </Button>
+            <Button 
+              size="1" 
+              onClick={saveName}
+              disabled={isUploading || !customName.trim()}
+            >
+              <Flex align="center" gap="1">
+                <FiSave size={14} />
+                <Text>Сохранить</Text>
+              </Flex>
+            </Button>
+          </Flex>
+        </Flex>
+      ) : (
+        <Flex 
+          justify="between" 
+          align="center" 
+          gap="2"
+          style={{ minWidth: 0 }} // Важно для корректной работы flex
+        >
+          <Box style={{ 
+            flex: 1,
+            minWidth: 0, // Позволяет тексту сжиматься
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            <Tooltip content={preview.customName}>
+              <Text size="2" weight="bold" style={{ 
+                display: 'block',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}>
+                {preview.customName}
+              </Text>
+            </Tooltip>
+          </Box>
+          <Tooltip content="Изменить название">
+            <Button 
+              size="1" 
+              variant="soft" 
+              onClick={startEditing}
+              disabled={isUploading}
+              style={{ flexShrink: 0 }} // Кнопка не сжимается
+            >
+              <Flex align="center" gap="1">
+                <FiEdit2 size={14} />
+                <Text>Изменить</Text>
+              </Flex>
+            </Button>
+          </Tooltip>
+        </Flex>
+      )}
+    </Box>
+  </Card>
+</Box>
 
         <Separator size="4" />
 

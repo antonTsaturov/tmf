@@ -28,14 +28,13 @@ import {
 import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentArchive } from "@/hooks/useDocumentArchive";
 import { useNotification } from '@/wrappers/NotificationContext';
+import { Document } from '@/types/document';
 
 interface ArchiveDocumentPanelProps {
-  onDocumentArchived?: () => void;
+  onDocumentArchived?: (updatedDoc: Document) => void;
 }
 
-const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({ 
-  onDocumentArchived 
-}) => {
+const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentArchived}) => {
   const mainContext = useContext(MainContext);
   if (!mainContext) throw new Error('ArchiveDocumentPanel must be used within MainContext Provider');
 
@@ -66,11 +65,12 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({
     try {
       const result = await archiveDocument(selectedDocument.id);
       
-      if (result.success) {
+      if (result.success && onDocumentArchived) {
         addNotification('success', 'Документ успешно архивирован');
         updateContext({ isArchivePanelOpen: false });
         updateContext({ selectedDocument: null });
-        onDocumentArchived?.();
+        //console.log(result)
+        onDocumentArchived(result.data.document);
       }
     } catch (error) {
       console.error('Error archiving document:', error);

@@ -40,13 +40,11 @@ export default function UserDropdownMenu() {
           >
             User Settings
           </DropdownMenu.Item>
+          <DropdownMenu.Separator  />
+          <DropdownMenu.Item onClick={() => logout()}>
+            Exit
+          </DropdownMenu.Item>
 
-          {<>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item onClick={() => logout()}>
-              Exit
-            </DropdownMenu.Item>
-          </>}
         </DropdownMenu.Content>
       </DropdownMenu.Root>
 

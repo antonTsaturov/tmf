@@ -39,6 +39,7 @@ interface SubmitToReviewPanelProps {
   onSuccess?: (updatedDoc: Document) => void;
 }
 
+
 const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, siteId, onSuccess }) => {
   const { addNotification } = useNotification();
   const [loading, setLoading] = useState(false);
@@ -51,16 +52,14 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
   const [reviewers, setReviewers] = useState<StudyUser[]>([]);
   const { user } = useAuth()!;
 
-  const {
-    submitting,
-    submitForReview,
-  } = useDocumentToReview();
+  const { submitting, submitForReview } = useDocumentToReview();
 
   const document = selectedDocument;
   const isOpen = isSubmittingToReview;
 
   // Загрузка доступных рецензентов
   useEffect(() => {
+    
     const loadReviewers = async () => {
       if (!isOpen || !document || !studyId || !siteId) return;
 

@@ -23,7 +23,8 @@ import {
   Separator,
   Button,
   Table,
-  Section
+  Section,
+  Tooltip
 } from '@radix-ui/themes';
 import { FileIcon } from 'react-file-icon';
 import { 
@@ -71,6 +72,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const contentRef = useRef<HTMLDivElement>(null);
   const folderHeaderRef = useRef<HTMLTableSectionElement>(null);
   const documentListRef = useRef<HTMLDivElement>(null);
+  const tableHeaderRef = useRef<HTMLTableSectionElement>(null);
 
   // функцию для точечного обновления документа в стейте
   const updateSingleDocumentInState = useCallback((updatedDoc: Document) => {
@@ -86,9 +88,8 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     });
   }, []);
 
-  // 2. Обновляем обработчик завершения ревью (вместо handleReviewComplete)
-  const handleReviewSuccess = (updatedDoc: Document) => {
-    // Вместо setUploadSuccess(true), который триггерит loadFolderContents,
+  // Обновляем документы в папке
+  const handleUpdateFIleInFolder = (updatedDoc: Document) => {
     // обновляем только один документ
     updateSingleDocumentInState(updatedDoc);
     
@@ -96,7 +97,22 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     if (selectedDocument?.id === updatedDoc.id) {
       updateContext({ selectedDocument: updatedDoc });
     }
-  };  
+  };
+
+  // Добавляем в список документов только что загруженный файл
+  const handleAddNewDocument = useCallback((updatedDoc: Document) => {
+    setDocumentsData(prevData => {
+      if (!prevData) return null;
+      
+      return {
+        ...prevData,
+        count: prevData.count + 1,
+        documents: [updatedDoc, ...prevData.documents] // Добавляем новый документ в начало списка
+      };
+    });
+  }, []);
+
+
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
@@ -172,11 +188,15 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     };
   }, [documentsData]);
 
-  const handleContentClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const target = e.target as Node;
-    const clickedOnEmptySpace = target === contentRef.current || target === documentListRef.current;
+  const handleContentClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    
+    // Проверяем, был ли клик внутри строки таблицы или контекстного меню
+    // Если клик был по элементам управления (кнопки, поповеры), тоже не снимаем выделение
+    const isRowClick = target.closest('.rt-TableRow');
+    const isActionClick = target.closest('button') || target.closest('.rt-PopoverContent');
 
-    if (clickedOnEmptySpace) {
+    if (!isRowClick && !isActionClick) {
       updateContext({ selectedDocument: null });
       onDocumentSelect?.(null as any);
     }
@@ -215,9 +235,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   };
 
   // Обработчик успешной загрузки
-  const handleUploadSuccess = () => {
-    setUploadSuccess(true);
-  };
+  // const handleUploadSuccess = () => {
+  //   setUploadSuccess(true);
+  // };
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -268,54 +288,112 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     );
   }
 
-  return (
-    <Box ref={contentRef} onClick={handleContentClick} style={{ height: '100%', overflow: 'auto' }}>
-      {/* Заголовок с информацией о папке */}
+return (
+  <Box 
+    ref={contentRef} 
+    onClick={handleContentClick} 
+    style={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      overflow: 'hidden',
+      borderBottomLeftRadius: '6px',
+      borderBottomRightRadius: '6px'
+    }}
+  >
+    {/* Заголовок с информацией о папке - фиксированный */}
+    <Box style={{ flexShrink: 0 }}>
       <Section size="1" p="4" mb="0" ref={folderHeaderRef}>
-          <Flex justify="between" align="start">
-            <Flex align="center" gap="3">
-              
-              <Flex direction="column" gap="1">
-                <Flex direction="row" gap="1">
-                  <FaRegFolderOpen size={24}/>
-                  <Text size="4" weight="bold" ml="2">{selectedFolder.name}</Text>
-                </Flex>
-                
-                <Text size="1" color="gray">
-                  {filteredDocuments.length} / {documentsData?.count || 0} {getDocumentCountText(documentsData?.count || 0)}
-                </Text>
+        <Flex justify="between" align="start">
+          <Flex align="center" gap="3">
+            <Flex direction="column" gap="1">
+              <Flex direction="row" gap="1">
+                <FaRegFolderOpen size={24}/>
+                <Text size="4" weight="bold" ml="2">{selectedFolder.name}</Text>
               </Flex>
+              
+              <Text size="1" color="gray">
+                {filteredDocuments.length} / {documentsData?.count || 0} {getDocumentCountText(documentsData?.count || 0)}
+              </Text>
             </Flex>
-
-            {/* Фильтр документов */}
-            {filteredDocuments.length !== 0 && <Popover.Root>
-              <Popover.Trigger>
-                <Button variant="ghost" size="2" color="gray">
-                  {activeFilter !== 'all' && <FiFilter />}
-                  {filterOptions.find(f => f.value === activeFilter)?.label}
-                  <FiChevronDown />
-                </Button>
-              </Popover.Trigger>
-              <Popover.Content size="1">
-                <Flex direction="column" gap="1">
-                  {filterOptions.map(option => (
-                    <Button
-                      key={option.value}
-                      variant={activeFilter === option.value ? 'solid' : 'ghost'}
-                      onClick={() => setActiveFilter(option.value as ViewFilter)}
-                      style={{ justifyContent: 'space-between', width: '100%' }}
-                    >
-                      <Text>{option.label}</Text>
-                      <Badge>{option.count}</Badge>
-                    </Button>
-                  ))}
-                </Flex>
-              </Popover.Content>
-            </Popover.Root>
-            }
           </Flex>
+
+          {/* Фильтр документов */}
+          {filteredDocuments.length !== 0 && <Popover.Root>
+            <Popover.Trigger>
+              <Button variant="ghost" size="2" color="gray">
+                {activeFilter !== 'all' && <FiFilter />}
+                {filterOptions.find(f => f.value === activeFilter)?.label}
+                <FiChevronDown />
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content size="1">
+              <Flex direction="column" gap="1">
+                {filterOptions.map(option => (
+                  <Button
+                    key={option.value}
+                    variant={activeFilter === option.value ? 'solid' : 'ghost'}
+                    onClick={() => setActiveFilter(option.value as ViewFilter)}
+                    style={{ justifyContent: 'space-between', width: '100%' }}
+                  >
+                    <Text>{option.label}</Text>
+                    <Badge>{option.count}</Badge>
+                  </Button>
+                ))}
+              </Flex>
+            </Popover.Content>
+          </Popover.Root>
+          }
+        </Flex>
       </Section>
-            {/* Список документов */}
+    </Box>
+
+    {/* Заголовок таблицы - фиксированный */}
+    {filteredDocuments.length > 0 && (
+      <Box 
+        style={{borderRadius: 0, '--table-row-box-shadow': 'none' } as React.CSSProperties}
+      >
+        <Table.Root 
+          variant="surface" 
+          size="2" 
+          style={{ 
+            borderRadius: 0,
+            borderTopWidth: 1,
+            borderLeftWidth: 0,
+            borderRightWidth: 0,
+            borderBottom: 1,
+            '--table-border-radius': '0px',
+            '--table-row-box-shadow': 'none'
+          } as React.CSSProperties}
+        >
+          <Table.Header 
+            onContextMenu={(e) => e.preventDefault()}
+            style={{ 
+              borderRadius: 0,
+              borderBottom: 1
+            }}
+            ref={tableHeaderRef}
+          >
+            <Table.Row  style={{  color: 'gray', '--table-row-box-shadow': 'none' } as React.CSSProperties} >
+              <Table.ColumnHeaderCell style={{ maxWidth: '400px', width: '40%' }}>Имя документа</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="20%">Статус</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="20%">Версия</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell width="20%">Создан</Table.ColumnHeaderCell>
+            </Table.Row>
+          </Table.Header>
+        </Table.Root>
+      </Box>
+    )}
+
+    {/* Прокручиваемая область с документами */}
+    <Box 
+      ref={documentListRef}
+      style={{ 
+        flex: 1, 
+        minHeight: 0, 
+        overflowY: 'auto'
+      }}
+    >
       {filteredDocuments.length === 0 ? (
         <Flex 
           align="center" 
@@ -333,18 +411,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
           </Text>
         </Flex>
       ) : (
-        <Box className="table-container" >
-          <Table.Root variant="surface" size="2" style={{ borderRadius: 0, borderRightWidth: 0, borderLeftWidth: 0}}>
-            <Table.Header  onContextMenu={(e) => e.preventDefault()}>
-              <Table.Row style={{color:'gray'}}>
-                <Table.ColumnHeaderCell width="40%">Имя документа</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell width="20%">Статус</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell width="15%">Версия</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell width="25%">Создан</Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-
-            <Table.Body  onContextMenu={(e) => e.preventDefault()}>
+        <Box className="table-container">
+          <Table.Root variant="surface" size="2" style={{ borderRadius: 0, borderRightWidth: 0, borderLeftWidth: 0 }}>
+            <Table.Body onContextMenu={(e) => e.preventDefault()}>
               {filteredDocuments.map((doc) => (
                 <DocumentContextMenu
                   document={doc}
@@ -358,13 +427,13 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                     style={{ 
                       cursor: 'pointer',
                       backgroundColor: selectedDocument?.id === doc.id ? 'var(--blue-3)' : undefined,
-                      transition: 'background-color 0.2s'
+                      transition: 'background-color 0.2s',
                     }}
                     className={selectedDocument?.id === doc.id ? 'rt-TableRow--selected' : ''}
                   >
                     {/* Имя документа */}
-                    <Table.Cell>
-                      <Flex align="center" gap="2">
+                    <Table.Cell style={{ maxWidth: '400px', width: '40%' }}>
+                      <Flex align="center" gap="2" style={{ width: '100%' }}>
                         <Box style={{ width: 24, height: 24, flexShrink: 0 }}>
                           {doc.file_type?.includes('pdf') ? (
                             <FileIcon extension="pdf" labelColor="#D93831" type="acrobat" />
@@ -372,21 +441,56 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                             <FileIcon extension="txt" type="document" />
                           )}
                         </Box>
-                        <Flex direction="column" gap="1">
-                          <Text size="2" weight="medium" title={doc.document_name}>
-                            {doc.document_name || 'Без названия'}
-                          </Text>
+                        <Flex 
+                          direction="column" 
+                          gap="1" 
+                          style={{ 
+                            minWidth: 0,
+                            flex: 1,
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <Tooltip content={doc.document_name || 'Без названия'}>
+                            <Text 
+                              size="2" 
+                              weight="medium" 
+                              style={{ 
+                                wordBreak: 'break-word',
+                                overflowWrap: 'break-word',
+                                maxWidth: '100%',
+                                lineHeight: '1.4'
+                              }}
+                            >
+                              {doc.document_name || 'Без названия'}
+                            </Text>
+                          </Tooltip>
                           {doc.tmf_artifact && (
-                            <Badge size="1" variant="soft" color="blue" style={{ width: 'fit-content' }}>
-                              {doc.tmf_artifact}
+                            <Badge 
+                              size="1" 
+                              variant="soft" 
+                              color="blue" 
+                              style={{ 
+                                width: 'fit-content',
+                                maxWidth: '100%'
+                              }}
+                            >
+                              <Text 
+                                style={{ 
+                                  wordBreak: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  display: 'block'
+                                }}
+                              >
+                                {doc.tmf_artifact}
+                              </Text>
                             </Badge>
                           )}
                         </Flex>
                       </Flex>
                     </Table.Cell>
-
+                    
                     {/* Статус */}
-                    <Table.Cell>
+                    <Table.Cell style={{  width: '20%'}}>
                       <DocumentStatusBadge
                         status={
                           doc.is_archived
@@ -399,12 +503,12 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                     </Table.Cell>
 
                     {/* Версия */}
-                    <Table.Cell>
+                    <Table.Cell style={{  width: '20%'}}>
                       <Text size="2">{doc.document_number || '1'}</Text>
                     </Table.Cell>
 
                     {/* Дата создания */}
-                    <Table.Cell>
+                    <Table.Cell >
                       <Flex direction="column">
                         <Text size="2">{formatDate(doc.created_at)}</Text>
                       </Flex>
@@ -416,29 +520,31 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
           </Table.Root>
         </Box>
       )}
-      {/* Панели */}
-      <FilePreviewPanel
-        onUploadSuccess={handleUploadSuccess}
-        onUploadError={(error) => console.error('Upload error:', error)}
-      />
-      
-      <NewVersionUploadPanel
-        onUploadSuccess={handleUploadSuccess}
-        onUploadError={(error) => console.error('Upload error:', error)}
-      />
-
-      <SubmitToReviewPanel
-        studyId={currentStudy?.id || 0}
-        siteId={currentSite?.id || ''}
-        onSuccess={(updatedDoc) => handleReviewSuccess(updatedDoc)}
-      />
-
-      <DocumentReviewPanel onReviewComplete={handleReviewComplete} />
-      <DeleteDocumentPanel />
-      <ArchiveDocumentPanel />
     </Box>
-  );
-};
+
+    {/* Панели (остаются без изменений) */}
+    <FilePreviewPanel
+      onUploadSuccess={(updatedDoc) => handleAddNewDocument(updatedDoc)}
+      onUploadError={(error) => console.error('Upload error:', error)}
+    />
+    <NewVersionUploadPanel
+      onUploadError={(error) => console.error('Upload error:', error)}
+      onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+    />
+    <SubmitToReviewPanel
+      studyId={currentStudy?.id || 0}
+      siteId={currentSite?.id || ''}
+      onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+    />
+    <DocumentReviewPanel
+      onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+    />
+    <DeleteDocumentPanel />
+    <ArchiveDocumentPanel
+      onDocumentArchived={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+    />
+  </Box>
+);};
 
 const getDocumentCountText = (count: number): string => {
   if (count === 0) return 'документов';

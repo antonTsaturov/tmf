@@ -3,7 +3,7 @@ import { Colors } from '@/types/types';
 
 
 interface DocumentStatusBadgeProps {
-  status: string;
+  status?: string | undefined;
 }
 
 const DocumentStatusBadge = ({status}: DocumentStatusBadgeProps) => {
@@ -16,7 +16,7 @@ const DocumentStatusBadge = ({status}: DocumentStatusBadgeProps) => {
     deleted: { label: 'DELETED', color: Colors.RED },
   };
   
-  const config = statusConfig[status];
+  const config = typeof status === 'undefined' ? statusConfig['draft'] :  statusConfig[status];
 
   return (
     <span 
