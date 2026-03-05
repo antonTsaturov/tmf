@@ -187,6 +187,7 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
             </Dialog.Close>
           </Flex>
 
+
           {/* Document Info Card */}
           <Box p="4">
             <Card size="1" variant="surface">
@@ -204,8 +205,19 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
                 >
                   <FiFileText size={24} />
                 </Box>
-                <Box style={{ flex: 1 }}>
-                  <Text size="3" weight="bold">
+                <Box style={{ flex: 1, minWidth: 0 }}>
+                  <Text
+                    size="3"
+                    weight="bold"
+                    style={{ 
+                      display: 'block',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '100%'
+                    }}
+                    title={selectedDocument?.document_name}                    
+                  >
                     {selectedDocument?.document_name}
                   </Text>
                   <Flex gap="2" mt="2" wrap="wrap">

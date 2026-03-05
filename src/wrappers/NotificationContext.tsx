@@ -44,27 +44,40 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         flexDirection: 'column', 
         alignItems: 'flex-end' // Уведомления прижаты к правому краю
       }}>
-        {notifications.map((n) => (
-          <div 
-            key={n.id} 
-            className={`notification-item ${n.isExiting ? 'exiting' : ''}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => removeNotification(n.id)}
-          >
-            <Callout.Root 
-              color={n.type === 'success' ? 'green' : n.type === 'error' ? 'red' : 'blue'}
-              variant="surface"
-              style={{ 
-                cursor: 'pointer', 
-                minWidth: '250px', 
-                maxWidth: '350px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
-              }}
+        {notifications.map((n) => {
+          // Определяем имя цвета на основе типа
+          const colorName = n.type === 'success' ? 'green' : n.type === 'error' ? 'red' : 'blue';
+
+          return (
+            <div 
+              key={n.id} 
+              className={`notification-item ${n.isExiting ? 'exiting' : ''}`}
+              style={{ width: 'fit-content' }}
+              onClick={() => removeNotification(n.id)}
             >
-              <Callout.Text>{n.message}</Callout.Text>
-            </Callout.Root>
-          </div>
-        ))}
+              <Callout.Root 
+                color={colorName as any}
+                variant="surface"
+                highContrast // Помогает сделать текст и иконки более четкими на сплошном фоне
+                style={{ 
+                  cursor: 'pointer', 
+                  minWidth: '250px', 
+                  maxWidth: '350px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  
+                  // ДИНАМИЧЕСКИЙ НЕПРОЗРАЧНЫЙ ЦВЕТ:
+                  // Используем переменную --[color]-surface, она непрозрачная в Radix
+                  backgroundColor: `var(--${colorName}-3)`,
+                  opacity: 1
+                }}
+              >
+                <Callout.Text weight="light">
+                  {n.message}
+                </Callout.Text>
+              </Callout.Root>
+            </div>
+          );
+        })}
       </div>
     </NotificationContext.Provider>
   );

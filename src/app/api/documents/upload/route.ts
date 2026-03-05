@@ -2,12 +2,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, createTable } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
-import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/yc-iam';
-import { withAudit } from '@/lib/audit/audit.middleware';
-import { AuditAction, AuditEntity } from '@/types/types';
-import { AuditConfig } from '@/lib/audit/audit.middleware';
+import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 
 
 // Функция для кодирования метаданных в ASCII
@@ -61,7 +58,10 @@ async function uploadFileWithIAM(
 }
 
 // Основная функция обработки загрузки
-async function uploadHandler(request: NextRequest, preloadedData?: any) {
+async function uploadHandler(
+  request: NextRequest,
+  ctx: AuditContext
+) {
   const client = await connectDB();
   
   try {
@@ -69,8 +69,9 @@ async function uploadHandler(request: NextRequest, preloadedData?: any) {
     await createTable(Tables.DOCUMENT_VERSION);
 
     // Используем preloadedData если он есть, иначе читаем formData
-    const formData = preloadedData?.formData || await request.formData();
-    
+    //const formData = onloadeddata?.formData || await request.formData();
+    const formData = ctx.formData!;
+
     const file = formData.get('file') as File;
     const documentId = formData.get('documentId') as string;
     const versionId = formData.get('versionId') as string;
@@ -220,60 +221,29 @@ async function uploadHandler(request: NextRequest, preloadedData?: any) {
   }
 }
 
-// Оборачиваем handler в withAudit
-export const POST = async (request: NextRequest) => {
-  // Читаем formData один раз здесь
-  let formData: FormData | null = null;
-  
-  try {
-    formData = await request.formData();
-  } catch (error) {
-    console.error('Failed to parse form data:', error);
-  }
+export const POST = withAudit(
+  {
+    action: 'CREATE',
+    entityType: 'document',
 
-  // Извлекаем данные для аудита из formData
-  const auditData = formData ? {
-    fileName: formData.get('fileName'),
-    folderId: formData.get('folderId'),
-    folderName: formData.get('folderName'),
-    fileSize: formData.get('fileSize'),
-    fileType: formData.get('fileType'),
-    studyId: formData.get('studyId'),
-    siteId: formData.get('siteId'),
-    tmfZone: formData.get('tmfZone'),
-    tmfArtifact: formData.get('tmfArtifact')
-  } : null;
+    getEntityId: () => 0,
 
-  const auditConfig: AuditConfig = {
-    action: 'CREATE' as AuditAction,
-    entityType: 'DOCUMENT' as AuditEntity,
-    
-    getEntityId: (req: NextRequest) => {
-      return 0;
-    },
-    
-    getStudyId: (req: NextRequest, body?: any) => {
-      // Получаем из preloadedData или из сохраненных данных
-      return body?.studyId ? parseInt(body.studyId) : 0;
-    },
-    
-    getSiteId: (req: NextRequest, body?: any) => {
-      return body?.siteId || '';
-    },
-    
-    getNewValue: (req: NextRequest, body?: any) => {
-      // Используем данные из body (preloadedData)
-      return body || null;
-    },
-    
-    getOldValue: async (req: NextRequest, body?: any) => {
-      // Для CREATE операции старое значение не нужно
-      return null;
-    }
-  };
+    getStudyId: (ctx) =>
+      String(ctx.formData?.get('studyId') ?? ''),
 
-  return withAudit(auditConfig)(request, async (preloadedData?: any) => {
-    // Передаем formData и auditData в handler через preloadedData
-    return uploadHandler(request, { formData, ...auditData });
-  });
-};
+    getSiteId: (ctx) =>
+      String(ctx.formData?.get('siteId') ?? ''),
+
+    getNewValue: (ctx) => ({
+      fileName: ctx.formData?.get('fileName'),
+      folderId: ctx.formData?.get('folderId'),
+      folderName: ctx.formData?.get('folderName'),
+      fileSize: ctx.formData?.get('fileSize'),
+      fileType: ctx.formData?.get('fileType'),
+      tmfZone: ctx.formData?.get('tmfZone'),
+      tmfArtifact: ctx.formData?.get('tmfArtifact')
+    })
+  },
+
+  uploadHandler
+);

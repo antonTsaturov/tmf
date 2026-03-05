@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback, useContext } from 'react';
+import { useRef, useContext } from 'react';
 import '../../styles/Home.css';
 import FileExplorer, { FileNode } from '../../components/FileExplorer';
-import { sampleData } from '../../utils/data';
 import UserMenu from '@/components/UserMenu';
 import Modal from '@/components/Modal';
 import { useModal } from '@/hooks/useModal';
@@ -13,7 +12,6 @@ import StudyManager from '@/components/admin/StudyManager';
 import UserManager from '@/components/admin/UserManager';
 import { Button, Tabs, Box} from '@radix-ui/themes';
 import StudySiteNavigation from '@/components/Navigation';
-import { AdminContext } from '@/wrappers/AdminContext';
 import FolderContentViewer from '@/components/FolderContentViewer';
 import DocumentActions from '@/components/DocumentActions';
 import AuditTrailViewer from '@/components/admin/AuditTrailViewer';
@@ -23,7 +21,6 @@ import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
 import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
-import { DocumentWorkFlowStatus } from '@/types/document';
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -34,9 +31,11 @@ interface MainWindowProps {
 const Home: React.FC<MainWindowProps> = () => {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { isOpen, openModal, closeModal, modalProps } = useModal();
+  const { modalProps, isOpen } = useModal();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedDocument, isRightFrameOpen } = context!;
+  const { selectedDocument, isRightFrameOpen, isModal } = context!;
+
+  //console.
 
   return (
     <div className="sidebarresizable-root">
@@ -63,6 +62,7 @@ const Home: React.FC<MainWindowProps> = () => {
                 Deleted documents
             </Tabs.Trigger>
           </Tabs.List>
+          {isModal && (
           <Box pt="5">
               <Tabs.Content value="tab1">
                   <StudyManager />
@@ -82,7 +82,8 @@ const Home: React.FC<MainWindowProps> = () => {
               <Tabs.Content value="tab6">
                 <DeletedDocumentsViewer />
               </Tabs.Content>
-          </Box>
+          </Box>)
+          }
         </Tabs.Root>
       </Modal>
 
@@ -135,7 +136,7 @@ const Home: React.FC<MainWindowProps> = () => {
               <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
                 <Tabs.List>
                   <Tabs.Trigger value="view">Document preview</Tabs.Trigger>
-                  <Tabs.Trigger value="tab2">Document metadata</Tabs.Trigger>
+                  <Tabs.Trigger value="tab2">Document history</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="view" className="right-frame-tab-content">
                   {selectedDocument ? (

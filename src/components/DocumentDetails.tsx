@@ -2,10 +2,20 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { Document, DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document';
+import { Document, DocumentLifeCycleStatus } from '@/types/document';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
-
+import { 
+  Box, 
+  Card, 
+  Flex, 
+  Text, 
+  Badge, 
+  IconButton,
+  Tooltip,
+  Spinner,
+} from '@radix-ui/themes';
+import { FiDownload, FiInfo, FiUser } from 'react-icons/fi';
 
 interface DocumentVersionRow {
   id: string;
@@ -116,6 +126,21 @@ const DocumentDetails: React.FC = () => {
     );
   };
 
+  const getReviewStatusColor = (status?: string | null) => {
+    switch (status) {
+      case 'submitted': return 'blue';
+      case 'approved': return 'green';
+      default: return 'gray';
+    }
+  };
+
+  const getReviewStatusLabel = (status: string) => {
+    if (!status) return "Черновик"
+    switch (status) {
+      case 'submitted': return 'Документ отправлен на ревью';
+      case 'approved': return 'Документ утвержден';
+    }
+  };
 
   if (!selectedDocument) {
     return (
@@ -305,7 +330,7 @@ const DocumentDetails: React.FC = () => {
             <h3 className="document-details-section-title">Удаление</h3>
             <dl className="document-details-metadata">
               <div className="metadata-row">
-                <dt>Удален</dt>
+                <dt>Документ удален</dt>
                 <dd>{formatDate(doc.deleted_at || '')}</dd>
               </div>
               {doc.deleter && (
@@ -337,78 +362,101 @@ const DocumentDetails: React.FC = () => {
         )}
 
         {/* История версий */}
-        <section className="document-details-section">
+        {!doc.is_deleted && <section className="document-details-section">
           <h3 className="document-details-section-title">История версий</h3>
-          {loading ? (
-            <div className="document-details-loading">Загрузка...</div>
-          ) : error ? (
-            <div className="document-details-error">{error}</div>
-          ) : versions.length === 0 ? (
-            <p className="document-details-empty-text">Нет версий</p>
-          ) : (
-            <div className="document-versions-list">
-              {versions.map((v) => (
-                <div 
-                  key={v.id} 
-                  className={`document-version-item ${v.document_number === doc.document_number ? 'current-version' : ''}`}
-                >
-                  <div className="version-main">
-                    <div className="version-header">
-                      <span className="version-number">Версия {v.document_number}</span>
-                      {v.document_number === doc.document_number && (
-                        <span className="current-version-badge">Текущая</span>
-                      )}
-                      <span className="version-date">{formatDate(v.uploaded_at)}</span>
-                    </div>
-                    
-                    <div className="version-details">
-                      <span className="version-size">{formatFileSize(v.file_size)}</span>
-                      {v.change_reason && (
-                        <span className="version-reason" title={v.change_reason}>
-                          {v.change_reason}
-                        </span>
-                      )}
-                    </div>
+          <Card size="2">
+            {loading  ? (
+              <Flex align="center" justify="center" py="6">
+                <Spinner size="2" />
+              </Flex>
+            ) : error ? (
+              <Box p="4" style={{ backgroundColor: 'var(--red-3)', borderRadius: 'var(--radius-2)' }}>
+                <Text color="red">{error}</Text>
+              </Box>
+            ) : versions.length === 0 ? (
+              <Flex align="center" justify="center" py="6">
+                <Text color="gray">Нет версий</Text>
+              </Flex>
+            ) : (
+              <Flex direction="column" gap="3">
+                {versions.map((v) => (
+                  <Card key={v.id} size="1" variant="surface">
+                    <Flex gap="3" align="start" justify="between">
+                      <Box style={{ flex: 1 }}>
+                        <Flex align="center" gap="2" mb="1" wrap="wrap">
+                          <Badge size="2" variant="solid" color="blue">
+                            Версия {v.document_number}
+                          </Badge>
+                          {v.document_number === doc.document_number && (
+                            <Badge size="1" variant="soft" color="green">
+                              Текущая
+                            </Badge>
+                          )}
+                          <Text size="1" color="gray">
+                            {formatDate(v.uploaded_at)}
+                          </Text>
+                        </Flex>
+                        
+                        <Flex gap="3" mt="2" wrap="wrap">
+                          <Badge size="1" variant="soft" color="gray">
+                            {formatFileSize(v.file_size)}
+                          </Badge>
+                          
+                          {v.change_reason && (
+                            <Tooltip content={v.change_reason}>
+                              <Badge size="1" variant="soft" color="purple">
+                                <Flex align="center" gap="1">
+                                  <FiInfo size={10} />
+                                  <Text>Причина изменения</Text>
+                                </Flex>
+                              </Badge>
+                            </Tooltip>
+                          )}
+                        </Flex>
 
-                    {/* Информация о загрузившем */}
-                    {v.uploader && (
-                      <div className="version-user-info">
-                        <span className="user-label">Загрузил:</span>
-                        <span className="user-value" title={v.uploader.email}>
-                          {v.uploader.name || v.uploader.email}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Информация о ревью для версии */}
-                    {v.review_status && (
-                      <div className="version-review-info">
-                        <span className={`review-badge review-${v.review_status}`}>
-                          {v.review_status}
-                        </span>
-                        {v.assigned_reviewer && (
-                          <span className="reviewer-info" title={v.assigned_reviewer.email}>
-                            → {v.assigned_reviewer.name || v.assigned_reviewer.email}
-                          </span>
+                        {v.uploader && (
+                          <Flex align="center" gap="1" mt="2">
+                            <FiUser size={12} color="var(--gray-9)" />
+                            <Text size="1" color="gray">
+                              Загрузил: {v.uploader.name || v.uploader.email}
+                            </Text>
+                          </Flex>
                         )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="version-actions">
-                    <button
-                      type="button"
-                      className="version-action-btn"
-                      onClick={() => handleDownloadVersion(v)}
-                    >
-                      Скачать
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+
+                        {v.review_status && (
+                          <Flex align="center" gap="2" mt="2">
+                            <Badge 
+                              size="1" 
+                              variant="soft" 
+                              color={getReviewStatusColor(v.review_status)}
+                            >
+                              {getReviewStatusLabel(v.review_status)}
+                            </Badge>
+                            {v.assigned_reviewer && (
+                              <Text size="1" color="gray">
+                                → {v.assigned_reviewer.name || v.assigned_reviewer.email}
+                              </Text>
+                            )}
+                          </Flex>
+                        )}
+                      </Box>
+                      
+                      <Tooltip content="Скачать эту версию">
+                        <IconButton 
+                          size="2" 
+                          variant="soft" 
+                          onClick={() => handleDownloadVersion(v)}
+                        >
+                          <FiDownload size={16} />
+                        </IconButton>
+                      </Tooltip>
+                    </Flex>
+                  </Card>
+                ))}
+              </Flex>
+            )}
+          </Card>
+        </section>}
       </div>
     </div>
   );

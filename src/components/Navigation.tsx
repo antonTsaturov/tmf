@@ -135,11 +135,12 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   }
 
   return (
-    <Flex direction="row" gap="3" pb="3">
+    <Flex direction="row" gap="3">
       {/* Шаг 1: Выбор исследования */}
       <Flex direction="column" gap="1">
         <Text size="1" weight="medium">Исследование</Text>
-        <Select.Root 
+        <Select.Root
+          size="1"
           key={`study-select-${currentStudy?.id}`}
           value={currentStudy?.id?.toString() || undefined} 
           onValueChange={handleStudyChange}
@@ -165,7 +166,8 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
       {currentStudy && (
         <Flex direction="column" gap="1">
           <Text size="1" weight="medium">Уровень</Text>
-          <Select.Root 
+          <Select.Root
+            size="1"
             key={`level-select-${currentLevel}-${currentStudy.id}`}
             value={currentLevel || undefined} 
             onValueChange={(value: ViewLevel) => handleViewLevelChange(value)}
@@ -195,7 +197,8 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
       {currentStudy && currentLevel === ViewLevel.SITE && (
         <Flex direction="column" gap="1">
           <Text size="1" weight="medium">Центр</Text>
-          <Select.Root 
+          <Select.Root
+            size="1"
             key={`site-select-${currentSite?.id}-${currentStudy.id}`}
             value={currentSite?.id?.toString() || undefined} 
             onValueChange={handleSiteChange}

@@ -31,7 +31,7 @@ export const useDocumentDelete = (): UseDocumentDeleteReturn => {
     setError(null);
 
     try {
-      const response = await fetch(`/api/documents/${documentId}`, {
+      const response = await fetch(`/api/documents/${documentId}/delete`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

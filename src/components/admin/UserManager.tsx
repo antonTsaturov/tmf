@@ -555,7 +555,7 @@ const UserManager: FC<UserManagerProps> = () => {
     try {
       const loadedUsers = await loadAllUsers();
       const studyUsers = loadedUsers as unknown as StudyUser[];
-      //console.log('studyUsers: ', studyUsers)
+      console.log('studyUsers: ', studyUsers)
       if (studyUsers ) {
         setManagedUsers(studyUsers);
       } else {
@@ -573,6 +573,7 @@ const UserManager: FC<UserManagerProps> = () => {
       try {
         const loadedSites = await loadTable(Tables.SITE);
         const userSites = loadedSites as unknown as StudySite[]
+        console.log('userSites: ', userSites)
 
         if (userSites ) {
           setSites(userSites);

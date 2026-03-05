@@ -34,13 +34,13 @@ interface DocumentActionsProps {
 }
 
 // Маппинг действий на иконки, текст и вариант кнопки
-export const actionConfig: Record<DocumentAction, { 
+export const actionConfig: Partial<Record<DocumentAction, { 
   icon: React.ReactNode; 
   label: string; 
   color?: string;
   variant?: 'solid' | 'soft' | 'outline' | 'ghost';
   highContrast?: boolean;
-}> = {
+}>> = {
   [DocumentAction.CREATE_DOCUMENT]: { 
     icon: <FiFilePlus />, 
     label: 'Создать',
@@ -59,12 +59,12 @@ export const actionConfig: Record<DocumentAction, {
     variant: 'solid',
     //color: Colors.GREEN
   },
-  [DocumentAction.REJECT]: { // Не используется. Реджект выполняется через Approve
-    icon: <FiX />, 
-    label: 'Отклонить',
-    variant: 'solid',
-    //color: Colors.RED
-  },
+  // [DocumentAction.REJECT]: { // Не используется. Реджект выполняется через Approve
+  //   icon: <FiX />, 
+  //   label: 'Отклонить',
+  //   variant: 'solid',
+  //   //color: Colors.RED
+  // },
   [DocumentAction.ARCHIVE]: { 
     icon: <FiArchive />, 
     label: 'Архивировать',
@@ -270,6 +270,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       >
         {availableActions.map((action, index) => {
           const config = actionConfig[action];
+          if (!config) return;
           const isDisabled = isDeleting || isRestoring;
           
           return (

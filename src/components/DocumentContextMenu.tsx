@@ -36,14 +36,19 @@ const DocumentContextMenu = ({ children, onAction , document}: DocumentContextMe
       </ContextMenu.Trigger>
       
       <ContextMenu.Content>
-        {availableActions.map((action, i) => (
-          <ContextMenu.Item 
-            key={`${action}-${i}`}
-            onClick={() => onAction(action, document)}
-          >
-            {actionConfig[action].label} 
-          </ContextMenu.Item>
-        ))}
+        {availableActions.map((action, i) => {
+          const config = actionConfig[action]
+          if (!config) return;
+
+          return (
+            <ContextMenu.Item 
+              key={`${action}-${i}`}
+              onClick={() => onAction(action, document)}
+            >
+              {config.label} 
+            </ContextMenu.Item>
+          );
+        })}
         
         {availableActions.length === 0 && (
           <ContextMenu.Item disabled>Нет доступных действий</ContextMenu.Item>

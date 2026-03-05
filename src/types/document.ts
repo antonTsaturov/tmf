@@ -40,6 +40,7 @@ export interface Document {
   // current_version_id: string; // UUID
   created_by: string; // UUID
   created_at: string;
+  current_version: DocumentVersion;
 
   is_deleted: boolean;
   deleted_at: string;

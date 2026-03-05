@@ -193,13 +193,13 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     
     // Проверяем, был ли клик внутри строки таблицы или контекстного меню
     // Если клик был по элементам управления (кнопки, поповеры), тоже не снимаем выделение
-    const isRowClick = target.closest('.rt-TableRow');
-    const isActionClick = target.closest('button') || target.closest('.rt-PopoverContent');
+    // const isRowClick = target.closest('.rt-TableRow');
+    // const isActionClick = target.closest('button') || target.closest('.rt-PopoverContent');
 
-    if (!isRowClick && !isActionClick) {
-      updateContext({ selectedDocument: null });
-      onDocumentSelect?.(null as any);
-    }
+    // if (!isRowClick && !isActionClick) {
+    //   updateContext({ selectedDocument: null });
+    //   onDocumentSelect?.(null as any);
+    // }
   };
 
   const handleDocumentClick = (e: React.MouseEvent<HTMLDivElement>, doc: Document) => {
@@ -229,15 +229,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
         console.log('Action not implemented in context menu:', action);
     }
   };
-
-  const handleReviewComplete = () => {
-    setUploadSuccess(true);
-  };
-
-  // Обработчик успешной загрузки
-  // const handleUploadSuccess = () => {
-  //   setUploadSuccess(true);
-  // };
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('ru-RU', {
@@ -303,56 +294,49 @@ return (
   >
     {/* Заголовок с информацией о папке - фиксированный */}
     <Box style={{ flexShrink: 0 }}>
-      <Section size="1" p="4" mb="0" ref={folderHeaderRef}>
-        <Flex justify="between" align="start">
-          <Flex align="center" gap="3">
-            <Flex direction="column" gap="1">
-              <Flex direction="row" gap="1">
-                <FaRegFolderOpen size={24}/>
-                <Text size="4" weight="bold" ml="2">{selectedFolder.name}</Text>
-              </Flex>
-              
-              <Text size="1" color="gray">
-                {filteredDocuments.length} / {documentsData?.count || 0} {getDocumentCountText(documentsData?.count || 0)}
-              </Text>
-            </Flex>
+      <Section size="1" p="4" mb="0" ref={folderHeaderRef} style={{display: "flex",justifyContent:"space-between", alignItems:"start"}}>
+        <Flex direction="column" gap="1">
+          <Flex direction="row" gap="1">
+            <FaRegFolderOpen size={24}/>
+            <Text size="4" weight="bold" ml="2">{selectedFolder.name}</Text>
           </Flex>
-
-          {/* Фильтр документов */}
-          {filteredDocuments.length !== 0 && <Popover.Root>
-            <Popover.Trigger>
-              <Button variant="ghost" size="2" color="gray">
-                {activeFilter !== 'all' && <FiFilter />}
-                {filterOptions.find(f => f.value === activeFilter)?.label}
-                <FiChevronDown />
-              </Button>
-            </Popover.Trigger>
-            <Popover.Content size="1">
-              <Flex direction="column" gap="1">
-                {filterOptions.map(option => (
-                  <Button
-                    key={option.value}
-                    variant={activeFilter === option.value ? 'solid' : 'ghost'}
-                    onClick={() => setActiveFilter(option.value as ViewFilter)}
-                    style={{ justifyContent: 'space-between', width: '100%' }}
-                  >
-                    <Text>{option.label}</Text>
-                    <Badge>{option.count}</Badge>
-                  </Button>
-                ))}
-              </Flex>
-            </Popover.Content>
-          </Popover.Root>
-          }
+          
+          <Text size="1" color="gray">
+            {filteredDocuments.length} / {documentsData?.count || 0} {getDocumentCountText(documentsData?.count || 0)}
+          </Text>
         </Flex>
+
+        {/* Фильтр документов */}
+        {filteredDocuments.length !== 0 && <Popover.Root>
+          <Popover.Trigger>
+            <Button variant="ghost" size="2" color="gray">
+              {activeFilter !== 'all' && <FiFilter />}
+              {filterOptions.find(f => f.value === activeFilter)?.label}
+              <FiChevronDown />
+            </Button>
+          </Popover.Trigger>
+          <Popover.Content size="1">
+            <Flex direction="column" gap="1">
+              {filterOptions.map(option => (
+                <Button
+                  key={option.value}
+                  variant={activeFilter === option.value ? 'solid' : 'ghost'}
+                  onClick={() => setActiveFilter(option.value as ViewFilter)}
+                  style={{ justifyContent: 'space-between', width: '100%' }}
+                >
+                  <Text>{option.label}</Text>
+                  <Badge>{option.count}</Badge>
+                </Button>
+              ))}
+            </Flex>
+          </Popover.Content>
+        </Popover.Root>
+        }
       </Section>
     </Box>
 
     {/* Заголовок таблицы - фиксированный */}
     {filteredDocuments.length > 0 && (
-      <Box 
-        style={{borderRadius: 0, '--table-row-box-shadow': 'none' } as React.CSSProperties}
-      >
         <Table.Root 
           variant="surface" 
           size="2" 
@@ -382,7 +366,6 @@ return (
             </Table.Row>
           </Table.Header>
         </Table.Root>
-      </Box>
     )}
 
     {/* Прокручиваемая область с документами */}
@@ -450,7 +433,6 @@ return (
                             overflow: 'hidden'
                           }}
                         >
-                          <Tooltip content={doc.document_name || 'Без названия'}>
                             <Text 
                               size="2" 
                               weight="medium" 
@@ -461,9 +443,8 @@ return (
                                 lineHeight: '1.4'
                               }}
                             >
-                              {doc.document_name || 'Без названия'}
+                              {doc.document_name || doc.current_version.document_name || 'Без названия'}
                             </Text>
-                          </Tooltip>
                           {doc.tmf_artifact && (
                             <Badge 
                               size="1" 
@@ -522,7 +503,7 @@ return (
       )}
     </Box>
 
-    {/* Панели (остаются без изменений) */}
+    {/* Панели  */}
     <FilePreviewPanel
       onUploadSuccess={(updatedDoc) => handleAddNewDocument(updatedDoc)}
       onUploadError={(error) => console.error('Upload error:', error)}
@@ -538,6 +519,7 @@ return (
     />
     <DocumentReviewPanel
       onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+      onReject={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
     />
     <DeleteDocumentPanel />
     <ArchiveDocumentPanel

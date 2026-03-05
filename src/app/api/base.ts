@@ -90,14 +90,6 @@ private async checkTableExists(client: any, table: string): Promise<boolean> {
         
         const result = await client.query(queryText, [studyId]);
         
-        // Аудит для READ операции с фильтром
-        const auditMiddleware = withAudit({
-          action: 'READ',
-          entityType: this.mapTableToEntity(table),
-          getStudyId: () => studyId,
-          skip: () => true // Пропускаем аудит для массовых чтений
-        });
-
         return NextResponse.json(result.rows, { status: 200 });
         
       } catch (dbError) {
@@ -137,34 +129,8 @@ async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResp
   const data = await request.json().catch(() => ({}));
   const action: AuditAction = data.id ? 'UPDATE' : 'CREATE';
   
-  const auditMiddleware = withAudit({
-    action,
-    entityType: this.mapTableToEntity(table),
-    getEntityId: () => data?.id || 0,
-    getStudyId: () => data?.study_id || data?.studyId || '',
-    getSiteId: () => data?.site_id || data?.siteId || '',
-    getOldValue: async () => {
-      if (data?.id) {
-        const client = await connectDB();
-        try {
-          const result = await client.query(
-            `SELECT * FROM ${table} WHERE id = $1`,
-            [data.id]
-          );
-          return result.rows[0] || null;
-        } catch {
-          return null;
-        } finally {
-          client.release();
-        }
-      }
-      return null;
-    },
-    getNewValue: () => data
-  });
 
   // Передаем данные в middleware, чтобы он не пытался читать request снова
-  return auditMiddleware(request, async () => {
     try {
       if (data.id) {
         // Update existing record
@@ -203,37 +169,11 @@ async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResp
         details: String(err) 
       }, { status: 500 });
     }
-  });
 }
 
   // DELETE: delete any record by id с поддержкой каскадного удаления для сайтов
   async deleteRecord(table: Tables, request: NextRequest): Promise<NextResponse> {
-    const auditMiddleware = withAudit({
-      action: 'DELETE',
-      entityType: this.mapTableToEntity(table),
-      getEntityId: (req, body) => body?.id || 0,
-      getStudyId: (req, body) => body?.study_id || body?.studyId || '',
-      getSiteId: (req, body) => body?.site_id || body?.siteId || '',
-      getOldValue: async (req, body) => {
-        if (body?.id) {
-          const client = await connectDB();
-          try {
-            const result = await client.query(
-              `SELECT * FROM ${table} WHERE id = $1`,
-              [body.id]
-            );
-            return result.rows[0] || null;
-          } catch {
-            return null;
-          } finally {
-            client.release();
-          }
-        }
-        return null;
-      }
-    });
 
-    return auditMiddleware(request, async () => {
       const client = await connectDB();
       
       try {
@@ -308,7 +248,6 @@ async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResp
       } finally {
         client.release();
       }
-    });
   }
 
 
@@ -326,51 +265,7 @@ async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResp
     
     return mapping[table] || 'document';
   }
-
-  // Специализированный метод для логина (используется в auth routes)
-  async logLoginAttempt(request: NextRequest, userId: number, userEmail: string, success: boolean, errorMessage?: string) {
-    const auditMiddleware = withAudit({
-      action: success ? 'LOGIN' : 'LOGIN_FAILED',
-      entityType: 'user',
-      getEntityId: () => userId,
-      getStudyId: () => '',
-      getSiteId: () => ''
-    });
-
-    return auditMiddleware(request, async () => {
-      return NextResponse.json({ success });
-    });
-  }
-
-  // Специализированный метод для экспорта
-  async logExport(request: NextRequest, entityType: AuditEntity, entityId: number, studyId: string | number) {
-    const auditMiddleware = withAudit({
-      action: 'EXPORT',
-      entityType,
-      getEntityId: () => entityId,
-      getStudyId: () => studyId
-    });
-
-    return auditMiddleware(request, async () => {
-      return NextResponse.json({ success: true });
-    });
-  }
-
-  // Специализированный метод для approve/reject
-  async logApproval(request: NextRequest, action: 'APPROVE' | 'REJECT', entityType: AuditEntity, entityId: number, studyId: string | number, reason?: string) {
-    const auditMiddleware = withAudit({
-      action,
-      entityType,
-      getEntityId: () => entityId,
-      getStudyId: () => studyId,
-      getNewValue: () => ({ status: action, reason })
-    });
-
-    return auditMiddleware(request, async () => {
-      return NextResponse.json({ success: true });
-    });
-  }
-}
+ }
 
 // Создаем и экспортируем singleton instance
 export const studyApiHandler = new StudyApiHandler();

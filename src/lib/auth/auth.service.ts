@@ -8,8 +8,8 @@ const JWT_EXPIRES_IN = '24h';
 export interface JwtPayload {
   id: number;
   email: string;
-  role: string[];
-  study_id: number;
+  role: string;
+  study_id: number[];
   assigned_site_id: number[];
 }
 

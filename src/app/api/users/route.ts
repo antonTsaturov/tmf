@@ -6,12 +6,7 @@ import { Tables } from '@/lib/db/schema';
 const studyApiHandler = new StudyApiHandler();
 
 export async function GET(request?: NextRequest) {
-  // console.log('request: ',request)
-  // if (request) {
-  //   return studyApiHandler.getTablePartial(Tables.USERS, request);
-  // } else {
-    return studyApiHandler.getTable(Tables.USERS);
-  // }
+  return studyApiHandler.getTable(Tables.USERS);
 
 }
 

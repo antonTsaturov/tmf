@@ -3,150 +3,115 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/index';
 import { DocumentAction, DocumentWorkFlowStatus, Transitions } from '@/types/document';
 import { ActionRoleMap } from '@/domain/document/document.policy';
-import { UserRole } from '@/types/types';
-import { withAudit } from '@/lib/audit/audit.middleware';
-import { AuditAction, AuditEntity } from '@/types/types';
-import { AuditConfig } from '@/lib/audit/audit.middleware';
+import { UserRole, AuditAction, AuditEntity } from '@/types/types';
+import { withAudit, AuditContext, AuditConfig } from '@/lib/audit/audit.middleware';
+import { AuditService } from '@/lib/audit/audit.service';
 
 interface ActionRequest {
   action: DocumentAction;
   userId: string;
   userRole: UserRole;
   comment?: string;
-  reviewerId?: string; // Для отправки на ревью
+  reviewerId?: string;
 }
 
-// Функция для определения статуса документа на основе review_status
 function getDocumentStatusFromReview(reviewStatus: string | null): DocumentWorkFlowStatus {
   switch (reviewStatus) {
-    case 'approved':
-      return DocumentWorkFlowStatus.APPROVED;
-    case 'submitted':
-      return DocumentWorkFlowStatus.IN_REVIEW;
-    case 'rejected':
-      return DocumentWorkFlowStatus.DRAFT;
-    default:
-      return DocumentWorkFlowStatus.DRAFT;
+    case 'approved': return DocumentWorkFlowStatus.APPROVED;
+    case 'submitted': return DocumentWorkFlowStatus.IN_REVIEW;
+    case 'rejected': return DocumentWorkFlowStatus.DRAFT;
+    default: return DocumentWorkFlowStatus.DRAFT;
   }
 }
 
-// Функция для отправки документа на ревью
-async function applyDocumentActionHandler(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  
-  const { id } = await params;
+// Измененный хендлер: принимает ctx (где уже лежит body) и id
+async function applyDocumentActionHandler(
+  request: NextRequest, 
+  ctx: AuditContext, 
+) {
   const client = await connectDB();
-  
-  try {
-    // Парсим тело запроса
-    const body: ActionRequest = await request.json();
-    const { action, userId, userRole, comment, reviewerId } = body;
 
-    if (!action || !userId || !userRole) {
+
+
+
+  try {
+    // ВАЖНО: Используем ctx.body, так как request.json() уже вызван в мидлваре
+    const body: ActionRequest = ctx.body;
+    
+    // 1. Получаем данные ТЕКУЩЕГО авторизованного пользователя через сервис
+    const user = AuditService.getUserFromRequest(request);
+    //console.log('user: ', user)
+    // Извлекаем данные из сессии, а не из body для безопасности
+    const currentUserId = user.user_id?.toString();
+    const currentUserRoles = user.user_role || [];
+    
+    // Проверка: является ли пользователь администратором
+    // (Предполагаем, что роль в массиве называется 'admin' или используем Enum)
+    const isSystemAdmin = currentUserRoles.includes('admin' as UserRole) || currentUserRoles.includes(UserRole.ADMIN);
+
+
+    if (!body || !body.action) {
       return NextResponse.json(
         { error: 'Missing required fields: action, userId, userRole' },
         { status: 400 }
       );
     }
 
-    // 1. Получаем текущую версию документа со статусом из document_version
+    const parts = request.nextUrl.pathname.split('/');
+    const id =  parts[parts.indexOf('documents') + 1] || '0';
+
+    const { action, comment, reviewerId } = body;
+
+    // 1. Получаем текущую версию документа
     const { rows: documents } = await client.query(`
-      SELECT 
-        d.*,
-        dv.id as current_version_id,
-        dv.document_number,
-        dv.document_name,
-        dv.file_name,
-        dv.file_path,
-        dv.file_type,
-        dv.file_size,
-        dv.checksum,
-        dv.uploaded_by,
-        dv.uploaded_at,
-        dv.review_status,
-        dv.review_submitted_by,
-        dv.review_submitted_at,
-        dv.review_submitted_to,
-        dv.reviewed_by,
-        dv.reviewed_at,
-        dv.review_comment
+      SELECT d.*, dv.id as current_version_id, dv.review_status, dv.review_submitted_to
       FROM document d
       LEFT JOIN document_version dv ON d.current_version_id = dv.id
       WHERE d.id = $1 AND d.is_deleted = false
     `, [id]);
 
     if (documents.length === 0) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
     const document = documents[0];
-    const currentReviewStatus = document.review_status;
-    const currentStatus = getDocumentStatusFromReview(currentReviewStatus);
+    //const currentReviewStatus = document.review_status;
+    const currentStatus = getDocumentStatusFromReview(document.review_status);
 
-    // 2. Проверяем разрешён ли переход для данного статуса
+    // 2. Валидация переходов (Transitions)
     const allowedActions = Transitions[currentStatus] || [];
     if (!allowedActions.includes(action)) {
-      return NextResponse.json(
-        { 
-          error: 'Action not allowed for current document status',
-          currentStatus,
-          allowedActions 
-        },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Action not allowed', currentStatus }, { status: 403 });
     }
 
-    // 3. Проверяем права пользователя на выполнение действия
+    // 3. Валидация ролей (ActionRoleMap)
     const allowedRoles = ActionRoleMap[action] || [];
-    if (!allowedRoles.includes(userRole)) {
-      return NextResponse.json(
-        { 
-          error: 'User role not authorized to perform this action',
-          requiredRoles: allowedRoles 
-        },
-        { status: 403 }
-      );
+    const hasRequiredRole = currentUserRoles.some(role => allowedRoles.includes(role));
+    
+    if (!isSystemAdmin) {
+      if (!hasRequiredRole) {
+        return NextResponse.json({ error: 'Role not authorized' }, { status: 403 });
+      }
+      
     }
 
-    // 👇 ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА ДЛЯ APPROVE
-    // Проверяем, что пользователь является назначенным ревьюером
-    if (action === DocumentAction.APPROVE || action === DocumentAction.REJECT) {
-      // Получаем информацию о том, кому назначено ревью
-      const { rows: reviewInfo } = await client.query(`
-        SELECT review_submitted_to 
-        FROM document_version 
-        WHERE id = $1
-      `, [document.current_version_id]);
+    // Дополнительная проверка для ревьюера
+    if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
+        const isAssignedReviewer = document.review_submitted_to === currentUserId;
+        
+        // ЕСЛИ не админ И не назначенный ревьюер -> ОШИБКА
+        if (!isSystemAdmin && !isAssignedReviewer) {
+            return NextResponse.json({ 
+              error: 'Only assigned reviewer or Admin can perform this action' 
+            }, { status: 403 });
+        }
 
-      const assignedReviewerId = reviewInfo[0]?.review_submitted_to;
-
-      // Если есть назначенный ревьюер, проверяем что текущий пользователь - это он
-      if (assignedReviewerId && assignedReviewerId !== userId) {
-        return NextResponse.json(
-          { 
-            error: 'Only the assigned reviewer can approve/reject this document',
-            assignedReviewerId 
-          },
-          { status: 403 }
-        );
-      }
-
-      // Проверяем, что документ действительно на ревью
-      if (currentReviewStatus !== 'submitted') {
-        return NextResponse.json(
-          { 
-            error: 'Document is not in review status',
-            currentReviewStatus 
-          },
-          { status: 400 }
-        );
-      }
+        if (document.review_status !== 'submitted' && !isSystemAdmin) {
+            return NextResponse.json({ error: 'Document not in review' }, { status: 400 });
+        }
     }
 
-    // Определяем новый review_status на основе действия
-    let newReviewStatus: string | null = currentReviewStatus;
+    let newReviewStatus: string | null = document.review_status;
     let newDocumentStatus: DocumentWorkFlowStatus = currentStatus;
 
     switch (action) {
@@ -179,28 +144,28 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
     }
 
     // 4. Обновление документа (мягкое удаление/восстановление)
-    if (action === DocumentAction.SOFT_DELETE) {
-      await client.query(`
-        UPDATE document 
-        SET 
-          is_deleted = true,
-          deleted_at = NOW(),
-          deleted_by = $2
-        WHERE id = $1
-      `, [id, userId]);
-    } 
-    else if (action === DocumentAction.RESTORE) {
-      await client.query(`
-        UPDATE document 
-        SET 
-          is_deleted = false,
-          deleted_at = NULL,
-          deleted_by = NULL,
-          restored_at = NOW(),
-          restored_by = $2
-        WHERE id = $1
-      `, [id, userId]);
-    }
+    // if (action === DocumentAction.SOFT_DELETE) {
+    //   await client.query(`
+    //     UPDATE document 
+    //     SET 
+    //       is_deleted = true,
+    //       deleted_at = NOW(),
+    //       deleted_by = $2
+    //     WHERE id = $1
+    //   `, [id, userId]);
+    // } 
+    // else if (action === DocumentAction.RESTORE) {
+    //   await client.query(`
+    //     UPDATE document 
+    //     SET 
+    //       is_deleted = false,
+    //       deleted_at = NULL,
+    //       deleted_by = NULL,
+    //       restored_at = NOW(),
+    //       restored_by = $2
+    //     WHERE id = $1
+    //   `, [id, userId]);
+    // }
 
     // 5. 👇 ОБНОВЛЕНИЕ ДЛЯ APPROVE И REJECT
     if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
@@ -215,13 +180,11 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
         WHERE id = $4
       `, [
         newReviewStatus,        // 'approved' или 'rejected'
-        userId,                 // Кто утвердил/отклонил
+        currentUserId,                 // Кто утвердил/отклонил
         comment || null,        // Комментарий (опционально)
         document.current_version_id
       ]);
 
-      // 👇 ЛОГИРУЕМ ДЕЙСТВИЕ В AUDIT (дополнительно к withAudit)
-      console.log(`Document ${id} ${action}d by user ${userId}`);
     }
     else if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
       // Отправка на ревью (уже есть)
@@ -236,7 +199,7 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
         WHERE id = $5
       `, [
         newReviewStatus,
-        userId,
+        currentUserId,
         reviewerId || null,
         comment || null,
         document.current_version_id
@@ -326,13 +289,13 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
       _auditData: {
         oldValue: { 
           status: currentStatus,
-          review_status: currentReviewStatus,
+          review_status: document.review_status,
           assigned_reviewer: document.review_submitted_to
         },
         newValue: { 
           status: finalStatus,
           review_status: newReviewStatus,
-          reviewed_by: userId,
+          reviewed_by: currentUserId,
           reviewed_at: new Date().toISOString(),
           comment 
         },
@@ -353,35 +316,53 @@ async function applyDocumentActionHandler(request: NextRequest, { params }: { pa
   }
 }
 
-// Конфигурация аудита
-const auditConfig: AuditConfig = {
-  action: 'UPDATE' as AuditAction,
-  entityType: 'document' as AuditEntity,
-  
-  getEntityId: (req: NextRequest, body?: any) => {
-    return body?._auditData?.entityId || 0;
-  },
-  
-  getStudyId: (req: NextRequest, body?: any) => {
-    return body?._auditData?.studyId || 0;
-  },
-  
-  getSiteId: (req: NextRequest, body?: any) => {
-    return body?._auditData?.siteId || '';
-  },
-  
-  getOldValue: (req: NextRequest, body?: any) => {
-    return body?._auditData?.oldValue || null;
-  },
-  
-  getNewValue: (req: NextRequest, body?: any) => {
-    return body?._auditData?.newValue || null;
-  }
-};
 
-// Оборачиваем handler в withAudit
-export const POST = (request: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-  return withAudit(auditConfig)(request, async () => {
-    return applyDocumentActionHandler(request, { params });
-  });
-};
+export const POST = withAudit(
+  {
+    action: 'UPDATE' as AuditAction,
+    entityType: 'document' as AuditEntity,
+
+
+  getEntityId: (ctx, req) => {
+    const parts = req.nextUrl.pathname.split('/');
+    return parts[parts.indexOf('documents') + 1] || '0';
+  },
+
+  getStudyId: (ctx) => {
+    return String(ctx.body?.studyId ?? ctx.body?._auditData?.studyId ?? '');
+  },
+
+  getSiteId: (ctx) => {
+    return String(ctx.body?.siteId ?? ctx.body?._auditData?.siteId ?? '');
+  },
+
+  // Мидлвар вызывает getOldValue ДО хендлера. Это идеально для получения состояния из БД.
+  getOldValue: async (ctx, req) => {
+    const parts = req.nextUrl.pathname.split('/');
+    const id = parts[parts.indexOf('documents') + 1];
+    const client = await connectDB();
+    try {
+      const { rows } = await client.query(
+        'SELECT review_status FROM document_version dv JOIN document d ON d.current_version_id = dv.id WHERE d.id = $1', 
+        [id]
+      );
+      return rows[0] || null;
+    } finally {
+      client.release();
+    }
+  },
+
+  // Мидлвар вызывает это ПОСЛЕ хендлера. Берем данные из того, что пришло в запросе
+  getNewValue: (ctx) => {
+    return {
+      action: ctx.body?.action,
+      comment: ctx.body?.comment,
+      userId: ctx.body?.userId,
+      timestamp: new Date().toISOString()
+    };
+  }
+  },
+
+  applyDocumentActionHandler
+
+);

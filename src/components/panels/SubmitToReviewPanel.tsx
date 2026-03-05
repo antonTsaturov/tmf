@@ -59,7 +59,6 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
 
   // Загрузка доступных рецензентов
   useEffect(() => {
-    
     const loadReviewers = async () => {
       if (!isOpen || !document || !studyId || !siteId) return;
 
@@ -68,20 +67,20 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
 
       try {
         const response = await fetch(
-          `/api/users/reviewers?studyId=${studyId}&siteId=${siteId}&role=${UserRole.STUDY_MANAGER}`
-        );
+        `/api/users/reviewers?studyId=${studyId}&siteId=${siteId}&role=${UserRole.STUDY_MANAGER}`
+      );
 
-        if (!response.ok) {
-          throw new Error('Failed to load reviewers');
-        }
+      if (!response.ok) {
+        throw new Error('Failed to load reviewers');
+      }
 
-        const data = await response.json();
-        setReviewers(data.users || []);
-        
-        // Автоматически выбираем первого, если есть
-        if (data.users?.length > 0) {
-          setSelectedReviewer(data.users[0].id);
-        }
+      const data = await response.json();
+      setReviewers(data.users || []);
+
+      // Автоматически выбираем первого, если есть
+      if (data.users?.length > 0) {
+        setSelectedReviewer(data.users[0].id);
+      }
       } catch (err) {
         console.error('Error loading reviewers:', err);
         setError('Не удалось загрузить список рецензентов');
@@ -173,14 +172,25 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
           <Box p="4">
             <Card size="1" variant="surface">
               <Flex gap="3" align="start">
-                <Box className="rt-AvatarRoot" style={{ width: 40, height: 40 }}>
+                <Box className="rt-AvatarRoot" style={{ width: 40, height: 40, flexShrink: 0 }}>
                   <FiFileText size={24} />
                 </Box>
-                <Box style={{ flex: 1 }}>
-                  <Text size="3" weight="bold">
+                <Box style={{ flex: 1, minWidth: 0 }}> {/* Добавлен minWidth: 0 для корректной обрезки */}
+                  <Text 
+                    size="3" 
+                    weight="bold" 
+                    style={{ 
+                      display: 'block',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                      maxWidth: '100%'
+                    }}
+                    title={document.document_name} // Всплывающая подсказка с полным названием
+                  >
                     {document.document_name}
                   </Text>
-                  <Flex gap="2" mt="1" align="center">
+                  <Flex gap="2" mt="1" align="center" wrap="wrap"> {/* Добавлен wrap="wrap" для переноса бейджей */}
                     <Badge size="1" variant="soft" color="gray">
                       Версия: {document.document_number || '1'}
                     </Badge>

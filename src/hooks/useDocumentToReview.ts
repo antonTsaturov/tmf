@@ -1,8 +1,8 @@
 // hooks/useDocumentToReview.ts
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useContext } from 'react';
 import { Document, DocumentAction } from '@/types/document';
 import { StudyUser, UserRole } from '@/types/types';
-import React from 'react';
+import { MainContext } from '@/wrappers/MainContext';
 
 interface UseDocumentToReviewReturn {
   // Состояния
@@ -37,6 +37,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
   const [reviewers, setReviewers] = useState<StudyUser[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { context } = useContext(MainContext)!;
+  const { currentStudy, currentSite} = context;
 
   // Отправить документ на ревью
   const submitForReview = useCallback(async (
@@ -65,8 +67,11 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
           action: DocumentAction.SUBMIT_FOR_REVIEW,
           userId: userId,
           userRole: userRole,
-          comment: reviewerId,
-          reviewerId: comment,
+          comment: comment || 'Submit to review (autocomment)',
+          reviewerId: reviewerId,
+          siteId: currentSite?.id,
+          studyId: currentStudy?.id
+
         }),
       });
 
@@ -121,6 +126,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
           userId: userId,
           userRole: userRole,
           comment: comment?.trim() || undefined,
+          siteId: currentSite?.id,
+          studyId: currentStudy?.id
         }),
       });
 

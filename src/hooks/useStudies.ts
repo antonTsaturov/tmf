@@ -19,7 +19,7 @@ export function useStudies() {
 
   const loadTable = useCallback(async (table: Tables) => {
     // Если уже грузим или данные есть — выходим
-    if (isFetching.current || studies.length > 0 || !user) return;
+    //if (isFetching.current || studies.length > 0 || !user) return;
 
     try {
       isFetching.current = true; // Блокируем повторные вызовы

@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
     const token = AuthService.generateToken({
       id: user.id,
       email: user.email,
-      role: user.roles,
+      role: user.role,
       study_id: user.study_id,
       assigned_site_id: user.assigned_site_id,
     });

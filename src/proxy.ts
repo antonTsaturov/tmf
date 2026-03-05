@@ -21,6 +21,7 @@ export function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const authToken = request.cookies.get('auth-token')?.value;
+  //console.log('authToken: ', authToken)
   const payload = authToken ? AuthService.verifyToken(authToken) : null;
   const isAuthenticated = !!payload;
 
@@ -58,8 +59,10 @@ export function proxy(request: NextRequest) {
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-user-id', payload.id.toString());
   requestHeaders.set('x-user-email', payload.email);
-  requestHeaders.set('x-user-roles', JSON.stringify(payload.role));
 
+  const roles = payload.role || [];
+  requestHeaders.set('x-user-roles', JSON.stringify(roles));
+  //console.log('requestHeaders: ', requestHeaders)
   return NextResponse.next({
     headers: requestHeaders,
   });

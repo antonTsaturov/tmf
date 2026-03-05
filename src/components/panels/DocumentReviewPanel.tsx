@@ -33,9 +33,10 @@ import { Document } from '@/types/document';
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;
   onSuccess?: (updatedDoc: Document) => void;
+  onReject?: (updatedDoc: Document) => void;
 }
 
-const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewComplete, onSuccess }) => {
+const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewComplete, onSuccess, onReject }) => {
   const { context, updateContext } = useContext(MainContext)!;
   const { user } = useAuth();
   const { addNotification } = useNotification();
@@ -125,6 +126,12 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to reject document');
       }
+
+      const result = await response.json();
+      console.log(result)
+      if (typeof result === 'object' && result !== null && onReject) {
+        onReject(result.document); 
+      }      
 
       addNotification('success', 'Документ отклонен');
       
@@ -384,7 +391,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
             Вы уверены, что хотите отклонить документ "{selectedDocument?.document_name}"?
             {comment && (
               <Box mt="2" p="2" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-2)' }}>
-                <Text size="1" weight="bold">Причина:</Text>
+                <Text size="1" weight="bold">Причина: </Text>
                 <Text size="1">{comment}</Text>
               </Box>
             )}

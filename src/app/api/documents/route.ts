@@ -549,66 +549,66 @@ export async function POST(request: NextRequest) {
 }
 
 // DELETE метод для мягкого удаления
-export async function DELETE(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const document_id = searchParams.get('id');
-  const user_id = searchParams.get('user_id');
-  const reason = searchParams.get('reason');
+// export async function DELETE(request: NextRequest) {
+//   const searchParams = request.nextUrl.searchParams;
+//   const document_id = searchParams.get('id');
+//   const user_id = searchParams.get('user_id');
+//   const reason = searchParams.get('reason');
 
-  if (!document_id) {
-    return NextResponse.json(
-      { error: 'document_id is required' },
-      { status: 400 }
-    );
-  }
+//   if (!document_id) {
+//     return NextResponse.json(
+//       { error: 'document_id is required' },
+//       { status: 400 }
+//     );
+//   }
 
-  if (!user_id) {
-    return NextResponse.json(
-      { error: 'user_id is required' },
-      { status: 400 }
-    );
-  }
+//   if (!user_id) {
+//     return NextResponse.json(
+//       { error: 'user_id is required' },
+//       { status: 400 }
+//     );
+//   }
 
-  if (!reason || reason.length < 10) {
-    return NextResponse.json(
-      { error: 'Deletion reason is required and must be at least 10 characters' },
-      { status: 400 }
-    );
-  }
+//   if (!reason || reason.length < 10) {
+//     return NextResponse.json(
+//       { error: 'Deletion reason is required and must be at least 10 characters' },
+//       { status: 400 }
+//     );
+//   }
 
-  const client = await connectDB();
+//   const client = await connectDB();
   
-  try {
-    const { rowCount, rows } = await client.query(`
-      UPDATE document 
-      SET 
-        is_deleted = true,
-        deleted_at = NOW(),
-        deleted_by = $1,
-        deletion_reason = $2
-      WHERE id = $3 AND is_deleted = false
-      RETURNING *
-    `, [user_id, reason, document_id]);
+//   try {
+//     const { rowCount, rows } = await client.query(`
+//       UPDATE document 
+//       SET 
+//         is_deleted = true,
+//         deleted_at = NOW(),
+//         deleted_by = $1,
+//         deletion_reason = $2
+//       WHERE id = $3 AND is_deleted = false
+//       RETURNING *
+//     `, [user_id, reason, document_id]);
 
-    if (rowCount === 0) {
-      return NextResponse.json(
-        { error: 'Document not found or already deleted' },
-        { status: 404 }
-      );
-    }
+//     if (rowCount === 0) {
+//       return NextResponse.json(
+//         { error: 'Document not found or already deleted' },
+//         { status: 404 }
+//       );
+//     }
 
-    return NextResponse.json({ 
-      message: 'Document soft deleted successfully',
-      document: rows[0]
-    });
+//     return NextResponse.json({ 
+//       message: 'Document soft deleted successfully',
+//       document: rows[0]
+//     });
 
-  } catch (error) {
-    console.error('Error deleting document:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  } finally {
-    client.release();
-  }
-}
+//   } catch (error) {
+//     console.error('Error deleting document:', error);
+//     return NextResponse.json(
+//       { error: 'Internal server error' },
+//       { status: 500 }
+//     );
+//   } finally {
+//     client.release();
+//   }
+// }

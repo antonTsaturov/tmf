@@ -14,16 +14,14 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
   entityId,
   onClose
 }) => {
-  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 20,
-    total: 0,
-    totalPages: 0
+
+  const [state, setState] = useState({
+    logs: [] as AuditLogEntry[],
+    loading: false,
+    error: null as string | null,
+    pagination: { page: 1, limit: 20, total: 0, totalPages: 0 }
   });
-  
+
   const [filters, setFilters] = useState<AuditFilters>({
     entityType: entityType as any,
     entityId: entityId,
@@ -32,56 +30,76 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  const loadAuditLogs = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+
+  const loadAuditLogs = useCallback(async (signal?: AbortSignal) => {
+    // Устанавливаем только loading, не трогая остальное
+    setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      // Строим query string из фильтров
       const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-        ...(filters.startDate && { startDate: filters.startDate }),
-        ...(filters.endDate && { endDate: filters.endDate }),
-        ...(filters.userId && { userId: filters.userId }),
-        ...(filters.userEmail && { userEmail: filters.userEmail }),
-        ...(filters.action && { action: filters.action }),
-        ...(filters.entityType && { entityType: filters.entityType }),
-        ...(filters.entityId && { entityId: filters.entityId }),
-        ...(filters.status && { status: filters.status }),
-        ...(filters.siteId && { siteId: filters.siteId }),
-        ...(filters.studyId && { studyId: filters.studyId }),
-        ...(filters.search && { search: filters.search }),
+        page: state.pagination.page.toString(),
+        limit: state.pagination.limit.toString(),
+          ...(filters.startDate && { startDate: filters.startDate }),
+          ...(filters.endDate && { endDate: filters.endDate }),
+          ...(filters.userId && { userId: filters.userId }),
+          ...(filters.userEmail && { userEmail: filters.userEmail }),
+          ...(filters.action && { action: filters.action }),
+          ...(filters.entityType && { entityType: filters.entityType }),
+          ...(filters.entityId && { entityId: filters.entityId }),
+          ...(filters.status && { status: filters.status }),
+          ...(filters.siteId && { siteId: filters.siteId }),
+          ...(filters.studyId && { studyId: filters.studyId }),
+          ...(filters.search && { search: filters.search }),
       });
 
-      const response = await fetch(`/api/audit?${params}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to load audit logs');
-      }
-
+      const response = await fetch(`/api/audit?${params}`, { signal });
+      if (!response.ok) throw new Error('Failed to load audit logs');
       const data: AuditResponse = await response.json();
-      setLogs(data.logs);
-      setPagination(data.pagination);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error loading audit logs');
-      console.error('Error loading audit logs:', err);
-    } finally {
-      setLoading(false);
+
+      // ОДИН вызов для всех данных = ОДИН рендер
+      setState(prev => ({
+        ...prev,
+        logs: data.logs,
+        pagination: data.pagination,
+        loading: false
+      }));
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
+      setState(prev => ({ ...prev, error: err.message, loading: false }));
     }
-  }, [filters, pagination.page, pagination.limit]);
+  }, [filters, state.pagination.page]);
+
+
 
   useEffect(() => {
-    loadAuditLogs();
+    const controller = new AbortController();
+    loadAuditLogs(controller.signal);
+    return () => controller.abort(); // Отмена при размонтировании или смене зависимостей
   }, [loadAuditLogs]);
 
   const handleFilterChange = (key: keyof AuditFilters, value: any) => {
+    // 1. Обновляем фильтры
     setFilters(prev => ({ ...prev, [key]: value }));
-    setPagination(prev => ({ ...prev, page: 1 })); // Сброс на первую страницу
+
+    // 2. Обновляем общее состояние, сбрасывая страницу
+    setState(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination, // Сохраняем limit, total и т.д.
+        page: 1             // Сбрасываем на первую страницу
+      }
+    }));
   };
 
   const handlePageChange = (newPage: number) => {
-    setPagination(prev => ({ ...prev, page: newPage }));
+    setState(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination, 
+        page: newPage 
+      }
+    }));
+
   };
 
   const clearFilters = () => {
@@ -89,7 +107,13 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
       entityType: entityType as any,
       entityId: entityId,
     });
-    setPagination(prev => ({ ...prev, page: 1 }));
+    setState(prev => ({
+      ...prev,
+      pagination: {
+        ...prev.pagination, // Сохраняем limit, total и т.д.
+        page: 1             // Сбрасываем на первую страницу
+      }
+    }));
   };
 
   const formatDate = (dateString: string): string => {
@@ -129,6 +153,7 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
     return text.substring(0, maxLength) + '...';
   };
 
+  console.log(state.logs)
   return (
     <div className="audit-trail-viewer">
       <div className="audit-header">
@@ -242,22 +267,22 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
       </div>
 
       {/* Состояния загрузки и ошибок */}
-      {loading && (
+      {state.loading && (
         <div className="loading-state">
           <div className="spinner"></div>
           <div>Загрузка записей аудита...</div>
         </div>
       )}
 
-      {error && (
+      {state.error && (
         <div className="error-state">
           <span className="error-icon">⚠️</span>
-          <span>{error}</span>
+          <span>{state.error}</span>
         </div>
       )}
 
       {/* Таблица с записями */}
-      {!loading && !error && (
+      {!state.loading && !state.error && (
         <>
           <div className="logs-table">
             <div className="table-header">
@@ -270,12 +295,12 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
             </div>
 
             <div className="table-body">
-              {logs.length === 0 ? (
+              {state.logs.length === 0 ? (
                 <div className="empty-state">
                   <p>Нет записей аудита</p>
                 </div>
               ) : (
-                logs.map((log) => (
+                state.logs.map((log) => (
                   <React.Fragment key={log.audit_id}>
                     <div 
                       className={`table-row ${expandedRow === log.audit_id ? 'expanded' : ''}`}
@@ -396,26 +421,26 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
           </div>
 
           {/* Пагинация */}
-          {pagination.totalPages > 1 && (
+          {state.pagination.totalPages > 1 && (
             <div className="pagination">
               <button
-                disabled={pagination.page === 1}
-                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={state.pagination.page === 1}
+                onClick={() => handlePageChange(state.pagination.page - 1)}
               >
                 ←
               </button>
               
-              {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+              {Array.from({ length: state.pagination.totalPages }, (_, i) => i + 1)
                 .filter(p => 
                   p === 1 || 
-                  p === pagination.totalPages || 
-                  Math.abs(p - pagination.page) <= 2
+                  p === state.pagination.totalPages || 
+                  Math.abs(p - state.pagination.page) <= 2
                 )
                 .map((p, i, arr) => (
                   <React.Fragment key={p}>
                     {i > 0 && arr[i - 1] !== p - 1 && <span className="ellipsis">...</span>}
                     <button
-                      className={p === pagination.page ? 'active' : ''}
+                      className={p === state.pagination.page ? 'active' : ''}
                       onClick={() => handlePageChange(p)}
                     >
                       {p}
@@ -425,8 +450,8 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
               }
               
               <button
-                disabled={pagination.page === pagination.totalPages}
-                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={state.pagination.page === state.pagination.totalPages}
+                onClick={() => handlePageChange(state.pagination.page + 1)}
               >
                 →
               </button>
