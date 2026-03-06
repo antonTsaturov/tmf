@@ -5,17 +5,19 @@
   /* background-color: #fff; */
   overflow: hidden;
   user-select: none;
+  padding: 10px
 }
 
 .explorer-header {
   display: flex;
-  background-color: #f5f5f5;
   border-bottom: 1px solid #e1e1e1;
   padding: 8px 16px;
   font-weight: 600;
   color: #555;
   font-size: 14px;
   min-height: 40px;
+  align-content: center;
+  justify-content: center;
 }
 
 .header-name {

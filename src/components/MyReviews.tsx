@@ -1,7 +1,7 @@
 // app/reviews/MyReviewsModal.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { 
   Dialog,
   Flex, 
@@ -38,45 +38,13 @@ import {
   FiRefreshCw,
   FiX
 } from 'react-icons/fi';
-import { useAuth } from '@/wrappers/AuthProvider';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-
-interface PendingDocument {
-  id: string;
-  study_id: number;
-  site_id: string | number;
-  folder_id: string;
-  folder_name: string;
-  tmf_zone: string | null;
-  tmf_artifact: string | null;
-  document_name: string;
-  document_number: number;
-  file_name: string;
-  file_path: string;
-  file_type: string;
-  file_size: number;
-  review_status: string;
-  review_submitted_at: string;
-  review_comment: string | null;
-  created_at: string;
-  uploader: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  submitter: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  creator: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-}
+import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
+import DocumentReviewPanel from "./panels/DocumentReviewPanel";
+import { MainContext } from '@/wrappers/MainContext';
+import { Document } from '@/types/document';
 
 interface PaginationInfo {
   total: number;
@@ -96,10 +64,11 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
   onOpenChange,
   onReviewComplete 
 }) => {
-  const { user } = useAuth();
   const { addNotification } = useNotification();
+  const { context, updateContext } = useContext(MainContext)!;
+  const { onDocumentUpdatedId, selectedDocument } = context;
 
-  const [documents, setDocuments] = useState<PendingDocument[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
@@ -114,12 +83,12 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
   const [folderFilter, setFolderFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Состояние для модального окна ревью
-  const [selectedDocument, setSelectedDocument] = useState<PendingDocument | null>(null);
-  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
-  const [reviewComment, setReviewComment] = useState('');
-  const [reviewLoading, setReviewLoading] = useState(false);
-  const [rejectConfirmOpen, setRejectConfirmOpen] = useState(false);
+
+  const { 
+    getStudyProtocol, 
+    getSiteName, 
+    loading: metadataLoading 
+  } = useStudiesAndSites();
 
   // Загрузка документов
   const fetchPendingReviews = async () => {
@@ -173,87 +142,6 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
     }));
   };
 
-  // Обработчики ревью
-  const handleReviewClick = (doc: PendingDocument) => {
-    setSelectedDocument(doc);
-    setReviewComment('');
-    setReviewDialogOpen(true);
-  };
-
-  const handleApprove = async () => {
-    if (!selectedDocument || !user) return;
-
-    setReviewLoading(true);
-    try {
-      const response = await fetch(`/api/documents/${selectedDocument.id}/actions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'approve',
-          userId: user.id,
-          userRole: user.role?.[0],
-          comment: reviewComment.trim() || undefined
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to approve document');
-      }
-
-      addNotification('success', 'Документ утвержден');
-      setReviewDialogOpen(false);
-      fetchPendingReviews(); // Обновляем список
-      onReviewComplete?.();
-    } catch (error) {
-      console.error('Error approving document:', error);
-      addNotification('error', error instanceof Error ? error.message : 'Ошибка при утверждении');
-    } finally {
-      setReviewLoading(false);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!selectedDocument || !user || !reviewComment.trim()) return;
-
-    setReviewLoading(true);
-    try {
-      const response = await fetch(`/api/documents/${selectedDocument.id}/actions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'reject',
-          userId: user.id,
-          userRole: user.role?.[0],
-          comment: reviewComment.trim()
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to reject document');
-      }
-
-      addNotification('success', 'Документ отклонен');
-      setRejectConfirmOpen(false);
-      setReviewDialogOpen(false);
-      fetchPendingReviews(); // Обновляем список
-      onReviewComplete?.();
-    } catch (error) {
-      console.error('Error rejecting document:', error);
-      addNotification('error', error instanceof Error ? error.message : 'Ошибка при отклонении');
-    } finally {
-      setReviewLoading(false);
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
 
   const formatDate = (dateString: string) => {
     try {
@@ -263,10 +151,6 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
     }
   };
 
-  // const handleClose = () => {
-  //   onOpenChange(false);
-  // };
-
   const getDeclension = (count: number, words: [string, string, string]) => {
     const cases = [2, 0, 1, 1, 1, 2];
     return words[
@@ -274,10 +158,22 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
     ];
   };
 
+  // Обновление списка после Apprve / Reject
+  useEffect(() => {
+    setDocuments(prev => prev.filter(d => d.id !== onDocumentUpdatedId));
+    // Очищаем onDocumentUpdatedId
+    return () => updateContext({ onDocumentUpdatedId: undefined });
+  }, [onDocumentUpdatedId]);  
+
   return (
     <>
+      <DocumentReviewPanel
+        // onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+        // onReject={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+      />
+    
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
-        <Dialog.Content style={{ maxWidth: 1200, width: '95vw', height: '90vh', padding: 0 }}>
+        <Dialog.Content style={{ maxWidth: 1200, width: '95vw', height: '85vh', padding: 0 }}>
         {/* Header */}
         <Flex 
         direction="column"
@@ -317,7 +213,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
         {/* Бейдж под заголовком */}
         <Flex align="center" gap="2"  ml="7"> {/* mt-2 для отступа сверху, ml-5 для выравнивания с иконкой */}
             <Badge size="2" variant="soft" color="indigo">
-            {pagination.total} {getDeclension(pagination.total, ['документ ожидает', 'документа ожидают', 'документов ожидают'])}
+            {pagination.total} {getDeclension(pagination.total, ['документ', 'документа', 'документов'])} {' в ожидании'}
             </Badge>
             {loading && <Spinner size="1" />}
         </Flex>
@@ -396,7 +292,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                   <Table.Header>
                     <Table.Row>
                       <Table.ColumnHeaderCell>Документ</Table.ColumnHeaderCell>
-                      <Table.ColumnHeaderCell>Исследование</Table.ColumnHeaderCell>
+                      <Table.ColumnHeaderCell>Исследование/Центр</Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>Папка</Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>Отправитель</Table.ColumnHeaderCell>
                       <Table.ColumnHeaderCell>Дата отправки</Table.ColumnHeaderCell>
@@ -430,10 +326,9 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                           {doc.submitter ? (
                             <Flex direction="column" gap="1">
                               <Flex align="center" gap="1">
-                                <FiUser size={12} color="var(--gray-9)" />
-                                <Text size="2">{doc.study_id}</Text>
+                                <Text size="2">{getStudyProtocol(doc.study_id)}</Text>
                               </Flex>
-                              <Text size="1" color="gray">{doc.site_id}</Text>
+                              <Text size="1" color="gray">{getSiteName(doc.site_id)}</Text>
                             </Flex>
                           ) : (
                             <Text size="2" color="gray">—</Text>
@@ -464,7 +359,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                         <Table.Cell>
                           <Flex align="center" gap="1">
                             <FiCalendar size={12} color="var(--gray-9)" />
-                            <Text size="2">{formatDate(doc.review_submitted_at)}</Text>
+                            <Text size="2">{formatDate(String(doc.review_submitted_at))}</Text>
                           </Flex>
                         </Table.Cell>
 
@@ -476,7 +371,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                                 size="1" 
                                 color="blue"
                                 variant="soft" 
-                                onClick={() => window.open(`/api/documents/${doc.id}/file`)}
+                                //onClick={}
                               >
                                 <FiEye size={14} />
                               </IconButton>
@@ -487,7 +382,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                                 size="1"
                                 color="blue"
                                 variant="soft"
-                                onClick={() => window.open(`/api/documents/${doc.id}/download`)}
+                                //onClick={}
                               >
                                 <FiDownload size={14} />
                               </IconButton>
@@ -498,7 +393,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                                 size="1" 
                                 color="green" 
                                 variant="soft"
-                                onClick={() => handleReviewClick(doc)}
+                                onClick={() => {updateContext({ selectedDocument: doc, isAcceptedForReview: true})}}
                               >
                                 <FiCheckCircle size={14} />
                               </IconButton>
@@ -542,135 +437,6 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
           </Box>
         </Dialog.Content>
       </Dialog.Root>
-
-      {/* Review Dialog */}
-      <Dialog.Root open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-        <Dialog.Content style={{ maxWidth: 500 }}>
-          <Dialog.Title>Рассмотрение документа</Dialog.Title>
-          
-          {selectedDocument && (
-            <>
-              <Box mb="4">
-                <Card size="1" variant="surface">
-                  <Flex gap="3" align="start">
-                    <FiFileText size={24} />
-                    <Box>
-                      <Text weight="bold">{selectedDocument.document_name}</Text>
-                      <Flex gap="2" mt="1">
-                        <Badge size="1" variant="soft" color="gray">
-                          Вер. {selectedDocument.document_number}
-                        </Badge>
-                        <Badge size="1" variant="soft" color="blue">
-                          {formatFileSize(selectedDocument.file_size)}
-                        </Badge>
-                      </Flex>
-                    </Box>
-                  </Flex>
-                </Card>
-              </Box>
-
-              <Box mb="4">
-                <Flex align="center" gap="2" mb="2">
-                  <FiUser size={14} />
-                  <Text size="2" weight="medium">Отправитель:</Text>
-                  <Text size="2">
-                    {selectedDocument.submitter?.name || 'Неизвестно'}
-                  </Text>
-                </Flex>
-
-                {selectedDocument.review_comment && (
-                  <Box p="3" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-2)' }}>
-                    <Text size="2" color="gray">Комментарий к отправке:</Text>
-                    <Text size="2">{selectedDocument.review_comment}</Text>
-                  </Box>
-                )}
-              </Box>
-
-              <Box mb="4">
-                <Flex align="center" gap="2" mb="1">
-                  <Text as="label" size="2" weight="medium">
-                    Ваш комментарий
-                  </Text>
-                  <Text size="1" color="gray">(необязательно для утверждения)</Text>
-                </Flex>
-                <TextArea
-                  placeholder="Добавьте комментарий..."
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  disabled={reviewLoading}
-                />
-              </Box>
-
-              <Flex gap="3" justify="end">
-                <Dialog.Close disabled={reviewLoading}>
-                  <Button variant="soft" color="gray">Отмена</Button>
-                </Dialog.Close>
-                
-                <Button 
-                  color="red" 
-                  variant="soft"
-                  onClick={() => setRejectConfirmOpen(true)}
-                  disabled={reviewLoading}
-                >
-                  <Flex align="center" gap="2">
-                    <FiXCircle size={16} />
-                    Отклонить
-                  </Flex>
-                </Button>
-
-                <Button 
-                  color="green" 
-                  onClick={handleApprove}
-                  disabled={reviewLoading}
-                >
-                  {reviewLoading ? (
-                    <Flex align="center" gap="2">
-                      <Spinner size="1" />
-                      <Text>Утверждение...</Text>
-                    </Flex>
-                  ) : (
-                    <Flex align="center" gap="2">
-                      <FiCheckCircle size={16} />
-                      Утвердить
-                    </Flex>
-                  )}
-                </Button>
-              </Flex>
-            </>
-          )}
-        </Dialog.Content>
-      </Dialog.Root>
-
-      {/* Reject Confirmation */}
-      <AlertDialog.Root open={rejectConfirmOpen} onOpenChange={setRejectConfirmOpen}>
-        <AlertDialog.Content>
-          <AlertDialog.Title>Подтверждение отклонения</AlertDialog.Title>
-          <AlertDialog.Description>
-            Вы уверены, что хотите отклонить документ "{selectedDocument?.document_name}"?
-            {reviewComment && (
-              <Box mt="2" p="2" style={{ backgroundColor: 'var(--gray-3)', borderRadius: 'var(--radius-2)' }}>
-                <Text size="1" weight="bold">Причина: </Text>
-                <Text size="1">{reviewComment}</Text>
-              </Box>
-            )}
-          </AlertDialog.Description>
-
-          <Flex gap="3" mt="4" justify="end">
-            <AlertDialog.Cancel>
-              <Button variant="soft" color="gray">Отмена</Button>
-            </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button 
-                color="red" 
-                onClick={handleReject}
-                disabled={reviewLoading || !reviewComment.trim()}
-              >
-                Отклонить
-              </Button>
-            </AlertDialog.Action>
-          </Flex>
-        </AlertDialog.Content>
-      </AlertDialog.Root>
     </>
   );
 };

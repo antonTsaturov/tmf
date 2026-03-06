@@ -29,15 +29,12 @@ export enum DocumentLifeCycleStatus {
 export type DocumentType = 'pdf';
 
 export interface Document {
-  // id: string; // UUID
   study_id: number;
   site_id: number | string;
-  // folder_id: string;
   folder_name: string;
   tmf_zone: string | null;
   tmf_artifact: string | null;
   status: DocumentWorkFlowStatus;
-  // current_version_id: string; // UUID
   created_by: string; // UUID
   created_at: string;
   current_version: DocumentVersion;
@@ -62,10 +59,29 @@ export interface Document {
   file_type: string;
   file_size: number | string;
   checksum: string;
-  // uploaded_by: string;
-  // uploaded_at: string;
-  // change_reason: string;  
-
+  
+  // Дополнительные поля для овместимости с PendingDocument
+  folder_id?: string;
+  review_status?: string;
+  review_submitted_at?: string;
+  review_comment?: string | null;
+  uploader?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  submitter?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  creator?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  
+  version_id?: string;
 }
 
 export interface DocumentVersion {

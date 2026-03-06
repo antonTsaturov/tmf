@@ -33,6 +33,8 @@ export interface MainContextProps {
   currentSite: StudySite | undefined;
   selectedFolder: FileNode | null;
   selectedDocument: Document | null;
+
+  onDocumentUpdatedId: string | null;
   currentLevel: ViewLevel | undefined;
   filePreview: FilePreview | null;
   isPreviewOpen: boolean;
@@ -66,6 +68,8 @@ const defaultContext: MainContextProps = {
   currentSite: undefined,
   selectedFolder: null, // ID выбрабранной пользователем папки
   selectedDocument: null, // Объект выбрабранного пользователем документа
+
+  onDocumentUpdatedId: null,
   currentLevel: undefined, // Текущий уровень просмотра папок (General либо Site Level)
   filePreview: null, // Объект нового документа
   isPreviewOpen: false, // Флаг для открытия окна для загрузки нового документа
@@ -122,6 +126,10 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
       isNewVersionPanelOpen: false
     }));
   };
+
+  const onDocumentUpdated = (updatedDoc: Document | boolean) => {
+    return updatedDoc
+  }
 
   return (
     <MainContext.Provider value={{ 

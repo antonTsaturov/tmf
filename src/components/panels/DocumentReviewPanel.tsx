@@ -40,7 +40,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   const { context, updateContext } = useContext(MainContext)!;
   const { user } = useAuth();
   const { addNotification } = useNotification();
-  const { selectedDocument, isAcceptedForReview } = context;
+  const { selectedDocument, isAcceptedForReview, onDocumentUpdatedId } = context;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +63,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     if (loading) return;
     updateContext({ isAcceptedForReview: false });
   };
+
 
   const handleApprove = async () => {
     if (!selectedDocument || !user) return;
@@ -123,8 +124,16 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
       );
       
       if (typeof result === 'object' && result !== null && onReject) {
-        onReject(result); 
+        
+        onReject(result);
       }      
+
+
+      // Записываем ID обновленного документа в контекст для MyReviews
+      if (typeof result === 'object') {
+        updateContext({ onDocumentUpdatedId: String(result?.id) });
+        console.log('onDocumentUpdatedId: ', onDocumentUpdatedId)
+      }     
 
       addNotification('success', 'Документ отклонен');
       
@@ -149,6 +158,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
       // Переключаемся в режим отклонения
       setRejectMode(true);
       setError(null);
+      setComment('')
     }
   };
 
@@ -168,7 +178,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     return parseFloat((n / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (!isAcceptedForReview || !selectedDocument) return null;
+  if (!selectedDocument) return null;
 
   return (
     <>

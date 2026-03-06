@@ -73,18 +73,11 @@
 }
 .toolbar-header {
   width: 100%;
-  height: 100px;
-  background: #202020e0;
-  color: #fff;
   display: flex;
   align-items: center;
   padding: 0 24px;
   box-sizing: border-box;
-  font-size: 1.1rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  border-bottom: 1px solid #1a2027;
-  z-index: 100;
+  padding: 20px 20px 5px;
 }
 
 .toolbar-title {
@@ -102,12 +95,9 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  /* font-family: Arial, sans-serif; */
 }
 
 .sidebar {
-  background-color: #f0f0f0;
-  border-right: 1px solid #ccc;
   height: 100%;
   overflow-y: auto;
   position: relative;
@@ -117,7 +107,7 @@
 }
 
 .sidebar-content {
-  padding: 20px;
+  padding: 20px 10px 20px 20px;
   flex: 1; /* Добавить - растягивается на всю высоту */
   display: flex; /* Добавить */
   flex-direction: column; /* Добавить */
@@ -126,45 +116,17 @@
 
 .sidebar-content-area {
   flex: 1;
-  border: 2px solid #cccccc70;
+  border: 1px solid #a2a2a270;
   border-radius: 8px;
   background-color: #fafafa;
   overflow-y: auto;
 }
 
-.sidebar h2 {
-  margin-top: 0;
-  color: #333;
-}
-
-.sidebar p {
-  color: #666;
-  line-height: 1.5;
-}
-
-.sidebar-resizer {
-  width: 8px;
-  background-color: #ddd;
-  cursor: col-resize;
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 10;
-}
-
-.sidebar-resizer:hover {
-  background-color: #007bff;
-}
-
-.sidebar-resizer:active {
-  background-color: #0056b3;
-}
 
 .main-content {
   background-color: #fff;
   flex: 1;
-  padding: 20px;
+  padding: 20px 20px 20px 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -176,7 +138,7 @@
 }
 .main-content-area {
   background-color: #fafafa;
-  border: 2px solid #cccccc70;
+  border: 1px solid #a2a2a270;
   border-radius: 8px;
   display: flex;
   flex: 1;
@@ -193,8 +155,7 @@
 }
 
 .main-content--buttons, .main-content--status {
-  /* min-height: 40px; */
-  border: 2px solid #cccccc70;
+  border: 1px solid #a2a2a270;
   border-radius: 8px;
   margin-bottom: 16px;
   background: #fafbfc;

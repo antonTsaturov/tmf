@@ -352,16 +352,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     );
   }
 
-  // Добавляем отладочную информацию
-  // console.log('Current state:', {
-  //   currentLevel,
-  //   currentSite,
-  //   filteredDataLength: filteredData?.length,
-  //   filteredData
-  // });
 
   return (
     <div className="file-explorer">
+      <h4 className="explorer-header">Структура Файла Исследования</h4>
       <div className="tree-container">
         {!currentStudy || !currentLevel ? (
           <div className="empty-state">
