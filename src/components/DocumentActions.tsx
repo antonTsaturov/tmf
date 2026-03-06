@@ -14,14 +14,15 @@ import {
   FiEye,
   FiUploadCloud
 } from 'react-icons/fi';
-import { Flex, Button, Tooltip, Callout } from '@radix-ui/themes';
+import { Flex, Button, Tooltip } from '@radix-ui/themes';
 import { MainContext } from '@/wrappers/MainContext';
-import { DocumentAction, DocumentWorkFlowStatus, Transitions as transitions } from '@/types/document';
+import { DocumentAction } from '@/types/document';
 import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from './FileExplorer';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
 import { UserRole, Colors } from '@/types/types';
+import { Document } from '@/types/document';
 import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { useNotification } from '@/wrappers/NotificationContext';
@@ -121,6 +122,17 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
   const { user } = useAuth();
   const { isDeleting, isRestoring, error } = useDocumentDelete();
+
+  const prevSelectedDocumentRef = useRef<Document | null>(null);
+
+
+  useEffect(() => {
+    if (selectedDocument !== prevSelectedDocumentRef.current) {
+      console.log('Selected document changed:', selectedDocument?.id);
+      prevSelectedDocumentRef.current = selectedDocument;
+      // Можно добавить принудительное обновление, если нужно
+    }
+  }, [selectedDocument]);  
 
 // Обработка ошибок удаления через глобальные уведомления
   useEffect(() => {

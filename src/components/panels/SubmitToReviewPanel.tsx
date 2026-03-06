@@ -80,6 +80,7 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
       // Автоматически выбираем первого, если есть
       if (data.users?.length > 0) {
         setSelectedReviewer(data.users[0].id);
+
       }
       } catch (err) {
         console.error('Error loading reviewers:', err);

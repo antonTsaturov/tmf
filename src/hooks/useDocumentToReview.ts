@@ -29,6 +29,15 @@ interface UseDocumentToReviewReturn {
     userId?: string,
     userRole?: string 
   ) => Promise<Document | boolean>;
+  rejectDocument: (
+    documentId: string,
+    comment?: string,
+    userId?: string,
+    userRole?: string,
+    siteId?: string,
+    studyId?: string
+  ) => Promise<Document | boolean>;
+
 }
 
 export const useDocumentToReview = (): UseDocumentToReviewReturn => {
@@ -78,7 +87,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit for review');
+        console.log(errorData.error || 'Failed to submit for review');
+        return false;
       }
 
       const result = await response.json();
@@ -103,6 +113,7 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     setError(null);
   }, []);
 
+  // Одобрить документ
   const approveDocument = useCallback(async (
     documentId: string,
     comment?: string,
@@ -148,6 +159,47 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     }
   }, [])
 
+
+  const rejectDocument = useCallback(async (
+    documentId: string,
+    comment?: string,
+    userId?: string,
+    userRole?: string,
+  ) => {
+
+    try {
+      const response = await fetch(`/api/documents/${documentId}/actions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: DocumentAction.REJECT,
+          userId: userId,
+          userRole: userRole,
+          comment: comment?.trim(),
+          siteId: currentSite?.id,
+          studyId: currentStudy?.id
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error (errorData.error || 'Failed to reject document');
+        return false;
+      }
+
+      const result = await response.json();
+      return result.document;
+
+    } catch (err) {
+      console.error('Error rejecting document:', err);
+      setError(err instanceof Error ? err.message : 'Ошибка при отклонении документа');
+      return false;
+    }
+
+  },[])
+
   return {
     // Состояния
     isReviewModalOpen,
@@ -163,6 +215,7 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     // loadReviewers,
     submitForReview,
     approveDocument,
+    rejectDocument,
     resetError,
   };
 };

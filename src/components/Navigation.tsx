@@ -138,9 +138,9 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
     <Flex direction="row" gap="3">
       {/* Шаг 1: Выбор исследования */}
       <Flex direction="column" gap="1">
-        <Text size="1" weight="medium">Исследование</Text>
+        {/* <Text size="1" weight="medium">Исследование</Text> */}
         <Select.Root
-          size="1"
+          size="2"
           key={`study-select-${currentStudy?.id}`}
           value={currentStudy?.id?.toString() || undefined} 
           onValueChange={handleStudyChange}
@@ -158,16 +158,16 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
         </Select.Root>
       </Flex>
       
-      <div style={{marginTop: '25px'}}>
+      <div style={{marginTop: '5px'}}>
         {currentStudy && <IoIosArrowForward />}
       </div>
       
       {/* Шаг 2: Выбор уровня просмотра (показываем только если выбрано исследование) */}
       {currentStudy && (
         <Flex direction="column" gap="1">
-          <Text size="1" weight="medium">Уровень</Text>
+          {/* <Text size="1" weight="medium">Уровень</Text> */}
           <Select.Root
-            size="1"
+            size="2"
             key={`level-select-${currentLevel}-${currentStudy.id}`}
             value={currentLevel || undefined} 
             onValueChange={(value: ViewLevel) => handleViewLevelChange(value)}
@@ -189,16 +189,16 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
         </Flex>
       )}
       
-      <div style={{marginTop: '25px'}}>
+      <div style={{marginTop: '5px'}}>
         {currentLevel === ViewLevel.SITE && <IoIosArrowForward />}
       </div>
       
       {/* Шаг 3: Выбор центра (только если выбран Site Level) */}
       {currentStudy && currentLevel === ViewLevel.SITE && (
         <Flex direction="column" gap="1">
-          <Text size="1" weight="medium">Центр</Text>
+          {/* <Text size="1" weight="medium">Центр</Text> */}
           <Select.Root
-            size="1"
+            size="2"
             key={`site-select-${currentSite?.id}-${currentStudy.id}`}
             value={currentSite?.id?.toString() || undefined} 
             onValueChange={handleSiteChange}

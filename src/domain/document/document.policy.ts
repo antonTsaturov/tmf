@@ -5,7 +5,8 @@ import { UserRole } from "@/types/types";
 export const ActionRoleMap: Record<DocumentAction, UserRole[]> = {
     [DocumentAction.SUBMIT_FOR_REVIEW]: [
         UserRole.MONITOR,
-        UserRole.ADMIN
+        UserRole.ADMIN,
+        UserRole.STUDY_MANAGER,
     ],
 
     [DocumentAction.APPROVE]: [

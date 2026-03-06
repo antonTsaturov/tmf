@@ -21,6 +21,7 @@ import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
 import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
+import UserReviewsButton from '@/components/UserReviewsButton';
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -33,7 +34,7 @@ const Home: React.FC<MainWindowProps> = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { modalProps, isOpen } = useModal();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedDocument, isRightFrameOpen, isModal } = context!;
+  const { selectedDocument, isRightFrameOpen, isModal, reviewPendingCount } = context!;
 
   //console.
 
@@ -90,6 +91,7 @@ const Home: React.FC<MainWindowProps> = () => {
       <header className="toolbar-header">
         <StudySiteNavigation /> 
         <div className="toolbar-title"></div>
+        <UserReviewsButton/>
         <UserMenu />
       </header>
       <div className="sidebar-layout">

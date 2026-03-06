@@ -48,7 +48,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   const [rejectMode, setRejectMode] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  const { approveDocument } = useDocumentToReview();
+  const { approveDocument, rejectDocument } = useDocumentToReview();
 
   // Сбрасываем состояние при закрытии
   useEffect(() => {
@@ -77,6 +77,11 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
         String(user?.id), 
         String(user?.role)        
       );
+
+      if (!result) {
+        addNotification('error', 'Ошибка при утверждении документа');
+        return;
+      }
 
       if (typeof result === 'object' && result !== null && onSuccess) {
         onSuccess(result); 
@@ -109,28 +114,16 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     setError(null);
 
     try {
-      const response = await fetch(`/api/documents/${selectedDocument.id}/actions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          action: DocumentAction.REJECT,
-          userId: user.id,
-          userRole: user.role?.[0],
-          comment: comment.trim(),
-        }),
-      });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to reject document');
-      }
-
-      const result = await response.json();
-      console.log(result)
+      const result = await rejectDocument(
+        selectedDocument?.id, 
+        comment.trim(), 
+        String(user?.id), 
+        String(user?.role),
+      );
+      
       if (typeof result === 'object' && result !== null && onReject) {
-        onReject(result.document); 
+        onReject(result); 
       }      
 
       addNotification('success', 'Документ отклонен');

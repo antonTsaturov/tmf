@@ -77,6 +77,7 @@ export const useDocumentUpload = () => {
       formData.append('documentName', documentName);
       formData.append('fileSize', String(file.size));
       formData.append('fileType', file.type);
+      formData.append('status', "draft");
       
       if (options.tmfZone) {
         formData.append('tmfZone', options.tmfZone);

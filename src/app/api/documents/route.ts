@@ -77,18 +77,14 @@ export async function GET(request: NextRequest) {
           uploader.name as uploader_name,
           uploader.email as uploader_email,
           uploader.role as uploader_role,
-          -- Информация о ревьюере
-          reviewer.id as reviewer_id,
-          reviewer.name as reviewer_name,
-          reviewer.email as reviewer_email,
-          -- Информация об утверждающем
-          approver.id as approver_id,
-          approver.name as approver_name,
-          approver.email as approver_email
+          -- Информация об утверждающем (reviewed_by) - только для утвержденных документов
+          CASE WHEN dv.review_status = 'approved' THEN approver.id ELSE NULL END as approver_id,
+          CASE WHEN dv.review_status = 'approved' THEN approver.name ELSE NULL END as approver_name,
+          CASE WHEN dv.review_status = 'approved' THEN approver.email ELSE NULL END as approver_email
         FROM document_version dv
         LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
-        LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
         LEFT JOIN users approver ON dv.reviewed_by = approver.id
+        -- Удален LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
         ORDER BY dv.document_id, dv.document_number DESC
       )
       SELECT 
@@ -114,10 +110,10 @@ export async function GET(request: NextRequest) {
         lv.uploader_id as last_uploader_id,
         lv.uploader_name as last_uploader_name,
         lv.uploader_email as last_uploader_email,
-        -- Информация о ревьюере
-        lv.reviewer_id,
-        lv.reviewer_name,
-        lv.reviewer_email,
+        -- Информация о ревьюере (УДАЛЕНО)
+        -- lv.reviewer_id,
+        -- lv.reviewer_name,
+        -- lv.reviewer_email,
         -- Информация об утверждающем
         lv.approver_id,
         lv.approver_name,
@@ -157,7 +153,7 @@ export async function GET(request: NextRequest) {
             'uploaded_at', lv.uploaded_at,
             'change_reason', lv.change_reason,
             'review_status', lv.review_status,
-            'review_submitted_by', lv.reviewer_id,
+            'review_submitted_by', lv.review_submitted_by, -- Оставляем ID, но без данных пользователя
             'review_submitted_at', lv.review_submitted_at,
             'review_submitted_to', lv.review_submitted_to,
             'reviewed_by', lv.approver_id,
@@ -168,6 +164,7 @@ export async function GET(request: NextRequest) {
               'name', lv.uploader_name,
               'email', lv.uploader_email
             )
+            -- Удалена информация о ревьюере из json объекта
           )
           ELSE NULL
         END as latest_version

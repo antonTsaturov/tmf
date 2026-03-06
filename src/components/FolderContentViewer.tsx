@@ -96,6 +96,8 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     // Если документ был выделен, обновляем и выделение в контексте
     if (selectedDocument?.id === updatedDoc.id) {
       updateContext({ selectedDocument: updatedDoc });
+    } else {
+      updateContext({ selectedDocument: updatedDoc });
     }
   };
 
@@ -279,6 +281,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     );
   }
 
+  //console.log('selectedDocument: ',selectedDocument)
 return (
   <Box 
     ref={contentRef} 
@@ -309,7 +312,11 @@ return (
         {/* Фильтр документов */}
         {filteredDocuments.length !== 0 && <Popover.Root>
           <Popover.Trigger>
-            <Button variant="ghost" size="2" color="gray">
+            <Button
+              variant="ghost"
+              size="2"
+              color={`${ activeFilter !== 'all' ? 'indigo' : "gray"}`}
+              >
               {activeFilter !== 'all' && <FiFilter />}
               {filterOptions.find(f => f.value === activeFilter)?.label}
               <FiChevronDown />

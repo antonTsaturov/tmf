@@ -104,11 +104,12 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
         tmfZone: null,
         tmfArtifact: null,
         customFileName: preview.customName !== preview.file.name ? preview.customName : undefined
+        
       });
 
       if (result.success && result.document) {
         clearFilePreview();
-        updateContext({ selectedDocument: result.document });
+        updateContext({ selectedDocument: null });
         addNotification('success', 'Документ успешно загружен');
         console.log(result.document)
         onUploadSuccess?.(result.document);

@@ -117,6 +117,7 @@
   color: #666;
   margin-right: 4px;
   transform: rotate(0deg); /* Начальное состояние */
+  transform: translateY(-3px);
 }
 
 .toggle-icon-placeholder {

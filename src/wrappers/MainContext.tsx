@@ -42,6 +42,7 @@ export interface MainContextProps {
   isAcceptedForReview: boolean;
   isDeletePanelOpen: boolean;
   isArchivePanelOpen: boolean;
+  reviewPendingCount: number
 }
 
 interface MainContextType {
@@ -73,7 +74,8 @@ const defaultContext: MainContextProps = {
   isSubmittingToReview: false, // Флаг для открытия окна отправки документа на ревью
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
   isDeletePanelOpen:false,     // Флаг для открытия окна удаления документа
-  isArchivePanelOpen: false
+  isArchivePanelOpen: false,
+  reviewPendingCount: 0
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -130,7 +132,6 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
       clearFilePreview,
       setNewVersionPreview,
       clearNewVersionPreview,
-      
     }}>
       {children}
     </MainContext.Provider>

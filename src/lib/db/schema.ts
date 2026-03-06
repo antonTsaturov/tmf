@@ -139,15 +139,12 @@ export const DocumentVersionTable = `
     change_reason TEXT,
 
     review_status TEXT,
-
     review_submitted_by UUID REFERENCES users(id),
     review_submitted_at TIMESTAMPTZ,
-
     review_submitted_to UUID REFERENCES users(id),
 
     reviewed_by UUID REFERENCES users(id),
     reviewed_at TIMESTAMPTZ,
-
     review_comment TEXT,
 
     UNIQUE(document_id, document_number)

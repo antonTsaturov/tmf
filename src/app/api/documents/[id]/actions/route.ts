@@ -46,7 +46,6 @@ async function applyDocumentActionHandler(
     const currentUserRoles = user.user_role || [];
     
     // Проверка: является ли пользователь администратором
-    // (Предполагаем, что роль в массиве называется 'admin' или используем Enum)
     const isSystemAdmin = currentUserRoles.includes('admin' as UserRole) || currentUserRoles.includes(UserRole.ADMIN);
 
 
@@ -64,7 +63,13 @@ async function applyDocumentActionHandler(
 
     // 1. Получаем текущую версию документа
     const { rows: documents } = await client.query(`
-      SELECT d.*, dv.id as current_version_id, dv.review_status, dv.review_submitted_to
+      SELECT 
+        d.*, 
+        dv.id as current_version_id, 
+        dv.review_status, 
+        dv.review_submitted_to,
+        dv.review_submitted_by,
+        dv.review_submitted_at
       FROM document d
       LEFT JOIN document_version dv ON d.current_version_id = dv.id
       WHERE d.id = $1 AND d.is_deleted = false
@@ -97,8 +102,9 @@ async function applyDocumentActionHandler(
 
     // Дополнительная проверка для ревьюера
     if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
-        const isAssignedReviewer = document.review_submitted_to === currentUserId;
-        
+      const submittedTo = document.review_submitted_to
+        const isAssignedReviewer = submittedTo === currentUserId;
+        console.log('submittedTo  currentUserId: ', submittedTo,  currentUserId)
         // ЕСЛИ не админ И не назначенный ревьюер -> ОШИБКА
         if (!isSystemAdmin && !isAssignedReviewer) {
             return NextResponse.json({ 
@@ -199,8 +205,8 @@ async function applyDocumentActionHandler(
         WHERE id = $5
       `, [
         newReviewStatus,
-        currentUserId,
-        reviewerId || null,
+        currentUserId,    //Кто отправил
+        reviewerId, // Кому отправил
         comment || null,
         document.current_version_id
       ]);
