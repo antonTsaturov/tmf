@@ -34,9 +34,7 @@ const Home: React.FC<MainWindowProps> = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { modalProps, isOpen } = useModal();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedDocument, isRightFrameOpen, isModal, reviewPendingCount } = context!;
-
-  //console.
+  const { selectedDocument, isRightFrameOpen, isModal } = context!;
 
   return (
     <div className="sidebarresizable-root">
@@ -131,10 +129,13 @@ const Home: React.FC<MainWindowProps> = () => {
         </div>
         {isRightFrameOpen && (
           <div className="right-frame">
-            <button className="right-frame-close-button" onClick={()=> updateContext({isRightFrameOpen: false})}>
-              <FiX />
-            </button>
+
             <div className="right-frame-content">
+
+              <button className="right-frame-close-button" onClick={()=> updateContext({isRightFrameOpen: false})}>
+                <FiX />
+              </button>
+
               <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
                 <Tabs.List>
                   <Tabs.Trigger value="view">Document preview</Tabs.Trigger>

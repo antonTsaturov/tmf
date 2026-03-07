@@ -181,7 +181,7 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
               height: circleSize,
               borderRadius: '50%',
               backgroundColor: isActive ? colors.active : colors.inactive,
-              border: isCurrent ? '2px solid var(--gray-12)' : '2px solid transparent',
+              border: isCurrent ? '2px solid var(--gray-10)' : '2px solid transparent',
               opacity: showEmpty ? 0.5 : 1,
               display: 'flex',
               alignItems: 'center',
@@ -189,7 +189,8 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
               transition: 'all 0.2s ease',
               cursor: showEmpty ? 'default' : 'help',
               flexShrink: 0,
-              zIndex: 2
+              zIndex: 2,
+              boxShadow: isCurrent ? '0px 0px 5px #00000078' : ""
             }}
           >
             {isActive && (

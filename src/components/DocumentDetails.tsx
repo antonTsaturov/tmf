@@ -424,7 +424,7 @@ const DocumentDetails: React.FC = () => {
                         )}
 
                         {v.review_status && (
-                          <Flex align="center" gap="2" mt="2">
+                          <Flex gap="2" mt="2" direction='column' align="start" justify="start">
                             <Badge 
                               size="1" 
                               variant="soft" 

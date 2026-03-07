@@ -13,7 +13,8 @@ import {
   IconButton,
   Tooltip,
   Separator,
-  AlertDialog
+  AlertDialog,
+  Popover
 } from '@radix-ui/themes';
 import { 
   FiX, 
@@ -21,7 +22,9 @@ import {
   FiXCircle, 
   FiInfo,
   FiFileText,
-  FiArrowLeft
+  FiArrowLeft,
+  FiMessageSquare,
+  FiUser
 } from 'react-icons/fi';
 import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
@@ -29,6 +32,7 @@ import { useAuth } from '@/wrappers/AuthProvider';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { Document } from '@/types/document';
+import { ROLE_CONFIG, UserRole } from '@/types/types';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;
@@ -86,7 +90,13 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
 
       if (typeof result === 'object' && result !== null && onSuccess) {
         onSuccess(result); 
-      }      
+      }
+
+      // Записываем ID обновленного документа в контекст для MyReviews
+      if (typeof result === 'object') {
+        updateContext({ onDocumentUpdatedId: String(result?.id) });
+      }     
+
       addNotification('success', 'Документ утвержден');
       
       // Сбрасываем selectedDocument чтобы обновить кнопки
@@ -128,11 +138,9 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
         onReject(result);
       }      
 
-
       // Записываем ID обновленного документа в контекст для MyReviews
       if (typeof result === 'object') {
         updateContext({ onDocumentUpdatedId: String(result?.id) });
-        console.log('onDocumentUpdatedId: ', onDocumentUpdatedId)
       }     
 
       addNotification('success', 'Документ отклонен');
@@ -178,6 +186,24 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     return parseFloat((n / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+
+  const getRoleConfig = (role?: string): { label: string; color: string } => {
+    // Если роль не передана
+    if (!role) {
+      return { label: 'Unknown', color: '#868e96' };
+    }
+
+    // Ищем конфигурацию для роли
+    const config = ROLE_CONFIG[role as UserRole];
+    
+    if (config) {
+      return config;
+    }
+
+    // Если роль не найдена в конфигурации
+    return { label: 'Unknown', color: '#868e96' };
+  };
+
   if (!selectedDocument) return null;
 
   return (
@@ -208,16 +234,17 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
 
           {/* Document Info Card */}
           <Box p="4">
+            <Text size="2" weight="bold">Документ</Text>
             <Card size="1" variant="surface">
               <Flex gap="3" align="start">
                 <Box className="rt-AvatarRoot" style={{ width: 40, height: 40 }}>
                   <FiFileText size={24} />
                 </Box>
                 <Box style={{ flex: 1 }}>
-                  <Text size="3" weight="bold">
+                  <Text size="2" weight="bold">
                     {selectedDocument.document_name}
                   </Text>
-                  <Flex gap="2" mt="2" wrap="wrap">
+                  <Flex gap="2" mt="2" wrap="wrap" align="center">
                     <Badge size="1" variant="soft" color="gray">
                       Версия: {selectedDocument.document_number || '1'}
                     </Badge>
@@ -229,11 +256,104 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                         {selectedDocument.tmf_artifact}
                       </Badge>
                     )}
+                    
+
                   </Flex>
+
+
+
+                  {/* Альтернативный вариант: показываем иконку с tooltip если комментарий короткий */}
+                  {/* {selectedDocument.review_comment && (
+                    <Box mt="2">
+                      <Tooltip 
+                        content={
+                          <Flex direction="column" gap="1">
+                            <Text weight="bold">Комментарий отправителя:</Text>
+                            <Text>{selectedDocument.review_comment}</Text>
+                          </Flex>
+                        }
+                      >
+                        <Flex align="center" gap="1" style={{ cursor: 'help' }}>
+                          <FiMessageSquare size={14} color="var(--amber-9)" />
+                          <Text size="1" color="amber">
+                            Есть комментарий отправителя
+                          </Text>
+                        </Flex>
+                      </Tooltip>
+                    </Box>
+                  )} */}
                 </Box>
               </Flex>
             </Card>
           </Box>
+
+          {/* Карточка отправителя (новая) */}
+          {selectedDocument.review_submitter && (
+            <Box px="4" pb="2">
+              <Text size="2" weight="bold">Отправитель</Text>              
+              <Card size="1" variant="surface">
+                <Flex gap="3" align="start">
+                  <Box 
+                    style={{ 
+                      width: 36, 
+                      height: 36, 
+                      borderRadius: '50%', 
+                      backgroundColor: 'var(--amber-3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}
+                  >
+                    <FiUser size={18} color="var(--amber-9)" />
+                  </Box>
+                  <Box style={{ flex: 1 }}>
+                    <Text size="2" weight="bold">
+                      {selectedDocument.review_submitter.name || 'Отправитель'}
+                    </Text>
+                    <Flex align="center" gap="2">
+                      <Text size="1" color="gray">
+                        {selectedDocument.review_submitter.email || 'Email не указан'}
+                      </Text>
+                      {selectedDocument.review_submitter.role && (
+                        <Badge size="1" variant="soft" color="blue">
+                          {getRoleConfig(selectedDocument.review_submitter.role).label}
+                        </Badge>
+                      )}
+                    </Flex>
+
+                    {/* Badge с комментарием отправителя */}
+                    {selectedDocument.review_comment && (
+                      <Popover.Root>
+                        <Popover.Trigger>
+                          <Box mt="2">
+                            <Badge 
+                              size="1" 
+                              variant="soft" 
+                              color="plum" 
+                              style={{ cursor: 'pointer' }}
+                            >
+                              <Flex align="center" gap="1" >
+                                <FiMessageSquare size={12} />
+                                <Text>Комментарий отправителя</Text>
+                              </Flex>
+                            </Badge>
+                          </Box>
+                        </Popover.Trigger>
+                        <Popover.Content size="1" style={{ maxWidth: 300 }}>
+                            <Text size="2" style={{ whiteSpace: 'pre-wrap' }}>
+                              {selectedDocument.review_comment}
+                            </Text>
+                        </Popover.Content>
+                      </Popover.Root>
+                    )}
+
+                  </Box>
+                </Flex>
+              </Card>
+            </Box>
+          )}
+
 
           <Separator size="4" />
 

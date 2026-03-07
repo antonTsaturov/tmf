@@ -161,7 +161,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     if (!documentsData?.documents) return [];
     
     const allDocs = documentsData.documents;
-    
+
     switch (activeFilter) {
       case 'active':
         return allDocs.filter(doc => !doc.is_deleted && !doc.is_archived);
@@ -173,6 +173,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       default:
         return allDocs;
     }
+    
   }, [documentsData, activeFilter]);
 
   const documentCounts = useMemo(() => {
@@ -193,15 +194,24 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const handleContentClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     
-    // Проверяем, был ли клик внутри строки таблицы или контекстного меню
-    // Если клик был по элементам управления (кнопки, поповеры), тоже не снимаем выделение
-    // const isRowClick = target.closest('.rt-TableRow');
-    // const isActionClick = target.closest('button') || target.closest('.rt-PopoverContent');
+    // 1. Проверяем клик по строке таблицы
+    const isRowClick = target.closest('.rt-TableRow');
+    
+    // 2. Проверяем клик по элементам управления и модальным окнам
+    // Добавляем проверку на роли 'dialog', 'menu' и специфичные классы Radix
+    const isActionClick = 
+      target.closest('button') || 
+      target.closest('.rt-PopoverContent') || 
+      target.closest('.rt-DialogContent') ||      // Контент модального окна
+      target.closest('.rt-DialogOverlay') ||      // Задний фон модального окна
+      target.closest('[role="dialog"]') ||        // Универсальная проверка по роли
+      target.closest('[role="menu"]');            // Для контекстных меню
 
-    // if (!isRowClick && !isActionClick) {
-    //   updateContext({ selectedDocument: null });
-    //   onDocumentSelect?.(null as any);
-    // }
+    // Если клик не по строке и не по элементам интерфейса/модалкам — снимаем выделение
+    if (!isRowClick && !isActionClick) {
+      updateContext({ selectedDocument: null });
+      onDocumentSelect?.(null as any);
+    }
   };
 
   const handleDocumentClick = (e: React.MouseEvent<HTMLDivElement>, doc: Document) => {
@@ -281,7 +291,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     );
   }
 
-  //console.log('selectedDocument: ',selectedDocument)
+  console.log('selectedDocument: ',selectedDocument)
 return (
   <Box 
     ref={contentRef} 
@@ -328,7 +338,10 @@ return (
                 <Button
                   key={option.value}
                   variant={activeFilter === option.value ? 'solid' : 'ghost'}
-                  onClick={() => setActiveFilter(option.value as ViewFilter)}
+                  onClick={() => {
+                    setActiveFilter(option.value as ViewFilter);
+                    updateContext({selectedDocument: null});
+                  }}
                   style={{ justifyContent: 'space-between', width: '100%' }}
                 >
                   <Text>{option.label}</Text>

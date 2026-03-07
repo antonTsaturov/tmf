@@ -1,6 +1,13 @@
 // hooks/usePendingReviewsCount.ts
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/wrappers/AuthProvider';
+import { ActionRoleMap } from '@/domain/document/document.policy';
+import { DocumentAction } from '@/types/document';
+import { UserRole } from '@/types/types';
+
+const canApprove = (userRole: UserRole): boolean => {
+  return ActionRoleMap[DocumentAction.APPROVE].includes(userRole);
+};  
 
 export function usePendingReviewsCount() {
   const { user } = useAuth();
@@ -8,7 +15,7 @@ export function usePendingReviewsCount() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !canApprove(String(user.role) as UserRole)) {
       setCount(0);
       setLoading(false);
       return;

@@ -86,6 +86,7 @@ export type AuditAction =
   | 'EXPORT'
   | 'APPROVE'
   | 'REJECT'
+  | 'ARCHIVE'
   | 'SUBMIT';
 
 export type AuditEntity = 'document' | 'document_version' | 'user' | 'site' | 'study' | 'audit' ;
@@ -179,7 +180,7 @@ export enum UserRole {
   READ_ONLY = 'read_only',
 }
 
-export const ROLE_CONFIG = {
+export const ROLE_CONFIG: Record<UserRole, { label: string; color: string }> = {
   [UserRole.ADMIN]: { label: 'Administrator', color: '#e64980' },
   [UserRole.STUDY_MANAGER]: { label: 'Study Manager', color: '#228be6' },
   [UserRole.DATA_MANAGER]: { label: 'Data Manager', color: '#20c997' },

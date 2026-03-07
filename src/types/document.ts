@@ -28,6 +28,13 @@ export enum DocumentLifeCycleStatus {
 
 export type DocumentType = 'pdf';
 
+interface ShortUserInfo {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+}
+
 export interface Document {
   study_id: number;
   site_id: number | string;
@@ -64,6 +71,8 @@ export interface Document {
   folder_id?: string;
   review_status?: string;
   review_submitted_at?: string;
+  review_submitted_by?: string;
+  review_submitter?: ShortUserInfo;
   review_comment?: string | null;
   uploader?: {
     id: string;

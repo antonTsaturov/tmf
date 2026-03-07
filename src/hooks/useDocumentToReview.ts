@@ -76,7 +76,7 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
           action: DocumentAction.SUBMIT_FOR_REVIEW,
           userId: userId,
           userRole: userRole,
-          comment: comment || 'Submit to review (autocomment)',
+          comment: comment || '',
           reviewerId: reviewerId,
           siteId: currentSite?.id,
           studyId: currentStudy?.id

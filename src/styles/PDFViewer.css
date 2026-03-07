@@ -11,12 +11,13 @@
 
 .pdf-viewer.fullscreen {
   position: fixed;
-  top: 90;
+  top: 70;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 1000;
   border-radius: 0;
+  border: 1px #ccc solid;
 }
 
 .pdf-viewer-header {

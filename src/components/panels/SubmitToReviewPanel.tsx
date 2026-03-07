@@ -117,6 +117,7 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
             onSuccess(result); 
           }
           updateContext({ isSubmittingToReview: false });
+          setComment('');
         }
       }
     } catch (err) {

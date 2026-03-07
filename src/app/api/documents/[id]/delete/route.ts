@@ -5,7 +5,7 @@ import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditContext } from '@/lib/audit/audit.middleware';
 
 // Функция для получения документа для аудита
-async function getDocumentForAudit(documentId: string) {
+export async function getDocumentForAudit(documentId: string) {
   const client = await connectDB();
   try {
     const { rows } = await client.query(
@@ -22,7 +22,7 @@ async function getDocumentForAudit(documentId: string) {
 }
 
 // Функция для мягкого удаления документа
-async function softDeleteHandler(
+export async function softDeleteHandler(
   request: NextRequest,
   ctx: AuditContext,
   

@@ -19,7 +19,10 @@ export const useDocumentArchive = (): UseDocumentArchiveReturn => {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
 
-  const archiveDocument = async (documentId: string | number): Promise<ArchiveDocumentResult> => {
+  const archiveDocument = async (
+    documentId: string | number,
+  
+  ): Promise<ArchiveDocumentResult> => {
     setIsArchiving(true);
     setError(null);
     
@@ -30,6 +33,9 @@ export const useDocumentArchive = (): UseDocumentArchiveReturn => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
+        body: JSON.stringify({ 
+          userId: user?.id // Передаем ID текущего пользователя
+        }),
       });
       
       const data = await response.json();

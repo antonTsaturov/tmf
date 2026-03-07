@@ -1,3 +1,17 @@
+:root {
+  --gl-background-color: #f3f3f3dc;
+}
+
+.sidebarresizable-root {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--gl-background-color);
+}
+
+
 .toolbar-toggle-frame-btn {
   background: #3a4a5a;
   color: #fff;
@@ -17,13 +31,26 @@
 .right-frame {
   width: 470px;
   height: 100%;
-  background: #f7fafd;
-  border-left: 1px solid #c3c8d0;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.04);
+  /* box-shadow: -2px 0 8px rgba(0,0,0,0.04); */
   display: flex;
   flex-direction: column;
   z-index: 20;
+  margin-top: 20px;
+  padding: 0 20px 40px 0;
 }
+
+.right-frame-content {
+  background: #f7fafd;
+  border-radius: 8px;
+  flex: 1;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #a2a2a270;
+  padding: 8px 8px 0px;
+}
+
 
 .right-frame-close-button {
   background: none;
@@ -39,17 +66,8 @@
 
 
 .right-frame-close-button:hover {
-  background-color: #f5f5f5;
+  background-color: #dad8d8;
   color: #333;
-}
-
-.right-frame-content {
-  padding: 0 24px 24px;
-  flex: 1;
-  overflow-y: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
 }
 
 .right-frame-tabs-root {
@@ -71,7 +89,7 @@
 .right-frame-tab-content[hidden] {
   display: none !important;
 }
-.toolbar-header {
+/* .toolbar-header {
   width: 100%;
   display: flex;
   align-items: center;
@@ -82,15 +100,8 @@
 
 .toolbar-title {
   flex: 1;
-}
+} */
 
-.sidebarresizable-root {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
 .sidebar-layout {
   display: flex;
   height: 100vh;
@@ -124,12 +135,12 @@
 
 
 .main-content {
-  background-color: #fff;
   flex: 1;
   padding: 20px 20px 20px 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  background-color: var(--gl-background-color);
 }
 
 .main-content h1 {
@@ -151,7 +162,7 @@
   display: flex;
   gap: 20px;
   justify-content: space-between;
-  min-height: 60px;
+  min-height: 67px;
 }
 
 .main-content--buttons, .main-content--status {

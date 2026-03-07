@@ -2,16 +2,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/index';
 import { AuthService } from '@/lib/auth/auth.service';
-import { withAudit } from '@/lib/audit/audit.middleware';
+import { AuditContext, withAudit } from '@/lib/audit/audit.middleware';
 import { AuditAction, AuditEntity } from '@/types/types';
 import { AuditConfig } from '@/lib/audit/audit.middleware';
+import { getDocumentForAudit, softDeleteHandler } from '../delete/route';
 
 async function archiveHandler(
   request: NextRequest,
-  id: string,
-  userId: string
+  ctx: AuditContext,
 ): Promise<NextResponse> {
   const client = await connectDB();
+  // Get doc ID
+  const segments = request.nextUrl.pathname.split('/');
+  const id = segments[segments.indexOf('documents') + 1];
+  // Get user id
+  const { userId } = ctx.body || {};
+
+  if (!userId) {
+    return NextResponse.json(
+      { error: 'User ID is required' },
+      { status: 400 }
+    );
+  }
+
+  if (!id) {
+    return NextResponse.json(
+      { error: 'Document ID is required' },
+      { status: 400 }
+    );
+  }
 
   try {
     // Получаем информацию о документе до архивации
@@ -96,97 +115,132 @@ async function archiveHandler(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
-) {
-  const authToken = request.cookies.get('auth-token')?.value;
-  const payload = authToken ? AuthService.verifyToken(authToken) : null;
+// export async function POST(
+//   request: NextRequest,
+//   ctx: { params: Promise<{ id: string }> }
+// ) {
+//   const authToken = request.cookies.get('auth-token')?.value;
+//   const payload = authToken ? AuthService.verifyToken(authToken) : null;
 
-  if (!payload) {
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
-  }
+//   if (!payload) {
+//     return NextResponse.json(
+//       { error: 'Unauthorized' },
+//       { status: 401 }
+//     );
+//   }
 
-  const { id } = await ctx.params;
+//   const { id } = await ctx.params;
 
-  if (!id) {
-    return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
-  }
+//   if (!id) {
+//     return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
+//   }
 
-  const auditConfig: AuditConfig = {
-    action: 'UPDATE' as AuditAction,
-    entityType: 'document' as AuditEntity,
+//   const auditConfig: AuditConfig = {
+//     action: 'UPDATE' as AuditAction,
+//     entityType: 'document' as AuditEntity,
     
-    getEntityId: (req: NextRequest) => {
-      const urlParts = req.url.split('/');
-      return parseInt(urlParts[urlParts.length - 2] || '0');
-    },
+//     getEntityId: (req: NextRequest) => {
+//       const urlParts = req.url.split('/');
+//       return parseInt(urlParts[urlParts.length - 2] || '0');
+//     },
     
-    getStudyId: (req: NextRequest, body?: any) => {
-      return body?.study_id || 0;
-    },
+//     getStudyId: (req: NextRequest, body?: any) => {
+//       return body?.study_id || 0;
+//     },
     
-    getSiteId: (req: NextRequest, body?: any) => {
-      return body?.site_id || '';
-    },
+//     getSiteId: (req: NextRequest, body?: any) => {
+//       return body?.site_id || '';
+//     },
     
-    // getUserId: (req: NextRequest, body?: any) => {
-    //   return payload.userId;
-    // },
+//     // getUserId: (req: NextRequest, body?: any) => {
+//     //   return payload.userId;
+//     // },
     
-    getOldValue: async (req: NextRequest, body?: any) => {
-      const client = await connectDB();
-      try {
-        const { rows } = await client.query(
-          `SELECT d.*, 
-            dv.document_name, dv.file_name,
-            s.title as study_title,
-            sit.name as site_name
-          FROM document d
-          LEFT JOIN LATERAL (
-            SELECT * FROM document_version 
-            WHERE document_id = d.id 
-            ORDER BY document_number DESC 
-            LIMIT 1
-          ) dv ON true
-          LEFT JOIN study s ON d.study_id = s.id
-          LEFT JOIN site sit ON d.site_id = sit.id
-          WHERE d.id = $1`,
-          [id]
-        );
-        return rows[0] || null;
-      } catch (error) {
-        console.error('Error fetching old value:', error);
-        return null;
-      } finally {
-        client.release();
-      }
-    },
+//     getOldValue: async (req: NextRequest, body?: any) => {
+//       const client = await connectDB();
+//       try {
+//         const { rows } = await client.query(
+//           `SELECT d.*, 
+//             dv.document_name, dv.file_name,
+//             s.title as study_title,
+//             sit.name as site_name
+//           FROM document d
+//           LEFT JOIN LATERAL (
+//             SELECT * FROM document_version 
+//             WHERE document_id = d.id 
+//             ORDER BY document_number DESC 
+//             LIMIT 1
+//           ) dv ON true
+//           LEFT JOIN study s ON d.study_id = s.id
+//           LEFT JOIN site sit ON d.site_id = sit.id
+//           WHERE d.id = $1`,
+//           [id]
+//         );
+//         return rows[0] || null;
+//       } catch (error) {
+//         console.error('Error fetching old value:', error);
+//         return null;
+//       } finally {
+//         client.release();
+//       }
+//     },
     
-    getNewValue: (req: NextRequest, body?: any) => {
-      return body?.document || null;
-    },
+//     getNewValue: (req: NextRequest, body?: any) => {
+//       return body?.document || null;
+//     },
     
-    // getMetadata: (req: NextRequest, body?: any) => {
-    //   return {
-    //     archivedBy: payload.userId,
-    //     archivedAt: new Date().toISOString(),
-    //     documentName: body?.document_name,
-    //     studyTitle: body?.study_title,
-    //     siteName: body?.site_name,
-    //     folderName: body?.folder_name,
-    //     isArchived: true
-    //   };
-    // }
-  };
+//     // getMetadata: (req: NextRequest, body?: any) => {
+//     //   return {
+//     //     archivedBy: payload.userId,
+//     //     archivedAt: new Date().toISOString(),
+//     //     documentName: body?.document_name,
+//     //     studyTitle: body?.study_title,
+//     //     siteName: body?.site_name,
+//     //     folderName: body?.folder_name,
+//     //     isArchived: true
+//     //   };
+//     // }
+//   };
 
-  return withAudit(auditConfig)(
-    request,
-    async () => {
-      return archiveHandler(request, id, String(payload.id));
-    }
-  );
-}
+//   return withAudit(auditConfig)(
+//     request,
+//     async () => {
+//       return archiveHandler(request, id, String(payload.id));
+//     }
+//   );
+// }
+export const POST = withAudit(
+  {
+    action: 'ARCHIVE',
+    entityType: 'document',
+
+    getEntityId: (_, req) =>
+      req.nextUrl.pathname.split('/').pop() || '',
+
+    getStudyId: async (_, req) => {
+      const id = String(req.nextUrl.pathname.split('/').pop());
+      const doc = await getDocumentForAudit(id);
+      return doc?.study_id ?? '';
+    },
+
+    getSiteId: async (_, req) => {
+      const id = String(req.nextUrl.pathname.split('/').pop());
+      const doc = await getDocumentForAudit(id);
+      return String(doc?.site_id ?? '');
+    },
+
+    getOldValue: async (_, req) => {
+      const id = req.nextUrl.pathname.split('/').pop();
+      return getDocumentForAudit(String(id));
+    },
+
+    getNewValue: (ctx) => ({
+      reason: ctx.body?.reason,
+      deleted_by: ctx.body?.userId,
+      is_deleted: true
+    })
+  },
+
+  archiveHandler
+);
+

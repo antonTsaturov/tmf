@@ -44,7 +44,7 @@ export interface MainContextProps {
   isAcceptedForReview: boolean;
   isDeletePanelOpen: boolean;
   isArchivePanelOpen: boolean;
-  reviewPendingCount: number
+  //reviewPendingCount: number
 }
 
 interface MainContextType {
@@ -79,7 +79,7 @@ const defaultContext: MainContextProps = {
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
   isDeletePanelOpen:false,     // Флаг для открытия окна удаления документа
   isArchivePanelOpen: false,
-  reviewPendingCount: 0
+  //reviewPendingCount: 0
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);

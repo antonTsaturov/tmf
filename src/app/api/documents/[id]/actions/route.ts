@@ -75,6 +75,7 @@ async function applyDocumentActionHandler(
       WHERE d.id = $1 AND d.is_deleted = false
     `, [id]);
 
+    
     if (documents.length === 0) {
       return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }

@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Проверяем, есть ли у пользователя права на ревью
     const canReview = userRoles.some((role: string) => 
-      ['admin', 'study_manager', 'data_manager', 'monitor', 'qa', 'auditor'].includes(role)
+      ['admin', 'study_manager'].includes(role)
     );
 
     if (!canReview) {

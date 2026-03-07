@@ -215,37 +215,6 @@ export function getPermissionsForRole(role: UserRole[]): UserPermissions {
   return ROLE_PERMISSIONS[role as unknown as UserRole] || ROLE_PERMISSIONS[UserRole.READ_ONLY];
 }
 
-// Функция для получения permissions на основе ролей
-// const getPermissionsFromRoles = (roles: UserRole[]): UserPermissions => {
-//   // У пользователя может быть только одна роль
-//   if (roles.length === 0) {
-//     // Возвращаем все false для пустой роли
-//     return {
-//       canViewDocument: false,
-//       canUploadDocument: false,
-//       canEditDocument: false,
-//       canDeleteDocument: false,
-//       canReviewDocument: false,
-//       canApproveDocument: false,
-//       canRejectDocument: false,
-//       canLockDocument: false,
-//       canArchiveDocument: false,
-//       canExportDocument: false,
-//       canRestoreDocument: false,
-//       canGenerateReports: false,
-//       canManageUsers: false,
-//       canManageStudy: false,
-//       canManageSite: false,
-//       canFolderStructure: false,
-//       canChangeUserPermissions: false,
-//     };
-//   }
-  
-//   // Используем первую роль (у пользователя может быть только одна)
-//   const role = roles[0];
-//   return getPermissionsForRole([role]);
-// };
-
 export function hasPermission(
   role: UserRole, 
   permissionKey: keyof UserPermissions
