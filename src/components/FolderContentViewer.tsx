@@ -36,6 +36,7 @@ import {
   FiAlertCircle 
 } from 'react-icons/fi';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
+import { ViewLevel } from "@/types/types";
 
 
 interface FolderContentViewerProps {
@@ -59,7 +60,7 @@ type ViewFilter = 'all' | 'active' | 'deleted' | 'archived';
 
 const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSelect, onDocumentPreview }) => {
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument } = context;
+  const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel } = context;
   
   const [documentsData, setDocumentsData] = useState<DocumentsInFolder | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -118,7 +119,12 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
-    if (!selectedFolder || !currentStudy || !currentSite) {
+    if (!selectedFolder || !currentStudy) {
+      setDocumentsData(null);
+      return;
+    }
+    
+    if (currentLevel === ViewLevel.SITE && !currentSite) {
       setDocumentsData(null);
       return;
     }
@@ -127,9 +133,12 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/documents?study_id=${currentStudy.id}&site_id=${currentSite.id}&folder_id=${selectedFolder.id}&include_deleted=true&include_archived=true`
-      );
+
+      const apiPath = currentSite
+      ? `/api/documents?study_id=${currentStudy.id}&site_id=${currentSite.id}&folder_id=${selectedFolder.id}&include_deleted=true&include_archived=true`
+      : `/api/documents?study_id=${currentStudy.id}&folder_id=${selectedFolder.id}&include_deleted=true&include_archived=true`
+
+      const response = await fetch(apiPath);
       
       if (!response.ok) {
         throw new Error('Failed to load documents');

@@ -217,3 +217,8 @@ export interface UserPermissions {
 export interface StudyUserWithPermissions extends StudyUser {
   permissions: UserPermissions;
 }
+
+export enum ViewLevel {
+  SITE = 'site',
+  GENERAL = 'general'
+};

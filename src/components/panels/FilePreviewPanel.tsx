@@ -31,6 +31,8 @@ import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { FaClinicMedical, FaRegBuilding } from 'react-icons/fa';
 import { Document } from '@/types/document';
+import { ViewLevel } from '@/types/types';
+
 
 interface FilePreviewPanelProps {
   onUploadSuccess?: (updatedDoc: Document) => void;
@@ -43,7 +45,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
 }) => {
   const { addNotification } = useNotification();
   const { context, clearFilePreview, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite } = context;
+  const { currentStudy, currentSite, currentLevel } = context;
 
   const { uploadFile, isUploading } = useDocumentUpload();
   const [isEditing, setIsEditing] = useState(false);
@@ -88,16 +90,25 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
 
   const handleUpload = async () => {
     try {
-      if (!currentStudy?.id || !currentSite?.id) {
+      if ( !currentStudy?.id ) {
+        const errorMsg = 'Ошибка: не выбрано исследование';
+        addNotification('error', errorMsg);
+        onUploadError?.(errorMsg);
+        return;
+      }
+
+      if ( currentLevel === ViewLevel.SITE && !currentSite?.id) {
         const errorMsg = 'Ошибка: не указаны исследование или центр';
         addNotification('error', errorMsg);
         onUploadError?.(errorMsg);
         return;
       }
 
+
+
       const result = await uploadFile(preview.file, {
-        studyId: currentStudy?.id,
-        siteId: currentSite?.id,
+        studyId: String(currentStudy?.id),
+        siteId: String(currentSite?.id),
         folderId: preview.folderId,
         folderName: preview.folderName,
         createdBy: preview.createdBy,

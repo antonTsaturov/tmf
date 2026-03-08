@@ -60,21 +60,25 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
   // Загрузка доступных рецензентов
   useEffect(() => {
     const loadReviewers = async () => {
-      if (!isOpen || !document || !studyId || !siteId) return;
+      if (!isOpen || !document || !studyId) return;
 
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(
-        `/api/users/reviewers?studyId=${studyId}&siteId=${siteId}&role=${UserRole.STUDY_MANAGER}`
-      );
+        const apiPath = siteId
+        ? `/api/users/reviewers?studyId=${studyId}&siteId=${siteId}&role=${UserRole.STUDY_MANAGER}`
+        : `/api/users/reviewers?studyId=${studyId}&role=${UserRole.STUDY_MANAGER}`
+
+        const response = await fetch(apiPath);
 
       if (!response.ok) {
         throw new Error('Failed to load reviewers');
       }
 
+      
       const data = await response.json();
+      console.log(data)
       setReviewers(data.users || []);
 
       // Автоматически выбираем первого, если есть

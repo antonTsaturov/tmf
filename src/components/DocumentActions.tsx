@@ -19,7 +19,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
 import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
-import { ViewLevel } from './FileExplorer';
+import { ViewLevel } from '@/types/types';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
 import { UserRole, Colors } from '@/types/types';
 import { Document } from '@/types/document';

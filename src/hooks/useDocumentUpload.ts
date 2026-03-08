@@ -4,8 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { getDocumentVersionS3Key } from '@/lib/s3-path';
 
 interface UploadOptions {
-  studyId: number | string; // Изменено с Study на number/string
-  siteId: number | string;   // Изменено с StudySite на number/string
+  studyId: string; 
+  siteId?: string | null; // String for Site Level documents. Null for General
   folderId: string;
   folderName: string;
   createdBy: string | number;
@@ -68,8 +68,7 @@ export const useDocumentUpload = () => {
       formData.append('documentId', documentId);
       formData.append('versionId', versionId);
       formData.append('s3Key', s3Key);
-      formData.append('studyId', String(options.studyId)); // Приводим к строке
-      formData.append('siteId', String(options.siteId));   // Приводим к строке
+      formData.append('studyId', String(options.studyId)); 
       formData.append('folderId', options.folderId);
       formData.append('folderName', options.folderName);
       formData.append('createdBy', String(options.createdBy));
@@ -78,6 +77,10 @@ export const useDocumentUpload = () => {
       formData.append('fileSize', String(file.size));
       formData.append('fileType', file.type);
       formData.append('status', "draft");
+
+      if (options.siteId) {
+        formData.append('siteId', String(options.siteId))
+      }
       
       if (options.tmfZone) {
         formData.append('tmfZone', options.tmfZone);
@@ -87,25 +90,12 @@ export const useDocumentUpload = () => {
         formData.append('tmfArtifact', options.tmfArtifact);
       }
 
-      // Симуляция прогресса (можно заменить на реальный прогресс с XMLHttpRequest)
-      const progressInterval = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 200);
-
-
       // Отправляем запрос
       const response = await fetch('/api/documents/upload', {
         method: 'POST',
         body: formData,
       });
 
-      clearInterval(progressInterval);
 
       if (!response.ok) {
         const errorData = await response.json();

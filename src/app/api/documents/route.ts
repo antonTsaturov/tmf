@@ -22,13 +22,6 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (!site_id) {
-    return NextResponse.json(
-      { error: 'site_id is required' },
-      { status: 400 }
-    );
-  }
-
   if (!folder_id) {
     return NextResponse.json(
       { error: 'folder_id is required' },
@@ -42,304 +35,174 @@ export async function GET(request: NextRequest) {
     // Проверяем и создаем таблицы если их нет
     await ensureTablesExist();
 
-    // // Получаем документы с их последними версиями и информацией о пользователях
-    // const { rows: documents } = await client.query(`
-    //   WITH latest_versions AS (
-    //     SELECT DISTINCT ON (dv.document_id)
-    //       dv.document_id,
-    //       dv.id as version_id,
-    //       dv.document_number,
-    //       dv.document_name,
-    //       dv.file_name,
-    //       dv.file_path,
-    //       dv.file_type,
-    //       dv.file_size,
-    //       dv.checksum,
-    //       dv.uploaded_by,
-    //       dv.uploaded_at,
-    //       dv.change_reason,
-    //       dv.review_status,
-    //       dv.review_submitted_by,
-    //       dv.review_submitted_at,
-    //       dv.review_submitted_to,
-    //       dv.reviewed_by,
-    //       dv.reviewed_at,
-    //       dv.review_comment,
-    //       -- Определяем статус документа на основе review_status
-    //       CASE 
-    //         WHEN dv.review_status = 'approved' THEN 'approved'
-    //         WHEN dv.review_status = 'rejected' THEN 'draft'
-    //         WHEN dv.review_status = 'submitted' THEN 'in_review'
-    //         ELSE 'draft'
-    //       END as document_status,
-    //       -- Информация о загрузившем версию
-    //       uploader.id as uploader_id,
-    //       uploader.name as uploader_name,
-    //       uploader.email as uploader_email,
-    //       uploader.role as uploader_role,
-    //       -- Информация об утверждающем (reviewed_by) - только для утвержденных документов
-    //       CASE WHEN dv.review_status = 'approved' THEN approver.id ELSE NULL END as approver_id,
-    //       CASE WHEN dv.review_status = 'approved' THEN approver.name ELSE NULL END as approver_name,
-    //       CASE WHEN dv.review_status = 'approved' THEN approver.email ELSE NULL END as approver_email
-    //     FROM document_version dv
-    //     LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
-    //     LEFT JOIN users approver ON dv.reviewed_by = approver.id
-    //     -- Удален LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
-    //     ORDER BY dv.document_id, dv.document_number DESC
-    //   )
-    //   SELECT 
-    //     d.*,
-    //     -- Статус документа из последней версии
-    //     lv.document_status,
-    //     lv.review_status,
-    //     lv.version_id,
-    //     lv.document_number,
-    //     lv.document_name,
-    //     lv.file_name,
-    //     lv.file_path,
-    //     lv.file_type,
-    //     lv.file_size,
-    //     lv.checksum,
-    //     lv.uploaded_by as last_uploaded_by,
-    //     lv.uploaded_at as last_uploaded_at,
-    //     lv.change_reason as last_change_reason,
-    //     lv.review_submitted_at,
-    //     lv.reviewed_at,
-    //     lv.review_comment,
-    //     -- Информация о загрузившем последнюю версию
-    //     lv.uploader_id as last_uploader_id,
-    //     lv.uploader_name as last_uploader_name,
-    //     lv.uploader_email as last_uploader_email,
-    //     -- Информация о ревьюере (УДАЛЕНО)
-    //     -- lv.reviewer_id,
-    //     -- lv.reviewer_name,
-    //     -- lv.reviewer_email,
-    //     -- Информация об утверждающем
-    //     lv.approver_id,
-    //     lv.approver_name,
-    //     lv.approver_email,
-    //     -- Информация о том, кому отправлено на ревью
-    //     assigned.id as assigned_reviewer_id,
-    //     assigned.name as assigned_reviewer_name,
-    //     assigned.email as assigned_reviewer_email,
-    //     -- Информация о создателе документа
-    //     creator.id as creator_id,
-    //     creator.name as creator_name,
-    //     creator.email as creator_email,
-    //     creator.role as creator_role,
-    //     -- Информация об удалившем документ
-    //     deleter.id as deleter_id,
-    //     deleter.name as deleter_name,
-    //     deleter.email as deleter_email,
-    //     -- Информация о восстановившем документ
-    //     restorer.id as restorer_id,
-    //     restorer.name as restorer_name,
-    //     restorer.email as restorer_email,
-    //     -- Информация об архивировавшем документ
-    //     archiver.id as archiver_id,
-    //     archiver.name as archiver_name,
-    //     archiver.email as archiver_email,
-    //     CASE 
-    //       WHEN lv.version_id IS NOT NULL THEN json_build_object(
-    //         'id', lv.version_id,
-    //         'document_number', lv.document_number,
-    //         'document_name', lv.document_name,
-    //         'file_name', lv.file_name,
-    //         'file_path', lv.file_path,
-    //         'file_type', lv.file_type,
-    //         'file_size', lv.file_size,
-    //         'checksum', lv.checksum,
-    //         'uploaded_by', lv.uploaded_by,
-    //         'uploaded_at', lv.uploaded_at,
-    //         'change_reason', lv.change_reason,
-    //         'review_status', lv.review_status,
-    //         'review_submitted_by', lv.review_submitted_by, -- Оставляем ID, но без данных пользователя
-    //         'review_submitted_at', lv.review_submitted_at,
-    //         'review_submitted_to', lv.review_submitted_to,
-    //         'reviewed_by', lv.approver_id,
-    //         'reviewed_at', lv.reviewed_at,
-    //         'review_comment', lv.review_comment,
-    //         'uploader', json_build_object(
-    //           'id', lv.uploader_id,
-    //           'name', lv.uploader_name,
-    //           'email', lv.uploader_email
-    //         )
-    //         -- Удалена информация о ревьюере из json объекта
-    //       )
-    //       ELSE NULL
-    //     END as latest_version
-    //   FROM document d
-    //   LEFT JOIN users creator ON d.created_by = creator.id
-    //   LEFT JOIN users deleter ON d.deleted_by = deleter.id
-    //   LEFT JOIN users restorer ON d.restored_by = restorer.id
-    //   LEFT JOIN users archiver ON d.archived_by = archiver.id
-    //   LEFT JOIN latest_versions lv ON d.id = lv.document_id
-    //   LEFT JOIN users assigned ON lv.review_submitted_to = assigned.id
-    //   WHERE 
-    //     d.study_id = $1 AND
-    //     d.site_id = $2 AND
-    //     d.folder_id = $3 AND
-    //     (${include_deleted ? 'TRUE' : 'd.is_deleted = false'}) AND
-    //     (${include_archived ? 'TRUE' : '(d.is_archived = false OR d.is_archived IS NULL)'})
-    //   ORDER BY d.created_at DESC
-    // `, [parseInt(study_id), parseInt(site_id), folder_id]);
+    // Подготавливаем параметры для запроса
+    const queryParams: any[] = [parseInt(study_id), folder_id];
+    let siteCondition = '';
+    let paramIndex = 3; // Следующий индекс параметра после study_id и folder_id
 
-// Получаем документы с их последними версиями и информацией о пользователях
-const { rows: documents } = await client.query(`
-  WITH latest_versions AS (
-    SELECT DISTINCT ON (dv.document_id)
-      dv.document_id,
-      dv.id as version_id,
-      dv.document_number,
-      dv.document_name,
-      dv.file_name,
-      dv.file_path,
-      dv.file_type,
-      dv.file_size,
-      dv.checksum,
-      dv.uploaded_by,
-      dv.uploaded_at,
-      dv.change_reason,
-      dv.review_status,
-      dv.review_submitted_by,
-      dv.review_submitted_at,
-      dv.review_submitted_to,
-      dv.reviewed_by,
-      dv.reviewed_at,
-      dv.review_comment,
-      -- Определяем статус документа на основе review_status
-      CASE 
-        WHEN dv.review_status = 'approved' THEN 'approved'
-        WHEN dv.review_status = 'rejected' THEN 'draft'
-        WHEN dv.review_status = 'submitted' THEN 'in_review'
-        ELSE 'draft'
-      END as document_status,
-      -- Информация о загрузившем версию
-      uploader.id as uploader_id,
-      uploader.name as uploader_name,
-      uploader.email as uploader_email,
-      uploader.role as uploader_role,
-      -- Информация об утверждающем (reviewed_by) - только для утвержденных документов
-      CASE WHEN dv.review_status = 'approved' THEN approver.id ELSE NULL END as approver_id,
-      CASE WHEN dv.review_status = 'approved' THEN approver.name ELSE NULL END as approver_name,
-      CASE WHEN dv.review_status = 'approved' THEN approver.email ELSE NULL END as approver_email,
-      -- ИНФОРМАЦИЯ О ТОМ, КТО ОТПРАВИЛ НА РЕВЬЮ (ДОБАВЛЕНО)
-      reviewer.id as reviewer_id,
-      reviewer.name as reviewer_name,
-      reviewer.email as reviewer_email,
-      reviewer.role as reviewer_role
-    FROM document_version dv
-    LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
-    LEFT JOIN users approver ON dv.reviewed_by = approver.id
-    LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id -- ДОБАВЛЕН JOIN
-    ORDER BY dv.document_id, dv.document_number DESC
-  )
-  SELECT 
-    d.*,
-    -- Статус документа из последней версии
-    lv.document_status,
-    lv.review_status,
-    lv.version_id,
-    lv.document_number,
-    lv.document_name,
-    lv.file_name,
-    lv.file_path,
-    lv.file_type,
-    lv.file_size,
-    lv.checksum,
-    lv.uploaded_by as last_uploaded_by,
-    lv.uploaded_at as last_uploaded_at,
-    lv.change_reason as last_change_reason,
-    lv.review_submitted_at,
-    lv.reviewed_at,
-    lv.review_comment,
-    -- Информация о загрузившем последнюю версию
-    lv.uploader_id as last_uploader_id,
-    lv.uploader_name as last_uploader_name,
-    lv.uploader_email as last_uploader_email,
-    -- ИНФОРМАЦИЯ О ТОМ, КТО ОТПРАВИЛ НА РЕВЬЮ (ДОБАВЛЕНО)
-    lv.reviewer_id,
-    lv.reviewer_name,
-    lv.reviewer_email,
-    lv.reviewer_role,
-    -- Информация об утверждающем
-    lv.approver_id,
-    lv.approver_name,
-    lv.approver_email,
-    -- Информация о том, кому отправлено на ревью
-    assigned.id as assigned_reviewer_id,
-    assigned.name as assigned_reviewer_name,
-    assigned.email as assigned_reviewer_email,
-    -- Информация о создателе документа
-    creator.id as creator_id,
-    creator.name as creator_name,
-    creator.email as creator_email,
-    creator.role as creator_role,
-    -- Информация об удалившем документ
-    deleter.id as deleter_id,
-    deleter.name as deleter_name,
-    deleter.email as deleter_email,
-    -- Информация о восстановившем документ
-    restorer.id as restorer_id,
-    restorer.name as restorer_name,
-    restorer.email as restorer_email,
-    -- Информация об архивировавшем документ
-    archiver.id as archiver_id,
-    archiver.name as archiver_name,
-    archiver.email as archiver_email,
-    CASE 
-      WHEN lv.version_id IS NOT NULL THEN json_build_object(
-        'id', lv.version_id,
-        'document_number', lv.document_number,
-        'document_name', lv.document_name,
-        'file_name', lv.file_name,
-        'file_path', lv.file_path,
-        'file_type', lv.file_type,
-        'file_size', lv.file_size,
-        'checksum', lv.checksum,
-        'uploaded_by', lv.uploaded_by,
-        'uploaded_at', lv.uploaded_at,
-        'change_reason', lv.change_reason,
-        'review_status', lv.review_status,
-        'review_submitted_by', lv.reviewer_id, -- ИСПОЛЬЗУЕМ ID ИЗ JOIN
-        'review_submitted_at', lv.review_submitted_at,
-        'review_submitted_to', lv.review_submitted_to,
-        'reviewed_by', lv.approver_id,
-        'reviewed_at', lv.reviewed_at,
-        'review_comment', lv.review_comment,
-        'uploader', json_build_object(
-          'id', lv.uploader_id,
-          'name', lv.uploader_name,
-          'email', lv.uploader_email
-        ),
-        -- ДОБАВЛЕН ОБЪЕКТ С ИНФОРМАЦИЕЙ О ТОМ, КТО ОТПРАВИЛ НА РЕВЬЮ
-        'review_submitter', CASE 
-          WHEN lv.reviewer_id IS NOT NULL THEN json_build_object(
-            'id', lv.reviewer_id,
-            'name', lv.reviewer_name,
-            'email', lv.reviewer_email,
-            'role', lv.reviewer_role
+    // Формируем условие для site_id в зависимости от того, передан он или нет
+    if (site_id) {
+      siteCondition = `AND d.site_id = $${paramIndex}`;
+      queryParams.push(parseInt(site_id));
+    } else {
+      siteCondition = `AND d.site_id IS NULL`;
+    }
+
+    // Получаем документы с их последними версиями и информацией о пользователях
+    const { rows: documents } = await client.query(`
+      WITH latest_versions AS (
+        SELECT DISTINCT ON (dv.document_id)
+          dv.document_id,
+          dv.id as version_id,
+          dv.document_number,
+          dv.document_name,
+          dv.file_name,
+          dv.file_path,
+          dv.file_type,
+          dv.file_size,
+          dv.checksum,
+          dv.uploaded_by,
+          dv.uploaded_at,
+          dv.change_reason,
+          dv.review_status,
+          dv.review_submitted_by,
+          dv.review_submitted_at,
+          dv.review_submitted_to,
+          dv.reviewed_by,
+          dv.reviewed_at,
+          dv.review_comment,
+          -- Определяем статус документа на основе review_status
+          CASE 
+            WHEN dv.review_status = 'approved' THEN 'approved'
+            WHEN dv.review_status = 'rejected' THEN 'draft'
+            WHEN dv.review_status = 'submitted' THEN 'in_review'
+            ELSE 'draft'
+          END as document_status,
+          -- Информация о загрузившем версию
+          uploader.id as uploader_id,
+          uploader.name as uploader_name,
+          uploader.email as uploader_email,
+          uploader.role as uploader_role,
+          -- Информация об утверждающем (reviewed_by) - только для утвержденных документов
+          CASE WHEN dv.review_status = 'approved' THEN approver.id ELSE NULL END as approver_id,
+          CASE WHEN dv.review_status = 'approved' THEN approver.name ELSE NULL END as approver_name,
+          CASE WHEN dv.review_status = 'approved' THEN approver.email ELSE NULL END as approver_email,
+          -- Информация о том, кто отправил на ревью
+          reviewer.id as reviewer_id,
+          reviewer.name as reviewer_name,
+          reviewer.email as reviewer_email,
+          reviewer.role as reviewer_role
+        FROM document_version dv
+        LEFT JOIN users uploader ON dv.uploaded_by = uploader.id
+        LEFT JOIN users approver ON dv.reviewed_by = approver.id
+        LEFT JOIN users reviewer ON dv.review_submitted_by = reviewer.id
+        ORDER BY dv.document_id, dv.document_number DESC
+      )
+      SELECT 
+        d.*,
+        -- Статус документа из последней версии
+        lv.document_status,
+        lv.review_status,
+        lv.version_id,
+        lv.document_number,
+        lv.document_name,
+        lv.file_name,
+        lv.file_path,
+        lv.file_type,
+        lv.file_size,
+        lv.checksum,
+        lv.uploaded_by as last_uploaded_by,
+        lv.uploaded_at as last_uploaded_at,
+        lv.change_reason as last_change_reason,
+        lv.review_submitted_at,
+        lv.reviewed_at,
+        lv.review_comment,
+        -- Информация о загрузившем последнюю версию
+        lv.uploader_id as last_uploader_id,
+        lv.uploader_name as last_uploader_name,
+        lv.uploader_email as last_uploader_email,
+        -- Информация о том, кто отправил на ревью
+        lv.reviewer_id,
+        lv.reviewer_name,
+        lv.reviewer_email,
+        lv.reviewer_role,
+        -- Информация об утверждающем
+        lv.approver_id,
+        lv.approver_name,
+        lv.approver_email,
+        -- Информация о том, кому отправлено на ревью
+        assigned.id as assigned_reviewer_id,
+        assigned.name as assigned_reviewer_name,
+        assigned.email as assigned_reviewer_email,
+        -- Информация о создателе документа
+        creator.id as creator_id,
+        creator.name as creator_name,
+        creator.email as creator_email,
+        creator.role as creator_role,
+        -- Информация об удалившем документ
+        deleter.id as deleter_id,
+        deleter.name as deleter_name,
+        deleter.email as deleter_email,
+        -- Информация о восстановившем документ
+        restorer.id as restorer_id,
+        restorer.name as restorer_name,
+        restorer.email as restorer_email,
+        -- Информация об архивировавшем документ
+        archiver.id as archiver_id,
+        archiver.name as archiver_name,
+        archiver.email as archiver_email,
+        CASE 
+          WHEN lv.version_id IS NOT NULL THEN json_build_object(
+            'id', lv.version_id,
+            'document_number', lv.document_number,
+            'document_name', lv.document_name,
+            'file_name', lv.file_name,
+            'file_path', lv.file_path,
+            'file_type', lv.file_type,
+            'file_size', lv.file_size,
+            'checksum', lv.checksum,
+            'uploaded_by', lv.uploaded_by,
+            'uploaded_at', lv.uploaded_at,
+            'change_reason', lv.change_reason,
+            'review_status', lv.review_status,
+            'review_submitted_by', lv.reviewer_id,
+            'review_submitted_at', lv.review_submitted_at,
+            'review_submitted_to', lv.review_submitted_to,
+            'reviewed_by', lv.approver_id,
+            'reviewed_at', lv.reviewed_at,
+            'review_comment', lv.review_comment,
+            'uploader', json_build_object(
+              'id', lv.uploader_id,
+              'name', lv.uploader_name,
+              'email', lv.uploader_email
+            ),
+            'review_submitter', CASE 
+              WHEN lv.reviewer_id IS NOT NULL THEN json_build_object(
+                'id', lv.reviewer_id,
+                'name', lv.reviewer_name,
+                'email', lv.reviewer_email,
+                'role', lv.reviewer_role
+              )
+              ELSE NULL
+            END
           )
           ELSE NULL
-        END
-      )
-      ELSE NULL
-    END as latest_version
-  FROM document d
-  LEFT JOIN users creator ON d.created_by = creator.id
-  LEFT JOIN users deleter ON d.deleted_by = deleter.id
-  LEFT JOIN users restorer ON d.restored_by = restorer.id
-  LEFT JOIN users archiver ON d.archived_by = archiver.id
-  LEFT JOIN latest_versions lv ON d.id = lv.document_id
-  LEFT JOIN users assigned ON lv.review_submitted_to = assigned.id
-  WHERE 
-    d.study_id = $1 AND
-    d.site_id = $2 AND
-    d.folder_id = $3 AND
-    (${include_deleted ? 'TRUE' : 'd.is_deleted = false'}) AND
-    (${include_archived ? 'TRUE' : '(d.is_archived = false OR d.is_archived IS NULL)'})
-  ORDER BY d.created_at DESC
-`, [parseInt(study_id), parseInt(site_id), folder_id]);    
+        END as latest_version
+      FROM document d
+      LEFT JOIN users creator ON d.created_by = creator.id
+      LEFT JOIN users deleter ON d.deleted_by = deleter.id
+      LEFT JOIN users restorer ON d.restored_by = restorer.id
+      LEFT JOIN users archiver ON d.archived_by = archiver.id
+      LEFT JOIN latest_versions lv ON d.id = lv.document_id
+      LEFT JOIN users assigned ON lv.review_submitted_to = assigned.id
+      WHERE 
+        d.study_id = $1 AND
+        d.folder_id = $2
+        ${siteCondition}
+        AND (${include_deleted ? 'TRUE' : 'd.is_deleted = false'})
+        AND (${include_archived ? 'TRUE' : '(d.is_archived = false OR d.is_archived IS NULL)'})
+      ORDER BY d.created_at DESC
+    `, queryParams);    
   
     // Получаем все версии для каждого документа с информацией о пользователях
     const documentsWithVersions = await Promise.all(
@@ -438,22 +301,13 @@ const { rows: documents } = await client.query(`
           // Основные поля документа
           id: doc.id,
           study_id: doc.study_id,
-          site_id: doc.site_id,
+          site_id: doc.site_id, // Может быть null
           folder_id: doc.folder_id,
           folder_name: doc.folder_name,
           tmf_zone: doc.tmf_zone,
           tmf_artifact: doc.tmf_artifact,
           current_version_id: doc.current_version_id,
           created_at: doc.created_at,
-          
-          // // Информация о создателе
-          // created_by: doc.created_by,
-          // creator: doc.creator_id ? {
-          //   id: doc.creator_id,
-          //   name: doc.creator_name,
-          //   email: doc.creator_email,
-          //   role: doc.creator_role
-          // } : null,
           
           // Информация об удалении
           is_deleted: doc.is_deleted || false,
@@ -487,7 +341,6 @@ const { rows: documents } = await client.query(`
           
           // Текущая версия и статус
           current_version: doc.latest_version,
-          //status: doc.document_status || 'draft',
           status: doc.is_archived
           ? DocumentLifeCycleStatus.ARCHIVED
           : doc.is_deleted
@@ -560,7 +413,7 @@ const { rows: documents } = await client.query(`
       count: documentsWithVersions.length,
       filters: {
         study_id: parseInt(study_id),
-        site_id: parseInt(site_id),
+        site_id: site_id ? parseInt(site_id) : null,
         folder_id,
         include_deleted,
         include_archived
@@ -676,12 +529,19 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Валидация обязательных полей
-    if (!study_id || !site_id || !folder_id || !folder_name || !created_by) {
+    if (!study_id || !folder_id || !folder_name || !created_by) {
       return NextResponse.json(
-        { error: 'Missing required fields: study_id, site_id, folder_id, folder_name, created_by' },
+        { error: 'Missing required fields: site_id, folder_id, folder_name, created_by' },
         { status: 400 }
       );
     }
+
+    const normalizedSiteId = (
+      site_id === 'undefined' || 
+      site_id === 'null' || 
+      site_id === undefined || 
+      site_id === null
+    ) ? null : site_id;    
 
     const documentId = uuidv4();
 
@@ -695,7 +555,7 @@ export async function POST(request: NextRequest) {
     `, [
       documentId, 
       parseInt(study_id), 
-      site_id, // site_id уже строка, не нужно parseInt
+      normalizedSiteId,
       folder_id, 
       folder_name, 
       tmf_zone || null, 
@@ -715,68 +575,3 @@ export async function POST(request: NextRequest) {
     client.release();
   }
 }
-
-// DELETE метод для мягкого удаления
-// export async function DELETE(request: NextRequest) {
-//   const searchParams = request.nextUrl.searchParams;
-//   const document_id = searchParams.get('id');
-//   const user_id = searchParams.get('user_id');
-//   const reason = searchParams.get('reason');
-
-//   if (!document_id) {
-//     return NextResponse.json(
-//       { error: 'document_id is required' },
-//       { status: 400 }
-//     );
-//   }
-
-//   if (!user_id) {
-//     return NextResponse.json(
-//       { error: 'user_id is required' },
-//       { status: 400 }
-//     );
-//   }
-
-//   if (!reason || reason.length < 10) {
-//     return NextResponse.json(
-//       { error: 'Deletion reason is required and must be at least 10 characters' },
-//       { status: 400 }
-//     );
-//   }
-
-//   const client = await connectDB();
-  
-//   try {
-//     const { rowCount, rows } = await client.query(`
-//       UPDATE document 
-//       SET 
-//         is_deleted = true,
-//         deleted_at = NOW(),
-//         deleted_by = $1,
-//         deletion_reason = $2
-//       WHERE id = $3 AND is_deleted = false
-//       RETURNING *
-//     `, [user_id, reason, document_id]);
-
-//     if (rowCount === 0) {
-//       return NextResponse.json(
-//         { error: 'Document not found or already deleted' },
-//         { status: 404 }
-//       );
-//     }
-
-//     return NextResponse.json({ 
-//       message: 'Document soft deleted successfully',
-//       document: rows[0]
-//     });
-
-//   } catch (error) {
-//     console.error('Error deleting document:', error);
-//     return NextResponse.json(
-//       { error: 'Internal server error' },
-//       { status: 500 }
-//     );
-//   } finally {
-//     client.release();
-//   }
-// }

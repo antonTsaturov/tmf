@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
   const siteId = searchParams.get('siteId');
   const role = searchParams.get('role');
 
-  if (!studyId || !siteId || !role) {
+  if (!studyId || !role) {
     return NextResponse.json(
-      { error: 'Missing required parameters: studyId, siteId, role' },
+      { error: 'Missing required parameters: studyId, role' },
       { status: 400 }
     );
   }
@@ -21,11 +21,21 @@ export async function GET(request: NextRequest) {
   const client = await connectDB();
 
   try {
+    // Подготавливаем параметры запроса
+    const queryParams: any[] = [role, studyId];
+    let siteCondition = '';
+
+    // Формируем условие для site_id если оно не null
+    if (siteId) {
+      siteCondition = `AND $3::text = ANY(assigned_site_id::text[])`;
+      queryParams.push(siteId);
+    } 
+
     // Ищем пользователей, которые:
-    // 1. Имеют роль STUDY_MANAGER
+    // 1. Имеют указанную роль
     // 2. Назначены на исследование (assigned_study_id содержит studyId)
-    // 3. Назначены на центр (assigned_site_id содержит siteId)
-    const { rows } = await client.query(`
+    // 3. Назначены на центр (assigned_site_id содержит siteId) ИЛИ центр не указан
+    const query = `
       SELECT 
         id,
         email,
@@ -38,15 +48,22 @@ export async function GET(request: NextRequest) {
         assigned_site_id
       FROM ${Tables.USERS}
       WHERE 
-        $1 = ANY(role) AND
-        $2::text::integer = ANY(assigned_study_id) AND
-        $3::text = ANY(assigned_site_id::text[])
+        $1::text = ANY(role) AND
+        $2::text::integer = ANY(assigned_study_id)
+        ${siteCondition}
       ORDER BY name ASC
-    `, [role, studyId, siteId]);
+    `;
+
+    const { rows } = await client.query(query, queryParams);
 
     return NextResponse.json({
       users: rows,
-      count: rows.length
+      count: rows.length,
+      filters: {
+        studyId,
+        siteId: siteId || null,
+        role
+      }
     });
 
   } catch (error) {

@@ -74,7 +74,7 @@ async function uploadHandler(
     const versionId = formData.get('versionId') as string;
     const s3Key = formData.get('s3Key') as string;
     const studyId = parseInt(formData.get('studyId') as string);
-    const siteId = formData.get('siteId') as string;
+    const siteId = formData.get('siteId') as string || null;
     const folderId = formData.get('folderId') as string;
     const folderName = formData.get('folderName') as string;
     const createdBy = formData.get('createdBy') as string;
@@ -90,7 +90,6 @@ async function uploadHandler(
       !file ||
       studyId === undefined ||
       Number.isNaN(studyId) ||
-      !siteId ||
       !folderId ||
       !folderName ||
       !createdBy
@@ -115,20 +114,26 @@ async function uploadHandler(
     const checksum = createHash('sha256').update(buffer).digest('hex');
 
     try {
+
+      const metadata: Record<string, string> = {
+        documentid: documentId,
+        versionid: versionId,
+        studyid: studyId.toString(),
+        folderid: folderId,
+        filename: fileName,
+        uploadedby: String(createdBy),
+      };
+
+      if (siteId) {
+        metadata.siteid = siteId;
+      }
+
       await uploadFileWithIAM(
         process.env.YC_BUCKET_NAME!,
         s3Key,
         buffer,
         file.type,
-        {
-          documentid: documentId,
-          versionid: versionId,
-          studyid: studyId.toString(),
-          siteid: siteId,
-          folderid: folderId,
-          filename: fileName,
-          uploadedby: createdBy,
-        }
+        metadata
       );
     } catch (uploadError) {
       console.error('Failed to upload to S3:', uploadError);
@@ -143,6 +148,11 @@ async function uploadHandler(
 
     const fileUrl = `https://storage.yandexcloud.net/${process.env.YC_BUCKET_NAME}/${s3Key}`;
 
+
+  const normalizedSiteId = (siteId === 'undefined' || siteId === undefined || siteId === null || siteId === '') 
+    ? null 
+    : siteId;
+    
     // Вставляем документ
     const { rows: [newDocument] } = await client.query(`
       INSERT INTO document (
@@ -154,7 +164,7 @@ async function uploadHandler(
     `, [
       documentId,
       studyId,
-      siteId,
+      normalizedSiteId,
       folderId,
       folderName,
       tmfZone || null,

@@ -5,11 +5,8 @@ import '../styles/FileExplorer.css';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 import { MainContext } from '@/wrappers/MainContext';
 import { useNotification } from '@/wrappers/NotificationContext';
+import { ViewLevel } from '@/types/types';
 
-export enum ViewLevel {
-  SITE = 'site',
-  GENERAL = 'general'
-};
 
 export interface FileNode {
   id: string;
