@@ -144,8 +144,9 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
           key={`study-select-${currentStudy?.id}`}
           value={currentStudy?.id?.toString() || undefined} 
           onValueChange={handleStudyChange}
+          
         >
-          <Select.Trigger placeholder="Выберите исследование" />
+          <Select.Trigger placeholder="Выберите исследование" variant="surface"/>
           <Select.Content>
             {studies
               .filter(study => user?.assigned_study_id?.includes(study.id))

@@ -25,7 +25,7 @@ interface UseStudiesAndSitesReturn {
   refresh: () => Promise<void>;
   getStudyName: (studyId: number) => string;
   getStudyProtocol: (studyId: number) => string;
-  getSiteName: (siteId: string | number) => string;
+  getSiteName: (siteId: string | number | null) => string;
 }
 
 export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
@@ -93,7 +93,8 @@ export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
     return study?.protocol || `Протокол ${studyId}`;
   }, [studies]);
 
-  const getSiteName = useCallback((siteId: string | number): string => {
+  const getSiteName = useCallback((siteId: string | number | null): string => {
+    if (!siteId) return 'General Level Document';
     const site = sites.get(siteId);
     return site?.name || `Центр ${siteId}`;
   }, [sites]);

@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
         uploader.email as uploader_email,
         submitter.name as submitter_name,
         submitter.email as submitter_email,
+        submitter.role as submitter_role,
         creator.name as creator_name,
         creator.email as creator_email
     FROM document_version dv
@@ -166,7 +167,7 @@ export async function GET(request: NextRequest) {
       file_path: doc.file_path,
       file_type: doc.file_type,
       file_size: doc.file_size,
-      status: DocumentLifeCycleStatus.ACTIVE,
+      status: doc.review_status === 'submitted' && 'in_review',
       review_status: doc.review_status,
       review_submitted_at: doc.review_submitted_at,
       review_comment: doc.review_comment,
@@ -182,10 +183,11 @@ export async function GET(request: NextRequest) {
         name: doc.uploader_name,
         email: doc.uploader_email
       } : null,
-      submitter: doc.submitter_name ? {
+      review_submitter: doc.submitter_name ? {
         id: doc.review_submitted_by,
         name: doc.submitter_name,
-        email: doc.submitter_email
+        email: doc.submitter_email,
+        role: String(doc.submitter_role)
       } : null,
       version_id: doc.version_id,
       uploaded_at: doc.uploaded_at,

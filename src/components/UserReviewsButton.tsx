@@ -1,5 +1,5 @@
 // UserReviewsButton.tsx
-import { Button, Flex, Badge, Link } from "@radix-ui/themes";
+import { Button, Flex, Badge, Link, Tooltip } from "@radix-ui/themes";
 import { useMemo } from "react";
 import { usePendingReviewsCount } from "@/hooks/usePendingReviewsCount";
 import { UserRole } from "@/types/types";
@@ -23,19 +23,22 @@ const UserReviewsButton = () => {
   return (
     <div>
       <Link href="/reviews">
-        <Button
-          variant="solid"
-          mr="3"
-          >
-          <Flex align="center" gap="2">
-            <MdOutlinePendingActions />
-            {count && count > 0 && (
-              <Badge color="red" variant="solid" size="1">
-                {count}
-              </Badge>
-            )}
-          </Flex>
-        </Button>
+        <Tooltip content="Pending review">
+          <Button
+            variant="solid"
+            mr="3"
+            style={{ cursor: 'pointer' }}
+            >
+            <Flex align="center" gap="2">
+              <MdOutlinePendingActions />
+              {count && count > 0 && (
+                <Badge color="red" variant="solid" size="1">
+                  {count}
+                </Badge>
+              )}
+            </Flex>
+          </Button>
+        </Tooltip>
       </Link>
 
       {/* <MyReviews

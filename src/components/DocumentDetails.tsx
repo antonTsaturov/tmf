@@ -171,6 +171,8 @@ const DocumentDetails: React.FC = () => {
     review_comment?: string | null;
   };
 
+  console.log(doc)
+
   return (
     <div className="document-details">
       <div className="document-details-content">
@@ -189,7 +191,7 @@ const DocumentDetails: React.FC = () => {
             <div className="metadata-row">
               <dt>Статус</dt>
               <dd>
-                <DocumentStatusBadge
+                {doc.status && <DocumentStatusBadge
                   status={
                     doc.is_archived
                     ? DocumentLifeCycleStatus.ARCHIVED 
@@ -197,7 +199,7 @@ const DocumentDetails: React.FC = () => {
                     ? DocumentLifeCycleStatus.DELETED 
                     : doc.status
                   }
-                />
+                />}
               </dd>
             </div>
             <div className="metadata-row">

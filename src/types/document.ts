@@ -37,7 +37,7 @@ interface ShortUserInfo {
 
 export interface Document {
   study_id: number;
-  site_id: number | string;
+  site_id: number | string | null;
   folder_name: string;
   tmf_zone: string | null;
   tmf_artifact: string | null;

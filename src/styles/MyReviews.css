@@ -1,0 +1,97 @@
+:root {
+  --gl-background-color: #f3f3f3dc;
+}
+
+.right-frame {
+  width: 470px;
+  height: 100%;
+  /* box-shadow: -2px 0 8px rgba(0,0,0,0.04); */
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+}
+
+.right-frame-content {
+  background: #f7fafd;
+  border-radius: 8px;
+  flex: 1;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #a2a2a270;
+  padding: 8px 8px 0px;
+}
+
+
+.right-frame-close-button {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: #666;
+  border-radius: 4px;
+  display: flex;
+  align-self: baseline;
+  justify-content: center;
+}
+
+
+.right-frame-close-button:hover {
+  background-color: #dad8d8;
+  color: #333;
+}
+
+.right-frame-tabs-root {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.right-frame-tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+}
+
+.right-frame-tab-content[hidden] {
+  display: none !important;
+}
+
+.hoverable-row:hover {
+    background-color: var(--gray-1);
+    transition: background-color 0.2s ease;
+}
+
+.--selected {
+  background-color: var(--gray-4) !important; /* Более тёмный фон для выбранной строки */
+}
+
+.--selected:hover {
+  background-color: var(--gray-4) !important; /* Сохраняем цвет при наведении */
+}
+
+/* Фиксируем ширину кнопки селекта */
+.select-fixed-width {
+  max-width: 100px; /* Или min-width / max-width по необходимости */
+  justify-content: center;
+}
+
+/* Обрезаем текст внутри элемента списка */
+.select-item-text {
+  display: block;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* .hover-opacity:hover {
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+} */

@@ -2,7 +2,7 @@
 'use client';
 
 
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import { 
   Container, 
   Flex, 
@@ -19,7 +19,8 @@ import {
   Separator,
   IconButton,
   Tooltip,
-  AlertDialog
+  AlertDialog,
+  Tabs
 } from '@radix-ui/themes';
 import {
   FiSearch,
@@ -47,10 +48,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { MainContext } from '@/wrappers/MainContext';
 
 import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
+import { Study, StudySite } from '@/types/types';
 import DocumentReviewPanel from "@/components/panels/DocumentReviewPanel";
 import { Document } from '@/types/document';
 import UserMenu from '@/components/UserMenu';
 import React from 'react';
+import { DocumentModeToggle } from '@/components/DocumentModeToggle';
+import DocumentDetails from '@/components/DocumentDetails';
+import PDFViewer from '@/components/PDFViewer';
+import '../../styles/MyReviews.css';
 
 
 interface PaginationInfo {
@@ -64,10 +70,10 @@ interface PaginationInfo {
 export default function MyReviewsPage() {
   const { addNotification } = useNotification();
   const { context, updateContext } = useContext(MainContext)!;
-  const { onDocumentUpdatedId, selectedDocument } = context;
+  const { onDocumentUpdatedId, selectedDocument, isRightFrameOpen } = context;
   const { user } = useAuth()!;
-  const { getStudyProtocol, getSiteName, loading: metadataLoading } = useStudiesAndSites();
-  
+  const { getStudyProtocol, getSiteName, studies, sites, loading: metadataLoading } = useStudiesAndSites();
+  //const [isRightFrameOpen, setIsRightFrameOpen] = useState<boolean>(false)
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -87,13 +93,27 @@ export default function MyReviewsPage() {
   
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Загрузка документов
-  const fetchPendingReviews = async () => {
+  // State для хранения всех документов
+  const [allDocuments, setAllDocuments] = useState<Document[]>([]);
+
+  // State для выделения строки
+  const [isSelected, setIsSelected] = useState<boolean>(false);
+
+  const [docMode, setDocMode] = useState<'site' | 'general'>('site');
+
+  const handleModeChange = (newMode: 'site' | 'general') => {
+    setDocMode(newMode);
+    // Здесь можно добавить дополнительную логику, например, перезагрузку документов
+    //console.log('Режим изменён на:', newMode);
+  };
+
+  // Загрузка всех документов один раз при монтировании
+  const fetchAllPendingReviews = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        limit: pagination.limit.toString(),
-        offset: pagination.offset.toString()
+        limit: '1000', // Получаем все документы за один раз
+        offset: '0'
       });
 
       const response = await fetch(`/api/documents/reviews/pending?${params.toString()}`);
@@ -103,8 +123,12 @@ export default function MyReviewsPage() {
       }
 
       const data = await response.json();
-      setDocuments(data.documents);
-      setPagination(data.pagination);
+      setAllDocuments(data.documents);
+      // Устанавливаем общее количество для пагинации
+      setPagination(prev => ({
+        ...prev,
+        total: data.pagination.total
+      }));
     } catch (error) {
       console.error('Error fetching pending reviews:', error);
       addNotification('error', 'Ошибка при загрузке документов');
@@ -114,15 +138,17 @@ export default function MyReviewsPage() {
   };
 
   useEffect(() => {
-    fetchPendingReviews();
-  }, [pagination.offset, studyFilter, siteFilter, folderFilter]);
+    fetchAllPendingReviews();
+  }, []);
 
   // Обработчики пагинации
   const handleNextPage = () => {
-    setPagination(prev => ({
-      ...prev,
-      offset: prev.offset + prev.limit
-    }));
+    if (pagination.offset + pagination.limit < filteredDocuments.length) {
+      setPagination(prev => ({
+        ...prev,
+        offset: prev.offset + prev.limit
+      }));
+    }
   };
 
   const handlePrevPage = () => {
@@ -149,32 +175,76 @@ export default function MyReviewsPage() {
   };
 
   useEffect(() => {
-    setDocuments(prev => prev.filter(d => d.id !== onDocumentUpdatedId));
+    setAllDocuments(prev => prev.filter(d => d.id !== onDocumentUpdatedId));
     // Очищаем onDocumentUpdatedId
     return () => updateContext({ onDocumentUpdatedId: undefined });
   }, [onDocumentUpdatedId]);  
   
-  // Функция фильтрации
-  const filterDocuments = (docs: Document[], query: string, studyId?: string, siteId?: string) => {
-    return docs.filter(doc => {
-      // Фильтр по поисковому запросу (название документа)
-      const matchesSearch = !query.trim() || 
-        doc.document_name.toLowerCase().includes(query.toLowerCase());
-      
-      // Фильтр по исследованию
-      const matchesStudy = !studyId || studyId === "all" || 
-        doc.study_id.toString() === studyId;
-      
-      // Фильтр по центру
-      const matchesSite = !siteId || siteId === "all" || 
-        doc.site_id.toString() === siteId;
-      
-      return matchesSearch && matchesStudy && matchesSite;
-    });
-  };
 
-  const filteredDocuments = filterDocuments(documents, searchQuery);
+// Функция фильтрации
+type DocumentMode = 'site' | 'general';
 
+const filterDocuments = (
+  docs: Document[], 
+  query: string, 
+  studyId?: string, 
+  siteId?: string, 
+  folderId?: string,
+  docMode?: DocumentMode
+) => {
+  return docs.filter(doc => {
+    //  Фильтр по поисковому запросу
+    const matchesSearch = !query.trim() || 
+      doc.document_name.toLowerCase().includes(query.toLowerCase());
+    
+    //  Фильтр по исследованию
+    const matchesStudy = !studyId || studyId === "all" || 
+      doc.study_id.toString() === studyId;
+    
+    //  Фильтр по центру с учётом docMode
+    const matchesSite = (() => {
+      if (docMode === 'general') {
+        // Только General документы (site_id === null)
+        return doc.site_id === null;
+      }
+      if (docMode === 'site') {
+        // Только Site-level документы (site_id !== null)
+        if (!siteId || siteId === "all") {
+          return doc.site_id !== null; // все site-level
+        }
+        // Конкретный центр: site_id !== null + совпадение по ID
+        return doc.site_id !== null && doc.site_id.toString() === siteId;
+      }
+      // Если docMode не задан — не фильтруем по этому критерию
+      return true;
+    })();
+
+    // 📁 Фильтр по папке
+    const matchesFolder = !folderId || folderId === "all" || 
+      doc.folder_id?.toString() === folderId;
+    
+    return matchesSearch && matchesStudy && matchesSite && matchesFolder;
+  });
+};
+
+  const filteredDocuments = useMemo(() => {
+    return filterDocuments(
+      allDocuments,
+      searchQuery,
+      studyFilter,
+      siteFilter,
+      folderFilter,
+      docMode // ← передаём docMode как параметр
+    );
+  }, [
+    allDocuments,
+    searchQuery,
+    studyFilter,
+    siteFilter,
+    folderFilter,
+    docMode // ← docMode в зависимостях: при изменении — пересчёт
+  ]);
+  
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     // Сбрасываем пагинацию при поиске (опционально)
@@ -200,21 +270,20 @@ export default function MyReviewsPage() {
 
   if (!user) {
     return (
-      <Container size="4" py="6">
+      <Flex justify="center" align="center" minHeight="100vh" width="100%">
         <Card>
           <Flex direction="column" align="center" gap="4" py="8">
             <Text color="gray">Необходимо авторизоваться</Text>
             <Button onClick={() => router.push('/login')}>Войти</Button>
           </Flex>
         </Card>
-      </Container>
+      </Flex>
     );
   }
 
-  console.log(pagination)
   return (
-    <div style={{ 
-      height: 'calc(100vh - 64px)', // 64px — примерная высота вашего toolbar-header
+    <div className="main-box" style={{ 
+      height: '95vh', // 95% доступной высоты экрана
       display: 'flex', 
       flexDirection: 'column', 
       overflow: 'hidden' 
@@ -240,23 +309,20 @@ export default function MyReviewsPage() {
       />
     
       <Box
+        className='main-box'
         mt="8" 
         style={{
           flex: 1,
           display: 'flex',
-          flexDirection: 'column',
+          flexDirection: 'row',
           overflow: 'hidden',
-          paddingBottom: 'var(--space-4)',
-          padding: '0 150px'
+          padding: '0 20px',
+          gap: '20px',
         }}
-      >
+        >
         <Card size="2" variant="surface" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Header */}
-          <Flex 
-            direction="column"
-            p="4" 
-            style={{ borderBottom: '1px solid var(--gray-5)' }}
-          >
+          <Flex direction="column"p="4" >
             {/* Верхняя строка с заголовком и кнопками */}
             <Flex justify="between" align="center">
                 <Flex align="center" gap="2">
@@ -284,7 +350,7 @@ export default function MyReviewsPage() {
                       <IconButton 
                       variant="ghost" 
                       size="2" 
-                      onClick={fetchPendingReviews}
+                      onClick={fetchAllPendingReviews}
                       disabled={loading}
                       >
                       <FiRefreshCw size={16} className={loading ? 'rt-Spinner' : ''} />
@@ -293,44 +359,66 @@ export default function MyReviewsPage() {
                 </Flex>
               </Flex>
 
-            {/* Бейдж под заголовком */}
+            
             <Flex  gap="2" justify="between" mt="4">
+              {/* Бейджи под заголовком */}
+              <Flex gap="4" align="center" wrap="wrap">
                 <Badge size="2" variant="soft" color="indigo">
-                {pagination.total} {getDeclension(pagination.total, ['документ', 'документа', 'документов'])} {' в ожидании'}
+                  {filteredDocuments.length} {getDeclension(filteredDocuments.length, ['документ найден', 'документа найдено', 'документов найдено'])}
                 </Badge>
-                {loading && <Spinner size="1" />}
+                
+                {/* бейдж для общего количества */}
+                <Badge size="2" variant="soft" color="gray">
+                  Всего: {allDocuments.length} {getDeclension(allDocuments.length, ['документ', 'документа', 'документов'])} {'в ожидании'}
+                </Badge>
+              </Flex>
             
           
                 {/* Filters */}
-                <Flex  gap="3" align="center" wrap="wrap">
+              <Flex  gap="6" align="center" wrap="wrap">
+                  <DocumentModeToggle 
+                    mode={docMode} 
+                    onModeChange={handleModeChange} 
+                  />                  
+                  <Select.Root 
+                    value={studyFilter || "all"} 
+                    onValueChange={handleStudyFilterChange}
+                    size="1"
+                  >
+                    <Select.Trigger placeholder="Исследование" variant="ghost"/>
+                    <Select.Content>
+                      <Select.Item value="all">Все исследования</Select.Item>
+                      {studies ? Array.from(studies.values()).map((study) => (
+                        <Select.Item key={study.id} value={String(study.id)}>
+                          {study.protocol}
+                        </Select.Item>
+                      )) : null}
+                    </Select.Content>
+                  </Select.Root>
 
-                  
-                    <Select.Root 
-                      value={studyFilter || "all"} 
-                      onValueChange={handleStudyFilterChange}
-                      size="1"
-                    >
-                      <Select.Trigger placeholder="Исследование" variant="ghost"/>
-                      <Select.Content>
-                        <Select.Item value="all">Все исследования</Select.Item>
-                        <Select.Item value="1">Исследование 1</Select.Item>
-                        <Select.Item value="2">Исследование 2</Select.Item>
-                      </Select.Content>
-                    </Select.Root>
-
-                    <Select.Root 
-                      value={siteFilter || "all"} 
-                      onValueChange={handleSiteFilterChange}
-                      size="1"
-                    >
-                      <Select.Trigger placeholder="Центр" variant="ghost"/>
-                      <Select.Content>
-                        <Select.Item value="all">Все центры</Select.Item>
-                        <Select.Item value="1">Центр 1</Select.Item>
-                        <Select.Item value="2">Центр 2</Select.Item>
-                      </Select.Content>
-                    </Select.Root>
-                </Flex>
+                  <Select.Root 
+                    value={siteFilter || "all"} 
+                    onValueChange={handleSiteFilterChange}
+                    size="1"
+                  >
+                    <Select.Trigger
+                      placeholder="Центр"
+                      variant="ghost"
+                      disabled={docMode === 'general'}
+                      className={`${isRightFrameOpen ? "select-fixed-width" : ''}`}
+                    />
+                    <Select.Content >
+                      <Select.Item value="all" disabled={docMode === 'general'}>Все центры</Select.Item>
+                      {sites ? Array.from(sites.values()).map((site) => (
+                        <Select.Item key={site.id} value={String(site.id)} disabled={docMode === 'general'}>
+                          <span className="select-item-text" title={site.name}>
+                            {site.name}
+                          </span>
+                        </Select.Item>
+                      )) : null}
+                    </Select.Content>
+                  </Select.Root>
+              </Flex>
             </Flex>
           </Flex>
 
@@ -359,8 +447,8 @@ export default function MyReviewsPage() {
               >
                 <Table.Row>
                   <Table.ColumnHeaderCell style={{ width: '30%' }}>Документ</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: '15%' }}>Исследование/Центр</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: '15%' }}>Папка</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{`Исследование ${docMode === 'site' ? "/ Центр" : ''}`}</Table.ColumnHeaderCell>
+                  {!isRightFrameOpen && (<Table.ColumnHeaderCell style={{ width: '15%' }}>Папка</Table.ColumnHeaderCell>)}
                   <Table.ColumnHeaderCell style={{ width: '15%' }}>Отправитель</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell style={{ width: '15%' }}>Дата отправки</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell style={{ width: '10%' }} align="center">Действия</Table.ColumnHeaderCell>
@@ -378,7 +466,7 @@ export default function MyReviewsPage() {
                 <Spinner size="3" />
               </Flex>
             )}
-            {documents.length === 0 && !loading && (
+            {allDocuments.length === 0 && !loading && (
               <Flex direction="column" align="center" justify="center" gap="4" style={{ height: '100%' }}>
                 <Text size="4" weight="medium" color="gray">
                   Нет документов, ожидающих ревью
@@ -396,7 +484,8 @@ export default function MyReviewsPage() {
                       overflow: 'auto',
                       minHeight: 0,
                       maxHeight: '100%',
-                      position: 'relative'
+                      position: 'relative',
+                      borderBottom: '1px solid var(--gray-5)'
                     }}
                   >                 
                     <Table.Root
@@ -422,11 +511,18 @@ export default function MyReviewsPage() {
                       </Table.Header>
 
                       {/* Прокручиваемое тело */}
-                      <Table.Body >
+                      <Table.Body onContextMenu={(e) => e.preventDefault()}>
                         {paginatedDocuments.map((doc) => (
-                          <Table.Row key={doc.id} style={{ 
-                            cursor: 'pointer'
-                          }}>
+                          <Table.Row
+                            className={`${'hoverable-row'} ${selectedDocument?.id === doc.id ? '--selected' : ''}`}
+                            key={doc.id}
+                            onClick={()=> {
+                              updateContext({selectedDocument: doc, isRightFrameOpen: true})
+                            }}
+                            style={{ 
+                              cursor: 'pointer',
+                            }}
+                          >
                             <Table.Cell style={{ width: '30%' }}>
                               <Flex direction="column" gap="1">
                                 <Text weight="bold" size="2" style={{ wordBreak: 'break-word' }}>
@@ -446,31 +542,37 @@ export default function MyReviewsPage() {
                             </Table.Cell>
 
                             <Table.Cell style={{ width: '15%' }}>
-                              {doc.submitter ? (
+                              {doc.review_submitter ? (
                                 <Flex direction="column" gap="1">
-                                  <Text size="2" style={{ wordBreak: 'break-word' }}>{getStudyProtocol(doc.study_id)}</Text>
-                                  <Text size="1" color="gray" style={{ wordBreak: 'break-word' }}>{getSiteName(doc.site_id)}</Text>
+                                  <Text size="2" style={{ wordBreak: 'break-word' }}>
+                                    {doc.study_id !== null ? getStudyProtocol(doc.study_id) : '—'}
+                                  </Text>
+                                  <Text size="1" color="gray" style={{ wordBreak: 'break-word' }}>
+                                    {getSiteName(doc.site_id)}
+                                  </Text>
                                 </Flex>
                               ) : (
                                 <Text size="2" color="gray">—</Text>
                               )}
                             </Table.Cell>
 
-                            <Table.Cell style={{ width: '15%' }}>
+                            {/* Folder name */}
+                            {!isRightFrameOpen && (<Table.Cell style={{ width: '15%' }}>
                               <Flex align="center" gap="2">
                                 <FiFolder size={14} color="var(--gray-9)" />
                                 <Text size="2" style={{ wordBreak: 'break-word' }}>{doc.folder_name}</Text>
                               </Flex>
-                            </Table.Cell>
+                            </Table.Cell>)}
                             
+                            {/* Submitter name and email */}
                             <Table.Cell style={{ width: '15%' }}>
-                              {doc.submitter ? (
+                              {doc.review_submitter ? (
                                 <Flex direction="column" gap="1">
                                   <Flex align="center" gap="1">
                                     <FiUser size={12} color="var(--gray-9)" />
-                                    <Text size="2" style={{ wordBreak: 'break-word' }}>{doc.submitter.name}</Text>
+                                    <Text size="2" style={{ wordBreak: 'break-word' }}>{doc.review_submitter.name}</Text>
                                   </Flex>
-                                  <Text size="1" color="gray" style={{ wordBreak: 'break-word' }}>{doc.submitter.email}</Text>
+                                  <Text size="1" color="gray" style={{ wordBreak: 'break-word' }}>{doc.review_submitter.email}</Text>
                                 </Flex>
                               ) : (
                                 <Text size="2" color="gray">—</Text>
@@ -487,7 +589,14 @@ export default function MyReviewsPage() {
                             <Table.Cell style={{ width: '10%' }}>
                               <Flex gap="1" justify="center" align="center">
                                 <Tooltip content="Просмотр">
-                                  <IconButton size="1" color="blue" variant="soft">
+                                  <IconButton
+                                    size="1"
+                                    color="blue"
+                                    variant="soft"
+                                    onClick={()=> {
+                                      updateContext({selectedDocument: doc, isRightFrameOpen: true})
+                                    }}
+                                    >
                                     <FiEye size={14} />
                                   </IconButton>
                                 </Tooltip>
@@ -517,11 +626,11 @@ export default function MyReviewsPage() {
                   </Box> 
 
                 {/* Pagination */}
-                {pagination.total > pagination.limit && (
+                {filteredDocuments.length > pagination.limit && (
                   <Flex justify="between" align="center" pt="4" style={{ flexShrink: 0 }}>
                     <Text size="2" color="gray">
-                      Показано {pagination.offset + 1}-
-                      {Math.min(pagination.offset + pagination.limit, pagination.total)} из {pagination.total}
+                      Показано {startIndex + 1}-
+                      {endIndex} из {filteredDocuments.length}
                     </Text>
                     <Flex gap="2">
                       <Button 
@@ -535,7 +644,7 @@ export default function MyReviewsPage() {
                       <Button 
                         variant="soft" 
                         onClick={handleNextPage}
-                        disabled={!pagination.hasMore}
+                        disabled={pagination.offset + pagination.limit >= filteredDocuments.length}
                       >
                         Вперед
                         <FiChevronRight />
@@ -546,7 +655,7 @@ export default function MyReviewsPage() {
 
               </>
             )}
-            {documents.length > 0 && displayedCount === 0 && !loading && (
+            {allDocuments.length > 0 && displayedCount === 0 && !loading && (
               <Flex direction="column" align="center" justify="center" gap="4" style={{ height: '100%' }}>
                 <Text size="4" weight="medium" color="gray">
                   Ничего не найдено
@@ -558,6 +667,7 @@ export default function MyReviewsPage() {
                   setSearchQuery('');
                   setStudyFilter('');
                   setSiteFilter('');
+                  setFolderFilter('');
                 }}>
                   Сбросить фильтры
                 </Button>
@@ -565,7 +675,53 @@ export default function MyReviewsPage() {
             )}
           </Box>
         </Card>
-      </Box>
+     
+
+        {/* Right frame */}
+        {isRightFrameOpen && (
+          <div className="right-frame">
+
+            <div className="right-frame-content">
+
+              <button className="right-frame-close-button" onClick={()=> updateContext({isRightFrameOpen: false})}>
+                <FiX />
+              </button>
+
+              <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
+                <Tabs.List>
+                  <Tabs.Trigger value="view">Document preview</Tabs.Trigger>
+                  <Tabs.Trigger value="tab2">Document history</Tabs.Trigger>
+                </Tabs.List>
+                <Tabs.Content value="view" className="right-frame-tab-content">
+                  {selectedDocument ? (
+                    selectedDocument.is_deleted ? (
+                      <div className="right-frame-placeholder">
+                        <div className="placeholder-icon">🔒</div>
+                        <div className="placeholder-text">
+                          Документ "{selectedDocument.document_name}" был удален<br />
+                          <span style={{fontSize: '13px', color: '#6c757d'}}>Просмотр недоступен</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
+                    )
+                  ) : (
+                    <div className="right-frame-placeholder">
+                      <div className="placeholder-icon">📄</div>
+                      <div className="placeholder-text">
+                        Выберите документ для просмотра
+                      </div>
+                    </div>
+                  )}                
+                </Tabs.Content>
+                <Tabs.Content value="tab2" className="right-frame-tab-content">
+                  <DocumentDetails />
+                </Tabs.Content>
+              </Tabs.Root>
+            </div>
+          </div>
+        )}
+      </Box>   
     </div>
   );
 }

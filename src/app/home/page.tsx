@@ -93,13 +93,9 @@ const Home: React.FC<MainWindowProps> = () => {
         <UserMenu />
       </header>
       <div className="sidebar-layout">
-        <div
-          ref={sidebarRef}
-          className="sidebar"
-        >
+        {/* Folders Explorer*/}
+        <div ref={sidebarRef} className="sidebar">
           <div className="sidebar-content">
-
-                       
             <div className="sidebar-content-area">
               <FileExplorer
                 showFileIcons={true}
@@ -108,25 +104,26 @@ const Home: React.FC<MainWindowProps> = () => {
             </div>
           </div>
         </div>
+        {/* Main content */}
         <div className="main-content">
           <div className="main-content-row">
+            {/* Actions Buttons */}
             <div className="main-content--buttons">
               <DocumentActions />
-
             </div>
+            {/* Doc status Indicator */}
             <div className="main-content--status">
               {selectedDocument?.status && (
-                <DocumentStatusIndicator
-                  size="big" 
-                />
+                <DocumentStatusIndicator size="big" />
               )}
             </div>
           </div>
-          
+          {/* Selected Folder Content */}
           <div className="main-content-area">
             <FolderContentViewer />
           </div>
         </div>
+        {/* Right frame */}
         {isRightFrameOpen && (
           <div className="right-frame">
 

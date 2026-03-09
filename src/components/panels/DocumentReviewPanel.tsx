@@ -14,7 +14,8 @@ import {
   Tooltip,
   Separator,
   AlertDialog,
-  Popover
+  Popover,
+  Avatar
 } from '@radix-ui/themes';
 import { 
   FiX, 
@@ -26,6 +27,7 @@ import {
   FiMessageSquare,
   FiUser
 } from 'react-icons/fi';
+import { FaFileLines } from "react-icons/fa6";
 import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
 import { useAuth } from '@/wrappers/AuthProvider';
@@ -33,6 +35,8 @@ import { useNotification } from '@/wrappers/NotificationContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { Document } from '@/types/document';
 import { ROLE_CONFIG, UserRole } from '@/types/types';
+import {  } from 'radix-ui';
+import { FaUser } from 'react-icons/fa';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;
@@ -205,11 +209,12 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   };
 
   if (!selectedDocument) return null;
-
+  
+  console.log(selectedDocument)
   return (
     <>
       <Dialog.Root open={isAcceptedForReview} onOpenChange={(open) => !open && !loading && handleClose()}>
-        <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+        <Dialog.Content style={{ maxWidth: 500, padding: 0 }} aria-describedby={undefined}>
           {/* Header */}
           <Flex 
             justify="between" 
@@ -236,10 +241,8 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
           <Box p="4">
             <Text size="2" weight="bold">Документ</Text>
             <Card size="1" variant="surface">
-              <Flex gap="3" align="start">
-                <Box className="rt-AvatarRoot" style={{ width: 40, height: 40 }}>
-                  <FiFileText size={24} />
-                </Box>
+              <Flex gap="3" align="center">
+                <Avatar fallback={<FaFileLines />} />
                 <Box style={{ flex: 1 }}>
                   <Text size="2" weight="bold">
                     {selectedDocument.document_name}
@@ -292,21 +295,8 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
             <Box px="4" pb="2">
               <Text size="2" weight="bold">Отправитель</Text>              
               <Card size="1" variant="surface">
-                <Flex gap="3" align="start">
-                  <Box 
-                    style={{ 
-                      width: 36, 
-                      height: 36, 
-                      borderRadius: '50%', 
-                      backgroundColor: 'var(--amber-3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0
-                    }}
-                  >
-                    <FiUser size={18} color="var(--amber-9)" />
-                  </Box>
+                <Flex gap="3" align="center">
+                  <Avatar fallback={<FaUser />} />
                   <Box style={{ flex: 1 }}>
                     <Text size="2" weight="bold">
                       {selectedDocument.review_submitter.name || 'Отправитель'}

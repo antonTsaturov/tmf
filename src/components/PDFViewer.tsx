@@ -5,6 +5,7 @@ import { FiX, FiDownload, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import { MdCached } from "react-icons/md";
 import { usePDFCache } from '@/hooks/usePDFCache';
 import '../styles/PDFViewer.css';
+import { Flex, Spinner } from '@radix-ui/themes';
 
 interface PDFViewerProps {
   onClose?: () => void;
@@ -23,6 +24,7 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
   const objectRef = useRef<HTMLObjectElement>(null);
   const { getCachedPDF, cachePDF } = usePDFCache();
 
+  console.log('selectedDocument: ', selectedDocument)
   useEffect(() => {
     const loadPDF = async () => {
       if (!selectedDocument) {
@@ -158,6 +160,14 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
 
   if (!selectedDocument) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <Flex align="center" justify="center" py="6">
+        <Spinner size="2" />
+      </Flex>    
+    )
   }
 
   return (

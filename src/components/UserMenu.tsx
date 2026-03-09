@@ -21,7 +21,7 @@ export default function UserDropdownMenu() {
     <>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
-          <Button  color="gray" >
+          <Button  color="gray" aria-label="User menu">
             <FaUser /> {user?.name}
           </Button>
         </DropdownMenu.Trigger>
