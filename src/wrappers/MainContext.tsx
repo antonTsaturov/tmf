@@ -1,16 +1,17 @@
 // MainContext.tsx
 'use client'
 import React, { createContext, useState, ReactNode } from 'react';
-import { FileNode, ViewLevel } from '@/components/FileExplorer';
+import { FileNode } from '@/components/FileExplorer';
 import type { Document } from '@/types/document';
 import { Study, StudySite } from '@/types/types';
+import { ViewLevel } from '@/types/types';
 
 // Интерфейс для предпросмотра файла перед загрузкой
 export interface FilePreview {
   file: File;
   customName: string;
   size: number;
-  studyId: number;
+  studyId: number | string;
   siteId: string | number;
   folderId: string;
   folderName: string;
@@ -127,9 +128,9 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  const onDocumentUpdated = (updatedDoc: Document | boolean) => {
-    return updatedDoc
-  }
+  // const onDocumentUpdated = (updatedDoc: Document | boolean) => {
+  //   return updatedDoc
+  // }
 
   return (
     <MainContext.Provider value={{ 
