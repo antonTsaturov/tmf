@@ -42,6 +42,8 @@ import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { useAuth } from "@/wrappers/AuthProvider";
 import React from "react";
 import DragAndDropOverlay from "./DragAndDropOverlay";
+import BulkUploadPanel from "./panels/BulkUploadPanel";
+import { useUpload } from "@/wrappers/UploadContext";
 
 
 interface FolderContentViewerProps {
@@ -67,6 +69,8 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel } = context!;
   const { user } = useAuth();
+  const upload = useUpload();
+  
   const [documentsData, setDocumentsData] = useState<DocumentsInFolder | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,27 +80,31 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   
   // Загрузка перетаскиванием
   const { isDragOver, handleDragEnter, handleDragLeave, handleDragOver, handleDrop } = useDragAndDrop({
-    disabled: !context, // Отключаем, если контекст пуст
+    disabled: !context,
     onDropFiles: (files) => {
       // Логика обработки файлов при дропе
       if (!selectedFolder || !currentStudy?.id || !user?.id) return;
 
-      // Берем первый файл для превью (можно расширить для множественной загрузки)
-      const file = files[0];
+      // Всегда создаем массив файлов
+      const filesArray = Array.isArray(files) ? files : [files];
       
-      updateContext({
-        filePreview: {
-          file,
+      if (filesArray.length === 0) return;
+
+      if (filesArray.length > 0) {
+
+        upload.setFilePreview({
+          files,
           folderId: selectedFolder.id,
           folderName: selectedFolder.name,
-          size: file.size,
-          customName: file.name.replace(/\.[^/.]+$/, ""),
-          studyId: currentStudy?.id,
-          siteId: String(currentSite?.id),
-          createdBy: String(user?.id)
-        },
-        isPreviewOpen: true,
-      });
+          size: files.reduce((total, f) => total + f.size, 0),
+          customName: files.length === 1 
+            ? files[0].name.replace(/\.[^/.]+$/, "")
+            : `${files.length} файлов`,
+          studyId: currentStudy.id,
+          siteId: currentSite?.id || 'General Level Document',
+          createdBy: user.id
+        });
+      }
     }
   });
 
@@ -133,20 +141,20 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     }
   };
 
-  // Добавляем в список документов только что загруженный файл
-  const handleAddNewDocument = useCallback((updatedDoc: Document) => {
+  const handleAddNewDocument = useCallback((updatedDoc: Document | Document[]) => {
     setDocumentsData(prevData => {
       if (!prevData) return null;
       
+      // Нормализуем входные данные: если пришёл массив — используем его, если один документ — оборачиваем в массив
+      const docsToAdd = Array.isArray(updatedDoc) ? updatedDoc : [updatedDoc];
+      
       return {
         ...prevData,
-        count: prevData.count + 1,
-        documents: [updatedDoc, ...prevData.documents] // Добавляем новый документ в начало списка
+        count: prevData.count + docsToAdd.length,
+        documents: [...docsToAdd, ...prevData.documents] // Добавляем новые документы в начало списка
       };
     });
   }, []);
-
-
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
@@ -331,7 +339,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     );
   }
 
-  //console.log('selectedDocument: ',selectedDocument)
   return (
     <Box 
       ref={contentRef} 
@@ -512,7 +519,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                                   lineHeight: '1.4'
                                 }}
                               >
-                                {doc.document_name || doc.current_version.document_name || 'Без названия'}
+                                {doc.document_name || doc.current_version?.document_name || doc.file_name || 'Без названия'}
                               </Text>
                             {doc.tmf_artifact && (
                               <Badge 
@@ -577,6 +584,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
         onUploadSuccess={(updatedDoc) => handleAddNewDocument(updatedDoc)}
         onUploadError={(error) => console.error('Upload error:', error)}
       />
+      {/* <BulkUploadPanel /> */}
       <NewVersionUploadPanel
         onUploadError={(error) => console.error('Upload error:', error)}
         onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}

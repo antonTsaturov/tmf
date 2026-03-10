@@ -190,7 +190,6 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
               cursor: showEmpty ? 'default' : 'help',
               flexShrink: 0,
               zIndex: 2,
-              boxShadow: isCurrent ? '0px 0px 5px #00000078' : ""
             }}
           >
             {isActive && (

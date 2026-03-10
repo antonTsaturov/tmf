@@ -148,7 +148,6 @@ async function uploadHandler(
 
     const fileUrl = `https://storage.yandexcloud.net/${process.env.YC_BUCKET_NAME}/${s3Key}`;
 
-
   const normalizedSiteId = (siteId === 'undefined' || siteId === undefined || siteId === null || siteId === '') 
     ? null 
     : siteId;
@@ -323,7 +322,7 @@ async function uploadHandler(
 
     return NextResponse.json({
       success: true,
-      document: enrichedDocument
+      documents: [enrichedDocument]
     }, { status: 201 });
 
   } catch (error) {

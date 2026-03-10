@@ -7,8 +7,8 @@ import { Theme } from "@radix-ui/themes";
 import { AuthProvider } from "@/wrappers/AuthProvider";
 import { AdminContextProvider } from "@/wrappers/AdminContext";
 import { NotificationProvider } from "@/wrappers/NotificationContext";
-import { ConnectivityBanner } from "@/components/ConnectivityBanner"; // 👈 Импорт
-
+import { ConnectivityBanner } from "@/components/ConnectivityBanner"; 
+import { UploadProvider } from "@/wrappers/UploadContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,11 +37,14 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             <AdminContextProvider>
-              <ContextProvider>
+              <UploadProvider>
+                <ContextProvider>
+
                   <ConnectivityBanner /> 
                   {children}
-                
-              </ContextProvider>
+                  
+                </ContextProvider>
+              </UploadProvider>
             </AdminContextProvider>
           </NotificationProvider>  
         </AuthProvider>

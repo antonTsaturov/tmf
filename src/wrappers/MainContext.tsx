@@ -9,6 +9,7 @@ import { ViewLevel } from '@/types/types';
 // Интерфейс для предпросмотра файла перед загрузкой
 export interface FilePreview {
   file: File;
+  files?: File[]; // Добавляем возможность загрузки нескольких файлов
   customName: string;
   size: number;
   studyId: number | string;
@@ -37,9 +38,9 @@ export interface MainContextProps {
 
   onDocumentUpdatedId: string | null;
   currentLevel: ViewLevel | undefined;
-  filePreview: FilePreview | null;
+  // filePreview: FilePreview | null;
   isPreviewOpen: boolean;
-  newVersionPreview: NewVersionPreview | null;
+  //newVersionPreview: NewVersionPreview | null;
   isNewVersionPanelOpen: boolean;
   isSubmittingToReview: boolean;
   isAcceptedForReview: boolean;
@@ -53,10 +54,10 @@ interface MainContextType {
   updateContext: (newContext: Partial<MainContextProps>) => void;
   resetContext: () => void;
   // Методы для предпросмотра
-  setFilePreview: (preview: FilePreview | null) => void;
-  clearFilePreview: () => void;
-  setNewVersionPreview: (preview: NewVersionPreview | null) => void;
-  clearNewVersionPreview: () => void;
+  // setFilePreview: (preview: FilePreview | null) => void;
+  // clearFilePreview: () => void;
+  // setNewVersionPreview: (preview: NewVersionPreview | null) => void;
+  // clearNewVersionPreview: () => void;
 }
 
 const defaultContext: MainContextProps = {
@@ -72,9 +73,9 @@ const defaultContext: MainContextProps = {
 
   onDocumentUpdatedId: null,
   currentLevel: undefined, // Текущий уровень просмотра папок (General либо Site Level)
-  filePreview: null, // Объект нового документа
+  // filePreview: null, // Объект нового документа
   isPreviewOpen: false, // Флаг для открытия окна для загрузки нового документа
-  newVersionPreview: null, // Объект новой версии документа
+  //newVersionPreview: null, // Объект новой версии документа
   isNewVersionPanelOpen: false, // Флаг для открытия окна загрузки новой ВЕРСИИ документа
   isSubmittingToReview: false, // Флаг для открытия окна отправки документа на ревью
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
@@ -112,21 +113,22 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
     }));
   };
 
-  const setNewVersionPreview = (preview: NewVersionPreview | null) => {
-    setContext(prev => ({
-      ...prev,
-      newVersionPreview: preview,
-      isNewVersionPanelOpen: !!preview
-    }));
-  };
+  // const setNewVersionPreview = (preview: NewVersionPreview | null) => {
+  //   setContext(prev => ({
+  //     ...prev,
+  //     newVersionPreview: preview,
+  //     isNewVersionPanelOpen: !!preview
+  //   }));
+  // };
 
-  const clearNewVersionPreview = () => {
-    setContext(prev => ({
-      ...prev,
-      newVersionPreview: null,
-      isNewVersionPanelOpen: false
-    }));
-  };
+
+  // const clearNewVersionPreview = () => {
+  //   setContext(prev => ({
+  //     ...prev,
+  //     newVersionPreview: null,
+  //     isNewVersionPanelOpen: false
+  //   }));
+  // };
 
   // const onDocumentUpdated = (updatedDoc: Document | boolean) => {
   //   return updatedDoc
@@ -137,10 +139,10 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
       context, 
       updateContext, 
       resetContext,
-      setFilePreview,
-      clearFilePreview,
-      setNewVersionPreview,
-      clearNewVersionPreview,
+      // setFilePreview,
+      // clearFilePreview,
+      // setNewVersionPreview,
+      // clearNewVersionPreview,
     }}>
       {children}
     </MainContext.Provider>

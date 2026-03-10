@@ -42,7 +42,7 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
         zIndex: 10000, 
         display: 'flex', 
         flexDirection: 'column', 
-        alignItems: 'flex-end' // Уведомления прижаты к правому краю
+        alignItems: 'flex-end', // Уведомления прижаты к правому краю
       }}>
         {notifications.map((n) => {
           // Определяем имя цвета на основе типа
@@ -68,7 +68,8 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
                   // ДИНАМИЧЕСКИЙ НЕПРОЗРАЧНЫЙ ЦВЕТ:
                   // Используем переменную --[color]-surface, она непрозрачная в Radix
                   backgroundColor: `var(--${colorName}-3)`,
-                  opacity: 1
+                  opacity: 1,
+                  margin: '10px'
                 }}
               >
                 <Callout.Text weight="light">

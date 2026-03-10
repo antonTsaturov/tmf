@@ -26,6 +26,8 @@ import { Document } from '@/types/document';
 import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { useNotification } from '@/wrappers/NotificationContext';
+import { useDocumentUpload } from '@/hooks/useDocumentUpload';
+import { useUpload } from '@/wrappers/UploadContext';
 
 interface DocumentActionsProps {
   onAction?: (action: DocumentAction) => void;
@@ -117,18 +119,21 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const mainContext = useContext(MainContext);
   const { addNotification } = useNotification();
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
-  const { context, updateContext, setFilePreview, setNewVersionPreview } = mainContext;
+  const { context, updateContext } = mainContext;
   const { selectedFolder, selectedDocument, currentStudy, currentSite, currentLevel} = context;
   const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
   const { user } = useAuth();
   const { isDeleting, isRestoring, error } = useDocumentDelete();
+  const { handleFileSelect, handleUploadNewVersion } = useDocumentUpload();
 
+  
   const prevSelectedDocumentRef = useRef<Document | null>(null);
+
 
 
   useEffect(() => {
     if (selectedDocument !== prevSelectedDocumentRef.current) {
-      console.log('Selected document changed:', selectedDocument?.id);
+      //sconsole.log('Selected document changed:', selectedDocument?.id);
       prevSelectedDocumentRef.current = selectedDocument;
       // Можно добавить принудительное обновление, если нужно
     }
@@ -143,83 +148,8 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
 
   const availableActions = getAvailableDocumentActions(selectedDocument, user?.role as unknown as UserRole[]);
 
-  // Обработчик выбора файлов
-  const handleFileSelect = () => {
-    if (!selectedFolder) {
-      addNotification( 'error', 'Сначала выберите папку' );
-      return;
-    }
-
-    if (!user?.id) {
-      addNotification('error', 'Пользователь не авторизован');
-      return;
-    }
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,application/pdf,.txt,text/plain';
-    input.multiple = false;
-    
-    input.onchange = (e) => {
-      const target = e.target as HTMLInputElement;
-      const files = target.files;
-      
-      if (!files || files.length === 0) return;
-      
-      const file = files[0];
-      
-      setFilePreview({
-        file,
-        customName: file.name.replace(/\.[^/.]+$/, ''),
-        size: file.size,
-        studyId: currentStudy?.id!,
-        siteId: currentSite?.id!,
-        folderId: selectedFolder.id,
-        folderName: selectedFolder.name,
-        createdBy: user.id
-      });
-      
-      input.remove();
-    };
-    
-    input.click();
-  };
-
   const handleCreateDocument = () => {
     handleFileSelect();
-  };
-
-  const handleUploadNewVersion = () => {
-    if (!selectedDocument) {
-      addNotification('error', 'Выберите документ');
-      return;
-    }
-    if (!user?.id && !user?.email) {
-      addNotification('error', 'Пользователь не авторизован');
-      return;
-    }
-
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.pdf,application/pdf,.txt,text/plain';
-    input.multiple = false;
-
-    input.onchange = (e) => {
-      const target = e.target as HTMLInputElement;
-      const files = target.files;
-      if (!files || files.length === 0) return;
-
-      const file = files[0];
-      const preview = { file, document: selectedDocument };
-      if (typeof setNewVersionPreview === 'function') {
-        setNewVersionPreview(preview);
-      } else {
-        updateContext({ newVersionPreview: preview, isNewVersionPanelOpen: true });
-      }
-      input.remove();
-    };
-
-    input.click();
   };
 
   const handleActionClick = async (action: DocumentAction) => {
@@ -229,7 +159,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
 
     if (action === DocumentAction.UPLOAD_NEW_VERSION) {
-      handleUploadNewVersion();
+      handleUploadNewVersion(selectedDocument);
       return;
     }
 

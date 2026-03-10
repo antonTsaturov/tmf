@@ -40,7 +40,8 @@ export const ActionRoleMap: Record<DocumentAction, UserRole[]> = {
 
     [DocumentAction.UPLOAD_NEW_VERSION]: [
         UserRole.MONITOR,
-        UserRole.ADMIN
+        UserRole.ADMIN,
+        UserRole.STUDY_MANAGER,
     ],
 
     [DocumentAction.VIEW]: [

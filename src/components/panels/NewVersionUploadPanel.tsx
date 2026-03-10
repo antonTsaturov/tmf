@@ -30,6 +30,7 @@ import { useAuth } from '@/wrappers/AuthProvider';
 import { useDocumentNewVersion } from '@/hooks/useDocumentNewVersion';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
+import { useUpload } from '@/wrappers/UploadContext';
 
 interface NewVersionUploadPanelProps {
   //onUploadSuccess?: () => void;
@@ -40,14 +41,16 @@ interface NewVersionUploadPanelProps {
 const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadError, onSuccess}) => {
   const mainContext = useContext(MainContext);
   if (!mainContext) return null;
-  const { context, clearNewVersionPreview, updateContext } = mainContext;
+  const { context, updateContext } = mainContext;
   const { addNotification } = useNotification();
+  const upload = useUpload();
+
 
   const clearPanel = () => {
-    if (typeof clearNewVersionPreview === 'function') {
-      clearNewVersionPreview();
+    if (typeof upload.clearNewVersion === 'function') {
+      upload.clearNewVersion();
     } else {
-      updateContext({ newVersionPreview: null, isNewVersionPanelOpen: false });
+      updateContext({ isNewVersionPanelOpen: false });
     }
   };
 
@@ -55,7 +58,7 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
   const { uploadNewVersion, isUploading } = useDocumentNewVersion();
   const [changeReason, setChangeReason] = useState('');
 
-  const preview = context.newVersionPreview;
+  const preview = upload.newVersionPreview;
   const isOpen = context.isNewVersionPanelOpen;
 
   if (!isOpen || !preview || !user) return null;
