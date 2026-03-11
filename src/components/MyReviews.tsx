@@ -66,7 +66,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
 }) => {
   const { addNotification } = useNotification();
   const { context, updateContext } = useContext(MainContext)!;
-  const { onDocumentUpdatedId, selectedDocument } = context;
+  const { onDocumentUpdatedId } = context;
 
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);

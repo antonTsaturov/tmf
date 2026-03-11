@@ -12,7 +12,8 @@ import {
   FiTrash2, 
   FiDownload, 
   FiEye,
-  FiUploadCloud
+  FiUploadCloud,
+  FiEdit
 } from 'react-icons/fi';
 import { Flex, Button, Tooltip } from '@radix-ui/themes';
 import { MainContext } from '@/wrappers/MainContext';
@@ -85,7 +86,7 @@ export const actionConfig: Partial<Record<DocumentAction, {
     variant: 'solid',
     //color: Colors.RED
   },
-  [DocumentAction.RESTORE]: { // Не используйется
+  [DocumentAction.RESTORE]: { // Не используется
     icon: <FiRefreshCw />, 
     label: 'Восстановить',
     variant: 'solid'
@@ -105,7 +106,13 @@ export const actionConfig: Partial<Record<DocumentAction, {
     icon: <FiDownload />, 
     label: 'Скачать',
     variant: 'soft'
+  },
+  [DocumentAction.EDIT]: { 
+    icon: <FiEdit />, 
+    label: 'Редактировать',
+    variant: 'soft'
   }
+
 };
 
 const MIN_WIDTH = 700;
@@ -113,8 +120,6 @@ const MIN_WIDTH = 700;
 const DocumentActions: React.FC<DocumentActionsProps> = ({ 
   onAction, 
   className = '',
-  onDocumentDeleted,
-  onDocumentRestored,
 }) => {
   const mainContext = useContext(MainContext);
   const { addNotification } = useNotification();
@@ -126,16 +131,11 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const { isDeleting, isRestoring, error } = useDocumentDelete();
   const { handleFileSelect, handleUploadNewVersion } = useDocumentUpload();
 
-  
   const prevSelectedDocumentRef = useRef<Document | null>(null);
-
-
 
   useEffect(() => {
     if (selectedDocument !== prevSelectedDocumentRef.current) {
-      //sconsole.log('Selected document changed:', selectedDocument?.id);
       prevSelectedDocumentRef.current = selectedDocument;
-      // Можно добавить принудительное обновление, если нужно
     }
   }, [selectedDocument]);  
 
@@ -167,6 +167,12 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       updateContext({ isDeletePanelOpen: true });
       return;
     }
+
+    if (action === DocumentAction.EDIT) {
+      updateContext({ isEditTitlePanelOpen: true });
+      return;
+    }
+
 
     if (action === DocumentAction.VIEW) {
       updateContext({ isRightFrameOpen: true });

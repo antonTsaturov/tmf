@@ -1,3 +1,4 @@
+// Пока не используется
 // app/api/documents/[id]/versions/[number]/restore/route.ts
 // PUT - восстановить версию (сделать её текущей)
 import { NextRequest, NextResponse } from 'next/server';
@@ -59,28 +60,3 @@ async function restoreVersionHandler(
   }
 }
 
-export const PUT = async (
-  request: NextRequest,
-  ctx: { params: Promise<{ id: string; number: string }> }
-) => {
-  const { id, number } = await ctx.params;
-  const versionNumber = parseInt(number, 10);
-
-  if (isNaN(versionNumber) || versionNumber < 1) {
-    return NextResponse.json({ error: 'Invalid version number' }, { status: 400 });
-  }
-
-  const auditConfig: AuditConfig = {
-    action: 'UPDATE' as AuditAction,
-    entityType: 'document' as AuditEntity,
-    getEntityId: () => 0,
-    getStudyId: () => 0,
-    getSiteId: () => '',
-    getNewValue: () => ({ restored_version: versionNumber }),
-    getOldValue: async () => null,
-  };
-
-  return withAudit(auditConfig)(request, async () => {
-    return restoreVersionHandler(id, versionNumber, request);
-  });
-};

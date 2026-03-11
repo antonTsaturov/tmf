@@ -29,7 +29,6 @@ import {
 } from 'react-icons/fi';
 import { FaFileLines } from "react-icons/fa6";
 import { MainContext } from '@/wrappers/MainContext';
-import { DocumentAction } from '@/types/document';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
@@ -48,7 +47,7 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   const { context, updateContext } = useContext(MainContext)!;
   const { user } = useAuth();
   const { addNotification } = useNotification();
-  const { selectedDocument, isAcceptedForReview, onDocumentUpdatedId } = context;
+  const { selectedDocument, isAcceptedForReview } = context;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

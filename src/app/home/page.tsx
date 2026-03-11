@@ -136,7 +136,7 @@ const Home: React.FC<MainWindowProps> = () => {
               <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
                 <Tabs.List>
                   <Tabs.Trigger value="view">Document preview</Tabs.Trigger>
-                  <Tabs.Trigger value="tab2">Document history</Tabs.Trigger>
+                  <Tabs.Trigger value="tab2">Document details</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="view" className="right-frame-tab-content">
                   {selectedDocument ? (

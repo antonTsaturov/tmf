@@ -1,11 +1,8 @@
 // app/api/documents/[id]/archive/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/index';
-import { AuthService } from '@/lib/auth/auth.service';
 import { AuditContext, withAudit } from '@/lib/audit/audit.middleware';
-import { AuditAction, AuditEntity } from '@/types/types';
-import { AuditConfig } from '@/lib/audit/audit.middleware';
-import { getDocumentForAudit, softDeleteHandler } from '../delete/route';
+import { getDocumentForAudit } from '../delete/route';
 
 async function archiveHandler(
   request: NextRequest,
@@ -115,100 +112,6 @@ async function archiveHandler(
   }
 }
 
-// export async function POST(
-//   request: NextRequest,
-//   ctx: { params: Promise<{ id: string }> }
-// ) {
-//   const authToken = request.cookies.get('auth-token')?.value;
-//   const payload = authToken ? AuthService.verifyToken(authToken) : null;
-
-//   if (!payload) {
-//     return NextResponse.json(
-//       { error: 'Unauthorized' },
-//       { status: 401 }
-//     );
-//   }
-
-//   const { id } = await ctx.params;
-
-//   if (!id) {
-//     return NextResponse.json({ error: 'Document ID is required' }, { status: 400 });
-//   }
-
-//   const auditConfig: AuditConfig = {
-//     action: 'UPDATE' as AuditAction,
-//     entityType: 'document' as AuditEntity,
-    
-//     getEntityId: (req: NextRequest) => {
-//       const urlParts = req.url.split('/');
-//       return parseInt(urlParts[urlParts.length - 2] || '0');
-//     },
-    
-//     getStudyId: (req: NextRequest, body?: any) => {
-//       return body?.study_id || 0;
-//     },
-    
-//     getSiteId: (req: NextRequest, body?: any) => {
-//       return body?.site_id || '';
-//     },
-    
-//     // getUserId: (req: NextRequest, body?: any) => {
-//     //   return payload.userId;
-//     // },
-    
-//     getOldValue: async (req: NextRequest, body?: any) => {
-//       const client = await connectDB();
-//       try {
-//         const { rows } = await client.query(
-//           `SELECT d.*, 
-//             dv.document_name, dv.file_name,
-//             s.title as study_title,
-//             sit.name as site_name
-//           FROM document d
-//           LEFT JOIN LATERAL (
-//             SELECT * FROM document_version 
-//             WHERE document_id = d.id 
-//             ORDER BY document_number DESC 
-//             LIMIT 1
-//           ) dv ON true
-//           LEFT JOIN study s ON d.study_id = s.id
-//           LEFT JOIN site sit ON d.site_id = sit.id
-//           WHERE d.id = $1`,
-//           [id]
-//         );
-//         return rows[0] || null;
-//       } catch (error) {
-//         console.error('Error fetching old value:', error);
-//         return null;
-//       } finally {
-//         client.release();
-//       }
-//     },
-    
-//     getNewValue: (req: NextRequest, body?: any) => {
-//       return body?.document || null;
-//     },
-    
-//     // getMetadata: (req: NextRequest, body?: any) => {
-//     //   return {
-//     //     archivedBy: payload.userId,
-//     //     archivedAt: new Date().toISOString(),
-//     //     documentName: body?.document_name,
-//     //     studyTitle: body?.study_title,
-//     //     siteName: body?.site_name,
-//     //     folderName: body?.folder_name,
-//     //     isArchived: true
-//     //   };
-//     // }
-//   };
-
-//   return withAudit(auditConfig)(
-//     request,
-//     async () => {
-//       return archiveHandler(request, id, String(payload.id));
-//     }
-//   );
-// }
 export const POST = withAudit(
   {
     action: 'ARCHIVE',

@@ -28,7 +28,6 @@ export interface NewVersionPreview {
 export interface MainContextProps {
   isModal: boolean;
   isRightFrameOpen: boolean;
-  isFolderContentLoading: boolean;
   docWasDeleted: boolean;
   currentStudy: Study | undefined;
   currentCountry: string | undefined;
@@ -38,32 +37,23 @@ export interface MainContextProps {
 
   onDocumentUpdatedId: string | null;
   currentLevel: ViewLevel | undefined;
-  // filePreview: FilePreview | null;
-  isPreviewOpen: boolean;
-  //newVersionPreview: NewVersionPreview | null;
   isNewVersionPanelOpen: boolean;
   isSubmittingToReview: boolean;
   isAcceptedForReview: boolean;
   isDeletePanelOpen: boolean;
   isArchivePanelOpen: boolean;
-  //reviewPendingCount: number
+  isEditTitlePanelOpen: boolean;
 }
 
 interface MainContextType {
   context: MainContextProps;
   updateContext: (newContext: Partial<MainContextProps>) => void;
   resetContext: () => void;
-  // Методы для предпросмотра
-  // setFilePreview: (preview: FilePreview | null) => void;
-  // clearFilePreview: () => void;
-  // setNewVersionPreview: (preview: NewVersionPreview | null) => void;
-  // clearNewVersionPreview: () => void;
 }
 
 const defaultContext: MainContextProps = {
   isModal: false, // Флаг открытия админ панели
   isRightFrameOpen: false, // Флаг состояния правой панели
-  isFolderContentLoading: false,
   docWasDeleted: false,
   currentStudy: undefined,
   currentCountry: undefined,
@@ -73,15 +63,12 @@ const defaultContext: MainContextProps = {
 
   onDocumentUpdatedId: null,
   currentLevel: undefined, // Текущий уровень просмотра папок (General либо Site Level)
-  // filePreview: null, // Объект нового документа
-  isPreviewOpen: false, // Флаг для открытия окна для загрузки нового документа
-  //newVersionPreview: null, // Объект новой версии документа
   isNewVersionPanelOpen: false, // Флаг для открытия окна загрузки новой ВЕРСИИ документа
   isSubmittingToReview: false, // Флаг для открытия окна отправки документа на ревью
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
   isDeletePanelOpen:false,     // Флаг для открытия окна удаления документа
   isArchivePanelOpen: false,
-  //reviewPendingCount: 0
+  isEditTitlePanelOpen: false
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
@@ -97,52 +84,11 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
     setContext(defaultContext);
   };
 
-  const setFilePreview = (preview: FilePreview | null) => {
-    setContext(prev => ({
-      ...prev,
-      filePreview: preview,
-      isPreviewOpen: !!preview
-    }));
-  };
-
-  const clearFilePreview = () => {
-    setContext(prev => ({
-      ...prev,
-      filePreview: null,
-      isPreviewOpen: false
-    }));
-  };
-
-  // const setNewVersionPreview = (preview: NewVersionPreview | null) => {
-  //   setContext(prev => ({
-  //     ...prev,
-  //     newVersionPreview: preview,
-  //     isNewVersionPanelOpen: !!preview
-  //   }));
-  // };
-
-
-  // const clearNewVersionPreview = () => {
-  //   setContext(prev => ({
-  //     ...prev,
-  //     newVersionPreview: null,
-  //     isNewVersionPanelOpen: false
-  //   }));
-  // };
-
-  // const onDocumentUpdated = (updatedDoc: Document | boolean) => {
-  //   return updatedDoc
-  // }
-
   return (
     <MainContext.Provider value={{ 
       context, 
       updateContext, 
       resetContext,
-      // setFilePreview,
-      // clearFilePreview,
-      // setNewVersionPreview,
-      // clearNewVersionPreview,
     }}>
       {children}
     </MainContext.Provider>

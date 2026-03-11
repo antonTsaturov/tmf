@@ -42,8 +42,8 @@ import { useDragAndDrop } from '@/hooks/useDragAndDrop';
 import { useAuth } from "@/wrappers/AuthProvider";
 import React from "react";
 import DragAndDropOverlay from "./DragAndDropOverlay";
-import BulkUploadPanel from "./panels/BulkUploadPanel";
 import { useUpload } from "@/wrappers/UploadContext";
+import EditDocumentTitlePanel from "./panels/EditDocumentTitlePanel";
 
 
 interface FolderContentViewerProps {
@@ -118,15 +118,20 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const updateSingleDocumentInState = useCallback((updatedDoc: Document) => {
     setDocumentsData(prevData => {
       if (!prevData) return null;
-      
+
       return {
         ...prevData,
-        documents: prevData.documents.map(doc => 
+        documents: prevData.documents.map(doc =>
           doc.id === updatedDoc.id ? { ...doc, ...updatedDoc } : doc
         )
       };
     });
   }, []);
+
+  // Handle rename success - update document in folder list
+  const handleRenameSuccess = useCallback((updatedDoc: Document) => {
+    updateSingleDocumentInState(updatedDoc);
+  }, [updateSingleDocumentInState]);
 
   // Обновляем документы в папке
   const handleUpdateFIleInFolder = (updatedDoc: Document) => {
@@ -487,13 +492,14 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
                         cursor: 'pointer',
                         backgroundColor: selectedDocument?.id === doc.id ? 'var(--blue-3)' : undefined,
                         transition: 'background-color 0.2s',
+                        verticalAlign: 'middle'
                       }}
                       className={selectedDocument?.id === doc.id ? 'rt-TableRow--selected' : ''}
                     >
                       {/* Имя документа */}
                       <Table.Cell style={{ maxWidth: '400px', width: '40%' }}>
                         <Flex align="center" gap="2" style={{ width: '100%' }}>
-                          <Box style={{ width: 24, height: 24, flexShrink: 0 }}>
+                          <Box style={{ width: 24, flexShrink: 0 }}>
                             {doc.file_type?.includes('pdf') ? (
                               <FileIcon extension="pdf" labelColor="#D93831" type="acrobat" />
                             ) : (
@@ -580,11 +586,13 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       </Box>
 
       {/* Панели  */}
+      <EditDocumentTitlePanel
+        onRenameSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+      />
       <FilePreviewPanel
         onUploadSuccess={(updatedDoc) => handleAddNewDocument(updatedDoc)}
         onUploadError={(error) => console.error('Upload error:', error)}
       />
-      {/* <BulkUploadPanel /> */}
       <NewVersionUploadPanel
         onUploadError={(error) => console.error('Upload error:', error)}
         onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}

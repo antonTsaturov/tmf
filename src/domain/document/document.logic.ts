@@ -3,7 +3,7 @@ import { Document, DocumentAction, DocumentWorkFlowStatus, Transitions as transi
 import { UserRole } from '@/types/types';
 import { ActionRoleMap } from '@/domain/document/document.policy';
 
-//Функция проверки прав для конкретного действия
+// Функция проверки прав для конкретного действия
 const hasPermissionForAction = (action: DocumentAction, userRoles: UserRole[]): boolean => {
 
   if (!userRoles || !Array.isArray(userRoles)) {
@@ -14,22 +14,12 @@ const hasPermissionForAction = (action: DocumentAction, userRoles: UserRole[]): 
   return userRoles.some(role => allowedRoles.includes(role));
 };
 
-const getBaseActions = (userRole: UserRole[]): DocumentAction[] => {
-  if (!userRole) return [];
-  
-  const userRoles = userRole as UserRole[];
-  
-  return [
-    DocumentAction.CREATE_DOCUMENT,
-    DocumentAction.VIEW,
-    DocumentAction.DOWNLOAD
-  ].filter(action => hasPermissionForAction(action, userRoles));
-};
-
 export const getAvailableDocumentActions = (selectedDocument: Document | null, userRole: UserRole[]): DocumentAction[] => {
 
+  // Если документ не выбран - только кнопка создать документ (если есть права на создание документов)
   if (!selectedDocument) {
-    return [DocumentAction.CREATE_DOCUMENT].filter(action => hasPermissionForAction(action, userRole));
+    return [DocumentAction.CREATE_DOCUMENT]
+    .filter(action => hasPermissionForAction(action, userRole));
   }
 
   if (selectedDocument.is_deleted) {
@@ -37,17 +27,16 @@ export const getAvailableDocumentActions = (selectedDocument: Document | null, u
     .filter(action => hasPermissionForAction(action, userRole));
   }
 
-  // Базовые действия, доступные для всех документов с учетом роли пользователя
-  const baseActions = getBaseActions(userRole);
-
   const currentStatus = selectedDocument.status as DocumentWorkFlowStatus;
   
   // Получаем действия на основе статуса из Transitions
   const statusActions = transitions[currentStatus] || [];
   
-  let allActions: DocumentAction[] = [...baseActions, ...statusActions]
+  // Фильтруем действия по ролям
+  let roleActions: DocumentAction[] = [ ...statusActions]
   .filter(action => hasPermissionForAction(action, userRole));
   
-  return [...new Set(allActions)];
+  // Возвращаем Set для удаления случайных дубликатов
+  return [...new Set(roleActions)];
 };
 

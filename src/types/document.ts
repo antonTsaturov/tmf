@@ -9,7 +9,8 @@ export enum DocumentAction {
   RESTORE = 'restore',
   UPLOAD_NEW_VERSION = 'upload_new_version',
   VIEW = 'view',
-  DOWNLOAD = 'download'
+  DOWNLOAD = 'download',
+  EDIT = 'edit'
 }
 
 export enum DocumentWorkFlowStatus {
@@ -115,26 +116,34 @@ export interface DocumentVersion {
   review_comment: string;
 }
 
+const BASE_ACTIONS: DocumentAction[] = [
+  DocumentAction.CREATE_DOCUMENT,
+  DocumentAction.VIEW,
+  DocumentAction.DOWNLOAD,
+]
+
 // Используется в DocumentAction и app/api/documents/[id]/actions/route.ts
 export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
   draft: [
-    //DocumentAction.CREATE_DOCUMENT,
+    ...BASE_ACTIONS,
     DocumentAction.SUBMIT_FOR_REVIEW,
-    DocumentAction.SOFT_DELETE,
-    DocumentAction.UPLOAD_NEW_VERSION
+    DocumentAction.UPLOAD_NEW_VERSION,
+    DocumentAction.EDIT,
+    DocumentAction.SOFT_DELETE
   ],
   in_review: [
+    ...BASE_ACTIONS,
     DocumentAction.APPROVE,
     DocumentAction.REJECT,
-    // DocumentAction.CANCEL_REVIEW
   ],
   approved: [
+    ...BASE_ACTIONS,
     DocumentAction.ARCHIVE
   ],
   archived: [
-    //DocumentAction.UNARCHIVE
+    ...BASE_ACTIONS,
   ],
   deleted: [
-    //DocumentAction.RESTORE
+    ...BASE_ACTIONS,
   ]
 }

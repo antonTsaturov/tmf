@@ -48,15 +48,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { MainContext } from '@/wrappers/MainContext';
 
 import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
-import { Study, StudySite } from '@/types/types';
 import DocumentReviewPanel from "@/components/panels/DocumentReviewPanel";
 import { Document } from '@/types/document';
 import UserMenu from '@/components/UserMenu';
-import React from 'react';
 import { DocumentModeToggle } from '@/components/DocumentModeToggle';
 import DocumentDetails from '@/components/DocumentDetails';
 import PDFViewer from '@/components/PDFViewer';
 import '../../styles/MyReviews.css';
+import { FileIcon } from 'react-file-icon';
 
 
 interface PaginationInfo {
@@ -73,11 +72,10 @@ export default function MyReviewsPage() {
   const { onDocumentUpdatedId, selectedDocument, isRightFrameOpen } = context;
   const { user } = useAuth()!;
   const { getStudyProtocol, getSiteName, studies, sites, loading: metadataLoading } = useStudiesAndSites();
-  //const [isRightFrameOpen, setIsRightFrameOpen] = useState<boolean>(false)
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [documents, setDocuments] = useState<Document[]>([]);
+  //const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
@@ -96,15 +94,13 @@ export default function MyReviewsPage() {
   // State для хранения всех документов
   const [allDocuments, setAllDocuments] = useState<Document[]>([]);
 
-  // State для выделения строки
-  const [isSelected, setIsSelected] = useState<boolean>(false);
-
   const [docMode, setDocMode] = useState<'site' | 'general'>('site');
 
+  // Функция ереключения Site Level <-> General level
   const handleModeChange = (newMode: 'site' | 'general') => {
     setDocMode(newMode);
-    // Здесь можно добавить дополнительную логику, например, перезагрузку документов
-    //console.log('Режим изменён на:', newMode);
+    // Обязательный сброс пагинации
+    setPagination(prev => ({ ...prev, offset: 0 }));
   };
 
   // Загрузка всех документов один раз при монтировании
@@ -181,9 +177,10 @@ export default function MyReviewsPage() {
   }, [onDocumentUpdatedId]);  
   
 
-// Функция фильтрации
+
 type DocumentMode = 'site' | 'general';
 
+// Функция фильтрации
 const filterDocuments = (
   docs: Document[], 
   query: string, 
@@ -310,7 +307,7 @@ const filterDocuments = (
     
       <Box
         className='main-box'
-        mt="8" 
+        mt="5" 
         style={{
           flex: 1,
           display: 'flex',
@@ -524,6 +521,15 @@ const filterDocuments = (
                             }}
                           >
                             <Table.Cell style={{ width: '30%' }}>
+                              <Flex direction="row" gap="3">
+                              <Box style={{ width: 24, flexShrink: 0 }}>
+                                {doc.file_type?.includes('pdf') ? (
+                                  <FileIcon extension="pdf" labelColor="#D93831" type="acrobat" />
+                                ) : (
+                                  <FileIcon extension="txt" type="document" />
+                                )}
+                              </Box>
+                              
                               <Flex direction="column" gap="1">
                                 <Text weight="bold" size="2" style={{ wordBreak: 'break-word' }}>
                                   {doc.document_name}
@@ -538,6 +544,7 @@ const filterDocuments = (
                                     </Badge>
                                   )}
                                 </Flex>
+                              </Flex>
                               </Flex>
                             </Table.Cell>
 
@@ -690,7 +697,7 @@ const filterDocuments = (
               <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
                 <Tabs.List>
                   <Tabs.Trigger value="view">Document preview</Tabs.Trigger>
-                  <Tabs.Trigger value="tab2">Document history</Tabs.Trigger>
+                  <Tabs.Trigger value="tab2">Document details</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="view" className="right-frame-tab-content">
                   {selectedDocument ? (
