@@ -31,6 +31,7 @@ import { useDocumentNewVersion } from '@/hooks/useDocumentNewVersion';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
 import { useUpload } from '@/wrappers/UploadContext';
+import { ViewLevel } from '@/types/types';
 
 interface NewVersionUploadPanelProps {
   //onUploadSuccess?: () => void;
@@ -82,10 +83,15 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
       return;
     }
 
+    const siteId = context.currentLevel === ViewLevel.SITE ? context?.currentSite?.id as unknown as string : 'General Level Document';
+    const studyId = context.currentStudy?.id as unknown as string;
+
     const result = await uploadNewVersion(document, file, {
       createdBy,
       changeReason: changeReason.trim() || undefined,
       resetStatusToDraft: true,
+      siteId: siteId,
+      studyId: studyId 
     });
 
     if (result.success && result.document) {
@@ -140,13 +146,12 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
           </Dialog.Close>
         </Flex>
 
-        {/* Document Info Card */}
-
-        
-        <Box p="4">
-          <Text size="2" weight="medium" mb="3">Текущая версия докумена</Text>
+        {/* Current Document Info Card */}
+        <Box p="4" >
+          <Text size="2" weight="medium" mb="1">Текущая версия документа</Text>
           <Card size="1" variant="surface">
-            <Flex gap="3" align="start">
+            <Flex gap="3" align="center">
+              {/* Icon Box - Standardized */}
               <Box 
                 style={{ 
                   width: 48, 
@@ -155,16 +160,18 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
                   borderRadius: 'var(--radius-2)',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  flexShrink: 0 // Prevent shrinking
                 }}
               >
                 <FiFileText size={24} color="var(--blue-9)" />
               </Box>
-              <Box style={{ flex: 1 }}>
-                <Text size="3" weight="bold">
+              
+              <Box style={{ flex: 1, minWidth: 0 }}>
+                <Text size="2" weight="bold" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {document.document_name || document.file_name}
                 </Text>
-                <Flex gap="2" mt="2" wrap="wrap">
+                <Flex gap="2" mt="1" wrap="wrap">
                   <Badge size="1" variant="soft" color="blue">
                     <Flex align="center" gap="1">
                       <FiHash size={10} />
@@ -177,48 +184,69 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
           </Card>
         </Box>
 
-        <Separator size="4" />
-
-        {/* File Information */}
-        <Box p="4">
-          <Text size="2" weight="medium" mb="3">Новая верси документа</Text>
+        {/* New File Information */}
+        <Box p="4" pt="0">
+          <Text size="2" weight="medium" mb="1">Новая версия документа</Text>
           
           <Card size="1" variant="surface">
-            <Box>
-              <Flex gap="3" align="center">
-                <Box 
-                  style={{ 
-                    width: 40, 
-                    height: 40, 
-                    backgroundColor: 'var(--green-3)', 
-                    borderRadius: 'var(--radius-2)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '20px'
-                  }}
-                >
-                  📄
-                </Box>
-                <Box style={{ flex: 1 }}>
-                  <Text size="2" weight="bold">
-                    {file.name}
-                  </Text>
-                  <Flex align="center" gap="2" mt="1">
-                    <Badge size="1" variant="soft" color="gray">
-                      {file.type?.split('/')[1]?.toUpperCase() || 'Unknown'}
-                    </Badge>
-                    <Badge size="1" variant="soft" color="gray">
-                      {formatFileSize(file.size)}
-                    </Badge>
-                  </Flex>
-                </Box>
-              </Flex>
-            </Box>
+            <Flex gap="3" align="center">
+              {/* Icon Box - Matched to first card (48x48) */}
+              <Box 
+                style={{ 
+                  width: 48, 
+                  height: 48, 
+                  backgroundColor: 'var(--green-3)', 
+                  borderRadius: 'var(--radius-2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0 // Prevent shrinking
+                }}
+              >
+                {/* Changed Emoji to Icon for consistency */}
+                <FiUpload size={24} color="var(--green-9)" />
+              </Box>
+
+              <Box style={{ flex: 1, minWidth: 0 }}>
+                <Text size="2" weight="bold" style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {file.name}
+                </Text>
+                {/* Matched Badge structure */}
+                <Flex gap="2" mt="1" wrap="wrap">
+                  <Badge size="1" variant="soft" color="gray">
+                    {file.type?.split('/')[1]?.toUpperCase() || 'Unknown'}
+                  </Badge>
+                  <Badge size="1" variant="soft" color="gray">
+                    {formatFileSize(file.size)}
+                  </Badge>
+                </Flex>
+              </Box>
+            </Flex>
           </Card>
         </Box>
-
         <Separator size="4" />
+
+        {/* Info Message */}
+        <Box p="4">
+          <Flex 
+            gap="2"
+            align="center"
+            p="3" 
+            style={{ 
+              backgroundColor: 'var(--blue-3)', 
+              borderRadius: 'var(--radius-2)',
+              border: '1px solid var(--blue-6)'
+            }}
+          >
+            <FiAlertCircle size={18} color="var(--blue-9)" style={{ flexShrink: 0, marginTop: 2 }} />
+            <Box>
+              <Text size="1" style={{ color: 'var(--blue-10)' }}>
+                Проверьте документ перед загрузкой.
+                Предыдущая версия сохранится в истории документа.
+              </Text>
+            </Box>
+          </Flex>
+        </Box>
 
         {/* Change Reason */}
         <Box p="4">
@@ -248,27 +276,6 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
           </Flex>
         </Box>
 
-        {/* Info Message */}
-        <Box px="4" pb="2">
-          <Flex 
-            gap="2"
-            align="center"
-            p="3" 
-            style={{ 
-              backgroundColor: 'var(--blue-3)', 
-              borderRadius: 'var(--radius-2)',
-              border: '1px solid var(--blue-6)'
-            }}
-          >
-            <FiAlertCircle size={18} color="var(--blue-9)" style={{ flexShrink: 0, marginTop: 2 }} />
-            <Box>
-              <Text size="1" style={{ color: 'var(--blue-10)' }} mt="1">
-                Проверьте документ перед загрузкой.
-                Предыдущая версия сохранится в истории документа.
-              </Text>
-            </Box>
-          </Flex>
-        </Box>
 
         <Separator size="4" />
 

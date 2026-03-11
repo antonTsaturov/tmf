@@ -19,6 +19,8 @@ export const useDocumentNewVersion = () => {
       changeReason?: string;
       resetStatusToDraft?: boolean;
       customFileName?: string;
+      siteId?: string;
+      studyId: string; 
     }
   ): Promise<NewVersionUploadResult> => {
     setIsUploading(true);
@@ -41,6 +43,9 @@ export const useDocumentNewVersion = () => {
       formData.append('documentName', options.customFileName ?? file.name.replace(/\.[^/.]+$/, ''));
       formData.append('fileSize', String(file.size));
       formData.append('fileType', file.type);
+      formData.append('siteId', String(options.siteId));
+      formData.append('studyId', String(options.studyId));
+      
       if (options.changeReason) {
         formData.append('changeReason', options.changeReason);
       }

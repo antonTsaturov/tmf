@@ -25,7 +25,7 @@ function getDocumentStatusFromReview(reviewStatus: string | null): DocumentWorkF
 }
 
 // Измененный хендлер: принимает ctx (где уже лежит body) и id
-async function applyDocumentActionHandler(
+export async function applyDocumentActionHandler(
   request: NextRequest, 
   ctx: AuditContext, 
 ) {
@@ -330,44 +330,44 @@ export const POST = withAudit(
     entityType: 'document' as AuditEntity,
 
 
-  getEntityId: (ctx, req) => {
-    const parts = req.nextUrl.pathname.split('/');
-    return parts[parts.indexOf('documents') + 1] || '0';
-  },
+    getEntityId: (ctx, req) => {
+      const parts = req.nextUrl.pathname.split('/');
+      return parts[parts.indexOf('documents') + 1] || '0';
+    },
 
-  getStudyId: (ctx) => {
-    return String(ctx.body?.studyId ?? ctx.body?._auditData?.studyId ?? '');
-  },
+    getStudyId: (ctx) => {
+      return String(ctx.body?.studyId ?? ctx.body?._auditData?.studyId ?? '');
+    },
 
-  getSiteId: (ctx) => {
-    return String(ctx.body?.siteId ?? ctx.body?._auditData?.siteId ?? '');
-  },
+    getSiteId: (ctx) => {
+      return String(ctx.body?.siteId ?? ctx.body?._auditData?.siteId ?? '');
+    },
 
-  // Мидлвар вызывает getOldValue ДО хендлера. Это идеально для получения состояния из БД.
-  getOldValue: async (ctx, req) => {
-    const parts = req.nextUrl.pathname.split('/');
-    const id = parts[parts.indexOf('documents') + 1];
-    const client = await connectDB();
-    try {
-      const { rows } = await client.query(
-        'SELECT review_status FROM document_version dv JOIN document d ON d.current_version_id = dv.id WHERE d.id = $1', 
-        [id]
-      );
-      return rows[0] || null;
-    } finally {
-      client.release();
+    // Мидлвар вызывает getOldValue ДО хендлера для получения состояния из БД.
+    getOldValue: async (ctx, req) => {
+      const parts = req.nextUrl.pathname.split('/');
+      const id = parts[parts.indexOf('documents') + 1];
+      const client = await connectDB();
+      try {
+        const { rows } = await client.query(
+          'SELECT review_status FROM document_version dv JOIN document d ON d.current_version_id = dv.id WHERE d.id = $1', 
+          [id]
+        );
+        return rows[0] || null;
+      } finally {
+        client.release();
+      }
+    },
+
+    // Мидлвар вызывает это ПОСЛЕ хендлера. Берем данные из того, что пришло в запросе
+    getNewValue: (ctx) => {
+      return {
+        action: ctx.body?.action,
+        comment: ctx.body?.comment,
+        userId: ctx.body?.userId,
+        timestamp: new Date().toISOString()
+      };
     }
-  },
-
-  // Мидлвар вызывает это ПОСЛЕ хендлера. Берем данные из того, что пришло в запросе
-  getNewValue: (ctx) => {
-    return {
-      action: ctx.body?.action,
-      comment: ctx.body?.comment,
-      userId: ctx.body?.userId,
-      timestamp: new Date().toISOString()
-    };
-  }
   },
 
   applyDocumentActionHandler

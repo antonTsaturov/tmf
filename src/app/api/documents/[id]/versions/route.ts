@@ -5,9 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/yc-iam';
 import { getDocumentVersionS3Key } from '@/lib/s3-path';
-import { withAudit } from '@/lib/audit/audit.middleware';
+import { AuditContext, withAudit } from '@/lib/audit/audit.middleware';
 import { AuditAction, AuditEntity } from '@/types/types';
 import { AuditConfig } from '@/lib/audit/audit.middleware';
+import { applyDocumentActionHandler } from '../actions/route';
 
 function encodeMetadata(value: string): string {
   return Buffer.from(value).toString('base64');
@@ -147,16 +148,20 @@ export async function GET(
 }
 
 // POST /api/documents/:id/versions - загрузка новой версии
-async function uploadVersionHandler(
+async function uploadNewVersionHandler(
   request: NextRequest,
-  documentId: string,
-  preloadedData?: any
+  ctx: AuditContext
 ) {
-  const id = documentId;
+
+  const parts = request.nextUrl.pathname.split('/');
+  const id =  parts[parts.indexOf('documents') + 1] || '0';
+
+  const formData = ctx.formData!;
+  //const id = documentId;
   const client = await connectDB();
 
   try {
-    const formData = preloadedData?.formData || (await request.formData());
+    //const formData = preloadedData?.formData || (await request.formData());
     const file = formData.get('file') as File;
     const changeReason = (formData.get('changeReason') as string) || undefined;
     const uploadedBy = formData.get('uploadedBy') as string;
@@ -276,6 +281,13 @@ async function uploadVersionHandler(
       ]
     );
 
+    // Сохраняем информацию о новой версии в ctx чтобы получить ее для аудита
+    ctx.auditData = {
+      document_number: newVersion.document_number,
+      version_id: newVersion.id,
+      change_reason: newVersion.change_reason
+    };
+
     // Обновляем current_version_id в документе
     await client.query(
       `UPDATE document SET current_version_id = $1 WHERE id = $2`,
@@ -306,6 +318,7 @@ async function uploadVersionHandler(
       LEFT JOIN document_version lv ON d.current_version_id = lv.id
       WHERE d.id = $1
     `, [id]);
+    
 
     return NextResponse.json(
       {
@@ -331,29 +344,67 @@ async function uploadVersionHandler(
   }
 }
 
-export const POST = async (
-  request: NextRequest,
-  ctx: { params: Promise<{ id: string }> }
-) => {
-  const { id } = await ctx.params;
-  let formData: FormData | null = null;
-  try {
-    formData = await request.formData();
-  } catch {
-    // ignore
-  }
-
-  const auditConfig: AuditConfig = {
+export const POST = withAudit(
+  {
     action: 'UPDATE' as AuditAction,
     entityType: 'document' as AuditEntity,
-    getEntityId: () => 0,
-    getStudyId: (_req, body?: any) => (body?.studyId ? parseInt(body.studyId) : 0),
-    getSiteId: (_req, body?: any) => body?.siteId ?? '',
-    getNewValue: (_req, body?: any) => body || null,
-    getOldValue: async () => null,
-  };
 
-  return withAudit(auditConfig)(request, async (preloadedData?: any) => {
-    return uploadVersionHandler(request, id, { formData, ...preloadedData });
-  });
-};
+
+    getEntityId: (ctx, req) => {
+      const parts = req.nextUrl.pathname.split('/');
+      return parts[parts.indexOf('documents') + 1] || '0';
+    },
+
+    getStudyId: (ctx) => {
+      return String(ctx.formData?.get('studyId') ?? '');
+    },
+
+    getSiteId: (ctx) => {
+      return String(ctx.formData?.get('siteId') ?? '');
+    },
+
+    // Мидлвар вызывает getOldValue ДО хендлера для получения состояния из БД.
+    getOldValue: async (ctx, req) => {
+      const parts = req.nextUrl.pathname.split('/');
+      const id = parts[parts.indexOf('documents') + 1];
+      const client = await connectDB();
+      try {
+        const { rows } = await client.query(
+        `SELECT 
+          dv.id,
+          dv.document_number,
+          dv.document_name,
+          dv.file_name,
+          dv.file_type,
+          dv.file_size,
+          dv.checksum,
+          dv.review_status,
+          dv.change_reason,
+          dv.uploaded_at,
+          dv.uploaded_by,
+          u.name as uploaded_by_name,
+          u.email as uploaded_by_email
+        FROM document_version dv 
+        JOIN document d ON d.current_version_id = dv.id 
+        LEFT JOIN users u ON dv.uploaded_by = u.id
+        WHERE d.id = $1`, 
+        [id]
+      );
+        return rows[0] || null;
+      } finally {
+        client.release();
+      }
+    },
+
+    // Мидлвар вызывает это ПОСЛЕ хендлера. Берем данные из того, что пришло в запросе
+    getNewValue: (ctx) => {
+      return {
+        ...ctx.auditData,
+        timestamp: new Date().toISOString()
+      };
+    }
+  },
+
+  uploadNewVersionHandler
+
+);

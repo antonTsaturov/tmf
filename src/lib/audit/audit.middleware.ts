@@ -185,7 +185,16 @@ import { AuditAction, AuditEntity } from "@/types/types";
 
 export interface AuditContext {
   body?: any;
-  formData?: FormData;
+  formData?: any;
+  auditData?: any;
+  uploadedBy?: string;
+  fileName?: string;
+  documentName?: string;
+  fileSize?: string;
+  fileType?: string;
+  siteId?: string;
+  studyId?: string;
+  changeReason?: string;
 }
 
 export interface AuditConfig {
