@@ -56,6 +56,8 @@ import DocumentDetails from '@/components/DocumentDetails';
 import PDFViewer from '@/components/PDFViewer';
 import '../../styles/MyReviews.css';
 import { FileIcon } from 'react-file-icon';
+import { useFolderNameByMap } from '@/hooks/useFolderName';
+import { Study } from '@/types/types';
 
 
 interface PaginationInfo {
@@ -67,6 +69,7 @@ interface PaginationInfo {
 
 
 export default function MyReviewsPage() {
+  const { getFolderNameFromStudiesMap } = useFolderNameByMap();
   const { addNotification } = useNotification();
   const { context, updateContext } = useContext(MainContext)!;
   const { onDocumentUpdatedId, selectedDocument, isRightFrameOpen } = context;
@@ -75,7 +78,6 @@ export default function MyReviewsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  //const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState<PaginationInfo>({
     total: 0,
@@ -178,51 +180,51 @@ export default function MyReviewsPage() {
   
 
 
-type DocumentMode = 'site' | 'general';
+  type DocumentMode = 'site' | 'general';
 
-// Функция фильтрации
-const filterDocuments = (
-  docs: Document[], 
-  query: string, 
-  studyId?: string, 
-  siteId?: string, 
-  folderId?: string,
-  docMode?: DocumentMode
-) => {
-  return docs.filter(doc => {
-    //  Фильтр по поисковому запросу
-    const matchesSearch = !query.trim() || 
-      doc.document_name.toLowerCase().includes(query.toLowerCase());
-    
-    //  Фильтр по исследованию
-    const matchesStudy = !studyId || studyId === "all" || 
-      doc.study_id.toString() === studyId;
-    
-    //  Фильтр по центру с учётом docMode
-    const matchesSite = (() => {
-      if (docMode === 'general') {
-        // Только General документы (site_id === null)
-        return doc.site_id === null;
-      }
-      if (docMode === 'site') {
-        // Только Site-level документы (site_id !== null)
-        if (!siteId || siteId === "all") {
-          return doc.site_id !== null; // все site-level
+  // Функция фильтрации
+  const filterDocuments = (
+    docs: Document[], 
+    query: string, 
+    studyId?: string, 
+    siteId?: string, 
+    folderId?: string,
+    docMode?: DocumentMode
+  ) => {
+    return docs.filter(doc => {
+      //  Фильтр по поисковому запросу
+      const matchesSearch = !query.trim() || 
+        doc.document_name.toLowerCase().includes(query.toLowerCase());
+      
+      //  Фильтр по исследованию
+      const matchesStudy = !studyId || studyId === "all" || 
+        doc.study_id.toString() === studyId;
+      
+      //  Фильтр по центру с учётом docMode
+      const matchesSite = (() => {
+        if (docMode === 'general') {
+          // Только General документы (site_id === null)
+          return doc.site_id === null;
         }
-        // Конкретный центр: site_id !== null + совпадение по ID
-        return doc.site_id !== null && doc.site_id.toString() === siteId;
-      }
-      // Если docMode не задан — не фильтруем по этому критерию
-      return true;
-    })();
+        if (docMode === 'site') {
+          // Только Site-level документы (site_id !== null)
+          if (!siteId || siteId === "all") {
+            return doc.site_id !== null; // все site-level
+          }
+          // Конкретный центр: site_id !== null + совпадение по ID
+          return doc.site_id !== null && doc.site_id.toString() === siteId;
+        }
+        // Если docMode не задан — не фильтруем по этому критерию
+        return true;
+      })();
 
-    // 📁 Фильтр по папке
-    const matchesFolder = !folderId || folderId === "all" || 
-      doc.folder_id?.toString() === folderId;
-    
-    return matchesSearch && matchesStudy && matchesSite && matchesFolder;
-  });
-};
+      // 📁 Фильтр по папке
+      const matchesFolder = !folderId || folderId === "all" || 
+        doc.folder_id?.toString() === folderId;
+      
+      return matchesSearch && matchesStudy && matchesSite && matchesFolder;
+    });
+  };
 
   const filteredDocuments = useMemo(() => {
     return filterDocuments(
@@ -514,7 +516,13 @@ const filterDocuments = (
                             className={`${'hoverable-row'} ${selectedDocument?.id === doc.id ? '--selected' : ''}`}
                             key={doc.id}
                             onClick={()=> {
-                              updateContext({selectedDocument: doc, isRightFrameOpen: true})
+                              
+                              const study = studies.get(doc.study_id);
+                              updateContext({
+                                selectedDocument: doc,
+                                isRightFrameOpen: true, 
+                                currentStudy: study
+                              })
                             }}
                             style={{ 
                               cursor: 'pointer',
@@ -567,7 +575,7 @@ const filterDocuments = (
                             {!isRightFrameOpen && (<Table.Cell style={{ width: '15%' }}>
                               <Flex align="center" gap="2">
                                 <FiFolder size={14} color="var(--gray-9)" />
-                                <Text size="2" style={{ wordBreak: 'break-word' }}>{doc.folder_name}</Text>
+                                <Text size="2" style={{ wordBreak: 'break-word' }}>{getFolderNameFromStudiesMap(studies, doc.study_id, doc.folder_id)}</Text>
                               </Flex>
                             </Table.Cell>)}
                             

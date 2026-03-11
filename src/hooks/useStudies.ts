@@ -35,6 +35,7 @@ export function useStudies() {
       setLoading(false);
       isFetching.current = false; // Разблокируем после завершения
     }
+    
   }, [user?.id, studies.length]); // Следим за длиной массива
 
 

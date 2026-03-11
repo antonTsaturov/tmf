@@ -16,6 +16,7 @@ import {
   Spinner,
 } from '@radix-ui/themes';
 import { FiDownload, FiInfo, FiUser } from 'react-icons/fi';
+import { useFolderName } from '@/hooks/useFolderName';
 
 interface DocumentVersionRow {
   id: string;
@@ -59,6 +60,7 @@ interface DocumentVersionRow {
 }
 
 const DocumentDetails: React.FC = () => {
+  const getFolderName = useFolderName();
   const mainContext = useContext(MainContext);
   if (!mainContext) return null;
   const { context, updateContext } = mainContext;
@@ -157,7 +159,7 @@ const DocumentDetails: React.FC = () => {
   const doc = selectedDocument as Document & {
     study_id?: number;
     site_id?: string;
-    folder_id?: string;
+    folder_id: string;
     creator?: { id: string; name: string; email: string; role?: string[] } | null;
     deleter?: { id: string; name: string; email: string } | null;
     restorer?: { id: string; name: string; email: string } | null;
@@ -204,7 +206,7 @@ const DocumentDetails: React.FC = () => {
             </div>
             <div className="metadata-row">
               <dt>Папка</dt>
-              <dd>{doc.folder_name || '—'}</dd>
+              <dd>{getFolderName(doc.folder_id) || '—'}</dd>
             </div>
             <div className="metadata-row">
               <dt>TMF Zone</dt>

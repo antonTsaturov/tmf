@@ -1,13 +1,14 @@
 // hooks/useStudiesAndSites.ts
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/wrappers/AuthProvider';
+import { Study } from '@/types/types';
 
-interface Study {
-  id: number;
-  title: string;
-  protocol: string;
-  status: string;
-}
+// interface Study {
+//   id: number;
+//   title: string;
+//   protocol: string;
+//   status: string;
+// }
 
 interface Site {
   id: string | number;

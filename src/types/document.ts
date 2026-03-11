@@ -69,7 +69,7 @@ export interface Document {
   checksum: string;
   
   // Дополнительные поля для овместимости с PendingDocument
-  folder_id?: string;
+  folder_id: string;
   review_status?: string;
   review_submitted_at?: string;
   review_submitted_by?: string;
