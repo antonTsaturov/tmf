@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db/index';
 import { AuditService } from '@/lib/audit/audit.service';
-import { DocumentLifeCycleStatus } from '@/types/document';
+import { DocumentLifeCycleStatus } from '@/types/document.status';
 
 export async function GET(request: NextRequest) {
   const client = await connectDB();

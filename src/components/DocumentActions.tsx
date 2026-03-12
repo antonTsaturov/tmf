@@ -125,7 +125,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const { addNotification } = useNotification();
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
   const { context, updateContext } = mainContext;
-  const { selectedFolder, selectedDocument, currentSite, currentLevel} = context;
+  const { selectedFolder, selectedDocument, currentSite, currentLevel, currentStudy} = context;
   const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
   const { user } = useAuth();
   const { isDeleting, isRestoring, error } = useDocumentDelete();
@@ -137,7 +137,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     if (selectedDocument !== prevSelectedDocumentRef.current) {
       prevSelectedDocumentRef.current = selectedDocument;
     }
-  }, [selectedDocument]);  
+  }, [selectedDocument]);
 
 // Обработка ошибок удаления через глобальные уведомления
   useEffect(() => {
@@ -146,7 +146,12 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     }
   }, [error, addNotification]);
 
-  const availableActions = getAvailableDocumentActions(selectedDocument, user?.role as unknown as UserRole[]);
+  const availableActions = getAvailableDocumentActions(
+    selectedDocument,
+    user?.role as unknown as UserRole[],
+    currentSite?.status,
+    currentStudy?.status
+  );
 
   const handleCreateDocument = () => {
     handleFileSelect();

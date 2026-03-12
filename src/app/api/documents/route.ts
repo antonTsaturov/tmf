@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDB, createTable } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { v4 as uuidv4 } from 'uuid';
-import { DocumentLifeCycleStatus } from '@/types/document';
+import { DocumentLifeCycleStatus } from '@/types/document.status';
 
 // Получение документов при просмотре содержимого папки
 export async function GET(request: NextRequest) {

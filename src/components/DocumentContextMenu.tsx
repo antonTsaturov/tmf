@@ -1,7 +1,7 @@
 // src/components/DocumentContextMenu.tsx
 
 import React, { useContext } from 'react';
-import { ContextMenu } from '@radix-ui/themes'; 
+import { ContextMenu } from '@radix-ui/themes';
 import { DocumentAction, Document } from '@/types/document';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
@@ -18,15 +18,17 @@ interface DocumentContextMenuProps {
 
 const DocumentContextMenu = ({ children, onAction , document}: DocumentContextMenuProps) => {
   const { user } = useAuth();
-  const { updateContext } = useContext(MainContext)!;
+  const { updateContext, context } = useContext(MainContext)!;
 
   const handleRightClick = () => {
     updateContext({ selectedDocument: document });
   };
-  
+
   const availableActions = getAvailableDocumentActions(
-    document, 
-    (user?.role as UserRole[]) || []
+    document,
+    (user?.role as UserRole[]) || [],
+    context.currentSite?.status,
+    context.currentStudy?.status
   ).filter(a => a !== DocumentAction.CREATE_DOCUMENT);
 
   return (
