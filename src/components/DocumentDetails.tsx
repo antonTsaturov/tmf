@@ -2,7 +2,8 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { Document, DocumentLifeCycleStatus } from '@/types/document';
+import { Document } from '@/types/document';
+import { DocumentLifeCycleStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
 import { 

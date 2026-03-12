@@ -1,19 +1,16 @@
-export enum Colors {
-  GRAY = '#9E9E9E',
-  BLUE = '#48abfc',
-  GREEN = '#3dce4a',
-  YELLOW = '#f9c426',
-  RED = '#c0392b'
-}
+// Re-exports for backward compatibility
+export { UserStatus, UserRole, ROLE_CONFIG } from './user';
+export type { UserPermissions, StudyUser, StudyUserWithPermissions, OrganisationType } from './user';
+export { StudyStatus } from './study';
+export type { Study } from './study';
+export { SiteStatus } from './site';
+export type { StudySite } from './site';
+export { Colors } from '@/lib/constants';
 
-export enum StudyStatus {
-  PLANNED = 'planned',
-  ONGOING = 'ongoing',
-  COMPLETED = 'completed',
-  TERMINATED = 'terminated',
-  ARCHIVED = 'archived'
-}
+// Import for internal use
+//import type { UserRole as UserRoleType } from './user';
 
+// Folder types (kept here - shared between document and site)
 export enum FolderType {
   ROOT = 'root',
   FOLDER = 'folder',
@@ -32,6 +29,10 @@ export enum FolderViewLevel {
   ROOT = 'root'
 };
 
+export enum ViewLevel {
+  SITE = 'site',
+  GENERAL = 'general'
+};
 
 export interface Folder {
   id: string;
@@ -43,182 +44,3 @@ export interface Folder {
   shouldEdit: boolean;
 }
 
-export enum SiteStatus {
-  PLANNED = 'planned',
-  OPENED = 'opened',
-  CLOSED = 'closed',
-}
-
-export interface AuditFilters {
-  startDate?: string;
-  endDate?: string;
-  userId?: string;
-  userEmail?: string;
-  action?: AuditAction;
-  entityType?: AuditEntity;
-  entityId?: string;
-  status?: AuditStatus;
-  siteId?: string;
-  studyId?: string;
-  search?: string;
-}
-
-export interface AuditPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
-
-export interface AuditResponse {
-  logs: AuditLogEntry[];
-  pagination: AuditPagination;
-}
-
-export type AuditAction = 
-  | 'CREATE'
-  | 'READ'
-  | 'UPDATE'
-  | 'DELETE'
-  | 'LOGIN'
-  | 'LOGOUT'
-  | 'LOGIN_FAILED'
-  | 'EXPORT'
-  | 'APPROVE'
-  | 'REJECT'
-  | 'ARCHIVE'
-  | 'SUBMIT';
-
-export type AuditEntity = 'document' | 'document_version' | 'user' | 'site' | 'study' | 'audit' ;
-
-export type AuditStatus = 'SUCCESS' | 'FAILURE';
-
-export interface AuditLogEntry {
-  audit_id: string; // UUID
-  created_at: string;
-  user_id: string;
-  user_email: string;
-  user_role: UserRole[];
-  action: AuditAction;
-  entity_type: AuditEntity;
-  entity_id: string;
-  old_value: Record<string, unknown> | null;
-  new_value: Record<string, unknown> | null;
-  ip_address: string;
-  user_agent: string;
-  session_id: string;
-  status: AuditStatus;
-  error_message: string;
-  reason?: string;
-  site_id: string | number;
-  study_id: string | number;
-}
-
-export interface StudySite {
-  id: number;
-  study_id: number;
-  study_protocol: string;
-  name: string;
-  number: number;
-  country: string;
-  city: string;
-  principal_investigator: string;
-  status: SiteStatus;
-}
-
-
-export interface Study {
-  id: number;
-  title: string;
-  protocol: string;
-  sponsor: string;
-  cro: string;
-  countries: string[];
-  status: StudyStatus;
-  users: any[] | null;
-  total_documents: number | null;
-  folders_structure: Folder | null;
-  audit_trail?: any[] | null;
-}
-
-export interface StudyUser {
-  id:   string;
-  email: string;
-  password_hash: string;
-  name: string;
-  title?: string;
-  organisation: OrganisationType;
-  role: UserRole[];
-  status: UserStatus;
-  permissions: UserPermissions;
-  assigned_study_id: number[];
-  assigned_site_id: number[];
-  last_login?: Date;
-  password_changed_at?: Date;
-  failed_login_attempts: number;
-  created_at: string;
-}
-
-export type OrganisationType =  'CRO' | 'SPONSOR' | 'SITE';
-
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  PENDING = 'pending',
-  TERMINATED = 'terminated'
-}
-
-export enum UserRole {
-  ADMIN = 'admin',
-  STUDY_MANAGER = 'study_manager',
-  DATA_MANAGER = 'data_manager',
-  MONITOR = 'monitor',
-  INVESTIGATOR = 'investigator',
-  COORDINATOR = 'coordinator',
-  AUDITOR = 'auditor',
-  QUALITY_ASSURANCE = 'qa',
-  READ_ONLY = 'read_only',
-}
-
-export const ROLE_CONFIG: Record<UserRole, { label: string; color: string }> = {
-  [UserRole.ADMIN]: { label: 'Administrator', color: '#e64980' },
-  [UserRole.STUDY_MANAGER]: { label: 'Study Manager', color: '#228be6' },
-  [UserRole.DATA_MANAGER]: { label: 'Data Manager', color: '#20c997' },
-  [UserRole.MONITOR]: { label: 'Monitor', color: '#fd7e14' },
-  [UserRole.INVESTIGATOR]: { label: 'Investigator', color: '#be4bdb' },
-  [UserRole.COORDINATOR]: { label: 'Coordinator', color: '#15aabf' },
-  [UserRole.AUDITOR]: { label: 'Auditor', color: '#fab005' },
-  [UserRole.QUALITY_ASSURANCE]: { label: 'Quality Assurance', color: '#40c057' },
-  [UserRole.READ_ONLY]: { label: 'Read Only', color: '#868e96' },
-};
-
-
-export interface UserPermissions {
-  canViewDocument: boolean;
-  canUploadDocument: boolean;
-  canEditDocument: boolean;
-  canDeleteDocument: boolean;
-  canReviewDocument: boolean;
-  canApproveDocument: boolean;
-  canRejectDocument: boolean;
-  canLockDocument: boolean;
-  canArchiveDocument: boolean;
-  canExportDocument: boolean;
-  canRestoreDocument: boolean;
-  canGenerateReports: boolean;
-
-  canManageUsers: boolean;
-  canManageStudy: boolean;
-  canManageSite: boolean;
-  canFolderStructure: boolean;
-  canChangeUserPermissions: boolean;
-}
-
-export interface StudyUserWithPermissions extends StudyUser {
-  permissions: UserPermissions;
-}
-
-export enum ViewLevel {
-  SITE = 'site',
-  GENERAL = 'general'
-};

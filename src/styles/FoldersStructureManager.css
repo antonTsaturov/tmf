@@ -60,7 +60,7 @@ display: grid;
 .folder-header {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 4px 10px;
   gap: 8px;
   justify-content: space-between;
 }
@@ -268,7 +268,7 @@ display: grid;
 .folder-item.root .folder-name {
   font-weight: 700;
   color: #1864ab;
-  font-size: 18px;
+  font-size: 14px;
 }
 
 .folder-item.folder .folder-name {

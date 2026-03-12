@@ -1,3 +1,6 @@
+
+import { DocumentWorkFlowStatus } from '@/types/document.status';
+
 export enum DocumentAction {
   CREATE_DOCUMENT = 'create_document',
   SUBMIT_FOR_REVIEW = 'submit_for_review',
@@ -11,20 +14,6 @@ export enum DocumentAction {
   VIEW = 'view',
   DOWNLOAD = 'download',
   EDIT = 'edit'
-}
-
-export enum DocumentWorkFlowStatus {
-  DRAFT = 'draft',
-  IN_REVIEW = 'in_review',
-  APPROVED = 'approved',
-  ARCHIVED = 'archived',  // Удалить позднее, use DocumentLifeCycleStatus
-  DELETED = 'deleted' // Удалить позднее, use DocumentLifeCycleStatus
-}
-
-export enum DocumentLifeCycleStatus {
-  ACTIVE = 'active',
-  ARCHIVED = 'archived',
-  DELETED = 'deleted'
 }
 
 export type DocumentType = 'pdf';
@@ -102,7 +91,7 @@ export interface DocumentVersion {
   file_name: string;
   file_path: string;
   file_type: DocumentType;
-  file_size: string; 
+  file_size: string;
   checksum: string;
   uploaded_by: string; // UUID
   uploaded_at: string;
@@ -114,36 +103,4 @@ export interface DocumentVersion {
   reviewed_by: string;
   reviewed_at: string;
   review_comment: string;
-}
-
-const BASE_ACTIONS: DocumentAction[] = [
-  DocumentAction.CREATE_DOCUMENT,
-  DocumentAction.VIEW,
-  DocumentAction.DOWNLOAD,
-]
-
-// Используется в DocumentAction и app/api/documents/[id]/actions/route.ts
-export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
-  draft: [
-    ...BASE_ACTIONS,
-    DocumentAction.SUBMIT_FOR_REVIEW,
-    DocumentAction.UPLOAD_NEW_VERSION,
-    DocumentAction.EDIT,
-    DocumentAction.SOFT_DELETE
-  ],
-  in_review: [
-    ...BASE_ACTIONS,
-    DocumentAction.APPROVE,
-    DocumentAction.REJECT,
-  ],
-  approved: [
-    ...BASE_ACTIONS,
-    DocumentAction.ARCHIVE
-  ],
-  archived: [
-    ...BASE_ACTIONS,
-  ],
-  deleted: [
-    ...BASE_ACTIONS,
-  ]
 }

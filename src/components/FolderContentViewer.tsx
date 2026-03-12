@@ -1,7 +1,8 @@
 // components/FolderContentViewer.tsx
 import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { Document, DocumentAction, DocumentLifeCycleStatus, DocumentType, DocumentWorkFlowStatus } from "@/types/document";
+import { Document, DocumentAction } from "@/types/document";
+
 import FilePreviewPanel from "./panels/FilePreviewPanel";
 import NewVersionUploadPanel from "./panels/NewVersionUploadPanel";
 import SubmitToReviewPanel from "./panels/SubmitToReviewPanel";
@@ -44,6 +45,7 @@ import React from "react";
 import DragAndDropOverlay from "./DragAndDropOverlay";
 import { useUpload } from "@/wrappers/UploadContext";
 import EditDocumentTitlePanel from "./panels/EditDocumentTitlePanel";
+import { DocumentLifeCycleStatus } from "@/types/document.status";
 
 
 interface FolderContentViewerProps {

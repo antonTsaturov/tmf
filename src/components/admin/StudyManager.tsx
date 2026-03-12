@@ -227,7 +227,7 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
             ) : (
               <div className="display-details">
                 <div className="study-header">
-                  <h4 className="study-title">{study.title}</h4>
+                  <h5 className="study-title">{study.title}</h5>
                   <span className="study-protocol">{study.protocol}</span>
                 </div>
                 <div className="study-meta">
@@ -580,12 +580,6 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
       <div className="structure-preview">
         <div className="structure-header">
           <h3>Current Studies (JSON):</h3>
-          <button 
-            onClick={() => setStudyObject([])}
-            className="clear-button"
-          >
-            Clear Preview
-          </button>
         </div>
         {studyObject.length > 0 && (
           <pre className="json-preview">

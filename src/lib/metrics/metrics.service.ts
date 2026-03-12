@@ -1,5 +1,5 @@
 import * as repo from "./metrics.repository"
-import { MetricsDashboard } from "@/types/metrics.types"
+import { MetricsDashboard } from "@/types/metrics"
 
 export async function getStudyDashboard(
   studyId:number

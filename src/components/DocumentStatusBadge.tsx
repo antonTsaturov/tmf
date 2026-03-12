@@ -1,5 +1,5 @@
 import '../styles/DocumentStatusBadge.css'
-import { Colors } from '@/types/types';
+import { Colors } from '@/lib/constants';
 
 
 interface DocumentStatusBadgeProps {

@@ -1,7 +1,9 @@
 // @/domain/document/document.logic.ts (или аналогичный путь)
-import { Document, DocumentAction, DocumentWorkFlowStatus, Transitions as transitions } from '@/types/document';
+import { Document, DocumentAction } from '@/types/document';
+import { Transitions as transitions } from '@/domain/document/document.transitions';
 import { UserRole } from '@/types/types';
 import { ActionRoleMap } from '@/domain/document/document.policy';
+import { DocumentWorkFlowStatus } from '@/types/document.status';
 
 // Функция проверки прав для конкретного действия
 const hasPermissionForAction = (action: DocumentAction, userRoles: UserRole[]): boolean => {

@@ -4,7 +4,7 @@ import { connectDB } from '@/lib/db/index';
 import { DocumentAction, DocumentWorkFlowStatus, Transitions } from '@/types/document';
 import { ActionRoleMap } from '@/domain/document/document.policy';
 import { UserRole, AuditAction, AuditEntity } from '@/types/types';
-import { withAudit, AuditContext, AuditConfig } from '@/lib/audit/audit.middleware';
+import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { AuditService } from '@/lib/audit/audit.service';
 
 interface ActionRequest {

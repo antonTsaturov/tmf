@@ -1,9 +1,9 @@
 // components/DocumentStatusIndicator.tsx
 import React, { useContext } from 'react';
 import { Flex, Tooltip, Box } from '@radix-ui/themes';
-import { DocumentWorkFlowStatus, DocumentLifeCycleStatus } from '@/types/document';
+import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { IoIosCheckmark } from "react-icons/io";
-import { Colors } from '@/types/types';
+import { Colors } from '@/lib/constants';
 import { MainContext } from '@/wrappers/MainContext';
 
 interface DocumentStatusIndicatorProps {

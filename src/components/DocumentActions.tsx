@@ -22,13 +22,12 @@ import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from '@/types/types';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
-import { UserRole, Colors } from '@/types/types';
+import { UserRole } from '@/types/types';
 import { Document } from '@/types/document';
 import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
-import { useUpload } from '@/wrappers/UploadContext';
 
 interface DocumentActionsProps {
   onAction?: (action: DocumentAction) => void;
@@ -37,14 +36,16 @@ interface DocumentActionsProps {
   onDocumentRestored?: () => void;
 }
 
-// Маппинг действий на иконки, текст и вариант кнопки
-export const actionConfig: Partial<Record<DocumentAction, { 
+interface ActionConfigProps {
   icon: React.ReactNode; 
   label: string; 
   color?: string;
   variant?: 'solid' | 'soft' | 'outline' | 'ghost';
   highContrast?: boolean;
-}>> = {
+}
+
+// Маппинг действий на иконки, текст и вариант кнопки
+export const actionConfig: Partial<Record<DocumentAction, ActionConfigProps>> = {
   [DocumentAction.CREATE_DOCUMENT]: { 
     icon: <FiFilePlus />, 
     label: 'Создать',
@@ -59,7 +60,7 @@ export const actionConfig: Partial<Record<DocumentAction, {
   },
   [DocumentAction.APPROVE]: { 
     icon: <FiCheckCircle />, 
-    label: 'Утвердить',
+    label: 'Проверить',
     variant: 'solid',
     //color: Colors.GREEN
   },
@@ -86,7 +87,7 @@ export const actionConfig: Partial<Record<DocumentAction, {
     variant: 'solid',
     //color: Colors.RED
   },
-  [DocumentAction.RESTORE]: { // Не используется
+  [DocumentAction.RESTORE]: { //Admin only
     icon: <FiRefreshCw />, 
     label: 'Восстановить',
     variant: 'solid'
@@ -112,7 +113,6 @@ export const actionConfig: Partial<Record<DocumentAction, {
     label: 'Редактировать',
     variant: 'soft'
   }
-
 };
 
 const MIN_WIDTH = 700;
@@ -125,7 +125,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   const { addNotification } = useNotification();
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
   const { context, updateContext } = mainContext;
-  const { selectedFolder, selectedDocument, currentStudy, currentSite, currentLevel} = context;
+  const { selectedFolder, selectedDocument, currentSite, currentLevel} = context;
   const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
   const { user } = useAuth();
   const { isDeleting, isRestoring, error } = useDocumentDelete();
