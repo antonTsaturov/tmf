@@ -1,57 +1,33 @@
-// app/api/documents/[id]/route.ts
+// app/api/documents/[id]/delete/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
-import { withAudit } from '@/lib/audit/audit.middleware';
-import { AuditContext } from '@/lib/audit/audit.middleware';
+import { getPool } from '@/lib/db/index';
+import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
+import { getDocumentById } from '@/lib/db/document';
 
-// Функция для получения документа для аудита
-export async function getDocumentForAudit(documentId: string) {
-  const client = await connectDB();
-  try {
-    const { rows } = await client.query(
-      'SELECT * FROM document WHERE id = $1',
-      [documentId]
-    );
-    return rows[0] || null;
-  } catch (error) {
-    console.error('Error fetching document for audit:', error);
-    return null;
-  } finally {
-    client.release();
-  }
-}
-
-// Функция для мягкого удаления документа
 export async function softDeleteHandler(
   request: NextRequest,
   ctx: AuditContext,
-  
 ) {
-  const client = await connectDB();
+  const client = getPool();
   
   try {
-    // Получаем ID документа 
-    const segments = request.nextUrl.pathname.split('/');
-    const id = segments[segments.indexOf('documents') + 1];
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Document ID is required' },
-        { status: 400 }
-      );
-    }
-
+    // 1. Используем уже загруженную сущность из контекста
+    const document = ctx.entity;
     const { reason, userId } = ctx.body || {};
 
-    // Валидация обязательных полей
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    if (!document) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    // Валидация причины удаления
+    if (document.is_deleted) {
+      return NextResponse.json({ error: 'Document already deleted' }, { status: 404 });
+    }
+
+    // Валидация входных данных
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
     if (!reason || reason.trim().length < 10) {
       return NextResponse.json(
         { error: 'Deletion reason is required and must be at least 10 characters long' },
@@ -59,70 +35,33 @@ export async function softDeleteHandler(
       );
     }
 
-    // Сначала получаем документ для аудита (до изменений)
-    const document = await getDocumentForAudit(id);
-    
-    if (!document) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
-    }
-
-    // Проверяем, не удален ли уже документ
-    if (document.is_deleted) {
-      return NextResponse.json(
-        { error: 'Document already deleted' },
-        { status: 404 }
-      );
-    }
-
-    // Мягкое удаление - обновляем только таблицу document
+    // 2. Выполняем только один UPDATE запрос
     const { rowCount, rows } = await client.query(`
       UPDATE document 
       SET 
         is_deleted = true,
         deleted_at = NOW(),
         deleted_by = $1,
-        deletion_reason = $2
+        deletion_reason = $2,
+        restored_by = null,
+        restored_at = null,
+        restoration_reason = null
       WHERE id = $3 AND is_deleted = false
       RETURNING *
-    `, [userId, reason.trim(), id]);
+    `, [userId, reason.trim(), document.id]);
 
     if (rowCount === 0) {
-      return NextResponse.json(
-        { error: 'Document already deleted' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document already deleted' }, { status: 404 });
     }
 
-    // Возвращаем результат вместе с данными документа для аудита
     return NextResponse.json({ 
       message: 'Document soft deleted successfully',
-      document: rows[0],
-      _auditData: {
-        oldValue: document,
-        newValue: {
-          is_deleted: true,
-          deleted_at: new Date().toISOString(),
-          deleted_by: userId,
-          deletion_reason: reason.trim()
-        },
-        studyId: document.study_id,
-        siteId: document.site_id,
-        userId: userId,
-        deletionReason: reason.trim()
-      }
+      document: rows[0]
     });
 
   } catch (error) {
     console.error('Error soft deleting document:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  } finally {
-    client.release();
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -131,32 +70,34 @@ export const DELETE = withAudit(
     action: 'DELETE',
     entityType: 'document',
 
-    getEntityId: (_, req) =>
-      req.nextUrl.pathname.split('/').pop() || '',
-
-    getStudyId: async (_, req) => {
-      const id = String(req.nextUrl.pathname.split('/').pop());
-      const doc = await getDocumentForAudit(id);
-      return doc?.study_id ?? '';
+    // Извлекаем ID из URL
+    getEntityId: (_, req) => {
+      const parts = req.nextUrl.pathname.split('/');
+      return parts[parts.indexOf('documents') + 1] || '0';
     },
 
-    getSiteId: async (_, req) => {
-      const id = String(req.nextUrl.pathname.split('/').pop());
-      const doc = await getDocumentForAudit(id);
-      return String(doc?.site_id ?? '');
+    //  Загружаем сущность один раз для всего жизненного цикла запроса
+    loadEntity: async (_, ctx) => {
+      const id = ctx.body.id;
+      return await getDocumentById(id);
     },
 
-    getOldValue: async (_, req) => {
-      const id = req.nextUrl.pathname.split('/').pop();
-      return getDocumentForAudit(String(id));
-    },
+    // Теперь эти функции просто берут данные из памяти (ctx.entity)
+    getStudyId: (ctx) => ctx.entity?.study_id ?? '',
+    getSiteId: (ctx) => String(ctx.entity?.site_id ?? 'General Level Document'),
+    getOldValue: (ctx) => ({
+      reason: ctx.entity.deletion_reason,
+      deleted_by: ctx.entity?.deleted_by,
+      is_deleted: ctx.entity?.is_deleted,
+      deleted_at: ctx.entity?.deleted_at,
+    }),
 
     getNewValue: (ctx) => ({
       reason: ctx.body?.reason,
       deleted_by: ctx.body?.userId,
-      is_deleted: true
+      is_deleted: true,
+      deleted_at: new Date().toISOString()
     })
   },
-
   softDeleteHandler
 );

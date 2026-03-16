@@ -35,11 +35,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, currentLevel, selectedFolder, selectedDocument } = context;
+  const { currentStudy, currentSite, currentLevel, selectedFolder, isFolderContentLoading } = context;
 
   const [data, setData] = useState<FileNode[] | undefined>();
   const [filteredData, setFilteredData] = useState<FileNode[] | undefined>();
-  const { addNotification } = useNotification();
 
   // Get folders structure from Study object
   useEffect(() => {
@@ -153,7 +152,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   const handleSelect = (node: FileNode, event: React.MouseEvent) => {
     event.stopPropagation();
-    
+    // Запрещаем менять папку, если документы еще загружаются
+    if (isFolderContentLoading) {
+      return
+    }
     // Разрешаем выбор только папок с типом subfolder и без "детей"
     const isFolder = node.type === 'subfolder' && node.children?.length === 0 ;
     

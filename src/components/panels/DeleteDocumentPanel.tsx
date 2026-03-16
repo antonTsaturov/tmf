@@ -247,7 +247,7 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
                 borderRadius: 'var(--radius-2)',
                 border: '1px solid var(--red-6)'
               }}>
-                <Flex gap="2" align="start">
+                <Flex gap="2" align="center">
                   <FiAlertTriangle size={18} color="var(--red-9)" style={{ flexShrink: 0, marginTop: 2 }} />
                   <Box>
                     <Text size="1" style={{ color: 'var(--red-11)' }} mt="1">
@@ -356,7 +356,6 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
         <AlertDialog.Content style={{ maxWidth: 400 }}>
           <AlertDialog.Title>Confirm Deletion</AlertDialog.Title>
           <AlertDialog.Description>
-            <div>
               <Text as="div" size="2">
                 Are you sure you want to delete "{selectedDocument?.document_name}"?
               </Text>
@@ -376,7 +375,6 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
                   </Text>
                 </Flex>
               </Box>
-            </div>
           </AlertDialog.Description>
 
           <Flex gap="3" mt="4" justify="end">

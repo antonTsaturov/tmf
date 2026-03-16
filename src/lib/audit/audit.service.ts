@@ -154,32 +154,34 @@
 
 import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
-import { connectDB } from "@/lib/db";
+import { getPool } from "@/lib/db";
+import { AuditLogEntry } from '@/types/audit';
+
 
 const MAX_JSON_SIZE = 20000; // защита от огромных payload
 
-export interface AuditLogEntry {
-  user_id: string;
-  user_email: string;
-  user_role: any[];
+// export interface AuditLogEntry {
+//   user_id: string;
+//   user_email: string;
+//   user_role: any[];
 
-  action: string;
-  entity_type: string;
-  entity_id: string;
+//   action: string;
+//   entity_type: string;
+//   entity_id: string;
 
-  old_value: any;
-  new_value: any;
+//   old_value: any;
+//   new_value: any;
 
-  ip_address: string;
-  user_agent: string;
-  session_id: string;
+//   ip_address: string;
+//   user_agent: string;
+//   session_id: string;
 
-  status: "SUCCESS" | "FAILURE";
-  error_message?: string;
+//   status: "SUCCESS" | "FAILURE";
+//   error_message?: string;
 
-  site_id?: string | null;
-  study_id?: string | null;
-}
+//   site_id?: string | null;
+//   study_id?: string | null;
+// }
 
 export class AuditService {
 
@@ -213,7 +215,7 @@ export class AuditService {
 
     try {
 
-      client = await connectDB();
+      client = getPool();
 
       const query = `
         INSERT INTO audit (
@@ -275,13 +277,7 @@ export class AuditService {
 
       // аудит никогда не должен ломать API
 
-    } finally {
-
-      try {
-        client?.release();
-      } catch {}
-
-    }
+    } 
   }
 
   static extractMetadata(req: NextRequest) {

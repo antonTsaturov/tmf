@@ -38,11 +38,6 @@ export const getAvailableDocumentActions = (
       .filter(action => hasPermissionForAction(action, userRole));
   }
 
-  if (selectedDocument.is_deleted) {
-    return [DocumentAction.CREATE_DOCUMENT, DocumentAction.VIEW]
-      .filter(action => hasPermissionForAction(action, userRole));
-  }
-
   const currentDocStatus = selectedDocument.status as DocumentWorkFlowStatus;
 
   // Получаем действия по каждому измерению

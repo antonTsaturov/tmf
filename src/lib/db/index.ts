@@ -20,54 +20,44 @@ export async function connectDB() {
   }
 }
 
-// export async function createTable(table: Tables) {
-//   const client = await connectDB();
-//   try {
-//     // Проверяем существование таблицы
-//     const checkQuery = `
-//       SELECT EXISTS (
-//         SELECT FROM information_schema.tables 
-//         WHERE table_schema = 'public' 
-//         AND table_name = $1
-//       );
-//     `;
-    
-//     const checkResult = await client.query(checkQuery, [table]);
-//     const tableExists = checkResult.rows[0].exists;
+declare global {
+  var pgPool: Pool | undefined
+}
+// Более быстрое соединения с БД
+export const getPool = () => {
+  if (!global.pgPool) {
+    global.pgPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
 
-//     if (tableExists) {
-//       console.log(`createTable: Table "${table}" already exists. Skipping creation.`);
-//       return; // Выходим, ничего не делаем
-//     }
+      // максимальное количество соединений
+      max: 10,
 
-//     // Получаем SQL запрос для создания таблицы
-//     const query = tableSQLMap[table];
+      // сколько соединение может простаивать
+      idleTimeoutMillis: 30000,
 
-//     if (!query) {
-//       throw new Error(`SQL not found for table: ${table}`);
-//     }
+      // сколько ждать соединение из pool
+      connectionTimeoutMillis: 2000,
 
-//     // Создаем таблицу
-//     await client.query(query);
-//     console.log(`createTable: Table "${table}" created successfully.`);
+      // закрывать соединения через время
+      maxUses: 7500
+    })
 
-//   } catch (err) {
-//     console.error(`createTable: Failed to create table "${table}". `, err);
-//     throw err;
+    global.pgPool.on("connect", () => {
+      console.log("PostgreSQL pool connected")
+    })
 
-//   } finally {
-//     client.release();
-//   }
-// }
+    global.pgPool.on("error", (err) => {
+      console.error("PostgreSQL pool error", err)
+    })
+  }
+
+  return global.pgPool
+}
 
 export async function createTable(table: Tables) {
   const client = await connectDB();
 
   try {
-    // Если создаём DOCUMENT — сначала создаём DOCUMENT_VERSION
-    // if (table === Tables.DOCUMENT) {
-    //   await createTableIfNotExists(client, Tables.DOCUMENT_VERSION);
-    // }
 
     await createTableIfNotExists(client, table);
 

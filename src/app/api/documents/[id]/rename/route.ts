@@ -1,14 +1,13 @@
 // app/api/documents/[id]/rename/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditContext } from '@/lib/audit/audit.middleware';
 import { Tables } from '@/lib/db/schema';
-//import { Document } from '@/types/document';
 
 // Function to get document with its current version for audit
 export async function getDocumentForAudit(documentId: string) {
-  const client = await connectDB();
+  const client = getPool();
   try {
     const { rows } = await client.query(`
       SELECT 
@@ -26,14 +25,12 @@ export async function getDocumentForAudit(documentId: string) {
   } catch (error) {
     console.error('Error fetching document for audit:', error);
     return null;
-  } finally {
-    client.release();
   }
 }
 
 // Function to get full document object with all relations
 async function getFullDocument(documentId: string) {
-  const client = await connectDB();
+  const client = getPool();
   try {
     const { rows } = await client.query(`
       SELECT
@@ -79,8 +76,6 @@ async function getFullDocument(documentId: string) {
   } catch (error) {
     console.error('Error fetching full document:', error);
     return null;
-  } finally {
-    client.release();
   }
 }
 
@@ -89,7 +84,7 @@ export async function renameHandler(
   request: NextRequest,
   ctx: AuditContext
 ) {
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     // Get document ID from URL
@@ -232,71 +227,36 @@ export async function renameHandler(
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }
 
 const getDocId = (req: NextRequest) =>
   req.nextUrl.pathname.split('/').filter(Boolean)[2];
 
-// export const PUT = withAudit(
-//   {
-//     action: 'UPDATE',
-//     entityType: 'document',
-
-//     getEntityId: (_, req) => getDocId(req),
-
-//     getStudyId: async (_, req) => {
-//       const doc = await getDocumentForAudit(getDocId(req));
-//       return doc?.study_id ?? null;
-//     },
-
-//     getSiteId: async (_, req) => {
-//       const doc = await getDocumentForAudit(getDocId(req));
-//       return doc?.site_id ?? null;
-//     },
-
-//     getOldValue: async (_, req) => {
-//       const doc = await getDocumentForAudit(getDocId(req));
-
-//       return {
-//         document_name: doc?.document_name
-//       };
-//     },
-
-//     getNewValue: (ctx) => ({
-//       document_name: ctx.body?.newTitle,
-//       updated_by: ctx.body?.userId
-//     })
-//   },
-
-//   renameHandler
-// );
 
 export const PUT = withAudit(
-{
-  action: "UPDATE",
-  entityType: "document",
+  {
+    action: "UPDATE",
+    entityType: "document",
 
-  getEntityId: (_, req) =>
-    req.nextUrl.pathname.split("/")[3],
+    getEntityId: (_, req) =>
+      req.nextUrl.pathname.split("/")[3],
 
-  loadEntity: async (id) => {
-    return getDocumentForAudit(id);
+    loadEntity: async (id) => {
+      return getDocumentForAudit(id);
+    },
+
+    getSiteId: (ctx) => ctx.entity?.site_id ?? "",
+
+    getStudyId: (ctx) => ctx.entity?.study_id ?? "",
+
+    getOldValue: async (ctx) => ({
+      document_name: ctx.entity?.document_name
+    }),
+
+    getNewValue: async (ctx) => ({
+      document_name: ctx.body?.newTitle
+    })
   },
-
-  getSiteId: (ctx) => ctx.entity?.site_id ?? "",
-
-  getStudyId: (ctx) => ctx.entity?.study_id ?? "",
-
-  getOldValue: async (ctx) => ({
-    document_name: ctx.entity?.document_name
-  }),
-
-  getNewValue: async (ctx) => ({
-    document_name: ctx.body?.newTitle
-  })
-},
-renameHandler
+  renameHandler
 );

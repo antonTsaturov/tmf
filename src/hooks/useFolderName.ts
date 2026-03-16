@@ -6,7 +6,6 @@ export function useFolderName() {
   const { getFolderName } = useFolderStructure();
   
   return (folderId: string): string => {
-    console.log('Folder ID: ',folderId )
     return getFolderName(folderId) ?? 'Unknown Folder';
   };
 }

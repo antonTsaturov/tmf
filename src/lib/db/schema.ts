@@ -30,7 +30,7 @@ export const AuditTrialTable = `
         study_id VARCHAR(100),
 
         CONSTRAINT audit_status_check CHECK (status IN ('SUCCESS', 'FAILURE')),
-        CONSTRAINT audit_action_check CHECK (action IN ('CREATE', 'UPDATE', 'DELETE'))
+        CONSTRAINT audit_action_check CHECK (action IN ('CREATE', 'UPDATE', 'DELETE', 'RESTORE'))
     );
         CREATE INDEX idx_audit_timestamp ON audit(created_at DESC);
         CREATE INDEX idx_audit_user ON audit(user_id, created_at DESC);
@@ -111,6 +111,7 @@ export const DocumentTable = `
 
     restored_by UUID REFERENCES users(id),
     restored_at TIMESTAMPTZ,
+    restoration_reason TEXT,
 
     is_archived BOOLEAN DEFAULT FALSE,
     archived_at TIMESTAMPTZ,
@@ -152,7 +153,7 @@ export const DocumentVersionTable = `
 `;
 
 export const UserTable = `
-  CREATE TABLE IF NOT EXISTS ${Tables.USERS} (
+  CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,

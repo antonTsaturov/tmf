@@ -1,8 +1,8 @@
 // app/api/auth/change-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { hash, compare } from 'bcryptjs';
-import { connectDB } from '@/lib/db/index';
-import { checkAuth, getAuthenticatedUser } from '@/lib/auth/check-auth';
+import { connectDB, getPool } from '@/lib/db/index';
+import { checkAuth } from '@/lib/auth/check-auth';
 
 export async function POST(request: NextRequest) {
   // Проверяем авторизацию
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     return auth.response;
   }
 
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     const { currentPassword, newPassword, confirmPassword } = await request.json();
@@ -116,7 +116,5 @@ export async function POST(request: NextRequest) {
       { error: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

@@ -1,7 +1,7 @@
 // app/api/documents/deleted/route.ts
 // GET - список удалённых документов (только для ADMIN)
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, createTable } from '@/lib/db/index';
+import { getPool, createTable } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { AuthService } from '@/lib/auth/auth.service';
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Forbidden. Admin access required.' }, { status: 403 });
   }
 
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     await createTable(Tables.DOCUMENT);
@@ -66,7 +66,5 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching deleted documents:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-    client.release();
-  }
+  } 
 }

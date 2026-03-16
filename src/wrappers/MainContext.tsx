@@ -8,25 +8,6 @@ import { ViewLevel } from '@/types/types';
 import { FoldersStructure } from '@/types/folder';
 import { FolderStructureProvider } from './FolderStructureContext';
 
-// Интерфейс для предпросмотра файла перед загрузкой
-export interface FilePreview {
-  file: File;
-  files?: File[]; // Добавляем возможность загрузки нескольких файлов
-  customName: string;
-  size: number;
-  studyId: number | string;
-  siteId: string | number;
-  folderId: string;
-  folderName: string;
-  createdBy: string | number;
-}
-
-// Интерфейс для загрузки новой версии документа
-export interface NewVersionPreview {
-  file: File;
-  document: Document;
-}
-
 export interface MainContextProps {
   isModal: boolean;
   isRightFrameOpen: boolean;
@@ -36,6 +17,7 @@ export interface MainContextProps {
   currentSite: StudySite | undefined;
   selectedFolder: FileNode | null;
   selectedDocument: Document | null;
+  isFolderContentLoading: boolean;
 
   onDocumentUpdatedId: string | null;
   currentLevel: ViewLevel | undefined;
@@ -45,6 +27,7 @@ export interface MainContextProps {
   isDeletePanelOpen: boolean;
   isArchivePanelOpen: boolean;
   isEditTitlePanelOpen: boolean;
+  isRestorePanelOpen: boolean
 }
 
 interface MainContextType {
@@ -62,6 +45,7 @@ const defaultContext: MainContextProps = {
   currentSite: undefined,
   selectedFolder: null, // ID выбрабранной пользователем папки
   selectedDocument: null, // Объект выбрабранного пользователем документа
+  isFolderContentLoading: false,
 
   onDocumentUpdatedId: null,
   currentLevel: undefined, // Текущий уровень просмотра папок (General либо Site Level)
@@ -70,7 +54,8 @@ const defaultContext: MainContextProps = {
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
   isDeletePanelOpen:false,     // Флаг для открытия окна удаления документа
   isArchivePanelOpen: false,
-  isEditTitlePanelOpen: false
+  isEditTitlePanelOpen: false,
+  isRestorePanelOpen: false
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);

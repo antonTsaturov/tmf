@@ -1,6 +1,6 @@
-// app/api/documents/[id]/versions/[number]/route.ts
+// app/api/documents/[id]/versions/[number]/download/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { getIAMToken } from '@/lib/yc-iam';
 import { createHash } from 'crypto';
 
@@ -16,7 +16,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid version number' }, { status: 400 });
   }
 
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     const { rows } = await client.query(
@@ -84,7 +84,5 @@ export async function GET(
   } catch (error) {
     console.error('Error downloading version:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-    client.release();
   }
 }

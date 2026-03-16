@@ -30,7 +30,8 @@ export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {
     DocumentAction.UNARCHIVE
   ],
   deleted: [
-    ...BASE_ACTIONS,
+    DocumentAction.CREATE_DOCUMENT,
+    DocumentAction.VIEW,
     DocumentAction.RESTORE
   ]
 }

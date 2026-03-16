@@ -24,7 +24,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
   const objectRef = useRef<HTMLObjectElement>(null);
   const { getCachedPDF, cachePDF } = usePDFCache();
 
-  console.log('selectedDocument: ', selectedDocument)
   useEffect(() => {
     const loadPDF = async () => {
       if (!selectedDocument) {

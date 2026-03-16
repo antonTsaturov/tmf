@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
-import { connectDB } from '@/lib/db/index';
+import { connectDB, getPool } from '@/lib/db/index';
 
 export async function GET(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
@@ -18,12 +18,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ user: null });
   }
 
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     const result = await client.query(
-      `SELECT id, name, email, role, assigned_site_id, assigned_study_id 
-       FROM users 
+      `SELECT id, name, email, role, assigned_site_id, assigned_study_id
+       FROM users
        WHERE id = $1`,
       [payload.id]
     );
@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
         assigned_study_id: user.assigned_study_id,
       },
     });
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Error checking auth:', error);
+    return NextResponse.json({ user: null, error: 'Failed to check authentication' }, { status: 500 });
   }
 }

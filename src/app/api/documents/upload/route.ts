@@ -1,6 +1,6 @@
 // app/api/documents/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, createTable } from '@/lib/db/index';
+import { getPool, createTable } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/yc-iam';
@@ -61,7 +61,7 @@ async function uploadHandler(
   request: NextRequest,
   ctx: AuditContext
 ) {
-  const client = await connectDB();
+  const client = getPool();
   
   try {
     await createTable(Tables.DOCUMENT);
@@ -336,9 +336,7 @@ async function uploadHandler(
       },
       { status: 500 }
     );
-  } finally {
-    client.release();
-  }
+  } 
 }
 
 export const POST = withAudit(

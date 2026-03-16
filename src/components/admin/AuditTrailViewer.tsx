@@ -1,6 +1,6 @@
 // components/AuditTrailViewer.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { AuditLogEntry, AuditFilters, AuditResponse } from '@/types/types';
+import { AuditLogEntry, AuditFilters, AuditResponse } from '@/types/audit';
 import '@/styles/AuditTrailViewer.css';
 
 interface AuditTrailViewerProps {
@@ -131,7 +131,8 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
     const colors: Record<string, string> = {
       'CREATE': '#4CAF50',
       'UPDATE': '#2196F3',
-      'DELETE': '#F44336'
+      'DELETE': '#F44336',
+      'RESTORE': '#4c9daf'
     };
     return colors[action] || '#666';
   };
@@ -153,7 +154,7 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
     return text.substring(0, maxLength) + '...';
   };
 
-  console.log(state.logs)
+  //console.log(state.logs)
   return (
     <div className="audit-trail-viewer">
       <div className="audit-header">

@@ -3,7 +3,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { Document } from '@/types/document';
-import { DocumentLifeCycleStatus } from '@/types/document.status';
+import { DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
 import { 
@@ -18,53 +18,13 @@ import {
 } from '@radix-ui/themes';
 import { FiDownload, FiInfo, FiUser } from 'react-icons/fi';
 import { useFolderName } from '@/hooks/useFolderName';
-
-interface DocumentVersionRow {
-  id: string;
-  document_id: string;
-  document_number: number;
-  document_name: string;
-  file_name: string;
-  file_path: string;
-  file_type: string;
-  file_size: number;
-  checksum: string;
-  uploaded_by: string;
-  uploaded_at: string;
-  change_reason: string | null;
-  review_status?: string | null;
-  review_submitted_at?: string | null;
-  reviewed_at?: string | null;
-  review_comment?: string | null;
-  
-  // Информация о пользователях
-  uploader?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  reviewer?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  approver?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  assigned_reviewer?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-}
+import { DocumentVersionRow } from '@/types/document';
 
 const DocumentDetails: React.FC = () => {
   const getFolderName = useFolderName();
   const mainContext = useContext(MainContext);
   if (!mainContext) return null;
-  const { context, updateContext } = mainContext;
+  const { context } = mainContext;
   const selectedDocument = context.selectedDocument;
   const [versions, setVersions] = useState<DocumentVersionRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -119,7 +79,6 @@ const DocumentDetails: React.FC = () => {
     );
   };
 
-
   const renderUserInfo = (user?: { name?: string; email?: string } | null) => {
     if (!user) return '—';
     return (
@@ -158,23 +117,23 @@ const DocumentDetails: React.FC = () => {
 
   // Приводим selectedDocument к расширенному типу с пользовательскими полями
   const doc = selectedDocument as Document & {
-    study_id?: number;
-    site_id?: string;
-    folder_id: string;
-    creator?: { id: string; name: string; email: string; role?: string[] } | null;
+    // study_id?: number;
+    // site_id?: string;
+    // folder_id: string;
+    // creator?: { id: string; name: string; email: string; role?: string[] } | null;
     deleter?: { id: string; name: string; email: string } | null;
     restorer?: { id: string; name: string; email: string } | null;
-    last_uploader?: { id: string; name: string; email: string } | null;
-    reviewer?: { id: string; name: string; email: string } | null;
-    approver?: { id: string; name: string; email: string } | null;
-    assigned_reviewer?: { id: string; name: string; email: string } | null;
-    review_status?: string | null;
-    review_submitted_at?: string | null;
-    reviewed_at?: string | null;
-    review_comment?: string | null;
+    // last_uploader?: { id: string; name: string; email: string } | null;
+    // reviewer?: { id: string; name: string; email: string } | null;
+    // approver?: { id: string; name: string; email: string } | null;
+    // assigned_reviewer?: { id: string; name: string; email: string } | null;
+    // review_status?: string | null;
+    // review_submitted_at?: string | null;
+    // reviewed_at?: string | null;
+    // review_comment?: string | null;
   };
 
-  console.log(doc)
+  console.log('Document Details document: ', doc)
 
   return (
     <div className="document-details">
@@ -257,72 +216,72 @@ const DocumentDetails: React.FC = () => {
             </div>
             <div className="metadata-row">
               <dt>Кем загружено</dt>
-              <dd>{renderUserInfo(doc.last_uploader)}</dd>
+              <dd>{renderUserInfo(doc.creator)}</dd>
             </div>
             <div className="metadata-row">
               <dt>Checksum</dt>
               <dd className="metadata-value-monospace metadata-value-truncate" title={doc.checksum}>
-                {doc.checksum || '—'}
+                {doc.current_version?.checksum || '—'}
               </dd>
             </div>
           </dl>
         </section>
 
         {/* Информация о ревью */}
-        {doc.review_status && (
+        {doc.current_version?.review_status && (
           <section className="document-details-section">
             <h3 className="document-details-section-title">Ревью</h3>
             <dl className="document-details-metadata">
               <div className="metadata-row">
                 <dt>Статус ревью</dt>
                 <dd>
-                  <span className={`review-status review-status-${doc.review_status}`}>
-                    {doc.review_status === 'submitted' ? 'Отправлен на ревью' :
-                     doc.review_status === 'approved' ? 'Утвержден' :
-                     doc.review_status === 'rejected' ? 'Отклонен' : doc.review_status}
+                  <span className={`review-status review-status-${doc.current_version?.review_status}`}>
+                    {doc.current_version?.review_status === 'submitted' ? 'Отправлен на ревью' :
+                     doc.current_version?.review_status === 'approved' ? 'Утвержден' :
+                     doc.current_version?.review_status === 'rejected' ? 'Отклонен' : doc.current_version?.review_status}
                   </span>
                 </dd>
               </div>
               
-              {doc.assigned_reviewer && (
+              {doc.current_version?.assigned_reviewer && (
                 <div className="metadata-row">
-                  <dt>Назначен ревьюер</dt>
-                  <dd>{renderUserInfo(doc.assigned_reviewer)}</dd>
+                  <dt>Назначеный ревьюер</dt>
+                  <dd>{renderUserInfo(doc.current_version?.assigned_reviewer)}</dd>
                 </div>
               )}
               
-              {doc.review_submitted_at && (
+              {doc.current_version?.review_submitted_at && (
                 <div className="metadata-row">
-                  <dt>Отправлен на ревью</dt>
-                  <dd>{formatDate(doc.review_submitted_at)}</dd>
+                  <dt>Когда отправлен</dt>
+                  <dd>{formatDate(doc.current_version?.review_submitted_at)}</dd>
                 </div>
               )}
               
-              {doc.reviewer && (
+              {doc.current_version?.review_submitter && (
                 <div className="metadata-row">
                   <dt>Кем отправлен</dt>
-                  <dd>{renderUserInfo(doc.reviewer)}</dd>
+                  <dd>{renderUserInfo(doc.current_version?.review_submitter)}</dd>
                 </div>
               )}
-              
-              {doc.reviewed_at && (
+                            
+              {doc.current_version?.approver?.id && (
                 <div className="metadata-row">
-                  <dt>Рассмотрен</dt>
-                  <dd>{formatDate(doc.reviewed_at)}</dd>
+                  <dt>Кем утвержден</dt>
+                  <dd>{renderUserInfo(doc.current_version?.approver)}</dd>
                 </div>
               )}
               
-              {doc.approver && (
+              {doc.current_version?.reviewed_at && (
                 <div className="metadata-row">
-                  <dt>Кем рассмотрен</dt>
-                  <dd>{renderUserInfo(doc.approver)}</dd>
+                  <dt>Дата утверждения</dt>
+                  <dd>{formatDate(doc.current_version?.reviewed_at)}</dd>
                 </div>
               )}
-              
-              {doc.review_comment && (
+
+              {doc.current_version?.review_comment && (
                 <div className="metadata-row">
                   <dt>Комментарий</dt>
-                  <dd className="metadata-review-comment">{doc.review_comment}</dd>
+                  <dd className="metadata-review-comment">{doc.current_version?.review_comment}</dd>
                 </div>
               )}
             </dl>
@@ -344,6 +303,12 @@ const DocumentDetails: React.FC = () => {
                   <dd>{renderUserInfo(doc.deleter)}</dd>
                 </div>
               )}
+              {doc.deletion_reason && (
+                <div className="metadata-row">
+                  <dt>Причина удаления</dt>
+                  <dd>{doc.deletion_reason}</dd>
+                </div>
+              )}              
             </dl>
           </section>
         )}

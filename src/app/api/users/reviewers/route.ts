@@ -1,9 +1,8 @@
 // API эндпоинт для получения рецензентов
 // app/api/users/reviewers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
-import { UserRole } from '@/types/types';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -18,7 +17,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     // Подготавливаем параметры запроса
@@ -72,7 +71,5 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

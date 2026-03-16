@@ -39,7 +39,7 @@ interface NewVersionUploadPanelProps {
   onSuccess?: (updatedDoc: Document) => void;
 }
 
-const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadError, onSuccess}) => {
+const NewVersionDocumentPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadError, onSuccess}) => {
   const mainContext = useContext(MainContext);
   if (!mainContext) return null;
   const { context, updateContext } = mainContext;
@@ -94,11 +94,11 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
       studyId: studyId 
     });
 
-    if (result.success && result.document) {
+    if (result.success && result.version) {
       clearPanel();
-      updateContext({ selectedDocument: result.document });
+      //updateContext({ selectedDocument: result.version });
       if (typeof result === 'object' && result !== null && onSuccess) {
-        onSuccess(result.document); 
+        onSuccess(result.version); 
       }
       addNotification('success', 'Новая версия успешно загружена');
       //onUploadSuccess?.();
@@ -339,4 +339,4 @@ const NewVersionUploadPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadEr
   );
 };
 
-export default NewVersionUploadPanel;
+export default NewVersionDocumentPanel;

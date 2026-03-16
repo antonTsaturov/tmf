@@ -36,7 +36,7 @@ export default function LoginPage() {
       }
 
       // Перенаправление после успешного входа
-      router.refresh();
+      //router.refresh();
       //router.push('/');
       window.location.href = '/home';
     } catch (err: any) {

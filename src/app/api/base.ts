@@ -1,75 +1,68 @@
 // base.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateRecord } from '@/lib/db/study';
-import { connectDB, createTable } from '@/lib/db/index';
+import { getPool, createTable } from '@/lib/db/index';
 import { Tables, UserQueries } from '@/lib/db/schema';
-import { bulkSaveData } from '@/lib/db/site';
-import { withAudit } from '@/lib/audit/audit.middleware';
-import { AuditAction, AuditEntity } from '@/types/types';
 
 export class StudyApiHandler {
   // GET: get all records from table
-async getTable(table: Tables): Promise<NextResponse> {
-  let client;
-  try {
-    client = await connectDB();
-    
-    // Сначала проверяем существование таблицы
-    const tableExists = await this.checkTableExists(client, table);
-    
-    if (!tableExists) {
-      console.log(`Table ${table} does not exist, creating it...`);
-      await createTable(table);
-      // Возвращаем пустой массив, так как таблица только что создана
-      return NextResponse.json([], { status: 200 });
-    }
-    
-    // Если таблица существует, выполняем запрос
-    const queryText = table === Tables.USERS
-      ? UserQueries.getAllUsers()
-      : `SELECT * FROM ${table} ORDER BY id ASC`;
-    
-    const result = await client.query(queryText);
-    
-    return NextResponse.json(result.rows, { status: 200 });
-    
-  } catch (err) {
-    console.error(`GET /api/${table} error: `, err);
-    return NextResponse.json({ 
-      error: `Failed to fetch data from ${table}`, 
-      details: String(err) 
-    }, { status: 500 });
-    
-  } finally {
-    if (client) {
-      client.release();
+  async getTable(table: Tables): Promise<NextResponse> {
+    let client;
+    try {
+      client = getPool();
+      
+      // Сначала проверяем существование таблицы
+      const tableExists = await this.checkTableExists(client, table);
+      
+      if (!tableExists) {
+        console.log(`Table ${table} does not exist, creating it...`);
+        await createTable(table);
+        // Возвращаем пустой массив, так как таблица только что создана
+        return NextResponse.json([], { status: 200 });
+      }
+      
+      // Если таблица существует, выполняем запрос
+      const queryText = table === Tables.USERS
+        ? UserQueries.getAllUsers()
+        : `SELECT * FROM ${table} ORDER BY id ASC`;
+      
+      const result = await client.query(queryText);
+      
+      return NextResponse.json(result.rows, { status: 200 });
+      
+    } catch (err) {
+      console.error(`GET /api/${table} error: `, err);
+      return NextResponse.json({ 
+        error: `Failed to fetch data from ${table}`, 
+        details: String(err) 
+      }, { status: 500 });
+      
     }
   }
-}
 
-// Вспомогательный метод для проверки существования таблицы
-private async checkTableExists(client: any, table: string): Promise<boolean> {
-  try {
-    const result = await client.query(`
-      SELECT EXISTS (
-        SELECT FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        AND table_name = $1
-      );
-    `, [table]);
-    
-    return result.rows[0].exists;
-  } catch {
-    return false;
-  }
-}  
+  // Вспомогательный метод для проверки существования таблицы
+  private async checkTableExists(client: any, table: string): Promise<boolean> {
+    try {
+      const result = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = $1
+        );
+      `, [table]);
+      
+      return result.rows[0].exists;
+    } catch {
+      return false;
+    }
+  }  
 
   // GET: get filtered records by study ID
   async getTablePartial(table: Tables, request: NextRequest) {
     let client;
     
     try {
-      client = await connectDB();
+      client = getPool();
       console.log('request.nextUrl.searchParams', request.nextUrl.searchParams);
       
       // Получаем ID исследования из параметров запроса
@@ -116,21 +109,14 @@ private async checkTableExists(client: any, table: string): Promise<boolean> {
         { status: 500 }
       );
       
-    } finally {
-      if (client) {
-        client.release();
-      }
     }
   }
 
   // POST: create or update a record. Используется для построчного обновления/сохранения данных в БД.
-async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResponse> {
-  // Читаем данные только ОДИН раз
-  const data = await request.json().catch(() => ({}));
-  const action: AuditAction = data.id ? 'UPDATE' : 'CREATE';
-  
+  async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResponse> {
+    // Читаем данные только ОДИН раз
+    const data = await request.json().catch(() => ({}));
 
-  // Передаем данные в middleware, чтобы он не пытался читать request снова
     try {
       if (data.id) {
         // Update existing record
@@ -169,103 +155,85 @@ async createOrUpdateTable(table: Tables, request: NextRequest): Promise<NextResp
         details: String(err) 
       }, { status: 500 });
     }
-}
+  }
 
   // DELETE: delete any record by id с поддержкой каскадного удаления для сайтов
   async deleteRecord(table: Tables, request: NextRequest): Promise<NextResponse> {
 
-      const client = await connectDB();
+    const client = getPool();
+    
+    try {
+      const data = await request.json();
+
+      if (!data.id) {
+        return NextResponse.json(
+          { error: `Missing ${table} id` }, 
+          { status: 400 }
+        );
+      }
+
+      const id = data.id;
       
+      // Начинаем транзакцию
+      await client.query('BEGIN');
+
       try {
-        const data = await request.json();
-
-        if (!data.id) {
-          return NextResponse.json(
-            { error: `Missing ${table} id` }, 
-            { status: 400 }
-          );
-        }
-
-        const id = data.id;
-        
-        // Начинаем транзакцию
-        await client.query('BEGIN');
-
-        try {
-          // Если удаляем сайт, нужно очистить assigned_site_id у пользователей
-          if (table === Tables.SITE) {
-            // Преобразуем ID сайта в число для сравнения с элементами массива
-            const siteIdAsNumber = id;
-            
-            // Удаляем ID сайта из массива assigned_site_id всех пользователей
-            await client.query(
-              `UPDATE ${Tables.USERS} 
-               SET assigned_site_id = array_remove(assigned_site_id, $1)
-               WHERE $1 = ANY(assigned_site_id)`,
-              [siteIdAsNumber]
-            );
-            
-            console.log(`Cleaned up site ID ${siteIdAsNumber} from users' assigned_site_id arrays`);
-          }
+        // Если удаляем сайт, нужно очистить assigned_site_id у пользователей
+        if (table === Tables.SITE) {
+          // Преобразуем ID сайта в число для сравнения с элементами массива
+          const siteIdAsNumber = id;
           
-          // Удаляем саму запись
-          const result = await client.query(
-            `DELETE FROM ${table} WHERE id = $1 RETURNING *`, 
-            [id]
+          // Удаляем ID сайта из массива assigned_site_id всех пользователей
+          await client.query(
+            `UPDATE ${Tables.USERS} 
+              SET assigned_site_id = array_remove(assigned_site_id, $1)
+              WHERE $1 = ANY(assigned_site_id)`,
+            [siteIdAsNumber]
           );
-
-          if (result.rowCount === 0) {
-            await client.query('ROLLBACK');
-            return NextResponse.json(
-              { error: `Record with id ${id} in table ${table} not found` }, 
-              { status: 404 }
-            );
-          }
-
-          // Подтверждаем транзакцию
-          await client.query('COMMIT');
-
-          return NextResponse.json(
-            { 
-              message: `Record with id ${id} in table ${table} was deleted`,
-              cascaded: table === Tables.SITE ? 'Site ID removed from users' : undefined
-            }, 
-            { status: 200 }
-          );
-
-        } catch (err) {
-          // Откатываем транзакцию в случае ошибки
-          await client.query('ROLLBACK');
-          throw err;
+          
+          console.log(`Cleaned up site ID ${siteIdAsNumber} from users' assigned_site_id arrays`);
         }
+        
+        // Удаляем саму запись
+        const result = await client.query(
+          `DELETE FROM ${table} WHERE id = $1 RETURNING *`, 
+          [id]
+        );
+
+        if (result.rowCount === 0) {
+          await client.query('ROLLBACK');
+          return NextResponse.json(
+            { error: `Record with id ${id} in table ${table} not found` }, 
+            { status: 404 }
+          );
+        }
+
+        // Подтверждаем транзакцию
+        await client.query('COMMIT');
+
+        return NextResponse.json(
+          { 
+            message: `Record with id ${id} in table ${table} was deleted`,
+            cascaded: table === Tables.SITE ? 'Site ID removed from users' : undefined
+          }, 
+          { status: 200 }
+        );
 
       } catch (err) {
-        console.error(`DELETE /api/${table} error: `, err);
-        return NextResponse.json({ 
-          error: `Failed to delete record in ${table}`, 
-          details: String(err) 
-        }, { status: 500 });
-      } finally {
-        client.release();
+        // Откатываем транзакцию в случае ошибки
+        await client.query('ROLLBACK');
+        throw err;
       }
+
+    } catch (err) {
+      console.error(`DELETE /api/${table} error: `, err);
+      return NextResponse.json({ 
+        error: `Failed to delete record in ${table}`, 
+        details: String(err) 
+      }, { status: 500 });
+    }
   }
-
-
-
-  // Вспомогательный метод для маппинга таблиц на типы сущностей аудита
-  private mapTableToEntity(table: Tables): AuditEntity {
-    const mapping: Record<Tables, AuditEntity> = {
-      [Tables.STUDY]: 'study',
-      [Tables.SITE]: 'site',
-      [Tables.USERS]: 'user',
-      [Tables.DOCUMENT]: 'document',
-      [Tables.DOCUMENT_VERSION]: 'document_version',
-      [Tables.AUDIT]: 'audit',
-    };
-    
-    return mapping[table] || 'document';
-  }
- }
+}
 
 // Создаем и экспортируем singleton instance
 export const studyApiHandler = new StudyApiHandler();

@@ -12,6 +12,7 @@ export type AuditAction =
   | 'APPROVE'
   | 'REJECT'
   | 'ARCHIVE'
+  | 'RESTORE'
   | 'SUBMIT';
 
 export type AuditEntity = 'document' | 'document_version' | 'user' | 'site' | 'study' | 'audit';
@@ -40,8 +41,8 @@ export interface AuditPagination {
 }
 
 export interface AuditLogEntry {
-  audit_id: string; // UUID
-  created_at: string;
+  audit_id?: string; // UUID
+  created_at?: string;
   user_id: string;
   user_email: string;
   user_role: UserRole[];
@@ -56,8 +57,8 @@ export interface AuditLogEntry {
   status: AuditStatus;
   error_message: string;
   reason?: string;
-  site_id: string | number;
-  study_id: string | number;
+  site_id: string | null;
+  study_id: string | null;
 }
 
 export interface AuditResponse {

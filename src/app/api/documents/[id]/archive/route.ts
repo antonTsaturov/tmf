@@ -1,14 +1,12 @@
 // app/api/documents/[id]/archive/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
+import { connectDB, getPool } from '@/lib/db/index';
 import { AuditContext, withAudit } from '@/lib/audit/audit.middleware';
-import { getDocumentForAudit } from '../delete/route';
+//import { getDocumentForAudit } from '../delete/route';
 
-async function archiveHandler(
-  request: NextRequest,
-  ctx: AuditContext,
-): Promise<NextResponse> {
-  const client = await connectDB();
+async function archiveHandler(request: NextRequest, ctx: AuditContext): Promise<NextResponse> {
+  
+  const client = getPool();
   // Get doc ID
   const segments = request.nextUrl.pathname.split('/');
   const id = segments[segments.indexOf('documents') + 1];
@@ -107,9 +105,7 @@ async function archiveHandler(
   } catch (error) {
     console.error('Error archiving document:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } finally {
-    client.release();
-  }
+  } 
 }
 
 export const POST = withAudit(

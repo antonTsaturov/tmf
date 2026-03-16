@@ -1,11 +1,14 @@
 // app/api/documents/[id]/actions/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
-import { DocumentAction, DocumentWorkFlowStatus, Transitions } from '@/types/document';
+import { connectDB, getPool } from '@/lib/db/index';
+import { DocumentAction } from '@/types/document';
 import { ActionRoleMap } from '@/domain/document/document.policy';
-import { UserRole, AuditAction, AuditEntity } from '@/types/types';
+import { UserRole } from '@/types/types';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { AuditService } from '@/lib/audit/audit.service';
+import { DocumentWorkFlowStatus } from '@/types/document.status';
+import { Transitions } from '@/domain/document/document.transitions';
+import { AuditAction, AuditEntity } from '@/types/audit';
 
 interface ActionRequest {
   action: DocumentAction;
@@ -24,15 +27,11 @@ function getDocumentStatusFromReview(reviewStatus: string | null): DocumentWorkF
   }
 }
 
-// Измененный хендлер: принимает ctx (где уже лежит body) и id
 export async function applyDocumentActionHandler(
   request: NextRequest, 
   ctx: AuditContext, 
 ) {
-  const client = await connectDB();
-
-
-
+  const client = getPool();
 
   try {
     // ВАЖНО: Используем ctx.body, так как request.json() уже вызван в мидлваре
@@ -150,31 +149,7 @@ export async function applyDocumentActionHandler(
         newDocumentStatus = currentStatus;
     }
 
-    // 4. Обновление документа (мягкое удаление/восстановление)
-    // if (action === DocumentAction.SOFT_DELETE) {
-    //   await client.query(`
-    //     UPDATE document 
-    //     SET 
-    //       is_deleted = true,
-    //       deleted_at = NOW(),
-    //       deleted_by = $2
-    //     WHERE id = $1
-    //   `, [id, userId]);
-    // } 
-    // else if (action === DocumentAction.RESTORE) {
-    //   await client.query(`
-    //     UPDATE document 
-    //     SET 
-    //       is_deleted = false,
-    //       deleted_at = NULL,
-    //       deleted_by = NULL,
-    //       restored_at = NOW(),
-    //       restored_by = $2
-    //     WHERE id = $1
-    //   `, [id, userId]);
-    // }
-
-    // 5. 👇 ОБНОВЛЕНИЕ ДЛЯ APPROVE И REJECT
+    // ОБНОВЛЕНИЕ ДЛЯ APPROVE И REJECT
     if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
       // Утверждение или отклонение
       await client.query(`
@@ -318,8 +293,6 @@ export async function applyDocumentActionHandler(
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }
 

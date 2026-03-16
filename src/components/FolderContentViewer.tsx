@@ -4,48 +4,41 @@ import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "r
 import { Document, DocumentAction } from "@/types/document";
 
 import FilePreviewPanel from "./panels/FilePreviewPanel";
-import NewVersionUploadPanel from "./panels/NewVersionUploadPanel";
+import NewVersionUploadPanel from "./panels/NewVersionDocumentPanel";
 import SubmitToReviewPanel from "./panels/SubmitToReviewPanel";
-import DocumentReviewPanel from "./panels/DocumentReviewPanel";
+import DocumentReviewPanel from "./panels/ReviewDocumentPanel";
 import DocumentContextMenu from './DocumentContextMenu';
 import DeleteDocumentPanel from "./panels/DeleteDocumentPanel";
 import ArchiveDocumentPanel from "./panels/ArchiveDocumentPanel";
 import DocumentStatusBadge from "./DocumentStatusBadge";
 import { 
-  Card, 
   Flex, 
   Text, 
-  Grid, 
   Box, 
   Spinner, 
   Badge,
-  IconButton,
   Popover,
-  Separator,
   Button,
   Table,
   Section,
-  Tooltip
 } from '@radix-ui/themes';
 import { FileIcon } from 'react-file-icon';
 import { 
   FiFilter, 
   FiChevronDown, 
   FiFolder, 
-  FiFile, 
   FiInbox,
   FiAlertCircle, 
-  FiUpload
 } from 'react-icons/fi';
-import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
+import { FaRegFolderOpen } from "react-icons/fa";
 import { ViewLevel } from "@/types/types";
 import { useDragAndDrop } from '@/hooks/useDragAndDrop'; 
 import { useAuth } from "@/wrappers/AuthProvider";
-import React from "react";
 import DragAndDropOverlay from "./DragAndDropOverlay";
 import { useUpload } from "@/wrappers/UploadContext";
-import EditDocumentTitlePanel from "./panels/EditDocumentTitlePanel";
+import EditDocumentTitlePanel from "./panels/EditDocumentPanel";
 import { DocumentLifeCycleStatus } from "@/types/document.status";
+import RestoreDocumentPanel from "./panels/RestoreDocumentPanel";
 
 
 interface FolderContentViewerProps {
@@ -79,6 +72,10 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
   const [activeFilter, setActiveFilter] = useState<ViewFilter>('all');
+
+  useEffect(()=> {
+    updateContext({isFolderContentLoading:isLoading})
+  }, [isLoading])
   
   // Загрузка перетаскиванием
   const { isDragOver, handleDragEnter, handleDragLeave, handleDragOver, handleDrop } = useDragAndDrop({
@@ -131,9 +128,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
   }, []);
 
   // Handle rename success - update document in folder list
-  const handleRenameSuccess = useCallback((updatedDoc: Document) => {
-    updateSingleDocumentInState(updatedDoc);
-  }, [updateSingleDocumentInState]);
+  // const handleRenameSuccess = useCallback((updatedDoc: Document) => {
+  //   updateSingleDocumentInState(updatedDoc);
+  // }, [updateSingleDocumentInState]);
 
   // Обновляем документы в папке
   const handleUpdateFIleInFolder = (updatedDoc: Document) => {
@@ -148,6 +145,17 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     }
   };
 
+  // Обработчик успешной загрузки новой версии
+  const handleNewVersionSuccess = useCallback((newVersion: any) => {
+    if (!selectedDocument) return;
+
+    const updatedDoc = selectedDocument;
+    updatedDoc.document_number = newVersion;
+    updateSingleDocumentInState(updatedDoc);
+
+  }, []);  
+
+  //console.log('selectedDocument: ', selectedDocument)
   const handleAddNewDocument = useCallback((updatedDoc: Document | Document[]) => {
     setDocumentsData(prevData => {
       if (!prevData) return null;
@@ -256,7 +264,10 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     // Добавляем проверку на роли 'dialog', 'menu' и специфичные классы Radix
     const isActionClick = 
       target.closest('button') || 
-      target.closest('.rt-PopoverContent') || 
+      target.closest('.rt-PopoverContent') ||
+      target.closest('.rt-Heading') ||
+      target.closest('.rt-Text') ||
+      target.closest('.rt-BaseDialogContent') ||
       target.closest('.rt-DialogContent') ||      // Контент модального окна
       target.closest('.rt-DialogOverlay') ||      // Задний фон модального окна
       target.closest('[role="dialog"]') ||        // Универсальная проверка по роли
@@ -569,7 +580,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
 
                       {/* Версия */}
                       <Table.Cell style={{  width: '20%'}}>
-                        <Text size="2">{doc.document_number || '1'}</Text>
+                        <Text size="2">{doc?.document_number || '0'}</Text>
                       </Table.Cell>
 
                       {/* Дата создания */}
@@ -597,7 +608,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       />
       <NewVersionUploadPanel
         onUploadError={(error) => console.error('Upload error:', error)}
-        onSuccess={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+        onSuccess={(version) => handleNewVersionSuccess(version)}
       />
       <SubmitToReviewPanel
         studyId={currentStudy?.id || 0}
@@ -611,6 +622,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       <DeleteDocumentPanel />
       <ArchiveDocumentPanel
         onDocumentArchived={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+      />
+      <RestoreDocumentPanel
+        onDocumentRestored={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
       />
     </Box>
   );};

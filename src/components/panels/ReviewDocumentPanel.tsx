@@ -1,5 +1,5 @@
 // components/DocumentReviewPanel.tsx
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Dialog, 
   Flex, 
@@ -34,8 +34,8 @@ import { useNotification } from '@/wrappers/NotificationContext';
 import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { Document } from '@/types/document';
 import { ROLE_CONFIG, UserRole } from '@/types/types';
-import {  } from 'radix-ui';
 import { FaUser } from 'react-icons/fa';
+import { DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document.status';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;
@@ -43,7 +43,7 @@ interface DocumentReviewPanelProps {
   onReject?: (updatedDoc: Document) => void;
 }
 
-const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewComplete, onSuccess, onReject }) => {
+const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewComplete, onSuccess, onReject }) => {
   const { context, updateContext } = useContext(MainContext)!;
   const { user } = useAuth();
   const { addNotification } = useNotification();
@@ -54,6 +54,8 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   const [comment, setComment] = useState('');
   const [rejectMode, setRejectMode] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const [isAssignment, setIsAssignment] = useState<boolean>(false);
 
   const { approveDocument, rejectDocument } = useDocumentToReview();
 
@@ -70,7 +72,6 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     if (loading) return;
     updateContext({ isAcceptedForReview: false });
   };
-
 
   const handleApprove = async () => {
     if (!selectedDocument || !user) return;
@@ -189,7 +190,6 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     return parseFloat((n / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-
   const getRoleConfig = (role?: string): { label: string; color: string } => {
     // Если роль не передана
     if (!role) {
@@ -207,9 +207,29 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
     return { label: 'Unknown', color: '#868e96' };
   };
 
+  // Проверяет что конкретный документ на ревью и назначен залогиненому пользователю
+  const checkAssignment = () => {
+    if (selectedDocument?.current_version?.assigned_reviewer) {
+      const reviewAssignedTo = String(selectedDocument?.current_version?.assigned_reviewer?.id)
+      const currentUser = String(user?.id);
+      const isAssigned = currentUser === reviewAssignedTo;
+      setIsAssignment(isAssigned);
+    } else {
+      console.log('checkAssignment Failed!')
+    }
+
+  };
+
+  useEffect(()=> {
+    if (selectedDocument?.status === DocumentWorkFlowStatus.IN_REVIEW) {
+      checkAssignment();
+    }
+  }, [selectedDocument])
+
+
   if (!selectedDocument) return null;
   
-  console.log(selectedDocument)
+  //console.log(isAssignment)
   return (
     <>
       <Dialog.Root open={isAcceptedForReview} onOpenChange={(open) => !open && !loading && handleClose()}>
@@ -250,9 +270,9 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                     <Badge size="1" variant="soft" color="gray">
                       Версия: {selectedDocument.document_number || '1'}
                     </Badge>
-                    <Badge size="1" variant="soft" color="blue">
-                      Размер: {formatFileSize(selectedDocument.file_size)}
-                    </Badge>
+                    {selectedDocument?.current_version?.file_size && <Badge size="1" variant="soft" color="blue">
+                      Размер: {formatFileSize(selectedDocument.current_version.file_size)}
+                    </Badge>}
                     {selectedDocument.tmf_artifact && (
                       <Badge size="1" variant="soft" color="purple">
                         {selectedDocument.tmf_artifact}
@@ -350,13 +370,15 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
           <Box p="4">
             <Flex direction="column" gap="4">
               {/* Reviewer Info */}
+
+              {isAssignment ? (
               <Box style={{ 
                 backgroundColor: rejectMode ? 'var(--orange-3)' : 'var(--blue-3)', 
                 padding: '12px', 
                 borderRadius: 'var(--radius-2)',
                 border: '1px solid ' + (rejectMode ? 'var(--orange-6)' : 'var(--blue-6)')
               }}>
-                <Flex gap="2" align="start">
+                <Flex gap="2" align="center" >
                   <FiInfo size={18} color={rejectMode ? 'var(--orange-9)' : 'var(--blue-9)'} />
                   <Text size="2" style={{ color: rejectMode ? 'var(--orange-11)' : 'var(--blue-11)' }}>
                     Вы действуете как <strong>рецензент</strong>. 
@@ -365,10 +387,26 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                       : ' Укажите причину отклонения документа.'}
                   </Text>
                 </Flex>
+              </Box>)
+              : (<Box style={{ 
+                backgroundColor: 'var(--gray-3)', 
+                padding: '12px', 
+                borderRadius: 'var(--radius-2)',
+                border: '1px solid ' + 'var(--gray-6)'
+              }}>
+                <Flex gap="2" align="center" >
+                  <FiInfo size={18} color={'var(--gray-9)'} />
+                  <Text size="2" >
+                    У вас нет прав для вполнения действий.
+                    Документ назначен на рассмотрение другому пользователю.
+                  </Text>
+                </Flex>
               </Box>
+              )}
+
 
               {/* Comment Field */}
-              <Box>
+              {isAssignment === true && <Box>
                 <Flex align="center" gap="2" mb="1">
                   <Text as="label" size="2" weight="medium" htmlFor="review-comment">
                     {rejectMode ? 'Причина отклонения' : 'Комментарий'}
@@ -390,12 +428,12 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                   }
                   value={comment}
                   onChange={(e) => setComment(e.target.value)}
-                  disabled={loading}
+                  disabled={loading  || !isAssignment}
                   size="2"
                   style={rejectMode ? { borderColor: 'var(--red-7)' } : undefined}
                   autoFocus={rejectMode}
                 />
-              </Box>
+              </Box>}
 
               {/* Error */}
               {error && (
@@ -460,34 +498,43 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                 </>
               ) : (
                 <>
-                  <Button 
-                    variant="soft" 
-                    color="red" 
-                    onClick={handleRejectClick}
-                    disabled={loading}
+                  <Tooltip
+                    content={`${isAssignment ? 'Отклонить документ' : 'Документ назначен на рассмотрение другому пользователю'}`}
                   >
-                    <Flex align="center" gap="2">
-                      <FiXCircle size={16} />
-                      <Text>Отклонить</Text>
-                    </Flex>
-                  </Button>
-                  <Button 
-                    color="green" 
-                    onClick={handleApprove}
-                    disabled={loading}
+                    <Button 
+                      variant="soft" 
+                      color="red" 
+                      onClick={handleRejectClick}
+                      disabled={loading  || !isAssignment}
+                    >
+                      <Flex align="center" gap="2">
+                        <FiXCircle size={16} />
+                        <Text>Отклонить</Text>
+                      </Flex>
+                    </Button>
+                  </Tooltip>
+                  
+                  <Tooltip
+                    content={`${isAssignment ? 'Утвердить' : 'Документ назначен на рассмотрение другому пользователю'}`}
                   >
-                    {loading ? (
-                      <Flex align="center" gap="2">
-                        <Spinner size="1" />
-                        <Text>Утверждение...</Text>
-                      </Flex>
-                    ) : (
-                      <Flex align="center" gap="2">
-                        <FiCheckCircle size={16} />
-                        <Text>Утвердить</Text>
-                      </Flex>
-                    )}
-                  </Button>
+                    <Button 
+                      color="green" 
+                      onClick={handleApprove}
+                      disabled={loading  || !isAssignment}
+                    >
+                      {loading ? (
+                        <Flex align="center" gap="2">
+                          <Spinner size="1" />
+                          <Text>Утверждение...</Text>
+                        </Flex>
+                      ) : (
+                        <Flex align="center" gap="2">
+                          <FiCheckCircle size={16} />
+                          <Text>Утвердить</Text>
+                        </Flex>
+                      )}
+                    </Button>
+                  </Tooltip>
                 </>
               )}
             </Flex>
@@ -534,4 +581,4 @@ const DocumentReviewPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   );
 };
 
-export default DocumentReviewPanel;
+export default ReviewDocumentPanel;

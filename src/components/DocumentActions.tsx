@@ -1,12 +1,9 @@
 // components/DocumentActions.tsx
-import React, { useContext, useState, useEffect, useRef } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { 
   FiFilePlus, 
   FiSend, 
-  FiXCircle, 
   FiCheckCircle, 
-  FiX, 
-  FiRotateCcw, 
   FiArchive, 
   FiRefreshCw, 
   FiTrash2, 
@@ -115,7 +112,7 @@ export const actionConfig: Partial<Record<DocumentAction, ActionConfigProps>> = 
   }
 };
 
-const MIN_WIDTH = 700;
+const MIN_WIDTH = 700; // Width buttons container
 
 const DocumentActions: React.FC<DocumentActionsProps> = ({ 
   onAction, 
@@ -189,7 +186,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       return;
     }
 
-    if (action === DocumentAction.APPROVE || action === DocumentAction.REJECT) {
+    if (action === DocumentAction.APPROVE) {
       updateContext({ isAcceptedForReview: true });
       return;
     }
@@ -198,6 +195,12 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
       updateContext({ isArchivePanelOpen: true });
       return;
     }
+
+    if (action === DocumentAction.RESTORE) {
+      updateContext({ isRestorePanelOpen: true });
+      return;
+    }
+
 
     onAction?.(action);
   };

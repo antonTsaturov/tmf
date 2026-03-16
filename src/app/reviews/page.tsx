@@ -48,7 +48,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { MainContext } from '@/wrappers/MainContext';
 
 import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
-import DocumentReviewPanel from "@/components/panels/DocumentReviewPanel";
+import DocumentReviewPanel from "@/components/panels/ReviewDocumentPanel";
 import { Document } from '@/types/document';
 import UserMenu from '@/components/UserMenu';
 import { DocumentModeToggle } from '@/components/DocumentModeToggle';

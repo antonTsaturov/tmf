@@ -27,13 +27,13 @@ import { useNotification } from '@/wrappers/NotificationContext';
 import { useRename } from '@/hooks/useRename';
 import { Document } from "@/types/document";
 
-interface EditDocumentTitlePanelProps {
+interface EditDocumentPanelProps {
   onTitleChange?: (newTitle: string) => void;
   maxTitleLength?: number;
   onRenameSuccess?: (updatedDoc: Document ) => void;
 }
 
-const EditDocumentTitlePanel: React.FC<EditDocumentTitlePanelProps> = ({
+const EditDocumentPanel: React.FC<EditDocumentPanelProps> = ({
   onTitleChange,
   maxTitleLength = 200,
   onRenameSuccess
@@ -330,4 +330,4 @@ const EditDocumentTitlePanel: React.FC<EditDocumentTitlePanelProps> = ({
   );
 };
 
-export default EditDocumentTitlePanel;
+export default EditDocumentPanel;

@@ -1,6 +1,6 @@
 // app/api/documents/[id]/view/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { getIAMToken } from '@/lib/yc-iam';
 import { createHash } from 'crypto';
 
@@ -10,7 +10,7 @@ export async function GET(
 ) {
   const { id } = await params;
   
-  const client = await connectDB();
+  const client = getPool();
   
   try {
     // Получаем информацию о документе
@@ -106,7 +106,5 @@ export async function GET(
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
-  }
+  } 
 }

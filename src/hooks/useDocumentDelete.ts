@@ -36,7 +36,8 @@ export const useDocumentDelete = (): UseDocumentDeleteReturn => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
+          id: documentId,
           reason: reason,
           userId: user?.id // Передаем ID текущего пользователя
         }),

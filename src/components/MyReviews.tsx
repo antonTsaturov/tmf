@@ -42,7 +42,7 @@ import { useNotification } from '@/wrappers/NotificationContext';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
-import DocumentReviewPanel from "./panels/DocumentReviewPanel";
+import DocumentReviewPanel from "./panels/ReviewDocumentPanel";
 import { MainContext } from '@/wrappers/MainContext';
 import { Document } from '@/types/document';
 

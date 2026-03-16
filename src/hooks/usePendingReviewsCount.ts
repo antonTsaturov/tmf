@@ -15,7 +15,9 @@ export function usePendingReviewsCount() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !canApprove(String(user.role) as UserRole)) {
+    
+    const admin = String(user?.role) == UserRole.ADMIN;
+    if (!user || admin || !canApprove(String(user.role) as UserRole)) {
       setCount(0);
       setLoading(false);
       return;

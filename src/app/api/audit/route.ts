@@ -1,7 +1,7 @@
 // app/api/audit/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db/index';
-import { AuditFilters } from '@/types/types';
+import { connectDB, getPool } from '@/lib/db/index';
+import { AuditFilters } from '@/types/audit';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     search: searchParams.get('search') || undefined,
   };
 
-  const client = await connectDB();
+  const client = getPool();
   
   try {
     // Базовый запрос
@@ -147,7 +147,5 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    client.release();
   }
 }

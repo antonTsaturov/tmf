@@ -1,12 +1,12 @@
 // app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
-import { connectDB } from '@/lib/db';
+import { connectDB, getPool } from '@/lib/db';
 import { UserQueries } from '@/lib/db/schema';
 import { UserStatus } from '@/types/types';
 
 export async function POST(request: NextRequest) {
-  const client = await connectDB();
+  const client = getPool();
   
   try {
     const { email, password } = await request.json();
@@ -207,9 +207,5 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    if (client) {
-      client.release();
-    }
-  }
+  } 
 }

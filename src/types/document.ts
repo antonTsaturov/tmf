@@ -1,5 +1,7 @@
 
 import { DocumentWorkFlowStatus } from '@/types/document.status';
+import { id } from 'date-fns/locale';
+import { StudyUser } from './user';
 
 export enum DocumentAction {
   CREATE_DOCUMENT = 'create_document',
@@ -34,7 +36,7 @@ export interface Document {
   status: DocumentWorkFlowStatus;
   created_by: string; // UUID
   created_at: string;
-  current_version: DocumentVersion;
+  current_version: DocumentVersionRow;
 
   is_deleted: boolean;
   deleted_at: string;
@@ -83,24 +85,156 @@ export interface Document {
   version_id?: string;
 }
 
-export interface DocumentVersion {
-  id: string; // UUID
-  document_id: string; // UUID
-  document_version: number;
+// export interface DocumentVersion {
+//   id: string; // UUID
+//   document_id: string; // UUID
+//   document_version: number;
+//   document_name: string;
+//   file_name: string;
+//   file_path: string;
+//   file_type: DocumentType;
+//   file_size: string;
+//   checksum: string;
+//   uploaded_by: string; // UUID
+//   uploaded_at: string;
+//   change_reason: string;
+//   review_status: string;
+//   review_submitted_by: string;
+//   review_submitted_at: string;
+//   review_submitted_to: string;
+//   reviewed_by: string;
+//   reviewed_at: string;
+//   review_comment: string;
+// }
+
+export interface DocumentVersionRow {
+  id: string;
+  document_id: string;
+  document_number: number;
   document_name: string;
   file_name: string;
   file_path: string;
-  file_type: DocumentType;
-  file_size: string;
+  file_type: string;
+  file_size: number;
   checksum: string;
-  uploaded_by: string; // UUID
+  uploaded_by: string;
   uploaded_at: string;
-  change_reason: string;
-  review_status: string;
-  review_submitted_by: string;
-  review_submitted_at: string;
-  review_submitted_to: string;
-  reviewed_by: string;
-  reviewed_at: string;
-  review_comment: string;
+  change_reason: string | null;
+  review_status?: string | null;
+  review_submitted_at?: string | null;
+  reviewed_at?: string | null;
+  review_comment?: string | null;
+  
+  // Информация о пользователях
+  uploader?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  reviewer?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  approver?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  assigned_reviewer?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+  review_submitter?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
+
 }
+
+// interface cleanDocument {
+//   id: string,
+//   study_id: string;
+//   site_id: string | null;
+//   folder_id: string;
+//   tmf_zone: string | null;
+//   tmf_artifact: string | null;
+//   status: DocumentWorkFlowStatus;
+//   current_version: DocumentVersionRow;
+
+//   created_by: ShortUserInfo
+//   created_at: string;
+  
+//   is_deleted: boolean;
+//   deleted_at: string;
+//   deleted_by: ShortUserInfo;
+//   deletion_reason: string;
+
+//   restored_by: ShortUserInfo;
+//   restored_at: string;
+//   restoration_reasom: string;
+
+//   is_archived: boolean;
+//   archived_at: string;
+//   archived_by: ShortUserInfo;
+
+// }
+
+// interface CurrentVersion {
+//   version_id: string;
+//   document_number: number;
+//   document_name: string;
+//   file_name: string;
+//   file_path: string;
+//   file_type: string;
+//   file_size: number;
+//   checksum: string;
+
+//   upload: {
+//     uploaded_by: ShortUserInfo;
+//     uploaded_at: string;
+//     change_reason: string | null;
+//   },
+//   review: {
+//     review_status?: DocumentWorkFlowStatus;
+//     review_submitted_at?: string | null;
+//     review_submitted_by?: string | null;
+//     review_submitted_to?: string | null;
+//     reviewed_at?: string | null;
+//     review_comment?: string | null;
+//   }
+//   approve:
+//   reject:
+
+  
+
+  
+//   // Информация о пользователях
+//   uploader?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//   } | null;
+//   reviewer?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//   } | null;
+//   approver?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//   } | null;
+//   assigned_reviewer?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//   } | null;
+//   review_submitter?: {
+//     id: string;
+//     name: string;
+//     email: string;
+//   } | null;
+// }
