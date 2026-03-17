@@ -1,15 +1,15 @@
-import { useModal } from "@/hooks/useModal"
 import { UserRole } from "@/types/types";
 import { useAuth } from "@/wrappers/AuthProvider";
-import { Button, DropdownMenu } from "@radix-ui/themes";
+import { Button, DropdownMenu, Link } from "@radix-ui/themes";
 import { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import UserSettings from "./UserSettings";
+import { usePathname } from "next/navigation";
 
 export default function UserDropdownMenu() {
-  const { openModal } = useModal();
 	const { user, logout } = useAuth()!;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const pathname = usePathname();
 
   const userRole = String(user?.role);
 
@@ -27,12 +27,15 @@ export default function UserDropdownMenu() {
         </DropdownMenu.Trigger>
         <DropdownMenu.Content>
           {userRole === UserRole.ADMIN && (
-            <><DropdownMenu.Item onClick={openModal}>
+            <>
+            <Link href={`${pathname !== '/admin' ? "/admin" : '#' }`}>
+              <DropdownMenu.Item >
                 Admin Dashboard
               </DropdownMenu.Item>
-              <DropdownMenu.Separator />
-            </>)
-          }
+            </Link>
+            <DropdownMenu.Separator />
+            </>
+          )}
           <DropdownMenu.Item>Study Metrics</DropdownMenu.Item>
           
           <DropdownMenu.Item

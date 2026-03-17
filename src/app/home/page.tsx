@@ -4,20 +4,20 @@ import { useRef, useContext } from 'react';
 import '../../styles/Home.css';
 import FileExplorer, { FileNode } from '../../components/FileExplorer';
 import UserMenu from '@/components/UserMenu';
-import Modal from '@/components/Modal';
+// import Modal from '@/components/Modal';
 import { useModal } from '@/hooks/useModal';
-import FoldersStructureManager from '@/components/admin/FoldersStructureManager';
-import SiteManager from '@/components/admin/SiteManager';
-import StudyManager from '@/components/admin/StudyManager';
-import UserManager from '@/components/admin/UserManager';
+// import FoldersStructureManager from '@/components/admin/FoldersStructureManager';
+// import SiteManager from '@/components/admin/SiteManager';
+// import StudyManager from '@/components/admin/StudyManager';
+// import UserManager from '@/components/admin/UserManager';
 import { Button, Tabs, Box} from '@radix-ui/themes';
 import StudySiteNavigation from '@/components/Navigation';
 import FolderContentViewer from '@/components/FolderContentViewer';
 import DocumentActions from '@/components/DocumentActions';
-import AuditTrailViewer from '@/components/admin/AuditTrailViewer';
+// import AuditTrailViewer from '@/components/admin/AuditTrailViewer';
 import PDFViewer from '@/components/PDFViewer';
 import DocumentDetails from '@/components/DocumentDetails';
-import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
+// import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
 import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
@@ -32,14 +32,14 @@ interface MainWindowProps {
 const Home: React.FC<MainWindowProps> = () => {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const { modalProps, isOpen } = useModal();
+  // const { modalProps, isOpen } = useModal();
   const { context, updateContext } = useContext(MainContext)!;
   const { selectedDocument, isRightFrameOpen, isModal } = context!;
 
   return (
     <div className="sidebarresizable-root">
 
-      <Modal {...modalProps}>
+      {/* <Modal {...modalProps}>
         <Tabs.Root defaultValue="tab1">
           <Tabs.List >
             <Tabs.Trigger  value="tab1">
@@ -84,7 +84,7 @@ const Home: React.FC<MainWindowProps> = () => {
           </Box>)
           }
         </Tabs.Root>
-      </Modal>
+      </Modal> */}
 
       <header className="toolbar-header">
         <StudySiteNavigation /> 

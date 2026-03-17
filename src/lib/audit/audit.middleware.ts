@@ -16,7 +16,7 @@ import { AuditAction, AuditEntity } from "@/types/audit";
 export type AuditContext = {
   body?: any;
   formData?: FormData;
-
+  //oldEntity?: any;
   entity?: any;   // entity из БД
   result?: any;   // результат операции
 };

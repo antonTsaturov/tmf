@@ -24,11 +24,7 @@ const UserReviewsButton = () => {
     <div>
       <Link href="/reviews">
         <Tooltip content="Pending review">
-          <Button
-            variant="solid"
-            mr="3"
-            style={{ cursor: 'pointer' }}
-            >
+          <Button variant="solid" mr="3" style={{ cursor: 'pointer' }} >
             <Flex align="center" gap="2">
               <MdOutlinePendingActions />
               {count && count > 0 && (
@@ -40,14 +36,6 @@ const UserReviewsButton = () => {
           </Button>
         </Tooltip>
       </Link>
-
-      {/* <MyReviews
-        open={reviewsModalOpen}
-        onOpenChange={setReviewsModalOpen}
-        onReviewComplete={() => {
-          console.log('Review completed');
-        }}
-      /> */}
     </div>
   );
 }
