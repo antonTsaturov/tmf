@@ -52,6 +52,20 @@ export async function GET(request: NextRequest) {
         d.*,
         -- Информация о создателе
         json_build_object('id', uc.id, 'name', uc.name, 'email', uc.email) as creator,
+        -- Информация об удалившем (если документ удален)
+        CASE 
+          WHEN d.is_deleted = true AND d.deleted_by IS NOT NULL THEN
+            json_build_object('id', del.id, 'name', del.name, 'email', del.email, 'role', del.role)
+          ELSE
+            NULL
+        END as deleter_info,
+        -- Информация об архивировавшем (если документ архивирован)
+        CASE 
+          WHEN d.is_archived = true AND d.archived_by IS NOT NULL THEN
+            json_build_object('id', arch.id, 'name', arch.name, 'email', arch.email, 'role', arch.role)
+          ELSE
+            NULL
+        END as archiver_info,        
         -- Агрегация всех версий в массив объектов
         (
           SELECT jsonb_agg(v_info)
@@ -73,6 +87,8 @@ export async function GET(request: NextRequest) {
         ) as all_versions
       FROM document d
       LEFT JOIN users uc ON d.created_by = uc.id
+      LEFT JOIN users del ON d.deleted_by = del.id  -- Добавлен LEFT JOIN для информации об удалившем
+      LEFT JOIN users arch ON d.archived_by = arch.id  -- JOIN для информации об архивировавшем
       WHERE d.study_id = $1 AND d.folder_id = $2 ${siteCondition}
         AND (${include_deleted ? 'TRUE' : 'd.is_deleted = false'})
         AND (${include_archived ? 'TRUE' : '(d.is_archived = false OR d.is_archived IS NULL)'})
@@ -99,8 +115,28 @@ export async function GET(request: NextRequest) {
         total_versions: versions.length,
         document_name: latest.document_name,
         document_number: latest.document_number,
-        // Очищаем служебное поле из SQL-запроса
-        all_versions: undefined 
+        // Добавляем информацию об удалившем только если документ удален
+        ...(doc.is_deleted && doc.deleter_info ? {
+          deleted_by_info: {
+            name: doc.deleter_info.name,
+            email: doc.deleter_info.email,
+            role: String(doc.deleter_info.role),
+            deleted_at: doc.deleted_at // предполагается, что есть поле deleted_at
+          }
+        } : {}),
+        // Добавляем информацию об архивировавшем только если документ архивирован
+        ...(doc.is_archived && doc.archiver_info ? {
+          archived_by_info: {
+            name: doc.archiver_info.name,
+            email: doc.archiver_info.email,
+            role: String(doc.archiver_info.role),
+            archived_at: doc.archived_at
+          }
+        } : {}),
+        // Очищаем служебные поля из SQL-запроса
+        all_versions: undefined,
+        deleter_info: undefined,
+        archiver_info: undefined
       }
 
       return docObject;
@@ -117,7 +153,7 @@ export async function GET(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } 
+  }
 }
 
 // Создание документа

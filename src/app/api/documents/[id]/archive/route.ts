@@ -1,78 +1,38 @@
 // app/api/documents/[id]/archive/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, getPool } from '@/lib/db/index';
-import { AuditContext, withAudit } from '@/lib/audit/audit.middleware';
-//import { getDocumentForAudit } from '../delete/route';
+import { getPool } from '@/lib/db/index';
+import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
+import { getDocumentById } from '@/lib/db/document';
 
-async function archiveHandler(request: NextRequest, ctx: AuditContext): Promise<NextResponse> {
-  
+export async function archiveHandler(
+  request: NextRequest,
+  ctx: AuditContext,
+) {
   const client = getPool();
-  // Get doc ID
-  const segments = request.nextUrl.pathname.split('/');
-  const id = segments[segments.indexOf('documents') + 1];
-  // Get user id
-  const { userId } = ctx.body || {};
-
-  if (!userId) {
-    return NextResponse.json(
-      { error: 'User ID is required' },
-      { status: 400 }
-    );
-  }
-
-  if (!id) {
-    return NextResponse.json(
-      { error: 'Document ID is required' },
-      { status: 400 }
-    );
-  }
-
+  
   try {
-    // Получаем информацию о документе до архивации
-    const documentBefore = await client.query(
-      `SELECT d.*, 
-        dv.document_name, dv.file_name, dv.file_type, dv.file_size,
-        s.title as study_title,
-        sit.name as site_name
-      FROM document d
-      LEFT JOIN LATERAL (
-        SELECT * FROM document_version 
-        WHERE document_id = d.id 
-        ORDER BY document_number DESC 
-        LIMIT 1
-      ) dv ON true
-      LEFT JOIN study s ON d.study_id = s.id
-      LEFT JOIN site sit ON d.site_id = sit.id
-      WHERE d.id = $1`,
-      [id]
-    );
+    // 1. Используем уже загруженную сущность из контекста
+    const document = ctx.entity;
+    const { userId } = ctx.body || {};
 
-    if (documentBefore.rowCount === 0) {
-      return NextResponse.json(
-        { error: 'Document not found' },
-        { status: 404 }
-      );
+    if (!document) {
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    const document = documentBefore.rows[0];
-
-    // Проверяем, не архивирован ли уже документ
     if (document.is_archived) {
-      return NextResponse.json(
-        { error: 'Document already archived' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Document already archived' }, { status: 400 });
     }
 
-    // Проверяем, не удален ли документ (нельзя архивировать удаленный документ)
     if (document.is_deleted) {
-      return NextResponse.json(
-        { error: 'Cannot archive deleted document' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Cannot archive deleted document' }, { status: 400 });
     }
 
-    // Архивируем документ
+    // Валидация входных данных
+    if (!userId) {
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    }
+
+    // 2. Выполняем только один UPDATE запрос
     const { rowCount, rows } = await client.query(`
       UPDATE document 
       SET 
@@ -81,65 +41,54 @@ async function archiveHandler(request: NextRequest, ctx: AuditContext): Promise<
         archived_by = $1
       WHERE id = $2 AND is_archived = false
       RETURNING *
-    `, [userId, id]);
+    `, [userId, document.id]);
 
     if (rowCount === 0) {
-      return NextResponse.json(
-        { error: 'Document not found or already archived' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document already archived' }, { status: 400 });
     }
 
-    // Возвращаем результат с данными для аудита
-    return NextResponse.json({
+    return NextResponse.json({ 
       message: 'Document archived successfully',
-      document: rows[0],
-      study_id: document.study_id,
-      site_id: document.site_id,
-      document_name: document.document_name || document.file_name,
-      study_title: document.study_title,
-      site_name: document.site_name,
-      folder_name: document.folder_name
+      document: rows[0]
     });
 
   } catch (error) {
     console.error('Error archiving document:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  } 
+  }
 }
 
 export const POST = withAudit(
   {
-    action: 'ARCHIVE',
+    action: 'UPDATE',
     entityType: 'document',
 
-    getEntityId: (_, req) =>
-      req.nextUrl.pathname.split('/').pop() || '',
-
-    getStudyId: async (_, req) => {
-      const id = String(req.nextUrl.pathname.split('/').pop());
-      const doc = await getDocumentForAudit(id);
-      return doc?.study_id ?? '';
+    // Извлекаем ID из URL
+    getEntityId: (_, req) => {
+      const parts = req.nextUrl.pathname.split('/');
+      return parts[parts.indexOf('documents') + 1] || '0';
     },
 
-    getSiteId: async (_, req) => {
-      const id = String(req.nextUrl.pathname.split('/').pop());
-      const doc = await getDocumentForAudit(id);
-      return String(doc?.site_id ?? '');
+    //  Загружаем сущность один раз для всего жизненного цикла запроса
+    loadEntity: async (_, ctx) => {
+      const {docId} = ctx.body;
+      return await getDocumentById(docId);
     },
 
-    getOldValue: async (_, req) => {
-      const id = req.nextUrl.pathname.split('/').pop();
-      return getDocumentForAudit(String(id));
-    },
+    // Теперь эти функции просто берут данные из памяти (ctx.entity)
+    getStudyId: (ctx) => ctx.entity?.study_id ?? '',
+    getSiteId: (ctx) => String(ctx.entity?.site_id ?? 'General Level Document'),
+    getOldValue: (ctx) => ({
+      archived_by: ctx.entity?.archived_by,
+      is_archived: ctx.entity?.is_archived,
+      archived_at: ctx.entity?.archived_at,
+    }),
 
     getNewValue: (ctx) => ({
-      reason: ctx.body?.reason,
-      deleted_by: ctx.body?.userId,
-      is_deleted: true
+      archived_by: ctx.body?.userId,
+      is_archived: true,
+      archived_at: new Date().toISOString()
     })
   },
-
   archiveHandler
 );
-

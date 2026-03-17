@@ -34,7 +34,8 @@ export const useDocumentArchive = (): UseDocumentArchiveReturn => {
         },
         credentials: 'include',
         body: JSON.stringify({ 
-          userId: user?.id // Передаем ID текущего пользователя
+          userId: user?.id, // Передаем ID текущего пользователя
+          docId: documentId
         }),
       });
       

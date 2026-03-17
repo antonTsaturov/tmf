@@ -62,7 +62,6 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
   // Сбрасываем состояние при закрытии
   useEffect(() => {
     if (!isAcceptedForReview) {
-      setComment('');
       setRejectMode(false);
       setError(null);
     }
@@ -229,7 +228,9 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
 
   if (!selectedDocument) return null;
   
-  //console.log(isAssignment)
+  const reviewSubmitter = selectedDocument?.current_version?.review_submitter  || selectedDocument?.review_submitter || null;
+  const reviewComment = selectedDocument?.current_version?.review_comment || selectedDocument?.review_comment || null;
+
   return (
     <>
       <Dialog.Root open={isAcceptedForReview} onOpenChange={(open) => !open && !loading && handleClose()}>
@@ -278,39 +279,14 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                         {selectedDocument.tmf_artifact}
                       </Badge>
                     )}
-                    
-
                   </Flex>
-
-
-
-                  {/* Альтернативный вариант: показываем иконку с tooltip если комментарий короткий */}
-                  {/* {selectedDocument.review_comment && (
-                    <Box mt="2">
-                      <Tooltip 
-                        content={
-                          <Flex direction="column" gap="1">
-                            <Text weight="bold">Комментарий отправителя:</Text>
-                            <Text>{selectedDocument.review_comment}</Text>
-                          </Flex>
-                        }
-                      >
-                        <Flex align="center" gap="1" style={{ cursor: 'help' }}>
-                          <FiMessageSquare size={14} color="var(--amber-9)" />
-                          <Text size="1" color="amber">
-                            Есть комментарий отправителя
-                          </Text>
-                        </Flex>
-                      </Tooltip>
-                    </Box>
-                  )} */}
                 </Box>
               </Flex>
             </Card>
           </Box>
 
-          {/* Карточка отправителя (новая) */}
-          {selectedDocument.review_submitter && (
+          {/* Карточка отправителя */}
+          {reviewSubmitter && (
             <Box px="4" pb="2">
               <Text size="2" weight="bold">Отправитель</Text>              
               <Card size="1" variant="surface">
@@ -318,21 +294,21 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                   <Avatar fallback={<FaUser />} />
                   <Box style={{ flex: 1 }}>
                     <Text size="2" weight="bold">
-                      {selectedDocument.review_submitter.name || 'Отправитель'}
+                      {reviewSubmitter.name || 'Отправитель'}
                     </Text>
                     <Flex align="center" gap="2">
                       <Text size="1" color="gray">
-                        {selectedDocument.review_submitter.email || 'Email не указан'}
+                        {reviewSubmitter.email || 'Email не указан'}
                       </Text>
-                      {selectedDocument.review_submitter.role && (
+                      {reviewSubmitter.role && (
                         <Badge size="1" variant="soft" color="blue">
-                          {getRoleConfig(selectedDocument.review_submitter.role).label}
+                          {getRoleConfig(reviewSubmitter.role).label}
                         </Badge>
                       )}
                     </Flex>
 
                     {/* Badge с комментарием отправителя */}
-                    {selectedDocument.review_comment && (
+                    {reviewComment && (
                       <Popover.Root>
                         <Popover.Trigger>
                           <Box mt="2">
@@ -351,7 +327,7 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
                         </Popover.Trigger>
                         <Popover.Content size="1" style={{ maxWidth: 300 }}>
                             <Text size="2" style={{ whiteSpace: 'pre-wrap' }}>
-                              {selectedDocument.review_comment}
+                              {reviewComment}
                             </Text>
                         </Popover.Content>
                       </Popover.Root>

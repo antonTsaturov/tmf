@@ -96,12 +96,11 @@ const NewVersionDocumentPanel: React.FC<NewVersionUploadPanelProps> = ({onUpload
 
     if (result.success && result.version) {
       clearPanel();
-      //updateContext({ selectedDocument: result.version });
-      if (typeof result === 'object' && result !== null && onSuccess) {
-        onSuccess(result.version); 
+      if (onSuccess) {
+        const newVersionNumber = result.version
+        onSuccess(newVersionNumber); 
+        addNotification('success', 'Новая версия успешно загружена');
       }
-      addNotification('success', 'Новая версия успешно загружена');
-      //onUploadSuccess?.();
     } else {
       const err = result.error || 'Неизвестная ошибка';
       addNotification('error', `Ошибка: ${err}`);

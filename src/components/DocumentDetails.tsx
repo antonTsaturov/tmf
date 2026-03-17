@@ -3,7 +3,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { Document } from '@/types/document';
-import { DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document.status';
+import { DocumentLifeCycleStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
 import { 
@@ -120,9 +120,11 @@ const DocumentDetails: React.FC = () => {
     // study_id?: number;
     // site_id?: string;
     // folder_id: string;
-    // creator?: { id: string; name: string; email: string; role?: string[] } | null;
+    //creator?: { id: string; name: string; email: string; role?: string[] } | null;
     deleter?: { id: string; name: string; email: string } | null;
     restorer?: { id: string; name: string; email: string } | null;
+    deleted_by_info?: { name: string; email: string, role: string, deleted_at: string } | null;
+    archived_by_info?: { name: string; email: string, role: string, archived_at: string } | null;
     // last_uploader?: { id: string; name: string; email: string } | null;
     // reviewer?: { id: string; name: string; email: string } | null;
     // approver?: { id: string; name: string; email: string } | null;
@@ -168,14 +170,14 @@ const DocumentDetails: React.FC = () => {
               <dt>Папка</dt>
               <dd>{getFolderName(doc.folder_id) || '—'}</dd>
             </div>
-            <div className="metadata-row">
+            {doc.tmf_zone && <div className="metadata-row">
               <dt>TMF Zone</dt>
               <dd>{doc.tmf_zone || '—'}</dd>
-            </div>
-            <div className="metadata-row">
+            </div>}
+            {doc.tmf_artifact && <div className="metadata-row">
               <dt>TMF Artifact</dt>
               <dd>{doc.tmf_artifact || '—'}</dd>
-            </div>
+            </div>}
           </dl>
         </section>
 
@@ -211,15 +213,15 @@ const DocumentDetails: React.FC = () => {
               <dd>{formatFileSize(doc.file_size || 0)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Загружено</dt>
+              <dt>Загружена</dt>
               <dd>{formatDate(doc.created_at)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Кем загружено</dt>
+              <dt>Кто загрузил</dt>
               <dd>{renderUserInfo(doc.creator)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Checksum</dt>
+              <dt>Контрольная сумма</dt>
               <dd className="metadata-value-monospace metadata-value-truncate" title={doc.checksum}>
                 {doc.current_version?.checksum || '—'}
               </dd>
@@ -264,13 +266,6 @@ const DocumentDetails: React.FC = () => {
                 </div>
               )}
                             
-              {doc.current_version?.approver?.id && (
-                <div className="metadata-row">
-                  <dt>Кем утвержден</dt>
-                  <dd>{renderUserInfo(doc.current_version?.approver)}</dd>
-                </div>
-              )}
-              
               {doc.current_version?.reviewed_at && (
                 <div className="metadata-row">
                   <dt>Дата утверждения</dt>
@@ -278,6 +273,13 @@ const DocumentDetails: React.FC = () => {
                 </div>
               )}
 
+              {doc.current_version?.approver?.id && (
+                <div className="metadata-row">
+                  <dt>Кем утвержден</dt>
+                  <dd>{renderUserInfo(doc.current_version?.approver)}</dd>
+                </div>
+              )}
+              
               {doc.current_version?.review_comment && (
                 <div className="metadata-row">
                   <dt>Комментарий</dt>
@@ -288,27 +290,59 @@ const DocumentDetails: React.FC = () => {
           </section>
         )}
 
+        {/* Информация об архивировании */}
+        {doc.is_archived && (
+          <section className="document-details-section">
+            <h3 className="document-details-section-title">Архивация</h3>
+            <dl className="document-details-metadata">
+              <div className="metadata-row">
+                <dt>Документ архивирован</dt>
+                <dd>{formatDate(doc.archived_at || '')}</dd>
+              </div>
+              {doc.archived_by_info && (
+                <div className="metadata-row">
+                  <dt>Кем архивирован</dt>
+                  <dd>{renderUserInfo(doc.archived_by_info)}</dd>
+                </div>
+              )}
+
+              {doc.archived_by_info?.archived_at && (
+                <div className="metadata-row">
+                  <dt>Когда архивирован</dt>
+                  <dd>{formatDate(doc.archived_by_info?.archived_at)}</dd>
+                </div>
+              )}
+
+            </dl>
+          </section>
+        )}
+
+
         {/* Информация об удалении/восстановлении */}
         {doc.is_deleted && (
           <section className="document-details-section">
             <h3 className="document-details-section-title">Удаление</h3>
             <dl className="document-details-metadata">
+
               <div className="metadata-row">
                 <dt>Документ удален</dt>
                 <dd>{formatDate(doc.deleted_at || '')}</dd>
               </div>
-              {doc.deleter && (
+
+              {doc.deleted_by_info && (
                 <div className="metadata-row">
                   <dt>Кем удален</dt>
-                  <dd>{renderUserInfo(doc.deleter)}</dd>
+                  <dd>{renderUserInfo(doc.deleted_by_info)}</dd>
                 </div>
               )}
+
               {doc.deletion_reason && (
                 <div className="metadata-row">
                   <dt>Причина удаления</dt>
                   <dd>{doc.deletion_reason}</dd>
                 </div>
-              )}              
+              )}
+
             </dl>
           </section>
         )}

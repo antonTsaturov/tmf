@@ -77,17 +77,20 @@ export async function GET(request: NextRequest) {
         d.folder_name,
         d.tmf_zone,
         d.tmf_artifact,
+        d.created_at,
 
         dv.id AS version_id,
         dv.document_number,
         dv.document_name,
         dv.file_name,
         dv.file_type,
+        dv.file_size,
         dv.uploaded_at,
         dv.change_reason,
         dv.review_status,
         dv.review_submitted_at,
         dv.review_comment,
+        dv.checksum,
 
         uploader.name AS uploader_name,
         uploader.email AS uploader_email,
@@ -131,6 +134,9 @@ export async function GET(request: NextRequest) {
       site_id: doc.site_id,
       folder_id: doc.folder_id,
       folder_name: doc.folder_name,
+      created_at: doc.created_at,
+      checksum: doc.checksum,
+      file_size: doc.file_size,
 
       tmf_zone: doc.tmf_zone,
       tmf_artifact: doc.tmf_artifact,
@@ -150,6 +156,8 @@ export async function GET(request: NextRequest) {
 
       uploaded_at: doc.uploaded_at,
       change_reason: doc.change_reason,
+
+      current_version: doc,
 
       creator: doc.creator_name
         ? {

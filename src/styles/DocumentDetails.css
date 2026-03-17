@@ -38,7 +38,7 @@
 }
 
 .document-details-section {
-  background: #f8f9fa;
+  background: #f1f3f5;
   border-radius: 8px;
   padding: 16px;
 }
@@ -63,7 +63,7 @@
   grid-template-columns: 140px 1fr;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid #d7dbdf;
   align-items: start;
 }
 

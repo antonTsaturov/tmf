@@ -66,21 +66,9 @@ export interface Document {
   review_submitted_by?: string;
   review_submitter?: ShortUserInfo;
   review_comment?: string | null;
-  uploader?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  submitter?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  creator?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
+  uploader?: ShortUserInfo | null;
+  submitter?: ShortUserInfo | null;
+  creator?: ShortUserInfo| null;
   
   version_id?: string;
 }
@@ -126,31 +114,11 @@ export interface DocumentVersionRow {
   review_comment?: string | null;
   
   // Информация о пользователях
-  uploader?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  reviewer?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  approver?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  assigned_reviewer?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
-  review_submitter?: {
-    id: string;
-    name: string;
-    email: string;
-  } | null;
+  uploader?: ShortUserInfo | null;
+  reviewer?: ShortUserInfo | null;
+  approver?: ShortUserInfo | null;
+  assigned_reviewer?: ShortUserInfo| null;
+  review_submitter?: ShortUserInfo | null;
 
 }
 

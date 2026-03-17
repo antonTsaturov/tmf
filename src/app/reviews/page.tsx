@@ -1,7 +1,5 @@
 // app/reviews/page.tsx
 'use client';
-
-
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { 
   Container, 
@@ -67,6 +65,11 @@ interface PaginationInfo {
   hasMore: boolean;
 }
 
+const VIEW_LEVELS = [
+  { value: 'all', label: 'Все документы' },
+  { value: 'site', label: 'Site Level документы' },
+  { value: 'general', label: 'General Level документы' }
+];
 
 export default function MyReviewsPage() {
   const { getFolderNameFromStudiesMap } = useFolderNameByMap();
@@ -90,20 +93,12 @@ export default function MyReviewsPage() {
   const [studyFilter, setStudyFilter] = useState(searchParams.get('study_id') || '');
   const [siteFilter, setSiteFilter] = useState(searchParams.get('site_id') || '');
   const [folderFilter, setFolderFilter] = useState(searchParams.get('folder_id') || '');
+  const [levelFilter, setLevelFilter] = useState(searchParams.get('folder_id') || '');
   
   const [searchQuery, setSearchQuery] = useState('');
 
   // State для хранения всех документов
   const [allDocuments, setAllDocuments] = useState<Document[]>([]);
-
-  const [docMode, setDocMode] = useState<'site' | 'general'>('site');
-
-  // Функция ереключения Site Level <-> General level
-  const handleModeChange = (newMode: 'site' | 'general') => {
-    setDocMode(newMode);
-    // Обязательный сброс пагинации
-    setPagination(prev => ({ ...prev, offset: 0 }));
-  };
 
   // Загрузка всех документов один раз при монтировании
   const fetchAllPendingReviews = async () => {
@@ -179,17 +174,14 @@ export default function MyReviewsPage() {
   }, [onDocumentUpdatedId]);  
   
 
-
-  type DocumentMode = 'site' | 'general';
-
-  // Функция фильтрации
+ // Функция фильтрации
   const filterDocuments = (
     docs: Document[], 
     query: string, 
     studyId?: string, 
     siteId?: string, 
     folderId?: string,
-    docMode?: DocumentMode
+    levelFilter?: string
   ) => {
     return docs.filter(doc => {
       //  Фильтр по поисковому запросу
@@ -200,13 +192,17 @@ export default function MyReviewsPage() {
       const matchesStudy = !studyId || studyId === "all" || 
         doc.study_id.toString() === studyId;
       
-      //  Фильтр по центру с учётом docMode
-      const matchesSite = (() => {
-        if (docMode === 'general') {
+      //  Фильтр по уровню (general, site, или все)
+      const matchesLevel = (() => {
+        if (!levelFilter || levelFilter === 'all') {
+          // При выборе "Все документы" показываем все документы (и site level и general level)
+          return true;
+        }
+        if (levelFilter === 'general') {
           // Только General документы (site_id === null)
           return doc.site_id === null;
         }
-        if (docMode === 'site') {
+        if (levelFilter === 'site') {
           // Только Site-level документы (site_id !== null)
           if (!siteId || siteId === "all") {
             return doc.site_id !== null; // все site-level
@@ -214,15 +210,10 @@ export default function MyReviewsPage() {
           // Конкретный центр: site_id !== null + совпадение по ID
           return doc.site_id !== null && doc.site_id.toString() === siteId;
         }
-        // Если docMode не задан — не фильтруем по этому критерию
         return true;
       })();
-
-      // 📁 Фильтр по папке
-      const matchesFolder = !folderId || folderId === "all" || 
-        doc.folder_id?.toString() === folderId;
       
-      return matchesSearch && matchesStudy && matchesSite && matchesFolder;
+      return matchesSearch && matchesStudy && matchesLevel;
     });
   };
 
@@ -233,7 +224,7 @@ export default function MyReviewsPage() {
       studyFilter,
       siteFilter,
       folderFilter,
-      docMode // ← передаём docMode как параметр
+      levelFilter // ← передаём docMode как параметр
     );
   }, [
     allDocuments,
@@ -241,7 +232,7 @@ export default function MyReviewsPage() {
     studyFilter,
     siteFilter,
     folderFilter,
-    docMode // ← docMode в зависимостях: при изменении — пересчёт
+    levelFilter // ← docMode в зависимостях: при изменении — пересчёт
   ]);
   
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -250,9 +241,14 @@ export default function MyReviewsPage() {
     setPagination(prev => ({ ...prev, offset: 0 }));
   };
 
-  // Обновляем обработчики фильтров
+  // Oбработчики фильтров
   const handleStudyFilterChange = (value: string) => {
     setStudyFilter(value === "all" ? "" : value);
+    setPagination(prev => ({ ...prev, offset: 0 }));
+  };
+
+  const handleLevelFilterChange = (value: string) => {
+    setLevelFilter(value === "all" ? "" : value);
     setPagination(prev => ({ ...prev, offset: 0 }));
   };
 
@@ -272,14 +268,13 @@ export default function MyReviewsPage() {
       <Flex justify="center" align="center" minHeight="100vh" width="100%">
         <Card>
           <Flex direction="column" align="center" gap="4" py="8">
-            <Text color="gray">Необходимо авторизоваться</Text>
-            <Button onClick={() => router.push('/login')}>Войти</Button>
           </Flex>
         </Card>
       </Flex>
     );
   }
 
+  //console.log('selectedDocument: ', selectedDocument )
   return (
     <div className="main-box" style={{ 
       height: '95vh', // 95% доступной высоты экрана
@@ -375,15 +370,20 @@ export default function MyReviewsPage() {
           
                 {/* Filters */}
               <Flex  gap="6" align="center" wrap="wrap">
-                  <DocumentModeToggle 
-                    mode={docMode} 
-                    onModeChange={handleModeChange} 
-                  />                  
-                  <Select.Root 
-                    value={studyFilter || "all"} 
-                    onValueChange={handleStudyFilterChange}
-                    size="1"
-                  >
+                  <Select.Root value={levelFilter || "all"} onValueChange={handleLevelFilterChange} size="1">
+                    <Select.Trigger placeholder="Уровень" variant="ghost"/>
+                    <Select.Content>
+                      {VIEW_LEVELS.map((level) => (
+                        <Select.Item key={level.value} value={level.value}>
+                          {level.label}
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Root>
+
+
+
+                  <Select.Root value={studyFilter || "all"} onValueChange={handleStudyFilterChange} size="1">
                     <Select.Trigger placeholder="Исследование" variant="ghost"/>
                     <Select.Content>
                       <Select.Item value="all">Все исследования</Select.Item>
@@ -403,13 +403,13 @@ export default function MyReviewsPage() {
                     <Select.Trigger
                       placeholder="Центр"
                       variant="ghost"
-                      disabled={docMode === 'general'}
+                      disabled={levelFilter === 'general'}
                       className={`${isRightFrameOpen ? "select-fixed-width" : ''}`}
                     />
                     <Select.Content >
-                      <Select.Item value="all" disabled={docMode === 'general'}>Все центры</Select.Item>
+                      <Select.Item value="all" disabled={levelFilter === 'general'}>Все центры</Select.Item>
                       {sites ? Array.from(sites.values()).map((site) => (
-                        <Select.Item key={site.id} value={String(site.id)} disabled={docMode === 'general'}>
+                        <Select.Item key={site.id} value={String(site.id)} disabled={levelFilter === 'general'}>
                           <span className="select-item-text" title={site.name}>
                             {site.name}
                           </span>
@@ -446,7 +446,7 @@ export default function MyReviewsPage() {
               >
                 <Table.Row>
                   <Table.ColumnHeaderCell style={{ width: '30%' }}>Документ</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{`Исследование ${docMode === 'site' ? "/ Центр" : ''}`}</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{`Исследование ${levelFilter === 'site' ? "/ Центр" : ''}`}</Table.ColumnHeaderCell>
                   {!isRightFrameOpen && (<Table.ColumnHeaderCell style={{ width: '15%' }}>Папка</Table.ColumnHeaderCell>)}
                   <Table.ColumnHeaderCell style={{ width: '15%' }}>Отправитель</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell style={{ width: '15%' }}>Дата отправки</Table.ColumnHeaderCell>

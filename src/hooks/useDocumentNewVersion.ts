@@ -74,7 +74,7 @@ export const useDocumentNewVersion = () => {
 
       // 🔹 Получаем результат, соответствующий новой структуре route.ts
       const result = await response.json();
-      console.log('useDocumentNewVersion result: ', result)
+
       return {
         success: true,
         version: result.version.document_number, // возвращается только номер версии
