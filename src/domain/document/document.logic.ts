@@ -32,18 +32,21 @@ export const getAvailableDocumentActions = (
   studyStatus?: StudyStatus
 ): DocumentAction[] => {
 
+  // Получаем studyActions заранее 
+  const studyActions = studyStatus ? StudyStatusTransitions[studyStatus] : [];
+
   // Если документ не выбран - только кнопка создать документ (если есть права)
   if (!selectedDocument) {
     return [DocumentAction.CREATE_DOCUMENT]
-      .filter(action => hasPermissionForAction(action, userRole));
+      .filter(action => hasPermissionForAction(action, userRole))
+      .filter(action => studyActions.includes(action));
   }
 
   const currentDocStatus = selectedDocument.status as DocumentWorkFlowStatus;
 
-  // Получаем действия по каждому измерению
+  // Получаем действия еще по двум измерениям
   const documentActions = Transitions[currentDocStatus] || [];
   const siteActions = siteStatus ? SiteStatusTransitions[siteStatus] : [];
-  const studyActions = studyStatus ? StudyStatusTransitions[studyStatus] : [];
 
   // Если siteStatus/studyStatus не переданы - не ограничиваем по этим измерениям
   let availableActions = documentActions;

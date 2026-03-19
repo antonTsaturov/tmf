@@ -1,3 +1,4 @@
+// src/lib/db/schema.ts
 export enum Tables {
   STUDY = 'study',
   SITE = 'site',

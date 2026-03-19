@@ -62,6 +62,7 @@ import FoldersStructureManager from '@/components/admin/FoldersStructureManager'
 import SiteManager from '@/components/admin/SiteManager';
 import StudyManager from '@/components/admin/StudyManager';
 import UserManager from '@/components/admin/UserManager';
+import StudyArchivation from '@/components/admin/StudyArchivation';
 
 export default function AdminDashboard() {
   
@@ -129,6 +130,9 @@ export default function AdminDashboard() {
               </Tabs.Content>
               <Tabs.Content value="tab6">
                 <DeletedDocumentsViewer />
+              </Tabs.Content>
+              <Tabs.Content value="tab7">
+                <StudyArchivation />
               </Tabs.Content>
           </Box>
         </Tabs.Root>

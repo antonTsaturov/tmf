@@ -291,3 +291,19 @@
   color: #999;
   font-size: 14px;
 }
+
+/* Read-only state for completed studies - subtle lock indicator only */
+.lock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  color: #c0c0c0;
+  font-size: 11px;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.node:hover .lock-icon {
+  opacity: 0.8;
+}

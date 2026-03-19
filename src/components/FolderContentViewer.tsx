@@ -394,7 +394,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
           </Flex>
 
           {/* Фильтр документов */}
-          {filteredDocuments.length !== 0 && <Popover.Root>
+          {filteredDocuments && <Popover.Root>
             <Popover.Trigger>
               <Button
                 variant="ghost"

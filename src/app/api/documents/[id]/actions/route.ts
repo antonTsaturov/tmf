@@ -247,7 +247,7 @@ export async function applyDocumentActionHandler(
         name: updatedDocument.uploader_name,
         email: updatedDocument.uploader_email
       } : null,
-      reviewer: updatedDocument.reviewer_name ? {
+      review_submitter: updatedDocument.reviewer_name ? {
         id: updatedDocument.review_submitted_by,
         name: updatedDocument.reviewer_name,
         email: updatedDocument.reviewer_email
@@ -261,7 +261,8 @@ export async function applyDocumentActionHandler(
         id: updatedDocument.review_submitted_to,
         name: updatedDocument.assigned_name,
         email: updatedDocument.assigned_email
-      } : null
+      } : null,
+       
     };
 
     // 8. Возвращаем расширенный объект для аудита

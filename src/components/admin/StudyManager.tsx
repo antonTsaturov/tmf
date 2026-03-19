@@ -5,15 +5,7 @@ import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
 import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
-import { MainContext } from '@/wrappers/MainContext';
-
-
-// Пропсы компонентов
-interface StatusBadgeProps {
-  status: StudyStatus;
-  onChange?: (status: StudyStatus) => void;
-  editable?: boolean;
-}
+import StatusBadge from './StatusBadge';
 
 export interface StudyItemProps {
   study: Study;
@@ -22,83 +14,8 @@ export interface StudyItemProps {
   onDelete: (id: number) => void;
 }
 
-
-interface StudyManagerProps {
-  initialStudies?: Study[];
-}
-
 // Утилитарные функции
 const generateStudyId = (): number => Math.floor(Math.random() * 9000) + 1000;
-
-// const createNewStudy = (): Study => ({
-//   id: generateStudyId(),
-//   title: 'New Clinical Study',
-//   protocol: `PROT-${Math.floor(Math.random() * 9000) + 1000}`,
-//   sponsor: 'Pharmaceutical Company',
-//   cro: 'CRO Organization',
-//   countries: ['USA'],
-//   status: StudyStatus.PLANNED,
-//   total_documents: null,
-//   users: null,
-// });
-
-
-// Компонент бейджа статуса
-const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false }) => {
-  const [isEditing, setIsEditing] = useState(false);
-
-  const statusConfig = {
-    [StudyStatus.PLANNED]: { label: 'Planned', color: '#74c0fc', icon: '📅' },
-    [StudyStatus.ONGOING]: { label: 'Ongoing', color: '#51cf66', icon: '⚡' },
-    [StudyStatus.COMPLETED]: { label: 'Completed', color: '#868e96', icon: '✅' },
-    [StudyStatus.TERMINATED]: { label: 'Terminated', color: '#ff6b6b', icon: '❌' },
-    [StudyStatus.ARCHIVED]: { label: 'Archived', color: '#9775fa', icon: '📦' }
-  };
-
-  const config = statusConfig[status];
-
-  const handleStatusChange = (newStatus: StudyStatus) => {
-    if (onChange) {
-      onChange(newStatus);
-      setIsEditing(false);
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="status-editor">
-        {Object.entries(statusConfig).map(([statusKey, config]) => (
-          <button
-            key={statusKey}
-            className="status-option"
-            onClick={() => handleStatusChange(statusKey as StudyStatus)}
-            style={{ backgroundColor: config.color }}
-            title={config.label}
-          >
-            {config.icon}
-          </button>
-        ))}
-        <button 
-          className="status-cancel"
-          onClick={() => setIsEditing(false)}
-        >
-          ✕
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div 
-      className={`status-badge ${editable ? 'editable' : ''}`}
-      style={{ backgroundColor: config.color }}
-      onClick={editable ? () => setIsEditing(true) : undefined}
-      title={editable ? 'Click to change status' : config.label}
-    >
-      {config.icon} {config.label}
-    </div>
-  );
-};
 
 // Компонент элемента исследования
 const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => {
@@ -217,12 +134,6 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
                   placeholder="Select countries..."
                 />
 
-
-                {/* <PseudoSelector
-                  countries={COUNTRIES_LIST}
-                  selectedCountries={editData.countries || study.countries}
-                  onChange={handleCountriesChange}
-                /> */}
               </div>
             ) : (
               <div className="display-details">
@@ -317,10 +228,9 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
 };
 
 // Основной компонент
-const StudyManager: FC<StudyManagerProps> = () => {
+const StudyManager: FC = () => {
 
-  const { studies, setStudies, error, saveStudy } = useContext(AdminContext)!;
-  const { context } = useContext(MainContext)!;
+  const { studies, setStudies, saveStudy } = useContext(AdminContext)!;
 
 
   const [studyObject, setStudyObject] = useState<Study[]>([]);
@@ -363,36 +273,36 @@ const StudyManager: FC<StudyManagerProps> = () => {
     setNewStudyForm({ title: '', protocol: '', sponsor: '', cro: '', countries: [] });
   }, [newStudyForm]);
 
-const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
-  setStudies(prev => {
-    // Находим индекс обновляемого исследования
-    const studyIndex = prev.findIndex(study => study.id === id);
-    
-    if (studyIndex === -1) {
-      console.warn(`Study with id ${id} not found in state`);
-      return prev;
-    }
-    
-    const currentStudy = prev[studyIndex];
-    
-    // Создаем отдельный объект обновленного исследования
-    const updatedStudy: Study = {
-      ...currentStudy,
-      ...updates,
-    };
-    
-      // Сохраняем изменения в БД (асинхронно, не блокируя UI)
-    saveStudy(Tables.STUDY, updatedStudy).catch(err => {
-      console.error('Failed to save study updates:', err);
-      // Optionally, we could revert the local state change here if saving fails
-    });
-    // Создаем копию массива и заменяем элемент
-    const newStudies = [...prev];
-    newStudies[studyIndex] = updatedStudy;
+  const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
+    setStudies(prev => {
+      // Находим индекс обновляемого исследования
+      const studyIndex = prev.findIndex(study => study.id === id);
+      
+      if (studyIndex === -1) {
+        console.warn(`Study with id ${id} not found in state`);
+        return prev;
+      }
+      
+      const currentStudy = prev[studyIndex];
+      
+      // Создаем отдельный объект обновленного исследования
+      const updatedStudy: Study = {
+        ...currentStudy,
+        ...updates,
+      };
+      
+        // Сохраняем изменения в БД (асинхронно, не блокируя UI)
+      saveStudy(Tables.STUDY, updatedStudy).catch(err => {
+        console.error('Failed to save study updates:', err);
+        // Optionally, we could revert the local state change here if saving fails
+      });
+      // Создаем копию массива и заменяем элемент
+      const newStudies = [...prev];
+      newStudies[studyIndex] = updatedStudy;
 
-    return newStudies;
-  });
-}, []);
+      return newStudies;
+    });
+  }, []);
 
   // Удаление исследования
   const handleDeleteStudy = useCallback((id: number) => {
@@ -411,11 +321,6 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
     const generateStudyObject = () => {
       setStudyObject(studies);
       
-      //console.log('Studies Structure:', studies);
-      
-      // navigator.clipboard.writeText(JSON.stringify(studies, null, 2))
-      //   .then(() => alert('Study list copied to clipboard'))
-      //   .catch(err => console.error('Copy error:', err));
     }
     generateStudyObject();
   },[studies]);
@@ -499,12 +404,6 @@ const handleUpdateStudy = useCallback((id: number, updates: Partial<Study>) => {
               placeholder="Select countries..."
             />
 
-
-            {/* <PseudoSelector
-              countries={COUNTRIES_LIST}
-              selectedCountries={newStudyForm.countries}
-              onChange={(countries) => setNewStudyForm(prev => ({ ...prev, countries }))}
-            /> */}
           </div>
           <button 
             onClick={handleAddStudy}

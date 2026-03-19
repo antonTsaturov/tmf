@@ -208,6 +208,11 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
 
   // Проверяет что конкретный документ на ревью и назначен залогиненому пользователю
   const checkAssignment = () => {
+    if (String(user?.role) === UserRole.ADMIN) {
+      setIsAssignment(true);
+      return;
+    }
+
     if (selectedDocument?.current_version?.assigned_reviewer) {
       const reviewAssignedTo = String(selectedDocument?.current_version?.assigned_reviewer?.id)
       const currentUser = String(user?.id);
