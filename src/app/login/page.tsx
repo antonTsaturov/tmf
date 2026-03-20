@@ -169,7 +169,7 @@ export default function LoginPage() {
         {/* Информация о системе */}
         <div className={styles.footer}>
           <div className={styles.footerText}>
-            <p>© {new Date().getFullYear()} Manpremo eTMF System</p>
+            <p>© {new Date().getFullYear()} eTMF System</p>
             <p className={styles.footerVersion}>ver. beta • Secure access required</p>
           </div>
         </div>

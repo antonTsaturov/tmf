@@ -1,5 +1,8 @@
 // app/api/documents/[id]/restore/route.ts
-// Восстановление удалённого документа (только для ADMIN)
+/* 
+  Восстановление удалённого документа (только для ADMIN)
+  Восстановленный документ автоматически получает статус draft
+*/
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { withAudit } from '@/lib/audit/audit.middleware';

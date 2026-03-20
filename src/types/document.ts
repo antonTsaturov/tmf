@@ -43,12 +43,18 @@ export interface Document {
   deleted_by: string;
   deletion_reason: string;
 
-  restored_by: string;
-  restored_at: string;
+  restored_by?: string;
+  restored_at?: string;
+  restoration_reason?: string;
 
-  is_archived: boolean;
-  archived_at: string;
-  archived_by: string;
+  is_archived?: boolean;
+  archived_at?: string;
+  archived_by?: string;
+
+  unarchived_at: string;
+  unarchived_by: string;
+  unarchive_reason: string;
+
 
   id: string;
   document_number: number;
@@ -69,31 +75,11 @@ export interface Document {
   uploader?: ShortUserInfo | null;
   submitter?: ShortUserInfo | null;
   creator?: ShortUserInfo| null;
-  
+  archiver?: ShortUserInfo| null;
+  unarchiver?: ShortUserInfo| null;
+
   version_id?: string;
 }
-
-// export interface DocumentVersion {
-//   id: string; // UUID
-//   document_id: string; // UUID
-//   document_version: number;
-//   document_name: string;
-//   file_name: string;
-//   file_path: string;
-//   file_type: DocumentType;
-//   file_size: string;
-//   checksum: string;
-//   uploaded_by: string; // UUID
-//   uploaded_at: string;
-//   change_reason: string;
-//   review_status: string;
-//   review_submitted_by: string;
-//   review_submitted_at: string;
-//   review_submitted_to: string;
-//   reviewed_by: string;
-//   reviewed_at: string;
-//   review_comment: string;
-// }
 
 export interface DocumentVersionRow {
   id: string;
@@ -121,88 +107,3 @@ export interface DocumentVersionRow {
   review_submitter?: ShortUserInfo | null;
 
 }
-
-// interface cleanDocument {
-//   id: string,
-//   study_id: string;
-//   site_id: string | null;
-//   folder_id: string;
-//   tmf_zone: string | null;
-//   tmf_artifact: string | null;
-//   status: DocumentWorkFlowStatus;
-//   current_version: DocumentVersionRow;
-
-//   created_by: ShortUserInfo
-//   created_at: string;
-  
-//   is_deleted: boolean;
-//   deleted_at: string;
-//   deleted_by: ShortUserInfo;
-//   deletion_reason: string;
-
-//   restored_by: ShortUserInfo;
-//   restored_at: string;
-//   restoration_reasom: string;
-
-//   is_archived: boolean;
-//   archived_at: string;
-//   archived_by: ShortUserInfo;
-
-// }
-
-// interface CurrentVersion {
-//   version_id: string;
-//   document_number: number;
-//   document_name: string;
-//   file_name: string;
-//   file_path: string;
-//   file_type: string;
-//   file_size: number;
-//   checksum: string;
-
-//   upload: {
-//     uploaded_by: ShortUserInfo;
-//     uploaded_at: string;
-//     change_reason: string | null;
-//   },
-//   review: {
-//     review_status?: DocumentWorkFlowStatus;
-//     review_submitted_at?: string | null;
-//     review_submitted_by?: string | null;
-//     review_submitted_to?: string | null;
-//     reviewed_at?: string | null;
-//     review_comment?: string | null;
-//   }
-//   approve:
-//   reject:
-
-  
-
-  
-//   // Информация о пользователях
-//   uploader?: {
-//     id: string;
-//     name: string;
-//     email: string;
-//   } | null;
-//   reviewer?: {
-//     id: string;
-//     name: string;
-//     email: string;
-//   } | null;
-//   approver?: {
-//     id: string;
-//     name: string;
-//     email: string;
-//   } | null;
-//   assigned_reviewer?: {
-//     id: string;
-//     name: string;
-//     email: string;
-//   } | null;
-//   review_submitter?: {
-//     id: string;
-//     name: string;
-//     email: string;
-//   } | null;
-// }

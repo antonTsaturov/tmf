@@ -2,6 +2,7 @@
 import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Document, DocumentAction } from "@/types/document";
+import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 
 import FilePreviewPanel from "./panels/FilePreviewPanel";
 import NewVersionUploadPanel from "./panels/NewVersionDocumentPanel";
@@ -39,12 +40,7 @@ import { useUpload } from "@/wrappers/UploadContext";
 import EditDocumentTitlePanel from "./panels/EditDocumentPanel";
 import { DocumentLifeCycleStatus } from "@/types/document.status";
 import RestoreDocumentPanel from "./panels/RestoreDocumentPanel";
-
-
-interface FolderContentViewerProps {
-  onDocumentSelect?: (document: Document) => void;
-  onDocumentPreview?: (document: Document) => void;
-}
+import UnarchiveDocumentPanel from "./panels/UnarchiveDocumentPanel";
 
 interface DocumentFilters {
     study_id: number;
@@ -60,12 +56,13 @@ interface DocumentsInFolder {
 
 type ViewFilter = 'all' | 'active' | 'deleted' | 'archived';
 
-const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSelect, onDocumentPreview }) => {
+const FolderContentViewer: React.FC = () => {
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel } = context!;
   const { user } = useAuth();
   const upload = useUpload();
-  
+  const { handleAction } = useDocumentActionHandler();
+
   const [documentsData, setDocumentsData] = useState<DocumentsInFolder | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -126,11 +123,6 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       };
     });
   }, []);
-
-  // Handle rename success - update document in folder list
-  // const handleRenameSuccess = useCallback((updatedDoc: Document) => {
-  //   updateSingleDocumentInState(updatedDoc);
-  // }, [updateSingleDocumentInState]);
 
   // Обновляем документы в папке
   const handleUpdateFIleInFolder = (updatedDoc: Document) => {
@@ -218,7 +210,7 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       setUploadSuccess(false);
       updateContext({docWasDeleted: false});
     }
-  }, [uploadSuccess, loadFolderContents, docWasDeleted, updateContext]);
+  }, [uploadSuccess, loadFolderContents, docWasDeleted, updateContext ]);
 
   const filteredDocuments = useMemo(() => {
     if (!documentsData?.documents) return [];
@@ -276,36 +268,21 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
     // Если клик не по строке и не по элементам интерфейса/модалкам — снимаем выделение
     if (!isRowClick && !isActionClick) {
       updateContext({ selectedDocument: null });
-      onDocumentSelect?.(null as any);
+      //onDocumentSelect?.(null as any);
     }
   };
 
   const handleDocumentClick = (e: React.MouseEvent<HTMLDivElement>, doc: Document) => {
     e.stopPropagation();
     updateContext({ selectedDocument: doc });
-    onDocumentSelect?.(doc);
   };
 
   const handleDocumentDoubleClick = (e: React.MouseEvent<HTMLDivElement>, doc: Document) => {
     e.stopPropagation();
-    onDocumentPreview?.(doc);
   };
 
   const handleContextMenuAction = (action: DocumentAction, doc: Document) => {
-    switch (action) {
-      case DocumentAction.VIEW:
-        updateContext({ isRightFrameOpen: true });
-        break;
-      case DocumentAction.SUBMIT_FOR_REVIEW:
-        updateContext({ isSubmittingToReview: true });
-        break;
-      case DocumentAction.APPROVE:
-      case DocumentAction.REJECT:
-        updateContext({ isAcceptedForReview: true });
-        break;
-      default:
-        console.log('Action not implemented in context menu:', action);
-    }
+    handleAction(action, doc);
   };
 
   const formatDate = (dateString: string): string => {
@@ -394,38 +371,70 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
           </Flex>
 
           {/* Фильтр документов */}
-          {filteredDocuments && <Popover.Root>
-            <Popover.Trigger>
-              <Button
-                variant="ghost"
-                size="2"
-                color={`${ activeFilter !== 'all' ? 'indigo' : "gray"}`}
+          {filteredDocuments && (
+            <Popover.Root>
+              <Popover.Trigger>
+                <Button
+                  variant="ghost" 
+                  color={activeFilter !== 'all' ? "indigo" : "gray"}
+                  size="1"
+                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
                 >
-                {activeFilter !== 'all' && <FiFilter />}
-                {filterOptions.find(f => f.value === activeFilter)?.label}
-                <FiChevronDown />
-              </Button>
-            </Popover.Trigger>
-            <Popover.Content size="1">
-              <Flex direction="column" gap="1">
-                {filterOptions.map(option => (
-                  <Button
-                    key={option.value}
-                    variant={activeFilter === option.value ? 'solid' : 'ghost'}
-                    onClick={() => {
-                      setActiveFilter(option.value as ViewFilter);
-                      updateContext({selectedDocument: null});
-                    }}
-                    style={{ justifyContent: 'space-between', width: '100%' }}
-                  >
-                    <Text>{option.label}</Text>
-                    <Badge>{option.count}</Badge>
-                  </Button>
-                ))}
-              </Flex>
-            </Popover.Content>
-          </Popover.Root>
-          }
+                  <Flex align="center" gap="2">
+                    {activeFilter !== 'all' ? <FiFilter /> : null}
+                    <Text >
+                      {filterOptions.find(f => f.value === activeFilter)?.label}
+                    </Text>
+                    <FiChevronDown style={{ opacity: 0.6 }} />
+                  </Flex>
+                </Button>
+              </Popover.Trigger>
+
+              <Popover.Content size="1" width="200px">
+                <Flex direction="column" gap="1">
+                  {filterOptions.map(option => {
+                    const isSelected = activeFilter === option.value;
+                    return (
+                      <Button
+                        key={option.value}
+                        variant={isSelected ? 'ghost' : 'ghost'}
+                        color={isSelected ? 'indigo' : 'gray'}
+                        onClick={() => {
+                          setActiveFilter(option.value as ViewFilter);
+                          updateContext({ selectedDocument: null });
+                        }}
+                        style={{ 
+                          justifyContent: 'flex-start', 
+                          width: '100%',
+                          paddingLeft: '8px',
+                          paddingRight: '8px',
+                          marginBottom: '1px'
+                        }}
+                      >
+                        <Flex align="center" justify="between" width="100%">
+                          <Flex align="center" gap="2">
+                            {/* Небольшой визуальный маркер выбранного пункта */}
+                            <Box style={{ width: 6, height: 6, borderRadius: '50%', 
+                              backgroundColor: isSelected ? 'var(--indigo-9)' : 'transparent' }} 
+                            />
+                            <Text size="1" weight={isSelected ? "bold" : "regular"}>
+                              {option.label}
+                            </Text>
+                          </Flex>
+                          <Badge 
+                            variant={isSelected ? "solid" : "surface"} 
+                            color={isSelected ? "indigo" : "gray"}
+                          >
+                            {option.count}
+                          </Badge>
+                        </Flex>
+                      </Button>
+                    );
+                  })}
+                </Flex>
+              </Popover.Content>
+            </Popover.Root>
+          )}
         </Section>
       </Box>
 
@@ -468,7 +477,8 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
         style={{ 
           flex: 1, 
           minHeight: 0, 
-          overflowY: 'auto'
+          overflowY: 'auto',
+          backgroundColor: 'white'
         }}
       >
         {filteredDocuments.length === 0 ? (
@@ -622,6 +632,9 @@ const FolderContentViewer: React.FC<FolderContentViewerProps> = ({ onDocumentSel
       <DeleteDocumentPanel />
       <ArchiveDocumentPanel
         onDocumentArchived={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+      />
+      <UnarchiveDocumentPanel
+        onDocumentUnarchived={() => loadFolderContents()}
       />
       <RestoreDocumentPanel
         onDocumentRestored={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}

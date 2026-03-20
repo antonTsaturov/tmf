@@ -617,8 +617,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           style={{ 
             paddingLeft: `${depth * 12}px`,
             paddingRight: '8px',
-            paddingTop: '6px',
-            paddingBottom: '6px',
+            paddingTop: '8px',
+            paddingBottom: '8px',
             borderRadius: '6px',
             cursor: isFolder && isAvailableForCurrentLevel() ? 'pointer' : 'default',
             backgroundColor: isSelected ? 'var(--accent-5)' : 'transparent',
@@ -649,7 +649,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                 }} 
               />
             ) : isFolder ? (
-              <DotIcon width="14" height="14" style={{ color: 'var(--gray-6)' }} />
+              <DotIcon width="14" height="14" style={{ color: 'var(--gray-9)' }} />
             ) : (
               <Box style={{ width: '14px' }} />
             )}
@@ -688,7 +688,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               textTransform: 'uppercase', 
               letterSpacing: '0.5px',
               flex: 1,
-              color: isSelected ? 'var(--accent-13)' : 'var(--gray-12)'
+              color: isSelected ? 'var(--accent-10)' : 'var(--gray-12)',
+              marginTop:'1px'
             }}
             title={node.name}
             onClick={() => {

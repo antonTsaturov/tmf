@@ -26,6 +26,7 @@ export interface MainContextProps {
   isAcceptedForReview: boolean;
   isDeletePanelOpen: boolean;
   isArchivePanelOpen: boolean;
+  isUnarchivePanelOpen: boolean;
   isEditTitlePanelOpen: boolean;
   isRestorePanelOpen: boolean
 }
@@ -54,6 +55,7 @@ const defaultContext: MainContextProps = {
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
   isDeletePanelOpen:false,     // Флаг для открытия окна удаления документа
   isArchivePanelOpen: false,
+  isUnarchivePanelOpen: false,
   isEditTitlePanelOpen: false,
   isRestorePanelOpen: false
 };

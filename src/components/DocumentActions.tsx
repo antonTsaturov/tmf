@@ -1,13 +1,13 @@
 // components/DocumentActions.tsx
 import React, { useContext, useEffect, useRef } from 'react';
-import { 
-  FiFilePlus, 
-  FiSend, 
-  FiCheckCircle, 
-  FiArchive, 
-  FiRefreshCw, 
-  FiTrash2, 
-  FiDownload, 
+import {
+  FiFilePlus,
+  FiSend,
+  FiCheckCircle,
+  FiArchive,
+  FiRefreshCw,
+  FiTrash2,
+  FiDownload,
   FiEye,
   FiUploadCloud,
   FiEdit
@@ -25,6 +25,7 @@ import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useDocumentUpload } from '@/hooks/useDocumentUpload';
+import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 
 interface DocumentActionsProps {
   onAction?: (action: DocumentAction) => void;
@@ -35,7 +36,8 @@ interface DocumentActionsProps {
 
 interface ActionConfigProps {
   icon: React.ReactNode; 
-  label: string; 
+  label: string;
+  tooltip?: string;
   color?: string;
   variant?: 'solid' | 'soft' | 'outline' | 'ghost';
   highContrast?: boolean;
@@ -46,20 +48,21 @@ export const actionConfig: Partial<Record<DocumentAction, ActionConfigProps>> = 
   [DocumentAction.CREATE_DOCUMENT]: { 
     icon: <FiFilePlus />, 
     label: 'Создать',
+    tooltip: 'Создать документ',
     variant: 'solid',
     highContrast: true
   },
   [DocumentAction.SUBMIT_FOR_REVIEW]: { 
     icon: <FiSend />, 
     label: 'На ревью',
+    tooltip: 'Отправить документ на рассмотрение',
     variant: 'soft',
-    //color: Colors.GREEN
   },
   [DocumentAction.APPROVE]: { 
     icon: <FiCheckCircle />, 
     label: 'Проверить',
+    tooltip: 'Одобрить или отклонить документ',
     variant: 'solid',
-    //color: Colors.GREEN
   },
   // [DocumentAction.REJECT]: { // Не используется. Реджект выполняется через Approve
   //   icon: <FiX />, 
@@ -70,44 +73,49 @@ export const actionConfig: Partial<Record<DocumentAction, ActionConfigProps>> = 
   [DocumentAction.ARCHIVE]: { 
     icon: <FiArchive />, 
     label: 'Архивировать',
+    tooltip: 'Перенести документ в архив',
     variant: 'soft',
-    //color: Colors.YELLOW
   },
-  [DocumentAction.UNARCHIVE]: { 
+  [DocumentAction.UNARCHIVE]: {  //Admin only
     icon: <FiRefreshCw />, 
     label: 'Разархивировать',
+    tooltip: 'Венруть в статус draft',
     variant: 'soft'
   },
   [DocumentAction.SOFT_DELETE]: { 
     icon: <FiTrash2 />, 
     label: 'Удалить',
+    tooltip: 'Удалить документ',
     variant: 'solid',
-    //color: Colors.RED
   },
   [DocumentAction.RESTORE]: { //Admin only
     icon: <FiRefreshCw />, 
     label: 'Восстановить',
+    tooltip: 'Восстановить документ',
     variant: 'solid'
   },
   [DocumentAction.UPLOAD_NEW_VERSION]: { 
     icon: <FiUploadCloud />, 
     label: 'Новая версия',
+    tooltip: 'Зазгрузить новую версию документа',
     variant: 'soft',
-    //color: Colors.BLUE
   },
   [DocumentAction.VIEW]: { 
     icon: <FiEye />, 
     label: 'Просмотр',
+    tooltip: 'Подробная информация о документе',
     variant: 'soft'
   },
   [DocumentAction.DOWNLOAD]: { 
     icon: <FiDownload />, 
     label: 'Скачать',
+    tooltip: 'Скачать документ',
     variant: 'soft'
   },
   [DocumentAction.EDIT]: { 
     icon: <FiEdit />, 
-    label: 'Редактировать',
+    label: 'Изменить',
+    tooltip: 'Изменить название документа',
     variant: 'soft'
   }
 };
@@ -118,31 +126,34 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   onAction, 
   className = '',
 }) => {
-  const mainContext = useContext(MainContext);
-  const { addNotification } = useNotification();
-  if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
-  const { context, updateContext } = mainContext;
-  const { selectedFolder, selectedDocument, currentSite, currentLevel, currentStudy} = context;
-  const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
   const { user } = useAuth();
-  const { isDeleting, isRestoring, error } = useDocumentDelete();
-  const { handleFileSelect, handleUploadNewVersion } = useDocumentUpload();
+  const mainContext = useContext(MainContext);
+  //const { addNotification } = useNotification();
+  if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
+  const { context } = mainContext;
+  const { selectedFolder, selectedDocument, currentSite, currentLevel, currentStudy} = context;
+  // Необходимо для уменьшения кнопок при сужении контейнера
+  const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
+  
+  //const { isDeleting, isRestoring, error } = useDocumentDelete();
+  const { handleAction } = useDocumentActionHandler();
 
-  const prevSelectedDocumentRef = useRef<Document | null>(null);
+  // const prevSelectedDocumentRef = useRef<Document | null>(null);
 
-  useEffect(() => {
-    if (selectedDocument !== prevSelectedDocumentRef.current) {
-      prevSelectedDocumentRef.current = selectedDocument;
-    }
-  }, [selectedDocument]);
+  // useEffect(() => {
+  //   if (selectedDocument !== prevSelectedDocumentRef.current) {
+  //     prevSelectedDocumentRef.current = selectedDocument;
+  //   }
+  // }, [selectedDocument]);
 
 // Обработка ошибок удаления через глобальные уведомления
-  useEffect(() => {
-    if (error) {
-      addNotification('error', error);
-    }
-  }, [error, addNotification]);
+  // useEffect(() => {
+  //   if (error) {
+  //     addNotification('error', error);
+  //   }
+  // }, [error, addNotification]);
 
+  // Определяет какие кнопки показать 
   const availableActions = getAvailableDocumentActions(
     selectedDocument,
     user?.role as unknown as UserRole[],
@@ -150,59 +161,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
     currentStudy?.status
   );
 
-  const handleCreateDocument = () => {
-    handleFileSelect();
-  };
-
+  // Определяет какое модальное окно нужно открыть (в зависимости от кнопки)
   const handleActionClick = async (action: DocumentAction) => {
-    if (action === DocumentAction.CREATE_DOCUMENT) {
-      handleCreateDocument();
-      return;
-    }
-
-    if (action === DocumentAction.UPLOAD_NEW_VERSION) {
-      handleUploadNewVersion(selectedDocument);
-      return;
-    }
-
-    if (action === DocumentAction.SOFT_DELETE) {
-      updateContext({ isDeletePanelOpen: true });
-      return;
-    }
-
-    if (action === DocumentAction.EDIT) {
-      updateContext({ isEditTitlePanelOpen: true });
-      return;
-    }
-
-
-    if (action === DocumentAction.VIEW) {
-      updateContext({ isRightFrameOpen: true });
-      return;
-    }
-
-    if (action === DocumentAction.SUBMIT_FOR_REVIEW) {
-      updateContext({ isSubmittingToReview: true });
-      return;
-    }
-
-    if (action === DocumentAction.APPROVE) {
-      updateContext({ isAcceptedForReview: true });
-      return;
-    }
-
-    if (action === DocumentAction.ARCHIVE) {
-      updateContext({ isArchivePanelOpen: true });
-      return;
-    }
-
-    if (action === DocumentAction.RESTORE) {
-      updateContext({ isRestorePanelOpen: true });
-      return;
-    }
-
-
-    onAction?.(action);
+    handleAction(action);
   };
 
   // Определяем, нужно ли показывать кнопки
@@ -227,12 +188,11 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
         {availableActions.map((action, index) => {
           const config = actionConfig[action];
           if (!config) return;
-          const isDisabled = isDeleting || isRestoring;
           
           return (
             <Tooltip 
               key={`${action}-${index}`} 
-              content={config.label}
+              content={config.tooltip}
             >
               <Button
                 size="2"
@@ -240,7 +200,6 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
                 color={action === DocumentAction.SOFT_DELETE || action === DocumentAction.REJECT ? 'red' : undefined}
                 highContrast={config.highContrast}
                 onClick={() => handleActionClick(action)}
-                disabled={isDisabled}
                 style={config.color && !['red', 'green', 'blue'].includes(config.color) ? 
                   { backgroundColor: config.color } : undefined}
               >

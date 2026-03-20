@@ -116,7 +116,12 @@ export const DocumentTable = `
 
     is_archived BOOLEAN DEFAULT FALSE,
     archived_at TIMESTAMPTZ,
-    archived_by UUID REFERENCES users(id)
+    archived_by UUID REFERENCES users(id),
+
+    unarchived_at TIMESTAMPTZ,
+    unarchived_by UUID REFERENCES users(id),
+    unarchive_reason TEXT
+
   );
 `;
 

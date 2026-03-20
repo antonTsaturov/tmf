@@ -1,7 +1,16 @@
 // app/api/documents/archive/route.ts
+
+/*
+  Глобальная архивация. Архивирует все документы по исследованию Может использоваться,
+  если выполняются следующие условия:
+  1) Исследование в статусе completed or terminated
+  2) Все документы исследования в статусе approved
+
+*/
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { ensureTablesExist } from '@/lib/db/document';
+import { AuditService } from '@/lib/audit/audit.service';
 
 const isDbInitialized = true;
 
@@ -141,79 +150,85 @@ export async function GET(request: NextRequest) {
 
 // Архивировать все одобренные документы исследования
 export async function POST(request: NextRequest) {
-  const client = getPool();
+  const pool = getPool();
+  const client = await pool.connect(); // Берем клиент из пула для транзакции
 
   try {
-    if (!isDbInitialized) {
-      await ensureTablesExist();
-    }
-
     const body = await request.json();
-    const { study_id, user_id } = body;
+    const { study_id } = body;
+    
+    // Используем данные из заголовков (извлеченные через middleware/service)
+    // Это надежнее, чем верить ID из body.
+    const user = AuditService.getUserFromRequest(request); 
+    const metadata = AuditService.extractMetadata(request);
 
-    if (!study_id) {
-      return NextResponse.json(
-        { error: 'study_id is required' },
-        { status: 400 }
-      );
+    if (!study_id || !user.user_id) {
+      return NextResponse.json({ error: 'Missing required data' }, { status: 400 });
     }
 
-    if (!user_id) {
-      return NextResponse.json(
-        { error: 'user_id is required' },
-        { status: 400 }
-      );
-    }
+    await client.query('BEGIN'); // Начало транзакции
 
-    // Получаем все одобренные документы, которые еще не архивированы
-    const { rows: approvedDocuments } = await client.query(`
-      SELECT d.id
+    // 1. Находим документы, которые нужно архивировать
+    const { rows: toArchive } = await client.query(`
+      SELECT d.id, d.site_id, d.study_id
       FROM document d
       LEFT JOIN LATERAL (
-        SELECT review_status
-        FROM document_version
-        WHERE document_id = d.id
-        ORDER BY document_number DESC
-        LIMIT 1
+        SELECT review_status FROM document_version
+        WHERE document_id = d.id ORDER BY document_number DESC LIMIT 1
       ) dv ON true
-      WHERE d.study_id = $1
-        AND d.is_deleted = false
-        AND d.is_archived = false
-        AND dv.review_status = 'approved'
+      WHERE d.study_id = $1 AND d.is_deleted = false 
+        AND d.is_archived = false AND dv.review_status = 'approved'
+      FOR UPDATE; -- Блокируем строки от изменений другими процессами
     `, [parseInt(study_id)]);
 
-    if (approvedDocuments.length === 0) {
-      return NextResponse.json(
-        { message: 'No approved documents to archive', archived_count: 0 },
-        { status: 200 }
-      );
+    if (toArchive.length === 0) {
+      await client.query('ROLLBACK');
+      return NextResponse.json({ message: 'No documents to archive', count: 0 });
     }
 
-    const documentIds = approvedDocuments.map((d: { id: string }) => d.id);
+    const ids = toArchive.map(d => d.id);
     const now = new Date().toISOString();
 
-    // Архивируем все одобренные документы
-    const { rows: updatedDocuments } = await client.query(`
+    // 2. Обновляем все документы одним запросом
+    const { rows: updatedDocs } = await client.query(`
       UPDATE document
-      SET
-        is_archived = true,
-        archived_at = $2,
-        archived_by = $3
+      SET is_archived = true, archived_at = $2, archived_by = $3
       WHERE id = ANY($1)
-      RETURNING *
-    `, [documentIds, now, user_id]);
+      RETURNING id, site_id, study_id, archived_at
+    `, [ids, now, user.user_id]);
+
+    // 3. Формируем массив записей для аудита
+    const auditEntries = updatedDocs.map(doc => ({
+      ...metadata,
+      user_id: user.user_id,
+      user_email: user.user_email,
+      user_role: user.user_role,
+      action: 'UPDATE' as const,
+      entity_type: 'document' as const,
+      entity_id: doc.id,
+      old_value: { is_archived: false },
+      new_value: { is_archived: true, archived_at: doc.archived_at },
+      status: 'SUCCESS' as const,
+      site_id: doc.site_id,
+      study_id: doc.study_id,
+      
+    }));
+
+    // 4. Пишем весь аудит в той же транзакции
+    await AuditService.bulkLog(client, auditEntries);
+
+    await client.query('COMMIT'); // Фиксируем изменения
 
     return NextResponse.json({
-      message: 'Documents archived successfully',
-      archived_count: updatedDocuments.length,
-      archived_documents: updatedDocuments
+      message: 'Successfully archived',
+      archived_count: updatedDocs.length
     });
 
   } catch (error) {
-    console.error('Error archiving documents:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    await client.query('ROLLBACK'); // Откатываем всё при любой ошибке
+    console.error('Archivation failed:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  } finally {
+    client.release(); // Возвращаем клиента в пул
   }
 }

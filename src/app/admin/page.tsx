@@ -63,6 +63,7 @@ import SiteManager from '@/components/admin/SiteManager';
 import StudyManager from '@/components/admin/StudyManager';
 import UserManager from '@/components/admin/UserManager';
 import StudyArchivation from '@/components/admin/StudyArchivation';
+import DataExport from '@/components/admin/DataExport';
 
 export default function AdminDashboard() {
   
@@ -133,6 +134,9 @@ export default function AdminDashboard() {
               </Tabs.Content>
               <Tabs.Content value="tab7">
                 <StudyArchivation />
+              </Tabs.Content>
+              <Tabs.Content value="tab8">
+                <DataExport />
               </Tabs.Content>
           </Box>
         </Tabs.Root>

@@ -59,13 +59,27 @@ export async function GET(request: NextRequest) {
           ELSE
             NULL
         END as deleter_info,
+        -- Информация о восстановившем документ (если документ восстановлен)
+        CASE 
+          WHEN d.restored_by IS NOT NULL THEN
+            json_build_object('id', restore.id, 'name', restore.name, 'email', restore.email, 'role', restore.role)
+          ELSE
+            NULL
+        END as restorer_info,        
         -- Информация об архивировавшем (если документ архивирован)
         CASE 
           WHEN d.is_archived = true AND d.archived_by IS NOT NULL THEN
             json_build_object('id', arch.id, 'name', arch.name, 'email', arch.email, 'role', arch.role)
           ELSE
             NULL
-        END as archiver_info,        
+        END as archiver_info,
+        -- Информация об разархивировавшем (если документ разархивирован)
+        CASE 
+          WHEN d.unarchived_by IS NOT NULL THEN
+            json_build_object('id', unarch.id, 'name', unarch.name, 'email', unarch.email, 'role', unarch.role)
+          ELSE
+            NULL
+        END as unarchiver_info,              
         -- Агрегация всех версий в массив объектов
         (
           SELECT jsonb_agg(v_info)
@@ -88,7 +102,9 @@ export async function GET(request: NextRequest) {
       FROM document d
       LEFT JOIN users uc ON d.created_by = uc.id
       LEFT JOIN users del ON d.deleted_by = del.id  -- Добавлен LEFT JOIN для информации об удалившем
+      LEFT JOIN users restore ON d.restored_by = restore.id  -- Добавлен LEFT JOIN для информации о восстановившем
       LEFT JOIN users arch ON d.archived_by = arch.id  -- JOIN для информации об архивировавшем
+      LEFT JOIN users unarch ON d.unarchived_by = unarch.id  -- JOIN для информации об разархивировавшем
       WHERE d.study_id = $1 AND d.folder_id = $2 ${siteCondition}
         AND (${include_deleted ? 'TRUE' : 'd.is_deleted = false'})
         AND (${include_archived ? 'TRUE' : '(d.is_archived = false OR d.is_archived IS NULL)'})
@@ -124,6 +140,14 @@ export async function GET(request: NextRequest) {
             deleted_at: doc.deleted_at // предполагается, что есть поле deleted_at
           }
         } : {}),
+        // Добавляем информацию о восстановившем
+        ...(doc.restore_by && doc.restorer_info ? {
+          restored_by_info: {
+            name: doc.restorer_info.name,
+            email: doc.restorer_info.email,
+            role: String(doc.restorer_info.role),
+          }
+        } : {}),
         // Добавляем информацию об архивировавшем только если документ архивирован
         ...(doc.is_archived && doc.archiver_info ? {
           archived_by_info: {
@@ -131,6 +155,14 @@ export async function GET(request: NextRequest) {
             email: doc.archiver_info.email,
             role: String(doc.archiver_info.role),
             archived_at: doc.archived_at
+          }
+        } : {}),
+        // Добавляем информацию о разархивировавшем только если документ разархивирован
+        ...(doc.unarchived_by && doc.unarchiver_info ? {
+          unarchived_by_info: {
+            name: doc.unarchiver_info.name,
+            email: doc.unarchiver_info.email,
+            role: String(doc.unarchiver_info.role),
           }
         } : {}),
         // Очищаем служебные поля из SQL-запроса

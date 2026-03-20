@@ -122,9 +122,11 @@ const DocumentDetails: React.FC = () => {
     // folder_id: string;
     //creator?: { id: string; name: string; email: string; role?: string[] } | null;
     deleter?: { id: string; name: string; email: string } | null;
-    restorer?: { id: string; name: string; email: string } | null;
+    restorer_info?: { id: string; name: string; email: string } | null;
     deleted_by_info?: { name: string; email: string, role: string, deleted_at: string } | null;
     archived_by_info?: { name: string; email: string, role: string, archived_at: string } | null;
+    unarchived_by_info?: { name: string; email: string, role: string } | null;
+    unarchive_reason: string | null;
     // last_uploader?: { id: string; name: string; email: string } | null;
     // reviewer?: { id: string; name: string; email: string } | null;
     // approver?: { id: string; name: string; email: string } | null;
@@ -318,6 +320,35 @@ const DocumentDetails: React.FC = () => {
         )}
 
 
+        {/* Информация о разархивировании */}
+        {doc.unarchived_at && (
+          <section className="document-details-section">
+            <h3 className="document-details-section-title">Возвращен из архива</h3>
+            <dl className="document-details-metadata">
+              <div className="metadata-row">
+                <dt>Документ разархивирован</dt>
+                <dd>{formatDate(doc.unarchived_at || '')}</dd>
+              </div>
+
+              {doc.unarchived_by_info && (
+                <div className="metadata-row">
+                  <dt>Кем разархивирован</dt>
+                  <dd>{renderUserInfo(doc.unarchived_by_info)}</dd>
+                </div>
+              )}
+
+              {doc.unarchive_reason && (
+                <div className="metadata-row">
+                  <dt>Причина разархивации</dt>
+                  <dd>{doc.unarchive_reason}</dd>
+                </div>
+              )}
+
+            </dl>
+          </section>
+        )}
+
+
         {/* Информация об удалении/восстановлении */}
         {doc.is_deleted && (
           <section className="document-details-section">
@@ -355,10 +386,16 @@ const DocumentDetails: React.FC = () => {
                 <dt>Восстановлен</dt>
                 <dd>{formatDate(doc.restored_at || '')}</dd>
               </div>
-              {doc.restorer && (
+              {doc.restorer_info && (
                 <div className="metadata-row">
                   <dt>Кем восстановлен</dt>
-                  <dd>{renderUserInfo(doc.restorer)}</dd>
+                  <dd>{renderUserInfo(doc.restorer_info)}</dd>
+                </div>
+              )}
+              {doc.restoration_reason && (
+                <div className="metadata-row">
+                  <dt>Причина восстановления</dt>
+                  <dd>{doc.restoration_reason}</dd>
                 </div>
               )}
             </dl>

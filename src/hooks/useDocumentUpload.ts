@@ -44,7 +44,7 @@ export const useDocumentUpload = () => {
   const [progress, setProgress] = useState(0);
   const { user } = useAuth();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedFolder, currentStudy, currentSite} = context;
+  const { selectedFolder, currentStudy, currentSite, selectedDocument} = context;
   const { addNotification } = useNotification();
   const upload = useUpload();
   const setPreview = upload.setFilePreview;
@@ -220,7 +220,8 @@ export const useDocumentUpload = () => {
     }
   };
 
-  const handleUploadNewVersion = (selectedDocument: DocumentVersion | null) => {
+  // Функция для загрузки новой версии документа
+  const handleUploadNewVersion = () => {
     if (!selectedDocument) {
       addNotification('error', 'Выберите документ');
       return;

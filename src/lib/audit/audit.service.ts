@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { NextRequest } from "next/server";
 import { getPool } from "@/lib/db";
 import { AuditLogEntry } from '@/types/audit';
+import { PoolClient } from "pg";
 
 
 const MAX_JSON_SIZE = 20000; // защита от огромных payload
@@ -144,5 +145,49 @@ export class AuditService {
       user_email: email || "",
       user_role: parsedRoles
     };
+  }
+
+  // Массовая запись логов в рамках одной транзакции  
+  static async bulkLog(client: PoolClient, entries: AuditLogEntry[]) {
+    if (entries.length === 0) return;
+
+    const values: any[] = [];
+    const placeholders = entries.map((entry, index) => {
+      const offset = index * 17; // 17 полей в таблице audit
+      values.push(
+        randomUUID(),
+        new Date(),
+        entry.user_id,
+        entry.user_email,
+        this.safeJson(entry.user_role),
+        entry.action,
+        entry.entity_type,
+        entry.entity_id,
+        this.safeJson(entry.old_value),
+        this.safeJson(entry.new_value),
+        entry.ip_address,
+        entry.user_agent,
+        entry.session_id,
+        entry.status,
+        entry.error_message || null,
+        entry.site_id || null,
+        entry.study_id || null
+      );
+
+      // Формируем ($1, $2, ... $17), ($18, ... $34) и т.д.
+      return `($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5}, $${offset + 6}, $${offset + 7}, $${offset + 8}, $${offset + 9}, $${offset + 10}, $${offset + 11}, $${offset + 12}, $${offset + 13}, $${offset + 14}, $${offset + 15}, $${offset + 16}, $${offset + 17})`;
+    }).join(',');
+
+    const query = `
+      INSERT INTO audit (
+        audit_id, created_at, user_id, user_email, user_role,
+        action, entity_type, entity_id, old_value, new_value,
+        ip_address, user_agent, session_id, status, error_message,
+        site_id, study_id
+      )
+      VALUES ${placeholders}
+    `;
+
+    await client.query(query, values);
   }
 }

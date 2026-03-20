@@ -55,7 +55,7 @@ export interface AuditLogEntry {
   user_agent: string;
   session_id: string;
   status: AuditStatus;
-  error_message: string;
+  error_message?: string | null;
   reason?: string;
   site_id: string | null;
   study_id: string | null;

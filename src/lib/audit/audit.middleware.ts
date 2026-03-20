@@ -1,14 +1,15 @@
 // lib/audit/audit.middleware.ts
 
-// цепочка выполнения withAudit()
-//  
-//  ├─ подготовка ctx
-//  ├─ loadEntity()
-//  ├─ getOldValue()
-//  ├─ restoreHandler()
-//  │     └─ UPDATE document ...
-//  ├─ getNewValue()
-//  └─ AuditService.log(...)
+/*
+  цепочка выполнения withAudit()
+  ├─ подготовка ctx
+  ├─ loadEntity()
+  ├─ getOldValue()
+  ├─ restoreHandler()
+  │     └─ UPDATE document ...
+  ├─ getNewValue()
+  └─ AuditService.log(...)
+*/
 import { NextRequest, NextResponse } from "next/server";
 import { AuditService } from "./audit.service";
 import { AuditAction, AuditEntity } from "@/types/audit";

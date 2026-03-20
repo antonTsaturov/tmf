@@ -1,4 +1,8 @@
 // app/api/documents/[id]/archive/route.ts
+/*
+  Функция предназначена для архивации конкретного документа.
+  Доступна для study_manager и admin
+*/
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
