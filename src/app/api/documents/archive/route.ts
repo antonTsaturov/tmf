@@ -207,7 +207,11 @@ export async function POST(request: NextRequest) {
       entity_type: 'document' as const,
       entity_id: doc.id,
       old_value: { is_archived: false },
-      new_value: { is_archived: true, archived_at: doc.archived_at },
+      new_value: { 
+        is_archived: true, 
+        archived_at: doc.archived_at,
+        archived_by: doc.archived_by,
+      },
       status: 'SUCCESS' as const,
       site_id: doc.site_id,
       study_id: doc.study_id,

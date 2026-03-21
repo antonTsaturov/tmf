@@ -1,119 +1,3 @@
-// // app/api/documents/export/route.ts
-
-// import { NextRequest } from "next/server";
-// import { getPool } from "@/lib/db";
-// import archiver from "archiver";
-// import { PassThrough } from "stream";
-// import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-// import pLimit from "p-limit";
-// import { buildFolderPath, buildFileName } from "@/lib/s3-export";
-
-// const limit = pLimit(10);
-
-// const s3 = new S3Client({
-//   region: process.env.YC_REGION,
-//   endpoint: process.env.YC_ENDPOINT,
-//   credentials: {
-//     accessKeyId: process.env.YC_ACCESS_KEY_ID!,
-//     secretAccessKey: process.env.YC_SECRET_ACCESS_KEY!,
-//   },
-// });
-
-
-// export async function GET(req: NextRequest) {
-//   const studyId = req.nextUrl.searchParams.get("id");
-
-//   if (!studyId) {
-//     return new Response("Missing study id", { status: 400 });
-//   }
-
-//   const pool = getPool();
-
-//   const { rows: docs } = await pool.query(
-//     `
-//     SELECT 
-//       d.study_id,
-//       d.site_id,
-//       d.tmf_zone,
-//       d.tmf_artifact,
-//       dv.document_name,
-//       dv.document_number,
-//       dv.file_name,
-//       dv.file_path,
-//       dv.checksum,
-//       dv.uploaded_at,
-//       u.email as uploaded_by
-//     FROM document_version dv
-//     JOIN document d ON d.id = dv.document_id
-//     LEFT JOIN users u ON dv.uploaded_by = u.id
-//     WHERE d.study_id = $1
-//     ORDER BY d.site_id, d.folder_name, dv.document_number
-//   `,
-//     [studyId]
-//   );
-
-//   // создаем поток
-//   const stream = new PassThrough();
-
-//   const archive = archiver("zip", {
-//     zlib: { level: 9 },
-//   });
-
-//   archive.pipe(stream);
-
-//   // ===== metadata.csv =====
-//   let csv = "document_name,version,site,folder,uploaded_by,date,checksum\n";
-
-//   for (const doc of docs) {
-//     csv += [
-//       doc.document_name,
-//       doc.document_number,
-//       doc.site_id,
-//       doc.folder_name,
-//       doc.uploaded_by,
-//       doc.uploaded_at,
-//       doc.checksum,
-//     ].join(",") + "\n";
-//   }
-
-//   archive.append(csv, { name: `Study_${studyId}/metadata.csv` });
-
-//   // ===== файлы =====
-//   await Promise.all(
-//     docs.map(doc => limit(async () => {
-//       try {
-//         const key = doc.file_path.split(".net/")[1];
-
-//         const s3Object = await s3.send(
-//           new GetObjectCommand({
-//             Bucket: process.env.YC_BUCKET_NAME!,
-//             Key: key,
-//           })
-//         );
-
-//         const folderPath = buildFolderPath(doc);
-//         const fileName = buildFileName(doc);
-
-//         archive.append(s3Object.Body as any, {
-//           name: `${folderPath}/${fileName}`,
-//         });
-
-//       } catch (err) {
-//         console.error("S3 error:", doc.file_path, err);
-//       }
-//     }))
-//   );
-
-//   await archive.finalize();
-
-//   return new Response(stream as any, {
-//     headers: {
-//       "Content-Type": "application/zip",
-//       "Content-Disposition": `attachment; filename="study_${studyId}.zip"`,
-//     },
-//   });
-// }
-
 // app/api/documents/export/route.ts
 
 import { NextRequest } from "next/server";
@@ -122,9 +6,13 @@ import archiver from "archiver";
 import { PassThrough } from "stream";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
-import { buildFolderPath, buildFileName } from "@/lib/s3-export";
+import crypto from "crypto";
+import { buildFileNameWithMode, buildFolderMap, buildFolderPathWithMode } from "@/lib/s3-export";
+import { buildAuditCsv } from "@/lib/audit/buildAuditCsv";
+import { getAuditLogs } from "@/lib/audit/getAuditLogs";
 
 const limit = pLimit(10);
+const BUCKET_NAME = process.env.YC_BUCKET_NAME!;
 
 const s3 = new S3Client({
   region: process.env.YC_REGION,
@@ -135,132 +23,216 @@ const s3 = new S3Client({
   },
 });
 
-// Хелпер для превращения древовидной структуры папок в плоский справочник ID -> Name
-function buildFolderMap(nodes: any[], map: Map<string, string> = new Map()) {
-  for (const node of nodes) {
-    map.set(node.id, node.name);
-    if (node.children && node.children.length > 0) {
-      buildFolderMap(node.children, map);
-    }
-  }
-  return map;
-}
-
 export async function GET(req: NextRequest) {
-  const studyId = req.nextUrl.searchParams.get("id");
 
-  if (!studyId) {
-    return new Response("Missing study id", { status: 400 });
-  }
+  const type = req.nextUrl.searchParams.get("type") || "final";
+
+  const studyId = req.nextUrl.searchParams.get("id");
+  if (!studyId) return new Response("Missing study id", { status: 400 });
 
   const pool = getPool();
-
-  // 1. Сначала получаем структуру папок из исследования
+  
+  // 1. Получаем структуру папок
   const { rows: studyRows } = await pool.query(
-    `SELECT folders_structure FROM study WHERE id = $1`,
+    `SELECT folders_structure, protocol FROM study WHERE id = $1`,
     [studyId]
   );
+  if (studyRows.length === 0) return new Response("Study not found", { status: 404 });
 
-  if (studyRows.length === 0) {
-    return new Response("Study not found", { status: 404 });
+  const studyProtocol = studyRows[0].protocol;
+  const folderMap = buildFolderMap(studyRows[0].folders_structure);
+
+  let query = "";
+  let params = [studyId];
+
+  // Получаем документы
+  if (type === "full") {
+    // 🔥 ВСЕ версии
+    query = `
+      SELECT 
+        d.study_id,
+        d.site_id,
+        s.name as site_name, -- Добавляем имя сайта
+        d.tmf_zone,
+        d.tmf_artifact,
+        d.folder_id,
+        d.is_deleted,
+        d.deleted_at,
+        d.deletion_reason,
+
+        dv.document_name,
+        dv.document_number,
+        dv.file_name,
+        dv.file_path,
+        dv.checksum,
+        dv.uploaded_at,
+        dv.review_status,
+
+        u.email as uploaded_by
+
+      FROM document_version dv
+      JOIN document d ON d.id = dv.document_id
+      LEFT JOIN site s ON d.site_id = s.id -- Джоиним таблицу сайтов
+      LEFT JOIN users u ON dv.uploaded_by = u.id
+
+      WHERE d.study_id = $1
+        -- AND d.is_deleted = FALSE параметр выключен, получаем в том числе и удаленные документы
+
+      ORDER BY d.site_id, d.folder_id, dv.document_number
+    `;
+  } else {
+    // ✅ FINAL (только current)
+    query = `
+      SELECT 
+        d.study_id,
+        d.site_id,
+        s.name as site_name, -- Добавляем имя сайта
+        d.tmf_zone,
+        d.tmf_artifact,
+        d.folder_id,
+
+        dv.document_name,
+        dv.document_number,
+        dv.file_name,
+        dv.file_path,
+        dv.checksum,
+        dv.uploaded_at,
+        dv.review_status,
+
+        u.email as uploaded_by
+
+      FROM document d
+      JOIN document_version dv ON dv.id = d.current_version_id
+      LEFT JOIN site s ON d.site_id = s.id -- Джоиним таблицу сайтов
+      LEFT JOIN users u ON dv.uploaded_by = u.id
+
+      WHERE d.study_id = $1
+        AND d.is_deleted = FALSE
+        AND d.current_version_id IS NOT NULL
+        AND dv.review_status IN ('approved', 'archived')
+
+      ORDER BY d.site_id, d.folder_id
+    `;
   }
 
-  const foldersStructure = studyRows[0].folders_structure || [];
-  const folderMap = buildFolderMap(foldersStructure);
+  const { rows: docs } = await pool.query(query, params);
 
-  // 2. Получаем документы (используем folder_id вместо folder_name)
-  const { rows: docs } = await pool.query(
-    `
-    SELECT 
-      d.study_id,
-      d.site_id,
-      d.tmf_zone,
-      d.tmf_artifact,
-      d.folder_id, -- берем ID для маппинга
-      dv.document_name,
-      dv.document_number,
-      dv.file_name,
-      dv.file_path,
-      dv.checksum,
-      dv.uploaded_at,
-      u.email as uploaded_by
-    FROM document_version dv
-    JOIN document d ON d.id = dv.document_id
-    LEFT JOIN users u ON dv.uploaded_by = u.id
-    WHERE d.study_id = $1 AND d.is_deleted = FALSE
-    ORDER BY d.site_id, d.folder_id, dv.document_number
-  `,
-    [studyId]
-  );
 
   const stream = new PassThrough();
   const archive = archiver("zip", { zlib: { level: 9 } });
-
   archive.pipe(stream);
 
-  // ===== metadata.csv =====
-  let csv = "document_name,version,site,folder_name,uploaded_by,date,checksum\n";
+  const stats = {
+    total: docs.length,
+    success: 0,
+    checksumFailed: 0,
+    failed: [] as string[]
+  };
 
+    // создаем metadata.csv
+  let csv = "document_name, version, status, level, site, folder_name, uploaded_by, date, checksum, deleted, deleted_at, deletion_reason\n";
   for (const doc of docs) {
-    // Подставляем имя папки из нашего справочника по ID
-    const resolvedFolderName = folderMap.get(doc.folder_id) || "Unknown_Folder";
-    
+    const folderName = folderMap.get(doc.folder_id) || "Unknown";
     csv += [
-      doc.document_name,
-      doc.document_number,
-      doc.site_id || "Core",
-      resolvedFolderName,
-      doc.uploaded_by,
-      doc.uploaded_at?.toISOString(),
+      doc.document_name, 
+      doc.document_number, 
+      doc.review_status, 
+      doc.site_id ? "Site Level" : "General Level", // Уровень
+      doc.site_id || "", 
+      folderName, 
+      doc.uploaded_by, 
+      doc.uploaded_at?.toISOString(), 
       doc.checksum,
+      doc.is_deleted,
+      doc.deleted_at || '',
+      doc.deleted_by || ''
     ].join(",") + "\n";
   }
+  archive.append(csv, { name: `metadata.csv` });
+  
+  // Добавляем выгрузку аудит лога для full archive
+  if (type === "full") {
+    const auditRows = await getAuditLogs(studyId);
+    const auditCsv = buildAuditCsv(auditRows);
 
-  archive.append(csv, { name: `Study_${studyId}/metadata.csv` });
+    archive.append(auditCsv, { name: "audit/audit_log.csv" });
+  }  
 
-  // ===== файлы =====
+  // Загрузка и верификация
   await Promise.all(
     docs.map(doc => limit(async () => {
       try {
-        const key = doc.file_path.split(".net/")[1];
-        if (!key) return;
+        const url = new URL(doc.file_path);
+        let keyParts = url.pathname.replace(/^\//, '').split('/');
+        if (keyParts[0] === BUCKET_NAME) keyParts.shift();
+        const cleanKey = keyParts.join('/');
 
-        const s3Object = await s3.send(
-          new GetObjectCommand({
-            Bucket: process.env.YC_BUCKET_NAME!,
-            Key: key,
-          })
-        );
+        const s3Response = await s3.send(new GetObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: cleanKey,
+        }));
 
-        // Для корректной работы buildFolderPath, если она ожидает имя папки, 
-        // подменяем или передаем вычисленное значение
-        const resolvedFolderName = folderMap.get(doc.folder_id) || "Unknown_Folder";
+        // Читаем поток в Buffer для вычисления хэша
+        const chunks: Uint8Array[] = [];
+        for await (const chunk of s3Response.Body as any) {
+          chunks.push(chunk);
+        }
+        const fileBuffer = Buffer.concat(chunks);
+
+        // Проверка контрольной суммы
+        const calculatedHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
         
-        // Создаем модифицированный объект для хелперов путей
-        const docWithResolvedFolder = { 
-          ...doc, 
-          folder_name: resolvedFolderName 
-        };
+        if (doc.checksum && calculatedHash !== doc.checksum.toLowerCase()) {
+          throw new Error(`Checksum mismatch! Expected: ${doc.checksum}, Got: ${calculatedHash}`);
+        }
 
-        const folderPath = buildFolderPath(docWithResolvedFolder);
-        const fileName = buildFileName(docWithResolvedFolder);
+        const folderPath = buildFolderPathWithMode(
+          { ...doc, 
+            protocol: studyProtocol,
+            folder_name: folderMap.get(doc.folder_id) },
+          type
+        );
+        const fileName = buildFileNameWithMode(doc, type);
 
-        archive.append(s3Object.Body as any, {
-          name: `${folderPath}/${fileName}`,
-        });
 
-      } catch (err) {
-        console.error("S3 error:", doc.file_path, err);
+        archive.append(fileBuffer, { name: `${folderPath}/${fileName}` });
+        stats.success++;
+
+      } catch (err: any) {
+        const isChecksumError = err.message.includes("Checksum mismatch");
+        if (isChecksumError) stats.checksumFailed++;
+        
+        const errorMsg = `Error: ${doc.document_name} | File: ${doc.file_name} | Reason: ${err.message}`;
+        console.error(errorMsg);
+        stats.failed.push(errorMsg);
       }
     }))
   );
 
+  // Финальный отчет с результатами проверки
+  const summary = [
+    `Export Summary for Study ${studyId}`,
+    `----------------------------------`,
+    `Total records in DB: ${stats.total}`,
+    `Successfully verified and added: ${stats.success}`,
+    `Checksum verification failed: ${stats.checksumFailed}`,
+    `Other S3/Network errors: ${stats.failed.length - stats.checksumFailed}`,
+    stats.failed.length > 0 ? "\nDETAILED ERRORS:\n" + stats.failed.join("\n") : "\nAll files passed integrity check."
+  ].join("\n");
+
+  archive.append(summary, { name: "export_summary.txt" });
+
   await archive.finalize();
+
+  const filename =
+    type === "full"
+      ? `study_${studyId}_full_export.zip`
+      : `study_${studyId}_final_export.zip`;
 
   return new Response(stream as any, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="study_${studyId}.zip"`,
+      "Content-Disposition": `attachment; filename=${filename}`,
     },
   });
 }

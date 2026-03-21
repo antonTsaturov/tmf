@@ -11,7 +11,8 @@ import {
   Progress,
   Callout,
   Spinner,
-  Select
+  Select,
+  Tooltip
 } from '@radix-ui/themes';
 import {
   DownloadIcon,
@@ -73,7 +74,9 @@ const DataExport: FC = () => {
   const [stats, setStats] = useState<DocumentStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingFull, setIsExportingFull] = useState(false);
   const [exportProgress, setExportProgress] = useState<number>(0);
+  const [exportProgressFull, setExportProgressFull] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   // Get selected study
@@ -130,26 +133,32 @@ const DataExport: FC = () => {
     fetchDocuments();
   }, [fetchDocuments]);
 
-  const handleExport = async () => {
+  const handleExport = async (type: 'final' | 'full') => {
     if (!stats?.canExport || !selectedStudyId || !isStudyArchived) return;
 
-    setIsExporting(true);
-    setExportProgress(0);
+    const isFull = type === 'full';
+    setIsExporting(isFull ? false : true);
+    setIsExportingFull(isFull ? true : false);
+    
+    const setProgress = isFull ? setExportProgressFull : setExportProgress;
+    const setIsExportingState = isFull ? setIsExportingFull : setIsExporting;
+
+    setProgress(0);
     setError(null);
 
     // Simulate progress
     const progressInterval = setInterval(() => {
-      setExportProgress(prev => {
+      setProgress(prev => {
         if (prev >= 90) return prev;
         return prev + 10;
       });
     }, 200);
 
     try {
-      const response = await fetch(`/api/documents/export?id=${selectedStudyId}`);
-      
+      const response = await fetch(`/api/documents/export?id=${selectedStudyId}&type=${type}`);
+
       clearInterval(progressInterval);
-      setExportProgress(100);
+      setProgress(100);
 
       if (!response.ok) {
         throw new Error('Failed to export documents');
@@ -160,7 +169,7 @@ const DataExport: FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `study_${selectedStudyId}.zip`;
+      link.download = `study_${selectedStudyId}_${type}.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -169,11 +178,11 @@ const DataExport: FC = () => {
     } catch (err) {
       console.error('Failed to export documents:', err);
       setError('Failed to export documents');
-      setExportProgress(0);
+      setProgress(0);
     } finally {
       setTimeout(() => {
-        setIsExporting(false);
-        setExportProgress(0);
+        setIsExportingState(false);
+        setProgress(0);
       }, 500);
     }
   };
@@ -365,24 +374,46 @@ const DataExport: FC = () => {
                     </Text>
                   ) : (
                     <Flex justify="end" gap="2">
-                      <Button
-                        color="green"
-                        size="2"
-                        onClick={handleExport}
-                        disabled={isExporting}
-                      >
-                        {isExporting ? (
-                          <Flex gap="2" align="center">
-                            <Spinner size="1" />
-                            Creating Archive...
-                          </Flex>
-                        ) : (
-                          <Flex gap="2" align="center">
-                            <DownloadIcon />
-                            Get Archive
-                          </Flex>
-                        )}
-                      </Button>
+                      <Tooltip content="Final documents with metadata">
+                        <Button
+                          color="green"
+                          size="2"
+                          onClick={() => handleExport('final')}
+                          disabled={isExporting}
+                        >
+                          {isExporting ? (
+                            <Flex gap="2" align="center">
+                              <Spinner size="1" />
+                              Creating Archive...
+                            </Flex>
+                          ) : (
+                            <Flex gap="2" align="center">
+                              <DownloadIcon />
+                              Export Final Versions
+                            </Flex>
+                          )}
+                        </Button>
+                      </Tooltip>
+                      <Tooltip content="All documents versions with metadata and audit log">
+                        <Button
+                          color="blue"
+                          size="2"
+                          onClick={() => handleExport('full')}
+                          disabled={isExportingFull}
+                        >
+                          {isExportingFull ? (
+                            <Flex gap="2" align="center">
+                              <Spinner size="1" />
+                              Creating Archive...
+                            </Flex>
+                          ) : (
+                            <Flex gap="2" align="center">
+                              <ArchiveIcon />
+                              Export All Versions
+                            </Flex>
+                          )}
+                        </Button>
+                      </Tooltip>
                     </Flex>
                   )}
                 </Flex>
@@ -390,14 +421,27 @@ const DataExport: FC = () => {
             )}
 
             {/* Export progress */}
-            {isExporting && exportProgress > 0 && (
+            {(isExporting || isExportingFull) && (exportProgress > 0 || exportProgressFull > 0) && (
               <Card variant="surface">
                 <Flex direction="column" gap="2">
-                  <Flex justify="between" align="center">
-                    <Text size="2" weight="medium">Archive is being created</Text>
-                    <Text size="2" color="gray">{exportProgress}%</Text>
-                  </Flex>
-                  <Progress value={exportProgress} color="green" size="2" radius="full" />
+                  {isExporting && exportProgress > 0 && (
+                    <>
+                      <Flex justify="between" align="center">
+                        <Text size="2" weight="medium">Final versions archive is being created</Text>
+                        <Text size="2" color="gray">{exportProgress}%</Text>
+                      </Flex>
+                      <Progress value={exportProgress} color="green" size="2" radius="full" />
+                    </>
+                  )}
+                  {isExportingFull && exportProgressFull > 0 && (
+                    <>
+                      <Flex justify="between" align="center">
+                        <Text size="2" weight="medium">Full versions archive is being created</Text>
+                        <Text size="2" color="gray">{exportProgressFull}%</Text>
+                      </Flex>
+                      <Progress value={exportProgressFull} color="blue" size="2" radius="full" />
+                    </>
+                  )}
                 </Flex>
               </Card>
             )}

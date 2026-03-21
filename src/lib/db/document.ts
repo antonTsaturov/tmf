@@ -47,6 +47,7 @@ export async function ensureIndexesAndTriggers() {
       CREATE INDEX IF NOT EXISTS idx_document_created_at ON document(created_at);
       CREATE INDEX IF NOT EXISTS idx_document_deleted_at ON document(deleted_at);
       CREATE INDEX IF NOT EXISTS idx_document_archived_at ON document(archived_at);
+      CREATE INDEX IF NOT EXISTS idx_document_current_version ON document(current_version_id) WHERE is_deleted = false;
     `);
 
     // Проверяем существование индексов для document_version таблицы
@@ -56,6 +57,7 @@ export async function ensureIndexesAndTriggers() {
       CREATE INDEX IF NOT EXISTS idx_document_version_uploaded_at ON document_version(uploaded_at);
       CREATE INDEX IF NOT EXISTS idx_document_version_review_status ON document_version(review_status);
       CREATE INDEX IF NOT EXISTS idx_review_queue ON document_version (review_submitted_to, review_submitted_at DESC) WHERE review_status = 'submitted';
+      CREATE INDEX IF NOT EXISTS idx_document_version_status ON document_version(review_status);
     `);
 
     // Создаем функцию для автоматического обновления current_version_id если её нет
