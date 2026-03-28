@@ -9,6 +9,7 @@ import { StudySite, SiteStatus, Study } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
 import { deleteRecord } from '@/lib/api/fetch';
+import { CountrySelector, SelectorValue } from '../PseudoSelector';
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -43,6 +44,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
     [SiteStatus.OPENED]: { label: 'Opened', color: '#51cf66', icon: '🟢' },
     [SiteStatus.PLANNED]: { label: 'Planned', color: '#ff922b', icon: '🟡' },
     [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔒' },
+    [SiteStatus.FROZEN]: { label: 'Frozen', color: '#3b5bff', icon: '❄️' },
   };
 
   const config = statusConfig[status];
@@ -206,14 +208,14 @@ const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }
                     className="site-input"
                     required
                   />
-                  <input
+                  {/* <input
                     type="text"
                     value={editData.country || ''}
                     onChange={handleInputChange('country')}
                     placeholder="Country *"
                     className="site-input"
                     required
-                  />
+                  /> */}
                   <input
                     type="text"
                     value={editData.principal_investigator || ''}
@@ -375,7 +377,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
     }
 
     if (!newSiteForm.name.trim() || !newSiteForm.number.trim() || 
-        !newSiteForm.city.trim() || !newSiteForm.country.trim() || 
+        !newSiteForm.city.trim() || newSiteForm.country.length < 1 || 
         !newSiteForm.principal_investigator.trim()) {
       alert('Please fill all required fields: Institution Name, Number, City, PI name and Country.');
       return;
@@ -397,7 +399,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
       number: parseInt(newSiteForm.number) || 1,
       city: newSiteForm.city.trim(),
       principal_investigator: newSiteForm.principal_investigator.trim(),
-      country: newSiteForm.country.trim(),
+      country: newSiteForm.country,
       status: SiteStatus.PLANNED,
     };
 
@@ -495,6 +497,14 @@ const SiteManager: FC<SiteManagerProps> = () => {
     console.log('Selected study:', studyId);
   };
 
+  const studyCountriesList = studies.find(study => study.id === currentStudyId)?.countries;
+
+  const handleCountriesChange = (value: SelectorValue[]) => {
+    const country = String(value);
+
+    setNewSiteForm(prev => ({ ...prev, country: country }))
+  };
+
   return (
     <div className="site-manager-container">
       <div className="site-manager-header">
@@ -565,8 +575,8 @@ const SiteManager: FC<SiteManagerProps> = () => {
               disabled={!currentStudyId}
             />
             
-            <label>Country*</label>
-            <input
+            
+            {/* <input
               type="text"
               value={newSiteForm.country}
               onChange={(e) => setNewSiteForm(prev => ({ ...prev, country: e.target.value }))}
@@ -574,13 +584,25 @@ const SiteManager: FC<SiteManagerProps> = () => {
               className="form-input"
               required
               disabled={!currentStudyId}
-            />
+            /> */}
+
+            {studyCountriesList &&
+              <>
+                <label>Country*</label>
+                <CountrySelector
+                  selectedValues={[newSiteForm.country]}
+                  onChange={handleCountriesChange}
+                  placeholder="Select countries..."
+                  availableOptions={studyCountriesList}
+                />
+              </>
+            }
             
             <button 
               onClick={handleAddSite}
               className="add-button"
               disabled={!currentStudyId || !newSiteForm.name.trim() || !newSiteForm.number.trim() || 
-                       !newSiteForm.city.trim() || !newSiteForm.country.trim()}
+                       !newSiteForm.city.trim()}
             >
               Add Site
             </button>

@@ -1,4 +1,5 @@
 import { Folder } from './types';
+import { StudySite } from './types';
 
 export enum StudyStatus {
   PLANNED = 'planned',
@@ -20,4 +21,5 @@ export interface Study {
   total_documents: number | null;
   folders_structure: Folder | null;
   audit_trail?: any[] | null;
+  sites?: StudySite[];
 }

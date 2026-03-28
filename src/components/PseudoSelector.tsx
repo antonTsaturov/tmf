@@ -1,17 +1,33 @@
 import { FC, useState } from "react";
 import '../styles/PresudoSelector.css';
 import { UserRole, StudySite, SiteStatus, Study, StudyUser, ROLE_CONFIG } from "@/types/types";
-
-// Список доступных стран
-const COUNTRIES_LIST = [
-  'Russia', 'Australia', 'China', 'India', 'Brazil', 'Mexico', 'South Korea', 'USA'
-];
+import { COUNTRIES } from "@/lib/constants";
+import {
+  Flex,
+  Text,
+  Badge,
+  Button,
+  DropdownMenu,
+  TextField,
+  Separator,
+  ScrollArea,
+  Box,
+  Strong
+} from '@radix-ui/themes';
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  Cross2Icon,
+  MagnifyingGlassIcon,
+  CaretSortIcon
+} from '@radix-ui/react-icons';
 
 // Конфигурация для статусов центров
 const SITE_STATUS_CONFIG = {
   [SiteStatus.OPENED]: { label: 'Opened', color: '#51cf66', icon: '🟢' },
   [SiteStatus.PLANNED]: { label: 'Planned', color: '#ff922b', icon: '🟡' },
   [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔒' },
+  [SiteStatus.FROZEN]: { label: 'Frozen', color: '#3b5bff', icon: '❄️' },
 };
 
 // Типы для селектора
@@ -62,7 +78,7 @@ const PseudoSelector: FC<PseudoSelectorProps> = ({
     if (type === 'country') {
       return availableOptions && availableOptions.length > 0 
         ? availableOptions 
-        : COUNTRIES_LIST;
+        : COUNTRIES;
     } else if (type === 'role') {
       return Object.values(UserRole);
     } else if (type === 'site' || type === 'study') {
@@ -70,30 +86,6 @@ const PseudoSelector: FC<PseudoSelectorProps> = ({
     }
     return [];
   };
-
-  // Получаем отображаемое имя для опции
-  // const getDisplayName = (value: SelectorValue): string => {
-
-  //   if (type === 'role') {
-  //     const role = value as UserRole;
-  //     return ROLE_CONFIG[role]?.label || role.replace('_', ' ');
-
-  //   } else if (type === 'site' ) {
-  //     const siteObj = value as { id: number; site?: StudySite };
-  //     if (siteObj.site) {
-  //       return siteObj.site.name ;//|| `Site #${siteObj.site.number}`
-  //     }
-  //     return `Site #${siteObj.id}`;
-
-  //   } else if ( type === 'study'){
-  //     const siteObj = value as { id: number; study?: Study };
-  //     if (siteObj.study) {
-  //       return siteObj.study.protocol;
-  //     }
-  //     //return `Site #${siteObj.id}`;
-  //   }
-  //   return value as string;
-  // };
 
   // Получаем отображаемое имя для опции
 const getDisplayName = (value: SelectorValue): string => {
@@ -293,158 +285,232 @@ const filteredOptions = getOptions().filter(option => {
 });
 
   return (
-    <div className="pseudo-selector">
-      <div 
-        className="selector-trigger"
-        onClick={() => {
-          if (!disabled)
-          setIsOpen(!isOpen)
-        }}
-      >
-        {selectedValues.length > 0 ? (
-          <div className="selected-values">
-            {selectedValues.map(value => (
-              <span 
-                key={type === 'site' || type === 'study' ? (value as { id: number }).id.toString() : value.toString()} 
-                className="value-tag"
-                style={getColor(value) ? { 
-                  backgroundColor: getColor(value),
-                  color: 'white'
-                } : undefined}
-              >
-                {getDisplayName(value)}
-                {allowMultiple && (
-                  <button 
-                    className="remove-tag"
-                    onClick={(e) => removeTag(value, e)}
+    <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenu.Trigger disabled={disabled}>
+        <Flex
+          align="center"
+          justify="between"
+          gap="2"
+          p="2"
+          style={{
+            minWidth: 200,
+            cursor: disabled ? 'not-allowed' : 'pointer',
+            opacity: disabled ? 0.5 : 1,
+            border: '1px solid var(--gray-4)',
+            borderRadius: 'var(--radius-2)',
+            backgroundColor: 'var(--color-panel-solid)',
+            minHeight: 38
+          }}
+        >
+          <Flex gap="2" wrap="wrap" style={{ flex: 1, minWidth: 0 }}>
+            {selectedValues.length > 0 ? (
+              selectedValues.map(value => {
+                const color = getColor(value);
+                return (
+                  <Badge
+                    key={type === 'site' || type === 'study' ? (value as { id: number }).id.toString() : value.toString()}
+                    color={color ? undefined : 'gray'}
+                    variant={color ? 'solid' : 'soft'}
+                    size="2"
+                    style={{ backgroundColor: color }}
                   >
-                    ×
-                  </button>
-                )}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <span className="placeholder">{placeholder}</span>
-        )}
-        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
-      </div>
-      
-      {isOpen && (
-        <div className="selector-dropdown">
-          <input
-            type="text"
+                    {getDisplayName(value)}
+                    {allowMultiple && (
+                      <Box
+                        style={{ marginLeft: 4, cursor: 'pointer' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeTag(value, e as unknown as React.MouseEvent);
+                        }}
+                      >
+                        <Cross2Icon />
+                      </Box>
+                    )}
+                  </Badge>
+                );
+              })
+            ) : (
+              <Text size="2" color="gray">{placeholder}</Text>
+            )}
+          </Flex>
+          <ChevronDownIcon />
+        </Flex>
+      </DropdownMenu.Trigger>
+
+      <DropdownMenu.Content
+        style={{
+          minWidth: 300,
+          maxWidth: 400,
+          maxHeight: 400
+        }}
+        sideOffset={4}
+      >
+        <DropdownMenu.Item style={{ padding: 0 }}>
+          <TextField.Root
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="selector-search"
             autoFocus
-          />
-          
-          <div className="selector-options">
+            style={{ width: '100%' }}
+          >
+            <TextField.Slot>
+              <MagnifyingGlassIcon />
+            </TextField.Slot>
+          </TextField.Root>
+        </DropdownMenu.Item>
+
+        <Separator size="4" />
+
+        <ScrollArea style={{ maxHeight: 300 }}>
+          <Flex direction="column" gap="1" p="1">
             {filteredOptions.length > 0 ? (
               filteredOptions.map(option => {
                 const selected = isSelected(option);
                 const icon = getIcon(option);
                 const info = getDisplayInfo(option);
                 const siteNumber = getSiteNumber(option);
-                
+                const color = getColor(option);
+
                 return (
-                  <div
+                  <Flex
                     key={type === 'site' || type === 'study'
                       ? (option as { id: number }).id.toString()
                       : option.toString()
                     }
-                    className={`selector-item ${selected ? 'selected' : ''}`}
+                    align="center"
+                    gap="2"
+                    p="2"
+                    style={{
+                      cursor: 'pointer',
+                      borderRadius: 'var(--radius-2)',
+                      backgroundColor: selected && color ? color : selected ? 'var(--accent-4)' : 'transparent'
+                    }}
                     onClick={() => toggleOption(option)}
-                    style={getColor(option) && selected ? { 
-                      backgroundColor: getColor(option),
-                      color: 'white'
-                    } : {}}
+                    onMouseEnter={(e) => {
+                      if (!selected) {
+                        e.currentTarget.style.backgroundColor = 'var(--gray-3)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!selected) {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
                   >
-                    <span className="selector-checkbox">
-                      {selected ? '✓' : ''}
-                    </span>
-                    
+                    <Flex
+                      align="center"
+                      justify="center"
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: 'var(--radius-1)',
+                        border: `1px solid ${selected ? 'var(--accent-9)' : 'var(--gray-6)'}`,
+                        backgroundColor: selected ? 'var(--accent-9)' : 'transparent',
+                        color: 'white'
+                      }}
+                    >
+                      {selected && <CheckIcon width={12} height={12} />}
+                    </Flex>
+
                     {icon && (
-                      <span className="option-icon">{icon}</span>
+                      <Text size="2">{icon}</Text>
                     )}
-                    
-                    <div className="option-content">
-                      <span title={getDisplayName(option)} className="selector-label">
+
+                    <Flex direction="column" gap="0" style={{ flex: 1, minWidth: 0 }}>
+                      <Text
+                        size="2"
+                        truncate
+                        style={{ color: selected && color ? 'white' : 'inherit' }}
+                      >
                         {getDisplayName(option)}
-                      </span>
+                      </Text>
                       {info && showSiteDetails && (
-                        <span className="option-info">{info}</span>
+                        <Text
+                          size="1"
+                          color={selected && color ? 'gray' : 'gray'}
+                          truncate
+                        >
+                          {info}
+                        </Text>
                       )}
-                    </div>
-                    
-                    {type === 'role' && !selected && (
-                      <span 
-                        className="role-color-indicator"
-                        style={{ backgroundColor: getColor(option) }}
+                    </Flex>
+
+                    {type === 'role' && !selected && color && (
+                      <Box
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          backgroundColor: color
+                        }}
                       />
                     )}
-                    
+
                     {type === 'site' && siteNumber && (
-                      <span className="site-number">
+                      <Text size="1" color={selected && color ? 'gray' : 'gray'}>
                         #{siteNumber}
-                      </span>
+                      </Text>
                     )}
-                  </div>
+                  </Flex>
                 );
               })
             ) : (
-              <div className="no-results">
-                {availableOptions && availableOptions.length === 0 
-                  ? 'No options available' 
-                  : 'No results found'
-                }
-              </div>
+              <Flex align="center" justify="center" p="4">
+                <Text size="2" color="gray">
+                  {availableOptions && availableOptions.length === 0
+                    ? 'No options available'
+                    : 'No results found'
+                  }
+                </Text>
+              </Flex>
             )}
-          </div>
-          
-          <div className="selector-actions">
-            {allowMultiple && getOptions().length > 0 && (
-              <>
-                <button 
-                  onClick={selectAll}
-                  className="action-button select-all"
-                >
-                  Select All
-                </button>
-                <button 
-                  onClick={clearAll}
-                  className="action-button clear-all"
-                >
-                  Clear All
-                </button>
-              </>
-            )}
-            <button 
-              onClick={() => setIsOpen(false)}
-              className="action-button done"
-            >
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+          </Flex>
+        </ScrollArea>
+
+        {allowMultiple && getOptions().length > 0 && (
+          <>
+            <Separator size="4" />
+            <Flex gap="2" p="2">
+              <Button
+                size="2"
+                variant="surface"
+                onClick={selectAll}
+                style={{ flex: 1 }}
+              >
+                Select All
+              </Button>
+              <Button
+                size="2"
+                variant="soft"
+                color="gray"
+                onClick={clearAll}
+                style={{ flex: 1 }}
+              >
+                Clear All
+              </Button>
+            </Flex>
+          </>
+        )}
+      </DropdownMenu.Content>
+    </DropdownMenu.Root>
   );
 };
 
 export const CountrySelector: FC<{
+  availableOptions?: string[];
   selectedValues: string[];
   onChange: (values: string[]) => void;
   placeholder?: string;
-}> = ({ selectedValues, onChange, placeholder }) => {
+  allowMultiple?: boolean;
+}> = ({ selectedValues, onChange, placeholder, allowMultiple = false, availableOptions }) => {
   return (
     <PseudoSelector 
       type="country"
       selectedValues={selectedValues}
       onChange={(values) => onChange(values as string[])}
       placeholder={placeholder}
+      allowMultiple={allowMultiple}
+      availableOptions={availableOptions}
     />
   );
 };
@@ -468,64 +534,6 @@ export const RoleSelector: FC<{
   );
 };
 
-// export const SiteSelector: FC<{
-//   // Принимаем массив StudySite для отображения информации
-//   availableOptions: StudySite[];
-//   // Принимаем массив чисел (ID) как выбранные значения
-//   selectedValues: number[];
-//   // Возвращаем массив чисел (ID)
-//   onChange: (values: number[]) => void;
-//   placeholder?: string;
-//   showSiteDetails?: boolean;
-//   disabled: boolean;
-//   user?: StudyUser;
-// }> = ({ availableOptions, selectedValues, onChange, placeholder, showSiteDetails = false, disabled, user }) => {
-  
-//   // Преобразуем StudySite[] в { id: number, site: StudySite }[] для отображения
-//   const siteOptions = availableOptions.map(site => ({
-//     id: site.id,
-//     site: site
-//   }));
-  
-//   // Преобразуем числа (ID) в { id: number, site?: StudySite } для отображения
-//   const selectedSiteObjects = selectedValues.map(id => {
-//     console.log(id)
-//     const foundSite = availableOptions.find(site => {
-//       if(!user) {
-//         return site.id === id
-//       } else {
-//         return user.assigned_site_id.includes(site.id)
-//       }
-      
-//     });
-    
-//     console.log('foundSite: ', foundSite)
-//     return {
-//       id,
-//       site: foundSite
-//     };
-//   });
-  
-//   // Обработчик изменения - извлекаем только ID
-//   const handleChange = (values: SelectorValue[]) => {
-//     const ids = values
-//       .filter(v => typeof v === 'object' && 'id' in v)
-//       .map(v => (v as { id: number }).id);
-//     onChange(ids);
-//   };
-  
-//   return (
-//     <PseudoSelector 
-//       type="site"
-//       availableOptions={siteOptions}
-//       selectedValues={selectedSiteObjects}
-//       onChange={handleChange}
-//       placeholder={placeholder}
-//       showSiteDetails={showSiteDetails}
-//       disabled={disabled}
-//     />
-//   );
-// };
 
 export const SiteSelector: FC<{
   availableOptions: StudySite[];

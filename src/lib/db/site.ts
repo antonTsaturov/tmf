@@ -1,4 +1,4 @@
-import { connectDB } from './index';
+import { getPool } from './index';
 import { StudySite } from '@/types/types';
 
 export async function bulkSaveData(sites: StudySite[]) {
@@ -7,7 +7,7 @@ export async function bulkSaveData(sites: StudySite[]) {
     return [];
   }
 
-  const client = await connectDB();
+  const client = getPool();
   
   try {
     console.log(`bulkSaveSites: Saving ${sites.length} sites...`);
@@ -103,7 +103,5 @@ export async function bulkSaveData(sites: StudySite[]) {
     console.error('bulkSaveSites: Transaction error:', err);
     throw err;
     
-  } finally {
-    client.release();
   }
 }

@@ -1,6 +1,6 @@
 // app/api/audit/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, getPool } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { AuditFilters } from '@/types/audit';
 
 export async function GET(request: NextRequest) {

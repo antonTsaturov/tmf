@@ -1,6 +1,6 @@
 // app/api/documents/[id]/actions/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB, getPool } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { DocumentAction } from '@/types/document';
 import { ActionRoleMap } from '@/domain/document/document.policy';
 import { UserRole } from '@/types/types';
@@ -321,15 +321,15 @@ export const POST = withAudit(
     getOldValue: async (ctx, req) => {
       const parts = req.nextUrl.pathname.split('/');
       const id = parts[parts.indexOf('documents') + 1];
-      const client = await connectDB();
+      const client = getPool();
       try {
         const { rows } = await client.query(
           'SELECT review_status FROM document_version dv JOIN document d ON d.current_version_id = dv.id WHERE d.id = $1', 
           [id]
         );
         return rows[0] || null;
-      } finally {
-        client.release();
+      } catch (error) {
+        console.log('getOldValue error:', error)
       }
     },
 

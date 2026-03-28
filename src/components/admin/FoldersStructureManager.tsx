@@ -3,21 +3,37 @@ import '@/styles/FoldersStructureManager.css';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomSelect } from '../Select'
 import { AdminContext } from '@/wrappers/AdminContext';
-import { FolderType, FolderStatus, FolderViewLevel, Folder } from '@/types/types';
+import { FolderType, FolderStatus, Folder, ViewLevel } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
-import { IoIosArrowDroprightCircle, IoIosArrowDropdownCircle } from "react-icons/io";
+import {
+  Card,
+  Flex,
+  Text,
+  Badge,
+  Button,
+  Separator,
+  Heading,
+  Box,
+  IconButton,
+  ScrollArea,
+  TextField
+} from '@radix-ui/themes';
+import {
+  PlusIcon,
+  TrashIcon,
+  DownloadIcon,
+  UploadIcon,
+  ResetIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
+  HomeIcon
+} from '@radix-ui/react-icons';
+import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
 
 export interface FolderPosition {
   folder: Folder;
   parent: Folder | null;
-}
-
-// Пропсы для компонентов
-interface ActionButtonProps {
-  onClick: () => void;
-  children: React.ReactNode;
-  className?: string;
 }
 
 interface FolderItemProps {
@@ -28,23 +44,21 @@ interface FolderItemProps {
   onDelete: (folderId: string) => void;
   onUpdateName: (folderId: string, newName: string) => void;
   onEditComplete?: (folderId: string) => void;
-  parentLevel?: FolderViewLevel; // Добавляем уровень родителя
+  parentLevel?: ViewLevel; // Добавляем уровень родителя
 }
 
 interface FolderTreeProps {
   initialStructure?: Folder;
 }
 
-export const generateId = (level: FolderViewLevel): string => `${level}-${uuidv4()}`;
-
-//export const generateSiteId = (): string => `site-${uuidv4()}`;
+export const generateId = (level: ViewLevel): string => `${level}-${uuidv4()}`;
 
 export const createNewFolder = (
   name: string = '', 
   type: FolderType = FolderType.FOLDER,
   shouldEdit: boolean = false,
-  level: FolderViewLevel = FolderViewLevel.GENERAL, // По умолчанию GENERAL
-  parentLevel?: FolderViewLevel // Уровень родителя
+  level: ViewLevel = ViewLevel.GENERAL, // По умолчанию GENERAL
+  parentLevel?: ViewLevel // Уровень родителя
 ): Folder & { shouldEdit?: boolean } => {
   // Определяем уровень для новой папки
   let folderLevel = level;
@@ -54,10 +68,6 @@ export const createNewFolder = (
     folderLevel = parentLevel;
   }
   
-  // Для корневых папок Site Level используем специальный формат id
-  // const id = (type === FolderType.ROOT && folderLevel === FolderViewLevel.SITE) 
-  //   ? generateSiteId() 
-  //   : generateId();
   const id = generateId(folderLevel);
   
   return {
@@ -72,62 +82,64 @@ export const createNewFolder = (
 };
 
 // Создание начальной структуры с двумя корневыми папками
-export const createInitialStructure = (studyName: string = 'Root Directory'): Folder => {
-  const rootId = generateId(FolderViewLevel.ROOT);
+export const createInitialStructure = (studyName: string = 'Root Directory', countries?: string[]): Folder => {
+  const rootId = generateId(ViewLevel.ROOT);
   
+  const children = [
+    {
+      id: generateId(ViewLevel.GENERAL),
+      name: 'General',
+      type: FolderType.FOLDER,
+      level: ViewLevel.GENERAL,
+      status: FolderStatus.ACTIVE,
+      children: [],
+      shouldEdit: false
+    },
+    {
+      id: generateId(ViewLevel.SITE),
+      name: 'Site Level',
+      type: FolderType.FOLDER,
+      level: ViewLevel.SITE,
+      status: FolderStatus.ACTIVE,
+      children: [],
+      shouldEdit: false
+    },
+    ...(countries ? [{
+      id: generateId(ViewLevel.COUNTRY),
+      name: 'Country Level',
+      type: FolderType.FOLDER,
+      level: ViewLevel.COUNTRY,
+      status: FolderStatus.ACTIVE,
+      children: [],
+      shouldEdit: false
+    }] : [])
+  ];
+
   return {
     id: rootId,
     name: studyName,
     type: FolderType.ROOT,
-    level: FolderViewLevel.GENERAL, // Корень не имеет уровня
+    level: ViewLevel.ROOT,
     status: FolderStatus.ACTIVE,
     shouldEdit: false,
-    children: [
-      {
-        id: generateId(FolderViewLevel.SITE), // Специальный id для Site Level
-        name: 'Site Level',
-        type: FolderType.FOLDER,
-        level: FolderViewLevel.SITE,
-        status: FolderStatus.ACTIVE,
-        children: [],
-        shouldEdit: false
-      },
-      {
-        id: generateId(FolderViewLevel.GENERAL),
-        name: 'General',
-        type: FolderType.FOLDER,
-        level: FolderViewLevel.GENERAL,
-        status: FolderStatus.ACTIVE,
-        children: [],
-        shouldEdit: false
-      }
-    ]
+    children
   };
 };
 
-// Вспомогательный компонент для кнопок действий
-const ActionButton: FC<ActionButtonProps> = ({ onClick, children, className = '' }) => (
-  <button 
-    onClick={onClick}
-    className={`action-button ${className}`}
-    title={typeof children === 'string' ? children : undefined}
-  >
-    {children}
-  </button>
-);
 
 // Компонент папки
-const FolderItem: FC<FolderItemProps> = ({ 
-  folder, 
-  depth = 0, 
-  onAddFolder, 
-  onAddSubfolder, 
+const FolderItem: FC<FolderItemProps> = ({
+  folder,
+  depth = 0,
+  onAddFolder,
+  onAddSubfolder,
   onDelete,
   onUpdateName,
   onEditComplete,
   parentLevel
 }) => {
-  const [isEditing, setIsEditing] = useState<boolean>(folder.shouldEdit || false);
+  // Используем shouldEdit только при первоначальном монтировании
+  const [isEditing, setIsEditing] = useState<boolean>(() => folder.shouldEdit || false);
   const [editingName, setEditingName] = useState<string>(folder?.name);
   const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
@@ -158,106 +170,140 @@ const FolderItem: FC<FolderItemProps> = ({
 
   // Определяем иконку в зависимости от уровня
   const getFolderIcon = () => {
-    if (folder.type === FolderType.ROOT) return '🏠';
-    
-    if (folderLevel === FolderViewLevel.SITE || folderLevel === FolderViewLevel.GENERAL) {
-      return folder.children.length > 0 ? (isExpanded ? '📂' : '📁') : '📁';
+    if (folder.type === FolderType.ROOT) return <HomeIcon />;
+    if (folderLevel === ViewLevel.SITE || folderLevel === ViewLevel.GENERAL) {
+      return folder.children.length > 0 ? (isExpanded ? <FaRegFolderOpen /> : <FaRegFolder />) : <FaRegFolder />;
     }
-    
-    return folder.children.length > 0 ? (isExpanded ? '📂' : '📁') : '📁';
+    return folder.children.length > 0 ? (isExpanded ? <FaRegFolderOpen /> : <FaRegFolder />) : <FaRegFolder />;
   };
 
   // Получаем цвет фона в зависимости от уровня
   const getFolderBackground = () => {
-    if (folderLevel === FolderViewLevel.SITE) {
-      return 'rgba(85, 139, 47, 0.1)'; // Светло-зеленый для Site Level
-    } else if (folderLevel === FolderViewLevel.GENERAL) {
-      return 'rgba(25, 118, 210, 0.1)'; // Светло-синий для General
+    if (folderLevel === ViewLevel.SITE) {
+      return 'var(--green-3)';
+    } else if (folderLevel === ViewLevel.GENERAL) {
+      return 'var(--blue-3)';
+    } else if (folderLevel === ViewLevel.COUNTRY){
+      return 'var(--gray-3)';
     }
     return 'transparent';
   };
 
-  return (
-    <div 
-      className={`folder-item ${folder.type}`}
-      data-testid={`${folder.id}`}
-      style={{ backgroundColor: getFolderBackground(), padding: '5px' }}
-    >
-      <div className="folder-header">
-        <div style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-start'}}>
-        {folder.children.length > 0 && (
-          <button 
-            className="expand-button"
-            onClick={() => setIsExpanded(!isExpanded)}
-            aria-label={isExpanded ? 'Collapse folder' : 'Expand folder'}
-          >
-            {isExpanded ? <IoIosArrowDropdownCircle /> : <IoIosArrowDroprightCircle />}
-          </button>
-        )}
-        
-        <div className="folder-icon" aria-hidden="true">
-          {getFolderIcon()}
-        </div>
-        
-        {isEditing ? (
-          <input
-            type="text"
-            value={editingName}
-            onChange={handleNameChange}
-            onBlur={handleNameSave}
-            onKeyDown={handleKeyDown}
-            autoFocus
-            className="folder-name-input"
-            aria-label="Edit folder name"
-          />
-        ) : ( <>
-          <span 
-            className="folder-name"
-            onDoubleClick={() => setIsEditing(true)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && setIsEditing(true)}
-            aria-label={`Folder: ${folder.name}. Double click to edit`}
-          >
-            {folder.name}
-            
 
-          </span>
-            {folderLevel !== undefined && folder.type !== FolderType.ROOT && (
-              <span className={`level-badge ${folderLevel === FolderViewLevel.SITE ? 'site' : 'general'}`}>
-                {folderLevel === FolderViewLevel.SITE ? 'SL' : 'G'}
-              </span>
-            )}
-          </>
-        )}
-        </div>
-        
-        <div className="folder-actions">
-          {folder.type !== FolderType.ROOT  && (
-            <>
-              {/* <ActionButton onClick={() => onAddFolder(folder.id, 'before')}>
-                + Before
-              </ActionButton>
-              <ActionButton onClick={() => onAddFolder(folder.id, 'after')}>
-                + After
-              </ActionButton> */}
-              <ActionButton onClick={() => onAddSubfolder(folder.id)}>
-                + Sub
-              </ActionButton>
-              <ActionButton 
-                onClick={() => onDelete(folder.id)}
-                className="delete-button"
+return (
+    <Box>
+      <Card 
+        variant="ghost" 
+        style={{ 
+          backgroundColor: getFolderBackground(), 
+          marginBottom: '22px', // Плотная компоновка
+          padding: '4px 8px' 
+        }}
+      >
+        <Flex align="center" justify="between" style={{ height: 32 }}>
+          <Flex align="center" gap="2" style={{ flexGrow: 1, minWidth: 0 }}>
+            
+            {/* 1. Фиксированная область шеврона (24px) */}
+            <Box style={{ width: 24, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+              {folder.children && folder.children.length > 0 && (
+                <IconButton
+                  size="1"
+                  variant="ghost"
+                  color="gray"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                >
+                  {isExpanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+                </IconButton>
+              )}
+            </Box>
+
+            {/* 2. Иконка папки */}
+            <Box style={{ color: 'var(--accent-9)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+              {getFolderIcon()}
+            </Box>
+
+            {/* 3. Контентная часть (Текст или Инпут) */}
+            <Box style={{ flexGrow: 1, minWidth: 0 }}>
+              {isEditing ? (
+                <TextField.Root
+                  size="1"
+                  value={editingName}
+                  onChange={(e) => handleNameChange(e)}
+                  onBlur={handleNameSave}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                  style={{ width: '100%', maxWidth: 250 }}
+                />
+              ) : (
+                <Flex align="center" gap="2" style={{ minWidth: 0 }}>
+                  <Text
+                    size="2"
+                    weight={folder.type === FolderType.ROOT ? 'bold' : 'regular'}
+                    style={{ 
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                    onDoubleClick={() => setIsEditing(true)}
+                  >
+                    {folder.name}
+                  </Text>
+                  
+                  {folderLevel !== undefined && folder.type !== FolderType.ROOT && (
+                    <Badge 
+                      size="1" 
+                      color={folderLevel === ViewLevel.SITE ? 'green'
+                              : folderLevel === ViewLevel.GENERAL ? 'blue'
+                              : 'gray' }
+                      variant="soft"
+                      style={{ flexShrink: 0 }}
+                    >
+                      {folderLevel === ViewLevel.SITE ? 'SL' 
+                      : folderLevel === ViewLevel.GENERAL ? 'G'
+                      : 'CL'
+                      }
+                    </Badge>
+                  )}
+                </Flex>
+              )}
+            </Box>
+          </Flex>
+
+          {/* 4. Кнопки действий */}
+          {folder.type !== FolderType.ROOT && (
+            <Flex gap="1" ml="2" style={{ flexShrink: 0 }}>
+              <IconButton
+                size="1"
+                variant="soft"
+                color="iris"
+                onClick={() => {
+                  onAddSubfolder(folder.id)
+                  setTimeout(()=>{folder.children && folder.children.length > 0 && setIsExpanded(isExpanded)}, 400)
+                  //setIsExpanded(!isExpanded)
+                }}
+                title="Add subfolder"
               >
-                Delete
-              </ActionButton>
-            </>
+                <PlusIcon width="14" height="14" />
+              </IconButton>
+              <IconButton
+                size="1"
+                variant="soft"
+                color="red"
+                onClick={() => onDelete(folder.id)}
+                title="Delete folder"
+              >
+                <TrashIcon width="14" height="14" />
+              </IconButton>
+            </Flex>
           )}
-        </div>
-      </div>
-      
-      {isExpanded && folder.children.length > 0 && (
-        <div className="folder-children">
-          {folder.children.map(child => (
+        </Flex>
+      </Card>
+
+      {/* 5. Рекурсивный рендеринг детей */}
+      {isExpanded && folder.children && folder.children.length > 0 && (
+        <Box style={{ paddingLeft: 24}}>
+          {folder.children.map((child) => (
             <FolderItem
               key={child.id}
               folder={child}
@@ -266,13 +312,13 @@ const FolderItem: FC<FolderItemProps> = ({
               onAddSubfolder={onAddSubfolder}
               onDelete={onDelete}
               onUpdateName={onUpdateName}
+              parentLevel={folderLevel}
               onEditComplete={onEditComplete}
-              parentLevel={folderLevel} // Передаем свой уровень как родительский для детей
             />
           ))}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 
@@ -318,6 +364,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
     });
   }, []);
 
+  
   // Добавление папки
   const handleAddFolder = useCallback((targetFolderId: string, position: 'before' | 'after' = 'after') => {
     updateTree((tree: Folder) => {
@@ -412,7 +459,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       const { folder } = result;
       
       // Запрещаем переименование корневых папок Site Level и General
-      if (folder.name === 'Site Level' || folder.name === 'General') {
+      if (folder.name === 'Site Level' || folder.name === 'General' || folder.name === 'Country Level') {
         alert('Cannot rename root level folders');
         return;
       }
@@ -422,14 +469,14 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
   }, [updateTree, findFolderInTree]);
 
   // Очистка флага редактирования
-  const handleEditComplete = useCallback((folderId: string) => {
+  const handleEditComplete = (folderId: string) => {
     updateTree((tree: Folder) => {
       const result = findFolderInTree(folderId, tree);
       if (!result) return;
       const { folder } = result;
       delete (folder as any).shouldEdit;
     });
-  }, [updateTree, findFolderInTree]);
+  };
 
   // Генерация структуры JSON
   useEffect(() => {
@@ -521,6 +568,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
     setCurrentStudyId(studyId);
   };
 
+  // Создаем начальную структуру с Site Level, Country & General
   useEffect(() => {
     if (currentStudyId == null) {
       setRootFolder(null);
@@ -528,15 +576,22 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       return;
     }
 
+    const countries = studies?.find(study => study.id === currentStudyId && study.countries.length > 1)?.countries;
+
     const currentStudyFoldersStructure = studies?.find(study => study.id === currentStudyId)?.folders_structure;
     let folderStructure: Folder;
     
     if (currentStudyFoldersStructure && typeof currentStudyFoldersStructure === 'object' && !Array.isArray(currentStudyFoldersStructure)) {
       folderStructure = currentStudyFoldersStructure as Folder;
     } else {
-      // Создаем начальную структуру с Site Level и General
+      // Создаем начальную структуру 
       const studyName = studies?.find(study => study.id === currentStudyId)?.protocol || 'Root Directory';
-      folderStructure = createInitialStructure(studyName);
+      if (!countries) {
+        folderStructure = createInitialStructure(studyName);
+      } else {
+        folderStructure = createInitialStructure(studyName, countries);
+      }
+      
     }
     
     setRootFolder(folderStructure);
@@ -544,61 +599,107 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
   }, [currentStudyId, studies]);
 
   return (
-    <div className="folder-tree-container">
-      <div className="folder-tree-header">
-        <h2>Study Folders Structure Management</h2>
-        <div className="controls">
-          <ActionButton onClick={handleExportStructure}>
-            📋 Write
-          </ActionButton>
-          <ActionButton onClick={handleImportStructure}>
-            📥 Import
-          </ActionButton>
-          <ActionButton onClick={handleReset} className="reset-button">
-            🔄 Reset
-          </ActionButton>
-        </div>
-      </div>
-      
-      <CustomSelect
-        studies={studies}
-        studyHandler={studyHandler}
-      />
+    <Flex direction="column" gap="4" p="4">
+      {/* Header */}
+      <Card>
+        <Flex align="center" justify="between">
+          <Heading size="4">Study Folders Structure Management</Heading>
+          <Flex gap="2">
+            <Button size="2" variant="surface" onClick={handleExportStructure}>
+              <Flex gap="2" align="center">
+                <DownloadIcon />
+                Write
+              </Flex>
+            </Button>
+            <Button size="2" variant="surface" onClick={handleImportStructure}>
+              <Flex gap="2" align="center">
+                <UploadIcon />
+                Import
+              </Flex>
+            </Button>
+            <Button size="2" variant="soft" color="gray" onClick={handleReset}>
+              <Flex gap="2" align="center">
+                <ResetIcon />
+                Reset
+              </Flex>
+            </Button>
 
-      <div className="folder-tree-content">
-        {rootFolder ? (
-          <>
-            <div className="folder-tree" role="tree" aria-label="Folder tree">
-              <FolderItem
-                folder={rootFolder}
-                onAddFolder={handleAddFolder}
-                onAddSubfolder={handleAddSubfolder}
-                onDelete={handleDeleteFolder}
-                onUpdateName={handleUpdateName}
-                onEditComplete={handleEditComplete}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="empty-window" style={{ minHeight: 200, textAlign: 'center', padding: '2rem', color: '#888' }}>
-            <p>No study selected. Please select a study to view or edit its folder structure.</p>
-          </div>
-        )}
-        <StructurePreview structure={[structureObject]} />
-      </div>
-      
+            <CustomSelect
+              studies={studies}
+              studyHandler={studyHandler}
+            />
+
+          </Flex>
+        </Flex>
+      </Card>
+
+
+      <Flex gap="4" wrap="wrap">
+        {/* Folder Tree */}
+        <Card style={{ flex: '1 1 400px', minWidth: '55%' }}>
+          {rootFolder ? (
+            <ScrollArea style={{ maxHeight: 600 }}>
+              <Flex direction="column" gap="2" p="2">
+                <FolderItem
+                  folder={rootFolder}
+                  onAddFolder={handleAddFolder}
+                  onAddSubfolder={handleAddSubfolder}
+                  onDelete={handleDeleteFolder}
+                  onUpdateName={handleUpdateName}
+                  onEditComplete={handleEditComplete}
+                />
+              </Flex>
+            </ScrollArea>
+          ) : (
+            <Flex align="center" justify="center" p="6" style={{ minHeight: 200 }}>
+              <Flex direction="column" align="center" gap="3">
+                <FaRegFolder width="48" height="48" color="var(--gray-8)" />
+                <Text size="2" color="gray">
+                  No study selected. Please select a study to view or edit its folder structure.
+                </Text>
+              </Flex>
+            </Flex>
+          )}
+        </Card>
+
+        {/* Structure Preview */}
+        <Box style={{ flex: '1 1 400px' }}>
+          <StructurePreview structure={[structureObject]} />
+        </Box>
+      </Flex>
+
+      {/* Stats */}
       {rootFolder && (
-        <div className="stats">
-          <p>
-            Project name: <strong>{rootFolder.name}</strong> |
-            Total folders: <strong>{countFolders(rootFolder)}</strong> | 
-            Site Level folders: <strong>{countFoldersByLevel(rootFolder, FolderViewLevel.SITE)}</strong> |
-            General folders: <strong>{countFoldersByLevel(rootFolder, FolderViewLevel.GENERAL)}</strong> |
-            Depth: <strong>{getTreeDepth(rootFolder)}</strong>
-          </p>
-        </div>
+        <Card>
+          <Flex gap="4" wrap="wrap" justify="center">
+            <Flex gap="2" align="center">
+              <Text size="1" color="gray">Project:</Text>
+              <Text size="2" weight="bold">{rootFolder.name}</Text>
+            </Flex>
+            <Separator orientation="vertical" />
+            <Flex gap="2" align="center">
+              <Text size="1" color="gray">Total folders:</Text>
+              <Text size="2" weight="bold">{countFolders(rootFolder)}</Text>
+            </Flex>
+            <Separator orientation="vertical" />
+            <Flex gap="2" align="center">
+              <Text size="1" color="gray">Site Level:</Text>
+              <Badge color="green" variant="soft">{countFoldersByLevel(rootFolder, ViewLevel.SITE)}</Badge>
+            </Flex>
+            <Separator orientation="vertical" />
+            <Flex gap="2" align="center">
+              <Text size="1" color="gray">General:</Text>
+              <Badge color="blue" variant="soft">{countFoldersByLevel(rootFolder, ViewLevel.GENERAL)}</Badge>
+            </Flex>
+            <Separator orientation="vertical" />
+            <Flex gap="2" align="center">
+              <Text size="1" color="gray">Depth:</Text>
+              <Text size="2" weight="bold">{getTreeDepth(rootFolder)}</Text>
+            </Flex>
+          </Flex>
+        </Card>
       )}
-    </div>
+    </Flex>
   );
 };
 
@@ -611,7 +712,7 @@ const countFolders = (folder: Folder): number => {
   return count;
 };
 
-const countFoldersByLevel = (folder: Folder, level: FolderViewLevel): number => {
+const countFoldersByLevel = (folder: Folder, level: ViewLevel): number => {
   let count = folder.level === level ? 1 : 0;
   folder.children.forEach(child => {
     count += countFoldersByLevel(child, level);

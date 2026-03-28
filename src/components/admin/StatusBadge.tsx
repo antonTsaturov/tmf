@@ -9,14 +9,6 @@ import {
 } from '@radix-ui/react-icons';
 import { Study, StudyStatus } from '@/types/types';
 
-// Предполагаем, что этот энум у вас уже определен
-// enum StudyStatus {
-//   PLANNED = 'PLANNED',
-//   ONGOING = 'ONGOING',
-//   COMPLETED = 'COMPLETED',
-//   TERMINATED = 'TERMINATED',
-//   ARCHIVED = 'ARCHIVED'
-// }
 
 interface StatusBadgeProps {
   status: StudyStatus;
@@ -76,7 +68,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
               key={statusKey}
               variant="soft"
               color={cfg.color as any}
-              size="1"
+              size="2"
               onClick={() => handleStatusChange(statusKey as StudyStatus)}
               title={cfg.label}
               highContrast={status === statusKey}
@@ -88,7 +80,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
         <Button
           variant="ghost"
           color="gray"
-          size="1"
+          size="2"
           onClick={() => setIsEditing(false)}
           aria-label="Cancel editing"
         >
@@ -105,17 +97,17 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
     <Badge
       color={config.color as any}
       variant="soft"
-      size="1"
+      size="3"
       onClick={editable ? () => setIsEditing(true) : undefined}
       style={{ 
         cursor: editable ? 'pointer' : 'default',
         userSelect: 'none'
       }}
-      title={editable ? 'Click to change status' : config.label}
+      title={editable ? 'Click to change study status' : config.label}
     >
       <Flex gap="1" align="center">
-        <Icon width="14" height="14" />
-        <Text size="1" weight="medium">{config.label}</Text>
+        <Icon width="16" height="16" />
+        <Text size="2" weight="medium">{config.label}</Text>
       </Flex>
     </Badge>
   );

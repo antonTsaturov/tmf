@@ -1,12 +1,9 @@
 // app/api/documents/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '@/lib/db/index';
+import { getPool, DB_INITIALIZED } from '@/lib/db/index';
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
 import { ensureTablesExist } from '@/lib/db/document';
-
-// Проверки существования таблиц выключены
-const isDbInitialized = true;
 
 
 // Получение документов при просмотре содержимого папки
@@ -37,7 +34,7 @@ export async function GET(request: NextRequest) {
   
   try {
     // Проверяем и создаем таблицы если их нет
-    if (!isDbInitialized) {
+    if (!DB_INITIALIZED) {
       await ensureTablesExist();
     }
 
@@ -193,8 +190,9 @@ export async function POST(request: NextRequest) {
   const client = getPool();
   
   try {
-    // Убеждаемся что таблицы существуют
-    if (isDbInitialized) {
+    
+    if (DB_INITIALIZED) {
+      // Убеждаемся что таблицы существуют
       await ensureTablesExist();
     }
    

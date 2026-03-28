@@ -1,6 +1,6 @@
 // app/api/documents/upload/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool, createTable } from '@/lib/db/index';
+import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/yc-iam';
@@ -64,8 +64,11 @@ async function uploadHandler(
   const client = getPool();
   
   try {
-    await createTable(Tables.DOCUMENT);
-    await createTable(Tables.DOCUMENT_VERSION);
+
+    if (!DB_INITIALIZED) {
+      await createTable(Tables.DOCUMENT);
+      await createTable(Tables.DOCUMENT_VERSION);
+    }
 
     const formData = ctx.formData!;
 

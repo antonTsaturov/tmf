@@ -1,7 +1,7 @@
 // app/api/auth/change-password/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { hash, compare } from 'bcryptjs';
-import { connectDB, getPool } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 import { checkAuth } from '@/lib/auth/check-auth';
 
 export async function POST(request: NextRequest) {

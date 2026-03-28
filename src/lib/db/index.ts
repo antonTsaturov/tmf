@@ -1,24 +1,7 @@
 import { Pool } from 'pg';
 import { Tables, tableSQLMap, tableSQLDepend } from './schema';
 
-const pool = new Pool({
-  host: process.env.PG_HOST,
-  port: Number(process.env.PG_PORT),
-  user: process.env.PG_USER,
-  password: process.env.PG_PASSWORD,
-  database: process.env.PG_DATABASE,
-});
-
-export async function connectDB() {
-  try {
-    const client = await pool.connect();
-    console.log('PostgreSQL connection successful');
-    return client;
-  } catch (err) {
-    console.error('Database connection error:', err);
-    throw err;
-  }
-}
+export const DB_INITIALIZED = true;
 
 declare global {
   var pgPool: Pool | undefined
@@ -55,7 +38,7 @@ export const getPool = () => {
 }
 
 export async function createTable(table: Tables) {
-  const client = await connectDB();
+  const client = getPool();
 
   try {
 
@@ -76,8 +59,6 @@ export async function createTable(table: Tables) {
     console.error(`createTable: Failed to create table "${table}". `, err);
     throw err;
 
-  } finally {
-    client.release();
   }
 }
 

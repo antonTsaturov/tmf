@@ -1,4 +1,4 @@
-import { connectDB } from './index';
+import { getPool } from './index';
 import { Study } from '@/types/types';
 import { Tables } from './schema';
 
@@ -8,7 +8,7 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
     throw new Error('updateStudy: Table, ID and at least one field are required.');
   }
 
-  const client = await connectDB();
+  const client = getPool();
 
   try {
     // Проверяем существование записи
@@ -63,7 +63,5 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
   } catch (err) {
     console.error('createOrUpdateRecord: Error:', err);
     throw err;
-  } finally {
-    client.release();
   }
 }

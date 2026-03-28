@@ -1,7 +1,7 @@
 // app/api/documents/deleted/route.ts
 // GET - список удалённых документов (только для ADMIN)
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool, createTable } from '@/lib/db/index';
+import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { AuthService } from '@/lib/auth/auth.service';
 
@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
   const client = getPool();
 
   try {
-    await createTable(Tables.DOCUMENT);
-    await createTable(Tables.DOCUMENT_VERSION);
+    if (!DB_INITIALIZED) {
+      await createTable(Tables.DOCUMENT);
+      await createTable(Tables.DOCUMENT_VERSION);
+    }
 
     const { rows: documents } = await client.query(`
       SELECT 

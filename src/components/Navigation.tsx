@@ -1,10 +1,9 @@
 'use client'
 
-import { useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { useContext, useEffect, useState, useCallback } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
-import { Select, Flex, Text, Button, Spinner } from '@radix-ui/themes';
+import { Select, Flex, Text, Spinner } from '@radix-ui/themes';
 import { useAuth } from '@/wrappers/AuthProvider';
-import { Tables } from '@/lib/db/schema';
 import { Study, StudySite } from '@/types/types';
 import { MainContext } from '@/wrappers/MainContext';
 import { IoIosArrowForward } from "react-icons/io";
@@ -23,49 +22,16 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   onViewLevelChange,
 }) => {
   const { user, loading: authLoading } = useAuth()!;
-  const { studies, loadTablePartial } = useContext(AdminContext)!;
+  /*
+  *  studies - стартовая точка загрузки. Объект studies содержит вложенный объект
+  * центров, которые назначены пользователю.
+  */
+  const { studies, loading } = useContext(AdminContext)!;
   
   const [sites, setSites] = useState<StudySite[]>([]);
-  const [loadingSites, setLoadingSites] = useState(false);
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentSite, currentStudy, currentLevel } = context;
-
-  // Refs для предотвращения повторных загрузок
-  const loadedSitesRef = useRef<Record<number, boolean>>({});
-
-  // Загружаем центры только при выборе уровня SITE
-  useEffect(() => {
-    const loadStudySites = async () => {
-      if (!currentStudy || !user?.assigned_site_id) {
-        setSites([]);
-        return;
-      }
-
-      if (currentLevel === ViewLevel.SITE) {
-        try {
-          setLoadingSites(true);
-          const sitesData = await loadTablePartial(Tables.SITE, currentStudy.id);
-
-          // Фильтруем только ассигнированные центры
-          const studySites = sitesData?.filter((site: StudySite) => {
-            const siteId = typeof site.id === 'string' ? Number(site.id) : site.id;
-            return site.study_id === Number(currentStudy.id) && user?.assigned_site_id?.includes(siteId);
-          });
-
-          setSites(studySites);
-          loadedSitesRef.current[currentStudy.id] = true;
-          
-        } catch (error) {
-          console.error('Error loading sites:', error);
-          setSites([]);
-        } finally {
-          setLoadingSites(false);
-        }
-      }
-    };
-
-    loadStudySites();
-  }, [currentLevel, currentStudy, user?.assigned_site_id, loadTablePartial]);
+  const { currentSite, currentStudy, currentLevel, currentCountry } = context;
+  const [ countryFilter, setCountryFilter ] = useState<string[]>()
 
   // Сброс выбранного центра при смене уровня
   useEffect(() => {
@@ -84,7 +50,8 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
       updateContext({
         currentStudy: selectedStudy,
         currentSite: undefined,
-        currentLevel: undefined
+        currentLevel: undefined,
+        currentCountry: undefined
       });
       
       // Вызываем колбэки
@@ -95,15 +62,10 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   }, [studies, updateContext, onStudyChange, onSiteChange, onViewLevelChange]);
 
   const handleViewLevelChange = useCallback((level: ViewLevel) => {
-    // Сохраняем уровень в контекст
-    updateContext({ currentLevel: level });
     onViewLevelChange?.(level);
-    
-    // Если выбран General, сбрасываем выбранный центр
-    if (level === ViewLevel.GENERAL) {
-      updateContext({ currentSite: undefined });
-      onSiteChange?.(undefined);
-    }
+    // Обновляем контекст
+    updateContext({ currentLevel: level, currentSite: undefined, currentCountry: undefined });
+    onSiteChange?.(undefined);
   }, [updateContext, onViewLevelChange, onSiteChange]);
 
   const handleSiteChange = useCallback((siteId: string) => {
@@ -116,9 +78,38 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
     }
   }, [sites, updateContext, onSiteChange]);
 
-  if (authLoading) {
+  const handleCountryChange = (country: string) => {
+    if (currentCountry !== country) {
+      updateContext({ currentCountry: country });
+    }
+  }
+
+  // Обновляем локальный стейт с объектами центров
+  useEffect(()=> {
+    const sites = currentStudy && studies.find(study => study.id === currentStudy.id)?.sites;
+    if (sites)
+    setSites(sites)
+  }, [currentStudy])
+
+  /* Получаем список стран на основе assigned_site_id пользователя для фильтрации
+  * центров по странам
+  */ 
+  useEffect(() => {
+    if (currentLevel === ViewLevel.SITE && user?.assigned_site_id && sites.length > 0) {
+      // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны
+      const assignedCountries = sites
+        .filter(site => user.assigned_site_id.includes(Number(site.id)))
+        .map(site => site.country)
+        .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
+
+      setCountryFilter(assignedCountries);
+    }
+  }, [currentLevel, user?.assigned_site_id, sites]);
+
+
+  if (authLoading || loading) {
     return (
-      <Flex p="3" justify="center" align="center" gap="2">
+      <Flex p="1" justify="center" align="center" gap="2">
         <Spinner size="2" />
         <Text size="2">Загрузка исследований...</Text>
       </Flex>
@@ -137,8 +128,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   return (
     <Flex direction="row" gap="3">
       {/* Шаг 1: Выбор исследования */}
-      <Flex direction="column" gap="1">
-        {/* <Text size="1" weight="medium">Исследование</Text> */}
+      <Flex direction="row" gap="3" align="center">
         <Select.Root
           size="2"
           key={`study-select-${currentStudy?.id}`}
@@ -157,16 +147,12 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
               ))}
           </Select.Content>
         </Select.Root>
-      </Flex>
-      
-      <div style={{marginTop: '5px'}}>
         {currentStudy && <IoIosArrowForward />}
-      </div>
+      </Flex>
       
       {/* Шаг 2: Выбор уровня просмотра (показываем только если выбрано исследование) */}
       {currentStudy && (
-        <Flex direction="column" gap="1">
-          {/* <Text size="1" weight="medium">Уровень</Text> */}
+        <Flex direction="row" gap="3" align="center">
           <Select.Root
             size="2"
             key={`level-select-${currentLevel}-${currentStudy.id}`}
@@ -175,56 +161,110 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
           >
             <Select.Trigger placeholder="Выберите уровень" />
             <Select.Content>
-              <Select.Item value={ViewLevel.SITE}>
-                <Flex direction="column" gap="1">
-                  <Text>Site Level</Text>
-                </Flex>
-              </Select.Item>
               <Select.Item value={ViewLevel.GENERAL}>
                 <Flex direction="column" gap="1">
                   <Text>General</Text>
                 </Flex>
               </Select.Item>
+              {/* Показываем уровень страны только если стран в исследовании больше одной */}
+              {currentStudy.countries.length > 1 && <Select.Item value={ViewLevel.COUNTRY}>
+                <Flex direction="column" gap="1">
+                  <Text>Country Level</Text>
+                </Flex>
+              </Select.Item>}
+              <Select.Item value={ViewLevel.SITE}>
+                <Flex direction="column" gap="1">
+                  <Text>Site Level</Text>
+                </Flex>
+              </Select.Item>
             </Select.Content>
           </Select.Root>
+          {currentLevel && currentLevel !== ViewLevel.GENERAL && <IoIosArrowForward />}
         </Flex>
       )}
       
-      <div style={{marginTop: '5px'}}>
-        {currentLevel === ViewLevel.SITE && <IoIosArrowForward />}
-      </div>
-      
-      {/* Шаг 3: Выбор центра (только если выбран Site Level) */}
-      {currentStudy && currentLevel === ViewLevel.SITE && (
-        <Flex direction="column" gap="1">
-          {/* <Text size="1" weight="medium">Центр</Text> */}
-          <Select.Root
-            size="2"
-            key={`site-select-${currentSite?.id}-${currentStudy.id}`}
-            value={currentSite?.id?.toString() || undefined} 
-            onValueChange={handleSiteChange}
-            disabled={loadingSites || !sites.length}
-          >
-            <Select.Trigger 
-              placeholder={loadingSites 
-                ? "Загрузка центров..." 
-                : !sites.length 
-                  ? "Нет доступных центров" 
-                  : "Выберите центр"
-              } 
-            />
-            <Select.Content>
-              {sites.map((site) => (
-                <Select.Item key={site.id} value={site.id.toString()}>
-                  <Flex direction="column">
-                    <Text>{site.name} №{site.number}</Text>
-                  </Flex>
-                </Select.Item>
-              ))}
-            </Select.Content>
-          </Select.Root>
-        </Flex>
+      {/* Дополнительный фильтр центров по странам.
+          Достпен если пользователю добавлены центры в более чем 1 стране */}
+      {currentStudy && currentLevel === ViewLevel.SITE && countryFilter && countryFilter.length > 1 ?
+       <Flex direction="row" gap="3" align="center">
+        <Select.Root
+          size="2"
+          key={`country-select-${currentCountry}`}
+          value={currentCountry || undefined} 
+          onValueChange={handleCountryChange}
+          //disabled={loadingSites || !sites.length}
+        >
+          <Select.Trigger placeholder={"Выберите страну"} />
+          <Select.Content>
+            {currentLevel === ViewLevel.SITE && countryFilter && (
+            countryFilter.map((country) => (
+              <Select.Item key={country} value={country}>
+                <Flex direction="column">
+                  <Text>{country}</Text>
+                </Flex>
+              </Select.Item>
+            )))}
+          </Select.Content>
+        </Select.Root>
+        {currentCountry && <IoIosArrowForward />}
+      </Flex>
+        : null
+      }
+
+      {/* Выбор центра */}
+      {currentStudy && currentLevel === ViewLevel.SITE && currentCountry && (
+        <Select.Root
+          size="2"
+          key={`site-select-${currentSite?.id}-${currentStudy.id}`}
+          value={currentSite?.id?.toString() || undefined} 
+          onValueChange={handleSiteChange}
+          //disabled={loadingSites || !sites.length}
+        >
+          <Select.Trigger 
+            placeholder={loading 
+              ? "Загрузка центров..." 
+              : !sites.length 
+                ? "Нет доступных центров" 
+                : "Выберите центр"
+            } 
+          />
+          <Select.Content>
+            {sites.filter(site => site.country === currentCountry )
+            .map((site) => (
+              <Select.Item key={site.id} value={site.id.toString()}>
+                <Flex direction="column">
+                  <Text>{site.name} №{site.number}</Text>
+                </Flex>
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
       )}
+
+      
+      {/* Выбор страны  */}
+      {currentStudy && currentLevel === ViewLevel.COUNTRY && (
+        <Select.Root
+          size="2"
+          key={`country-select-${currentCountry}`}
+          value={currentCountry || undefined} 
+          onValueChange={handleCountryChange}
+          //disabled={loadingSites || !sites.length}
+        >
+          <Select.Trigger placeholder={"Выберите страну"} />
+          <Select.Content>
+            {currentLevel === ViewLevel.COUNTRY &&
+            currentStudy.countries.map((country) => (
+              <Select.Item key={country} value={country}>
+                <Flex direction="column">
+                  <Text>{country}</Text>
+                </Flex>
+              </Select.Item>
+            ))}
+          </Select.Content>
+        </Select.Root>
+      )}
+
     </Flex>
   );
 };

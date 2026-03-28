@@ -1,7 +1,7 @@
 // lib/auth/check-auth.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from './auth.service';
-import { connectDB } from '@/lib/db/index';
+import { getPool } from '@/lib/db/index';
 
 export async function checkAuth(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
@@ -31,7 +31,7 @@ export async function getAuthenticatedUser(request: NextRequest) {
   const payload = AuthService.verifyToken(authToken);
   if (!payload) return null;
 
-  const client = await connectDB();
+  const client = getPool();
   try {
     const result = await client.query(
       `SELECT id, name, email, role, assigned_site_id, assigned_study_id, status 
@@ -40,7 +40,7 @@ export async function getAuthenticatedUser(request: NextRequest) {
       [payload.id]
     );
     return result.rows[0] || null;
-  } finally {
-    client.release();
+  } catch (error) {
+    console.log('getAuthenticatedUser error: ', error)
   }
 }

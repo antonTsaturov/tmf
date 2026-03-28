@@ -1,7 +1,7 @@
 // base.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateRecord } from '@/lib/db/study';
-import { getPool, createTable } from '@/lib/db/index';
+import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables, UserQueries } from '@/lib/db/schema';
 
 export class StudyApiHandler {
@@ -11,14 +11,16 @@ export class StudyApiHandler {
     try {
       client = getPool();
       
-      // Сначала проверяем существование таблицы
-      const tableExists = await this.checkTableExists(client, table);
-      
-      if (!tableExists) {
-        console.log(`Table ${table} does not exist, creating it...`);
-        await createTable(table);
-        // Возвращаем пустой массив, так как таблица только что создана
-        return NextResponse.json([], { status: 200 });
+      if (!DB_INITIALIZED) {
+      // Проверяем существование таблицы
+        const tableExists = await this.checkTableExists(client, table);
+        
+        if (!tableExists) {
+          console.log(`Table ${table} does not exist, creating it...`);
+          await createTable(table);
+          // Возвращаем пустой массив, так как таблица только что создана
+          return NextResponse.json([], { status: 200 });
+        }
       }
       
       // Если таблица существует, выполняем запрос

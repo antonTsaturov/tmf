@@ -5,3 +5,7 @@ export enum Colors {
   YELLOW = '#f9c426',
   RED = '#c0392b'
 }
+
+export const COUNTRIES = [
+  'Russia', 'Australia', 'China', 'India', 'Brazil', 'Mexico', 'South Korea', 'USA'
+];

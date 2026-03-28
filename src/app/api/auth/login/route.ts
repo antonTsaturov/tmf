@@ -1,7 +1,7 @@
 // app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
-import { connectDB, getPool } from '@/lib/db';
+import { getPool } from '@/lib/db';
 import { UserQueries } from '@/lib/db/schema';
 import { UserStatus } from '@/types/types';
 

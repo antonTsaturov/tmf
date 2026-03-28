@@ -6,6 +6,34 @@ import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
 import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
 import StatusBadge from './StatusBadge';
+import { StructurePreview } from './StructurePreview';
+import {
+  Card,
+  Flex,
+  Text,
+  Badge,
+  Button,
+  TextField,
+  Separator,
+  Heading,
+  Box,
+  Strong,
+  Callout,
+  IconButton,
+  Dialog,
+  ScrollArea
+} from '@radix-ui/themes';
+import {
+  PlusIcon,
+  Pencil2Icon,
+  TrashIcon,
+  CheckIcon,
+  Cross2Icon,
+  FileTextIcon,
+  PersonIcon,
+  ArchiveIcon,
+  MagnifyingGlassIcon
+} from '@radix-ui/react-icons';
 
 export interface StudyItemProps {
   study: Study;
@@ -81,149 +109,190 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
   const stats = getStudyStats();
 
   return (
-    <div 
-      className="study-item"
-      style={{ animationDelay: `${index * 0.05}s` }}
-      onKeyDown={handleKeyDown}
-      data-testid={`study-${study.id}`}
-    >
-      <div className="study-item-first-row">
-        <div className="study-item-first-row-left-block">
-          <div className="study-index">
-            <span className="index-number">{index + 1}</span>
-            <div className="study-id">
-              ID: {study.id}
-            </div>
-          </div>
+    <Card variant="surface">
+      <Flex direction="column" gap="3" >
+        {/* First Row */}
+        <Flex align="start" justify="between" gap="4">
+          <Flex align="start" gap="3" style={{ flex: 1 }}>
+            {/* Index Number */}
+            <Flex direction="column" align="center">
+              <Flex
+                align="center"
+                justify="center"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'var(--accent-3)',
+                  flexShrink: 0
+                }}
+              >
+                <Text size="2" weight="bold" color="indigo">
+                  {index + 1}
+                </Text>
+              </Flex>
+              <Text size="1" color="indigo">
+                ID: {study.id}
+              </Text>
+            </Flex>
 
-          <div className="study-details">
-            {isEditing ? (
-              <div className="edit-form">
-                <input
-                  type="text"
-                  value={editData.title}
-                  onChange={handleInputChange('title')}
-                  placeholder="Study Title"
-                  className="study-input"
-                  autoFocus
-                />
-                <input
-                  type="text"
-                  value={editData.protocol}
-                  onChange={handleInputChange('protocol')}
-                  placeholder="Protocol Number"
-                  className="study-input"
-                />
-                <input
-                  type="text"
-                  value={editData.sponsor}
-                  onChange={handleInputChange('sponsor')}
-                  placeholder="Sponsor"
-                  className="study-input"
-                />
-                <input
-                  type="text"
-                  value={editData.cro}
-                  onChange={handleInputChange('cro')}
-                  placeholder="CRO Organization"
-                  className="study-input"
-                />
-                <CountrySelector 
-                  selectedValues={editData.countries || study.countries}
-                  onChange={handleCountriesChange}
-                  placeholder="Select countries..."
-                />
+            {/* Study Details */}
+            <Flex direction="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
+              {isEditing ? (
+                <Flex direction="column" gap="2" >
+                  <TextField.Root
+                    value={editData.title}
+                    onChange={handleInputChange('title')}
+                    placeholder="Study Title"
+                    autoFocus
+                  />
+                  <TextField.Root
+                    value={editData.protocol}
+                    onChange={handleInputChange('protocol')}
+                    placeholder="Protocol Number"
+                  />
+                  <TextField.Root
+                    value={editData.sponsor}
+                    onChange={handleInputChange('sponsor')}
+                    placeholder="Sponsor"
+                  />
+                  <TextField.Root
+                    value={editData.cro}
+                    onChange={handleInputChange('cro')}
+                    placeholder="CRO Organization"
+                  />
+                  <Box style={{ marginTop: 8 }}>
+                    <CountrySelector
+                      selectedValues={editData.countries || study.countries}
+                      onChange={handleCountriesChange}
+                      placeholder="Select countries..."
+                    />
+                  </Box>
+                </Flex>
+              ) : (
+                <Flex direction="column" gap="2">
+                  <Flex align="center" gap="2" wrap="wrap" width="600px">
+                    <Text size="2" weight="bold" style={{ wordBreak: 'break-word', maxWidth: '100%' }}>
+                      {study.title}
+                    </Text>
+                    <Badge color="gray" variant="soft" size="1">
+                      {study.protocol}
+                    </Badge>
+                  </Flex>
+                  <Flex gap="2" wrap="wrap" direction="column">
+                    <Flex gap="1" align="center">
+                      <Text size="1" color="gray">Sponsor:</Text>
+                      <Text size="1">{study.sponsor}</Text>
+                    </Flex>
+                    <Flex gap="1" align="center">
+                      <Text size="1" color="gray">CRO:</Text>
+                      <Text size="1">{study.cro}</Text>
+                    </Flex>
+                  </Flex>
+                  <Flex gap="1" align="center" wrap="wrap">
+                    <Text size="1" color="gray">Countries:</Text>
+                    <Flex gap="1" wrap="wrap">
+                      {study.countries.slice(0, 3).map((country, i) => (
+                        <Badge key={i} variant="outline" size="1">
+                          {country}
+                        </Badge>
+                      ))}
+                      {study.countries.length > 3 && (
+                        <Text size="1" color="gray">
+                          +{study.countries.length - 3} more
+                        </Text>
+                      )}
+                    </Flex>
+                  </Flex>
+                  <Flex gap="2">
+                    <Badge color="gray" variant="surface">
+                      <Flex gap="1" align="center">
+                        <FileTextIcon />
+                        <Text size="1">{stats.documents}</Text>
+                        <Text size="1" color="gray">Docs</Text>
+                      </Flex>
+                    </Badge>
+                    <Badge color="gray" variant="surface">
+                      <Flex gap="1" align="center">
+                        <PersonIcon />
+                        <Text size="1">{stats.users}</Text>
+                        <Text size="1" color="gray">Users</Text>
+                      </Flex>
+                    </Badge>
+                  </Flex>
+                </Flex>
+              )}
+            </Flex>
+          </Flex>
 
-              </div>
-            ) : (
-              <div className="display-details">
-                <div className="study-header">
-                  <h5 className="study-title">{study.title}</h5>
-                  <span className="study-protocol">{study.protocol}</span>
-                </div>
-                <div className="study-meta">
-                  <div className="meta-item">
-                    <span className="meta-label">Sponsor:</span>
-                    <span className="meta-value">{study.sponsor}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">CRO:</span>
-                    <span className="meta-value">{study.cro}</span>
-                  </div>
-                  <div className="meta-item">
-                    <span className="meta-label">Countries:</span>
-                    <span className="meta-value">
-                      {study.countries.slice(0, 3).join(', ')}
-                      {study.countries.length > 3 && ` +${study.countries.length - 3} more`}
-                    </span>
-                  </div>
-                </div>
-                <div className="study-stats">
-                  <div className="stat-badge">
-                    <span className="stat-icon">📄</span>
-                    <span className="stat-count">{stats.documents}</span>
-                    <span className="stat-label">Docs</span>
-                  </div>
-                  <div className="stat-badge">
-                    <span className="stat-icon">👥</span>
-                    <span className="stat-count">{stats.users}</span>
-                    <span className="stat-label">Users</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          {/* Status */}
+          <Flex direction="column" gap="2">
+            <Text size="1" weight="medium">
+              Change status
+            </Text>
+            <StatusBadge
+              status={study.status}
+              onChange={(newStatus) => onUpdate(study.id, { status: newStatus })}
+              editable={!isEditing}
+            />
+          </Flex>
+        </Flex>
 
-        <div className="study-status">
-          <StatusBadge 
-            status={study.status}
-            onChange={(newStatus) => onUpdate(study.id, { status: newStatus })}
-            editable={!isEditing}
-          />
-        </div>
-      </div>
-      
-      <div className="study-item-second-row">
-        <div className="study-actions">
+        {/* Second Row - Actions */}
+        <Separator size="4" />
+        <Flex justify="end" gap="2">
           {isEditing ? (
             <>
-              <button 
+              <Button
+                size="2"
+                color="green"
                 onClick={handleSave}
-                className="action-button save-button"
-                title="Save changes"
               >
-                💾 Save
-              </button>
-              <button 
+                <Flex gap="2" align="center">
+                  <CheckIcon />
+                  Save
+                </Flex>
+              </Button>
+              <Button
+                size="2"
+                variant="soft"
+                color="gray"
                 onClick={handleCancel}
-                className="action-button cancel-button"
-                title="Cancel editing"
               >
-                ✕ Cancel
-              </button>
+                <Flex gap="2" align="center">
+                  <Cross2Icon />
+                  Cancel
+                </Flex>
+              </Button>
             </>
           ) : (
             <>
-              <button 
+              <Button
+                size="2"
+                variant="surface"
                 onClick={() => setIsEditing(true)}
-                className="action-button edit-button"
-                title="Edit study"
               >
-                ✏️ Edit
-              </button>
-              <button 
+                <Flex gap="2" align="center">
+                  <Pencil2Icon />
+                  Edit
+                </Flex>
+              </Button>
+              <Button
+                size="2"
+                variant="soft"
+                color="red"
                 onClick={() => onDelete(study.id)}
-                className="action-button delete-button"
-                title="Delete study"
               >
-                🗑️ Delete
-              </button>
+                <Flex gap="2" align="center">
+                  <TrashIcon />
+                  Delete
+                </Flex>
+              </Button>
             </>
           )}
-        </div>
-      </div>
-    </div>
+        </Flex>
+      </Flex>
+    </Card>
   );
 };
 
@@ -343,150 +412,164 @@ const StudyManager: FC = () => {
   const stats = getStats();
 
   return (
-    <div className="study-manager-container">
-      <div className="study-manager-header">
-        <h2>Clinical Trials Management</h2>
-      </div>
+    <Flex direction="column" gap="4" p="4">
+      {/* Header */}
+      <Card>
+        <Flex align="center" justify="between">
+          <Heading size="4">Clinical Trials Management</Heading>
+        </Flex>
+      </Card>
 
-      <div style={{ display: 'flex', flexDirection: 'row', gap: '24px' }}>
-      {/* Форма добавления нового исследования */}
-      <div className="add-study-form">
-        <h3>➕ Add New Clinical Study</h3>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Study Title *</label>
-            <input
-              type="text"
-              value={newStudyForm.title}
-              onChange={(e) => setNewStudyForm(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="e.g., Phase III Oncology Trial"
-              className="form-input"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Protocol Number *</label>
-            <input
-              type="text"
-              value={newStudyForm.protocol}
-              onChange={(e) => setNewStudyForm(prev => ({ ...prev, protocol: e.target.value }))}
-              placeholder="e.g., PROT-2024-001"
-              className="form-input"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Sponsor</label>
-            <input
-              type="text"
-              value={newStudyForm.sponsor}
-              onChange={(e) => setNewStudyForm(prev => ({ ...prev, sponsor: e.target.value }))}
-              placeholder="Pharmaceutical company"
-              className="form-input"
-            />
-          </div>
-          <div className="form-group">
-            <label>CRO Organization</label>
-            <input
-              type="text"
-              value={newStudyForm.cro}
-              onChange={(e) => setNewStudyForm(prev => ({ ...prev, cro: e.target.value }))}
-              placeholder="Clinical Research Organization"
-              className="form-input"
-            />
-          </div>
-          <div className="form-group full-width">
-            <label>Countries</label>
-            <CountrySelector 
-              //type="country"
-              selectedValues={newStudyForm.countries}
-              onChange={(countries) => setNewStudyForm(prev => ({ ...prev, countries }))}
-              placeholder="Select countries..."
-            />
+      <Flex gap="4" wrap="wrap">
+        {/* Add Study Form */}
+        <Card variant="surface" style={{ flex: '1 1 400px', maxWidth: 500 }}>
+          <Flex direction="column" gap="3">
+            <Heading size="3">
+              <Flex gap="2" align="center">
+                <PlusIcon />
+                Add New Clinical Study
+              </Flex>
+            </Heading>
+            <Flex direction="column" gap="3">
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Study Title *</Text>
+                <TextField.Root
+                  value={newStudyForm.title}
+                  onChange={(e) => setNewStudyForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g., Phase III Oncology Trial"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Protocol Number *</Text>
+                <TextField.Root
+                  value={newStudyForm.protocol}
+                  onChange={(e) => setNewStudyForm(prev => ({ ...prev, protocol: e.target.value }))}
+                  placeholder="e.g., PROT-2024-001"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Sponsor</Text>
+                <TextField.Root
+                  value={newStudyForm.sponsor}
+                  onChange={(e) => setNewStudyForm(prev => ({ ...prev, sponsor: e.target.value }))}
+                  placeholder="Pharmaceutical company"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">CRO Organization</Text>
+                <TextField.Root
+                  value={newStudyForm.cro}
+                  onChange={(e) => setNewStudyForm(prev => ({ ...prev, cro: e.target.value }))}
+                  placeholder="Clinical Research Organization"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Countries</Text>
+                <CountrySelector
+                  selectedValues={newStudyForm.countries}
+                  onChange={(countries) => setNewStudyForm(prev => ({ ...prev, countries }))}
+                  placeholder="Select countries..."
+                />
+              </Flex>
+              <Button
+                size="2"
+                color="green"
+                onClick={handleAddStudy}
+                disabled={!newStudyForm.title.trim() || !newStudyForm.protocol.trim()}
+              >
+                <Flex gap="2" align="center">
+                  <PlusIcon />
+                  Create Study
+                </Flex>
+              </Button>
+              <Text size="1" color="gray">* Required fields</Text>
+            </Flex>
+          </Flex>
+        </Card>
 
-          </div>
-          <button 
-            onClick={handleAddStudy}
-            className="add-button"
-            disabled={!newStudyForm.title.trim() || !newStudyForm.protocol.trim()}
-          >
-            Create Study
-          </button>
-        </div>
-        <p className="form-hint">* Required fields</p>
-      </div>
+        {/* Studies List */}
+        <Card style={{ flex: '2 1 500px' }}>
+          <Flex direction="column" gap="3">
+            {/* List Header */}
+            <Flex align="center" gap="3" p="2" style={{ borderBottom: '1px solid var(--gray-4)' }}>
+              <Box style={{ width: 32, flexShrink: 0 }}>
+                <Text size="1" weight="medium" color="gray">#</Text>
+              </Box>
+              <Box style={{ flex: 1 }}>
+                <Text size="1" weight="medium" color="gray">Study Details</Text>
+              </Box>
+              <Box>
+                <Text size="1" weight="medium" color="gray">Status</Text>
+              </Box>
+            </Flex>
 
-      
+            {studies.length === 0 ? (
+              <Flex align="center" justify="center" p="6">
+                <Flex direction="column" align="center" gap="3">
+                  <ArchiveIcon width="48" height="48" color="var(--gray-8)" />
+                  <Heading size="3">No clinical studies yet</Heading>
+                  <Text size="2" color="gray">Create your first study using the form above</Text>
+                </Flex>
+              </Flex>
+            ) : (
+              <ScrollArea style={{ maxHeight: 600 }}>
+                <Flex direction="column" gap="2" p="2">
+                  {studies.map((study, index) => (
+                    <StudyItem
+                      key={study.id}
+                      study={study}
+                      index={index}
+                      onUpdate={handleUpdateStudy}
+                      onDelete={handleDeleteStudy}
+                    />
+                  ))}
+                </Flex>
+              </ScrollArea>
+            )}
+          </Flex>
+        </Card>
+      </Flex>
 
-      {/* Список исследований */}
-      <div className="studies-list">
-        <div className="list-header">
-          <div className="header-index">#</div>
-          <div className="header-details">Study Details</div>
-          <div className="header-status">Status</div>
-        </div>
-        
-        {studies.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-icon">🔬</div>
-            <h3>No clinical studies yet</h3>
-            <p>Create your first study using the form above</p>
-          </div>
-        ) : (
-          studies.map((study, index) => (
-            <StudyItem
-              key={study.id}
-              study={study}
-              index={index}
-              onUpdate={handleUpdateStudy}
-              onDelete={handleDeleteStudy}
-            />
-          ))
-        )}
-      </div>
+      {/* Stats Bar */}
+      <Card>
+        <Flex gap="4" wrap="wrap" justify="center">
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Total Studies:</Text>
+            <Text size="2" weight="bold">{stats.total}</Text>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Planned:</Text>
+            <Badge color="blue" variant="soft">{stats.planned}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Ongoing:</Text>
+            <Badge color="green" variant="soft">{stats.ongoing}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Completed:</Text>
+            <Badge color="gray" variant="soft">{stats.completed}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Terminated:</Text>
+            <Badge color="red" variant="soft">{stats.terminated}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Archived:</Text>
+            <Badge color="purple" variant="soft">{stats.archived}</Badge>
+          </Flex>
+        </Flex>
+      </Card>
 
-      </div>
-
-      {/* Статистика */}
-      <div className="stats-bar">
-        <div className="stat-item">
-          <span className="stat-label">Total Studies:</span>
-          <span className="stat-value total">{stats.total}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Planned:</span>
-          <span className="stat-value planned">{stats.planned}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Ongoing:</span>
-          <span className="stat-value ongoing">{stats.ongoing}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Completed:</span>
-          <span className="stat-value completed">{stats.completed}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Terminated:</span>
-          <span className="stat-value terminated">{stats.terminated}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Archived:</span>
-          <span className="stat-value archived">{stats.archived}</span>
-        </div>
-      </div>
-
-      {/* Превью объекта */}
-      <div className="structure-preview">
-        <div className="structure-header">
-          <h3>Current Studies (JSON):</h3>
-        </div>
-        {studyObject.length > 0 && (
-          <pre className="json-preview">
-            {JSON.stringify(studyObject, null, 2)}
-          </pre>
-        )}
-      </div>
-    </div>
+      {/* Structure Preview */}
+      <StructurePreview
+        structure={studyObject}
+      />
+    </Flex>
   );
 };
 

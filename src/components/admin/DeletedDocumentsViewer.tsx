@@ -5,6 +5,32 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { UserRole } from '@/types/types';
 import '@/styles/DeletedDocumentsViewer.css';
+import {
+  Card,
+  Flex,
+  Text,
+  Badge,
+  Button,
+  Spinner,
+  Callout,
+  Table,
+  Separator,
+  Heading,
+  IconButton,
+  Dialog,
+  Strong
+} from '@radix-ui/themes';
+import {
+  UpdateIcon,
+  TrashIcon,
+  PersonIcon,
+  CalendarIcon,
+  FileIcon,
+  ArchiveIcon,
+  ReloadIcon,
+  ChevronDownIcon,
+  ChevronUpIcon
+} from '@radix-ui/react-icons';
 
 interface DeletedDocument {
   id: string;
@@ -19,20 +45,20 @@ interface DeletedDocument {
   file_type: string;
   file_size: number;
   document_number: number;
-  
+
   // Информация об удалении
   deleted_at: string | null;
   deleted_by: string | null;
   deleted_by_name: string | null;
   deleted_by_email: string | null;
   deletion_reason: string | null;
-  
+
   // Информация о восстановлении
   restored_at: string | null;
   restored_by: string | null;
   restored_by_name: string | null;
   restored_by_email: string | null;
-  
+
   created_at: string;
 }
 
@@ -53,10 +79,10 @@ const DeletedDocumentsViewer: React.FC = () => {
     setError(null);
 
     try {
-      const res = await fetch('/api/documents/deleted', { 
-        credentials: 'include' 
+      const res = await fetch('/api/documents/deleted', {
+        credentials: 'include'
       });
-      
+
       if (!res.ok) {
         if (res.status === 403) {
           setError('Доступ запрещён');
@@ -65,7 +91,7 @@ const DeletedDocumentsViewer: React.FC = () => {
         }
         throw new Error('Ошибка загрузки');
       }
-      
+
       const data = await res.json();
       setDocuments(data.documents || []);
     } catch (err) {
@@ -91,16 +117,16 @@ const DeletedDocumentsViewer: React.FC = () => {
         method: 'POST',
         credentials: 'include',
       });
-      
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Ошибка восстановления');
       }
-      
+
       // Убираем восстановленный документ из списка
       setDocuments((prev) => prev.filter((d) => d.id !== id));
       setExpandedId(null);
-      
+
       // Показываем сообщение об успехе
       alert('Документ успешно восстановлен');
     } catch (err) {
@@ -134,192 +160,276 @@ const DeletedDocumentsViewer: React.FC = () => {
     setExpandedId(expandedId === id ? null : id);
   };
 
+  const getDocumentCountText = (count: number): string => {
+    if (count === 1) return 'документ';
+    if (count > 1 && count < 5) return 'документа';
+    return 'документов';
+  };
+
   if (!isAdmin) {
     return (
-      <div className="deleted-docs-viewer deleted-docs-access-denied">
-        <p>Доступ запрещён. Требуются права администратора.</p>
-      </div>
+      <Callout.Root color="red" variant="surface" size="3">
+        <Callout.Icon>
+          <TrashIcon />
+        </Callout.Icon>
+        <Callout.Text>
+          <Strong>Доступ запрещён</Strong>. Требуются права администратора.
+        </Callout.Text>
+      </Callout.Root>
     );
   }
 
   return (
-    <div className="deleted-docs-viewer">
-      <div className="deleted-docs-header">
-        <h3>Удалённые документы</h3>
-        <div className="deleted-docs-header-actions">
-          <span className="deleted-docs-count">
-            {documents.length} {documents.length === 1 ? 'документ' : 
-              documents.length > 1 && documents.length < 5 ? 'документа' : 'документов'}
-          </span>
-          <button
-            type="button"
-            className="deleted-docs-refresh"
-            onClick={loadDeletedDocuments}
-            disabled={loading}
-          >
-            {loading ? 'Загрузка...' : 'Обновить'}
-          </button>
-        </div>
-      </div>
-
-      {error && <div className="deleted-docs-error">{error}</div>}
-
-      {loading && documents.length === 0 ? (
-        <div className="deleted-docs-loading">Загрузка...</div>
-      ) : documents.length === 0 ? (
-        <div className="deleted-docs-empty">Удалённых документов нет</div>
-      ) : (
-        <div className="deleted-docs-list">
-          {documents.map((doc) => (
-            <div 
-              key={doc.id} 
-              className={`deleted-docs-item ${expandedId === doc.id ? 'expanded' : ''}`}
+    <Flex direction="column" gap="4" p="5">
+      {/* Header */}
+      <Card>
+        <Flex align="center" justify="between" gap="4">
+          <Flex align="center" gap="3">
+            <ArchiveIcon width="24" height="24" color="var(--gray-12)" />
+            <Heading size="4">Удалённые документы</Heading>
+          </Flex>
+          <Flex align="center" gap="3">
+            <Badge color="gray" variant="soft" size="2">
+              <Flex gap="2" align="center">
+                <FileIcon />
+                {documents.length} {getDocumentCountText(documents.length)}
+              </Flex>
+            </Badge>
+            <Button
+              size="2"
+              variant="surface"
+              onClick={loadDeletedDocuments}
+              disabled={loading}
             >
-              <div className="deleted-docs-item-header" onClick={() => toggleExpand(doc.id)}>
-                <div className="deleted-docs-item-main">
-                  <span className="deleted-docs-name" title={doc.document_name || doc.file_name}>
-                    {doc.document_name || doc.file_name || 'Без названия'}
-                  </span>
-                  <span className="deleted-docs-folder">{doc.folder_name}</span>
-                  <span className="deleted-docs-date">
-                    Удалён: {formatDate(doc.deleted_at)}
-                  </span>
-                  <span className="deleted-docs-size">{formatFileSize(doc.file_size)}</span>
-                </div>
-                <button
-                  type="button"
-                  className="deleted-docs-restore-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRestore(doc.id);
-                  }}
-                  disabled={restoringId === doc.id}
-                >
-                  {restoringId === doc.id ? 'Восстановление...' : 'Восстановить'}
-                </button>
-              </div>
+              <Flex gap="2" align="center">
+                <ReloadIcon className={loading ? 'spin' : ''} />
+                {loading ? 'Загрузка...' : 'Обновить'}
+              </Flex>
+            </Button>
+          </Flex>
+        </Flex>
+      </Card>
 
-              {expandedId === doc.id && (
-                <div className="deleted-docs-item-details">
-                  <div className="deleted-docs-details-grid">
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">ID документа:</span>
-                      <span className="detail-value">{doc.id}</span>
-                    </div>
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Study ID:</span>
-                      <span className="detail-value">{doc.study_id}</span>
-                    </div>
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Site ID:</span>
-                      <span className="detail-value">{doc.site_id || '—'}</span>
-                    </div>
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Папка:</span>
-                      <span className="detail-value">{doc.folder_name} (ID: {doc.folder_id})</span>
-                    </div>
-                    
-                    {doc.tmf_zone && (
-                      <div className="deleted-docs-detail-row">
-                        <span className="detail-label">TMF зона:</span>
-                        <span className="detail-value">{doc.tmf_zone}</span>
-                      </div>
-                    )}
-                    
-                    {doc.tmf_artifact && (
-                      <div className="deleted-docs-detail-row">
-                        <span className="detail-label">TMF артефакт:</span>
-                        <span className="detail-value">{doc.tmf_artifact}</span>
-                      </div>
-                    )}
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Версия:</span>
-                      <span className="detail-value">{doc.document_number || 1}</span>
-                    </div>
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Тип файла:</span>
-                      <span className="detail-value">{doc.file_type}</span>
-                    </div>
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Имя файла:</span>
-                      <span className="detail-value">{doc.file_name}</span>
-                    </div>
-                    
-                    <div className="deleted-docs-detail-row">
-                      <span className="detail-label">Дата создания:</span>
-                      <span className="detail-value">{formatDate(doc.created_at)}</span>
-                    </div>
-                  </div>
-
-                  <div className="deleted-docs-deletion-info">
-                    <h4>Информация об удалении</h4>
-                    <div className="deleted-docs-details-grid">
-                      <div className="deleted-docs-detail-row">
-                        <span className="detail-label">Дата удаления:</span>
-                        <span className="detail-value">{formatDate(doc.deleted_at)}</span>
-                      </div>
-                      
-                      <div className="deleted-docs-detail-row">
-                        <span className="detail-label">Кто удалил:</span>
-                        <span className="detail-value">
-                          {doc.deleted_by_name ? (
-                            <>
-                              {doc.deleted_by_name} 
-                              {doc.deleted_by_email && ` (${doc.deleted_by_email})`}
-                            </>
-                          ) : (
-                            doc.deleted_by || 'Неизвестно'
-                          )}
-                        </span>
-                      </div>
-                      
-                      <div className="deleted-docs-detail-row detail-row-full">
-                        <span className="detail-label">Причина удаления:</span>
-                        <span className="detail-value detail-value-reason">
-                          {doc.deletion_reason || 'Не указана'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {doc.restored_at && (
-                    <div className="deleted-docs-restoration-info">
-                      <h4>Информация о восстановлении</h4>
-                      <div className="deleted-docs-details-grid">
-                        <div className="deleted-docs-detail-row">
-                          <span className="detail-label">Дата восстановления:</span>
-                          <span className="detail-value">{formatDate(doc.restored_at)}</span>
-                        </div>
-                        
-                        <div className="deleted-docs-detail-row">
-                          <span className="detail-label">Кто восстановил:</span>
-                          <span className="detail-value">
-                            {doc.restored_by_name ? (
-                              <>
-                                {doc.restored_by_name}
-                                {doc.restored_by_email && ` (${doc.restored_by_email})`}
-                              </>
-                            ) : (
-                              doc.restored_by || 'Неизвестно'
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      {/* Error */}
+      {error && (
+        <Callout.Root color="red" variant="soft">
+          <Callout.Icon>
+            <TrashIcon />
+          </Callout.Icon>
+          <Callout.Text>{error}</Callout.Text>
+        </Callout.Root>
       )}
-    </div>
+
+      {/* Loading */}
+      {loading && documents.length === 0 ? (
+        <Card>
+          <Flex align="center" justify="center" gap="3" p="6">
+            <Spinner size="3" />
+            <Text size="2" weight="medium">Загрузка...</Text>
+          </Flex>
+        </Card>
+      ) : documents.length === 0 ? (
+        <Card>
+          <Flex align="center" justify="center" gap="3" p="6">
+            <ArchiveIcon width="48" height="48" color="var(--gray-8)" />
+            <Text size="2" color="gray">Удалённых документов нет</Text>
+          </Flex>
+        </Card>
+      ) : (
+        <Flex direction="column" gap="3">
+          {documents.map((doc) => (
+            <Card key={doc.id} variant="surface">
+              <Flex direction="column" gap="3">
+                {/* Document Item Header */}
+                <Flex
+                  align="center"
+                  justify="between"
+                  gap="3"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => toggleExpand(doc.id)}
+                >
+                  <Flex align="center" gap="3" style={{ flex: 1, minWidth: 0 }}>
+                    <Badge color="red" variant="soft" size="2">
+                      <TrashIcon />
+                    </Badge>
+                    <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+                      <Text size="2" weight="medium" truncate>
+                        {doc.document_name || doc.file_name || 'Без названия'}
+                      </Text>
+                      <Flex gap="3" wrap="wrap">
+                        <Text size="1" color="gray">
+                          <Flex gap="1" align="center">
+                            {doc.folder_name}
+                          </Flex>
+                        </Text>
+                        <Text size="1" color="gray">
+                          <Flex gap="1" align="center">
+                            <CalendarIcon />
+                            Удалён: {formatDate(doc.deleted_at)}
+                          </Flex>
+                        </Text>
+                        <Text size="1" color="gray">
+                          {formatFileSize(doc.file_size)}
+                        </Text>
+                      </Flex>
+                    </Flex>
+                  </Flex>
+                  <Button
+                    size="2"
+                    color="green"
+                    variant="surface"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRestore(doc.id);
+                    }}
+                    disabled={restoringId === doc.id}
+                  >
+                    <Flex gap="2" align="center">
+                      <UpdateIcon className={restoringId === doc.id ? 'spin' : ''} />
+                      {restoringId === doc.id ? 'Восстановление...' : 'Восстановить'}
+                    </Flex>
+                  </Button>
+                  <IconButton
+                    size="2"
+                    variant="ghost"
+                    color="gray"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleExpand(doc.id);
+                    }}
+                  >
+                    {expandedId === doc.id ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                  </IconButton>
+                </Flex>
+
+                {/* Expanded Details */}
+                {expandedId === doc.id && (
+                  <>
+                    <Separator size="4" />
+                    <Flex direction="column" gap="3">
+                      {/* Document Info - Compact Grid */}
+                      <Flex gap="4" wrap="wrap">
+                        <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                          <Text size="1" color="gray">ID</Text>
+                          <Text size="2" weight="medium">{doc.id}</Text>
+                        </Flex>
+                        <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                          <Text size="1" color="gray">Study</Text>
+                          <Text size="2">{doc.study_id}</Text>
+                        </Flex>
+                        <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                          <Text size="1" color="gray">Site</Text>
+                          <Text size="2">{doc.site_id || '—'}</Text>
+                        </Flex>
+                        <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                          <Text size="1" color="gray">Версия</Text>
+                          <Text size="2">{doc.document_number || 1}</Text>
+                        </Flex>
+                        <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                          <Text size="1" color="gray">Тип</Text>
+                          <Text size="2">{doc.file_type}</Text>
+                        </Flex>
+                        <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                          <Text size="1" color="gray">Размер</Text>
+                          <Text size="2">{formatFileSize(doc.file_size)}</Text>
+                        </Flex>
+                      </Flex>
+
+                      <Flex direction="column" gap="1">
+                        <Text size="1" color="gray">Папка</Text>
+                        <Text size="2">{doc.folder_name} <Text color="gray">(ID: {doc.folder_id})</Text></Text>
+                      </Flex>
+
+                      {doc.tmf_zone && (
+                        <Flex direction="column" gap="1">
+                          <Text size="1" color="gray">TMF зона</Text>
+                          <Text size="2">{doc.tmf_zone}</Text>
+                        </Flex>
+                      )}
+
+                      {doc.tmf_artifact && (
+                        <Flex direction="column" gap="1">
+                          <Text size="1" color="gray">TMF артефакт</Text>
+                          <Text size="2">{doc.tmf_artifact}</Text>
+                        </Flex>
+                      )}
+
+                      <Flex direction="column" gap="1">
+                        <Text size="1" color="gray">Файл</Text>
+                        <Text size="2" truncate>{doc.file_name}</Text>
+                      </Flex>
+
+                      <Flex direction="column" gap="1">
+                        <Text size="1" color="gray">Создан</Text>
+                        <Text size="2">{formatDate(doc.created_at)}</Text>
+                      </Flex>
+
+                      {/* Deletion Info */}
+                      <Card variant="surface" mt="2">
+                        <Flex direction="column" gap="2">
+                          <Flex gap="2" align="center">
+                            <TrashIcon color="var(--red-9)" />
+                            <Text size="1" weight="medium">Удаление</Text>
+                          </Flex>
+                          <Flex gap="4" wrap="wrap">
+                            <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                              <Text size="1" color="gray">Дата</Text>
+                              <Text size="2">{formatDate(doc.deleted_at)}</Text>
+                            </Flex>
+                            <Flex direction="column" gap="1" style={{ flex: '1 1 200px' }}>
+                              <Text size="1" color="gray">Кто</Text>
+                              <Text size="2">
+                                {doc.deleted_by_name || doc.deleted_by || 'Неизвестно'}
+                                {doc.deleted_by_email && (
+                                  <Text color="gray"> ({doc.deleted_by_email})</Text>
+                                )}
+                              </Text>
+                            </Flex>
+                          </Flex>
+                          <Flex direction="column" gap="1">
+                            <Text size="1" color="gray">Причина</Text>
+                            <Text size="2" color={doc.deletion_reason ? 'gray' : 'amber'}>
+                              {doc.deletion_reason || 'Не указана'}
+                            </Text>
+                          </Flex>
+                        </Flex>
+                      </Card>
+
+                      {/* Restoration Info */}
+                      {doc.restored_at && (
+                        <Card variant="surface">
+                          <Flex direction="column" gap="2">
+                            <Flex gap="2" align="center">
+                              <UpdateIcon color="var(--green-9)" />
+                              <Text size="1" weight="medium">Восстановление</Text>
+                            </Flex>
+                            <Flex gap="4" wrap="wrap">
+                              <Flex direction="column" gap="1" style={{ flex: '1 1 140px' }}>
+                                <Text size="1" color="gray">Дата</Text>
+                                <Text size="2">{formatDate(doc.restored_at)}</Text>
+                              </Flex>
+                              <Flex direction="column" gap="1" style={{ flex: '1 1 200px' }}>
+                                <Text size="1" color="gray">Кто</Text>
+                                <Text size="2">
+                                  {doc.restored_by_name || doc.restored_by || 'Неизвестно'}
+                                  {doc.restored_by_email && (
+                                    <Text color="gray"> ({doc.restored_by_email})</Text>
+                                  )}
+                                </Text>
+                              </Flex>
+                            </Flex>
+                          </Flex>
+                        </Card>
+                      )}
+                    </Flex>
+                  </>
+                )}
+              </Flex>
+            </Card>
+          ))}
+        </Flex>
+      )}
+    </Flex>
   );
 };
 

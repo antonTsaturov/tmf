@@ -1,9 +1,9 @@
-import { connectDB, createTable } from '@/lib/db/index';
+import { getPool, createTable } from '@/lib/db/index';
 import { Tables } from './schema';
 
 // Функция для получения документа (должна использоваться только в loadEntity)
 export async function getDocumentById(id: string) {
-  const client = await connectDB();
+  const client = getPool();
   try {
     const { rows } = await client.query(
       'SELECT * FROM document WHERE id = $1',
@@ -13,8 +13,6 @@ export async function getDocumentById(id: string) {
   } catch (error) {
     console.error('Error fetching document:', error);
     return null;
-  } finally {
-    client.release();
   }
 }
 
@@ -34,7 +32,7 @@ export async function ensureTablesExist() {
 }
 
 export async function ensureIndexesAndTriggers() {
-  const client = await connectDB();
+  const client = getPool();
   
   try {
     // Проверяем существование индексов для document таблицы
@@ -94,7 +92,5 @@ export async function ensureIndexesAndTriggers() {
   } catch (error) {
     console.error('Error ensuring indexes and triggers:', error);
     throw error;
-  } finally {
-    client.release();
   }
 }
