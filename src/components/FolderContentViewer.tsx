@@ -58,7 +58,7 @@ type ViewFilter = 'all' | 'active' | 'deleted' | 'archived';
 
 const FolderContentViewer: React.FC = () => {
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel } = context!;
+  const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel, currentCountry } = context!;
   const { user } = useAuth();
   const upload = useUpload();
   const { handleAction } = useDocumentActionHandler();
@@ -175,14 +175,22 @@ const FolderContentViewer: React.FC = () => {
       return;
     }
 
+    if (currentLevel === ViewLevel.COUNTRY && !currentCountry) {
+      setDocumentsData(null);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-
-      const apiPath = currentSite
-      ? `/api/documents?study_id=${currentStudy.id}&site_id=${currentSite.id}&folder_id=${selectedFolder.id}&include_deleted=true&include_archived=true`
-      : `/api/documents?study_id=${currentStudy.id}&folder_id=${selectedFolder.id}&include_deleted=true&include_archived=true`
+      let apiPath = `/api/documents?study_id=${currentStudy.id}&folder_id=${selectedFolder.id}&include_deleted=true&include_archived=true`;
+      
+      if (currentLevel === ViewLevel.SITE && currentSite) {
+        apiPath += `&site_id=${currentSite.id}`;
+      } else if (currentLevel === ViewLevel.COUNTRY && currentCountry) {
+        apiPath += `&country=${encodeURIComponent(currentCountry)}`;
+      }
 
       const response = await fetch(apiPath);
       
@@ -198,7 +206,7 @@ const FolderContentViewer: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedFolder, currentStudy, currentSite]);
+  }, [selectedFolder, currentStudy, currentSite, currentLevel, currentCountry]);
 
   useEffect(() => {
     loadFolderContents();

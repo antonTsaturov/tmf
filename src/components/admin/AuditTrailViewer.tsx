@@ -27,7 +27,7 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
     entityId: entityId,
   });
 
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null | undefined>(null);
   const [showFilters, setShowFilters] = useState(false);
 
 
@@ -309,7 +309,7 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
                         expandedRow === log.audit_id ? null : log.audit_id
                       )}
                     >
-                      <div className="col-time">{formatDate(log.created_at)}</div>
+                      {log.created_at && <div className="col-time">{formatDate(log.created_at)}</div>}
                       <div className="col-user">
                         <div className="user-info">
                           <span className="user-email">{log.user_email}</span>

@@ -19,6 +19,8 @@ interface StatusBadgeProps {
 }
 
 interface SiteItemProps {
+  studies: Study[];
+  currentStudyId: number;
   site: StudySite;
   index: number;
   onUpdate: (id: number, updates: Partial<StudySite>) => void;
@@ -93,7 +95,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
 };
 
 // Компонент элемента центра
-const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }) => {
+const SiteItem: FC<SiteItemProps> = ({ studies, currentStudyId, site, index, onUpdate, onDelete, onMove }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<StudySite>>({
     name: site.name,
@@ -150,6 +152,15 @@ const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }
     }
   };
 
+  const studyCountriesList = studies.find(study => study.id === currentStudyId)?.countries;
+
+  const handleCountriesChange = (country: string[]) => {
+    setEditData(prev => ({
+      ...prev,
+      country: String(country)
+    }));
+  }
+
   return (
     <div
       className="site-item"
@@ -162,23 +173,7 @@ const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }
           <div className="site-item-first-row-left-block">
             <div className="site-index">
               <span className="index-number">{index + 1}</span>
-              {onMove && (
-                <div className="move-controls">
-                  <button 
-                    onClick={() => onMove(index, index - 1)}
-                    disabled={index === 0}
-                    title="Move up"
-                  >
-                    ↑
-                  </button>
-                  <button 
-                    onClick={() => onMove(index, index + 1)}
-                    title="Move down"
-                  >
-                    ↓
-                  </button>
-                </div>
-              )}
+              <span style={{fontSize: '10px'}}>ID: {site.id}</span>
             </div>
 
             <div className="site-details">
@@ -208,14 +203,16 @@ const SiteItem: FC<SiteItemProps> = ({ site, index, onUpdate, onDelete, onMove }
                     className="site-input"
                     required
                   />
-                  {/* <input
-                    type="text"
-                    value={editData.country || ''}
-                    onChange={handleInputChange('country')}
-                    placeholder="Country *"
-                    className="site-input"
-                    required
-                  /> */}
+
+                  {studyCountriesList &&
+                    <CountrySelector
+                      selectedValues={[site.country]}
+                      onChange={handleCountriesChange}
+                      placeholder="Select countries..."
+                      availableOptions={studyCountriesList}
+                    />
+                  }
+
                   <input
                     type="text"
                     value={editData.principal_investigator || ''}
@@ -575,17 +572,6 @@ const SiteManager: FC<SiteManagerProps> = () => {
               disabled={!currentStudyId}
             />
             
-            
-            {/* <input
-              type="text"
-              value={newSiteForm.country}
-              onChange={(e) => setNewSiteForm(prev => ({ ...prev, country: e.target.value }))}
-              placeholder="Country *"
-              className="form-input"
-              required
-              disabled={!currentStudyId}
-            /> */}
-
             {studyCountriesList &&
               <>
                 <label>Country*</label>
@@ -636,6 +622,8 @@ const SiteManager: FC<SiteManagerProps> = () => {
             ) : (
               filteredSites.map((site, index) => (
                 <SiteItem
+                  studies={studies}
+                  currentStudyId={currentStudyId}
                   key={site.id}
                   site={site}
                   index={index}

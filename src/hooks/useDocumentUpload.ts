@@ -30,6 +30,7 @@ interface UploadOptions {
   tmfZone: string | null;
   tmfArtifact: string | null;
   customFileName?: string;
+  country?: string;
 }
 
 interface UploadResult {
@@ -84,6 +85,7 @@ export const useDocumentUpload = () => {
           : `${filesArray.length} файлов`,
         studyId: currentStudy?.id!,
         siteId: currentSite?.id!,
+        country: context.currentCountry,
         createdBy: user.id,
         ...(filesArray.length === 1 && { file: filesArray[0] })
       });
@@ -158,6 +160,7 @@ export const useDocumentUpload = () => {
         formData.append('status', 'draft');
         
         if (options.siteId) formData.append('siteId', String(options.siteId));
+        if (options.country) formData.append('country', options.country);
         if (options.tmfZone) formData.append('tmfZone', options.tmfZone);
         if (options.tmfArtifact) formData.append('tmfArtifact', options.tmfArtifact);
 

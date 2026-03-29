@@ -55,6 +55,7 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
         RETURNING *;
       `;
       
+      console.log('updateQuery, updateValues: ', updateQuery, updateValues)
       const result = await client.query(updateQuery, updateValues);
       console.log(`createOrUpdateRecord: Record with id ${id} in table ${table} was updated.`);
       return result.rows[0];

@@ -39,6 +39,7 @@ export async function ensureIndexesAndTriggers() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_document_study_id ON document(study_id);
       CREATE INDEX IF NOT EXISTS idx_document_site_id ON document(site_id);
+      CREATE INDEX IF NOT EXISTS idx_document_country ON document(country);
       CREATE INDEX IF NOT EXISTS idx_document_folder_id ON document(folder_id);
       CREATE INDEX IF NOT EXISTS idx_document_is_deleted ON document(is_deleted);
       CREATE INDEX IF NOT EXISTS idx_document_is_archived ON document(is_archived);

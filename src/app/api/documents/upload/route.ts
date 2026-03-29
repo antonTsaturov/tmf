@@ -78,6 +78,7 @@ async function uploadHandler(
     const s3Key = formData.get('s3Key') as string;
     const studyId = parseInt(formData.get('studyId') as string);
     const siteId = formData.get('siteId') as string || null;
+    const country = formData.get('country') as string || null;
     const folderId = formData.get('folderId') as string;
     const folderName = formData.get('folderName') as string;
     const createdBy = formData.get('createdBy') as string;
@@ -131,6 +132,10 @@ async function uploadHandler(
         metadata.siteid = siteId;
       }
 
+      if (country) {
+        metadata.country = country;
+      }
+
       await uploadFileWithIAM(
         process.env.YC_BUCKET_NAME!,
         s3Key,
@@ -158,15 +163,16 @@ async function uploadHandler(
     // Вставляем документ
     const { rows: [newDocument] } = await client.query(`
       INSERT INTO document (
-        id, study_id, site_id, folder_id, folder_name, 
+        id, study_id, site_id, country, folder_id, folder_name, 
         tmf_zone, tmf_artifact, created_by, created_at,
         is_deleted, is_archived
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, false)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, false)
       RETURNING *
     `, [
       documentId,
       studyId,
       normalizedSiteId,
+      country || null,
       folderId,
       folderName,
       tmfZone || null,

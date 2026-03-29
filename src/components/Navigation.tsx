@@ -103,6 +103,12 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
         .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
 
       setCountryFilter(assignedCountries);
+      console.log('assignedCountries: ', assignedCountries)
+    }
+    
+    if (currentStudy?.countries.length === 1) {
+      //setCountryFilter(currentStudy?.countries);
+      updateContext({ currentCountry: String(currentStudy?.countries) })
     }
   }, [currentLevel, user?.assigned_site_id, sites]);
 
@@ -212,7 +218,9 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
       }
 
       {/* Выбор центра */}
-      {currentStudy && currentLevel === ViewLevel.SITE && currentCountry && (
+      {currentStudy && currentLevel === ViewLevel.SITE && currentCountry &&
+      //|| currentLevel === ViewLevel.SITE && currentStudy?.countries.length === 1 && 
+      (
         <Select.Root
           size="2"
           key={`site-select-${currentSite?.id}-${currentStudy.id}`}

@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const study_id = searchParams.get('study_id');
   const site_id = searchParams.get('site_id');
+  const country = searchParams.get('country');
   const folder_id = searchParams.get('folder_id');
   const include_deleted = searchParams.get('include_deleted') === 'true';
   const include_archived = searchParams.get('include_archived') === 'true';
@@ -38,10 +39,19 @@ export async function GET(request: NextRequest) {
       await ensureTablesExist();
     }
 
-    // Подготовка фильтра site_id
+    // Подготовка фильтра site_id или country
     const queryParams: any[] = [parseInt(study_id), folder_id];
-    let siteCondition = site_id ? `AND d.site_id = $3` : `AND d.site_id IS NULL`;
-    if (site_id) queryParams.push(parseInt(site_id));
+    let siteOrCountryCondition = '';
+    
+    if (site_id) {
+      siteOrCountryCondition = `AND d.site_id = $3`;
+      queryParams.push(parseInt(site_id));
+    } else if (country) {
+      siteOrCountryCondition = `AND d.country = $3`;
+      queryParams.push(country);
+    } else {
+      siteOrCountryCondition = `AND d.site_id IS NULL AND d.country IS NULL`;
+    }
 
     // Единый запрос с агрегацией JSON
     const { rows: documents } = await client.query(`
@@ -102,7 +112,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN users restore ON d.restored_by = restore.id  -- Добавлен LEFT JOIN для информации о восстановившем
       LEFT JOIN users arch ON d.archived_by = arch.id  -- JOIN для информации об архивировавшем
       LEFT JOIN users unarch ON d.unarchived_by = unarch.id  -- JOIN для информации об разархивировавшем
-      WHERE d.study_id = $1 AND d.folder_id = $2 ${siteCondition}
+      WHERE d.study_id = $1 AND d.folder_id = $2 ${siteOrCountryCondition}
         AND (${include_deleted ? 'TRUE' : 'd.is_deleted = false'})
         AND (${include_archived ? 'TRUE' : '(d.is_archived = false OR d.is_archived IS NULL)'})
       ORDER BY d.created_at DESC
@@ -201,6 +211,7 @@ export async function POST(request: NextRequest) {
     const { 
       study_id, 
       site_id, 
+      country,
       folder_id, 
       folder_name, 
       tmf_zone, 
@@ -227,15 +238,16 @@ export async function POST(request: NextRequest) {
 
     const { rows: [newDocument] } = await client.query(`
       INSERT INTO document (
-        id, study_id, site_id, folder_id, folder_name, 
+        id, study_id, site_id, country, folder_id, folder_name, 
         tmf_zone, tmf_artifact, created_by,
         is_deleted, is_archived
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false, false)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, false)
       RETURNING *
     `, [
       documentId, 
       parseInt(study_id), 
       normalizedSiteId,
+      country || null,
       folder_id, 
       folder_name, 
       tmf_zone || null, 

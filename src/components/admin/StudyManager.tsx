@@ -300,8 +300,6 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
 const StudyManager: FC = () => {
 
   const { studies, setStudies, saveStudy } = useContext(AdminContext)!;
-
-
   const [studyObject, setStudyObject] = useState<Study[]>([]);
   const [newStudyForm, setNewStudyForm] = useState({
     title: '',
@@ -353,17 +351,18 @@ const StudyManager: FC = () => {
       }
       
       const currentStudy = prev[studyIndex];
+      // Удаляем информацию о центрах из объекта исследования
+      const { sites, ...currentStudy_NoSites } = currentStudy;
       
-      // Создаем отдельный объект обновленного исследования
+      // Создаем отдельный объект обновленного исследования 
       const updatedStudy: Study = {
-        ...currentStudy,
+        ...currentStudy_NoSites,
         ...updates,
       };
       
         // Сохраняем изменения в БД (асинхронно, не блокируя UI)
       saveStudy(Tables.STUDY, updatedStudy).catch(err => {
         console.error('Failed to save study updates:', err);
-        // Optionally, we could revert the local state change here if saving fails
       });
       // Создаем копию массива и заменяем элемент
       const newStudies = [...prev];

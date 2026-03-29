@@ -17,7 +17,14 @@ import {
   DotIcon, 
   ArchiveIcon
 } from '@radix-ui/react-icons';
-import { FaRegFolder, FaRegFolderOpen, FaLock } from "react-icons/fa";
+import {
+  FiInfo,
+  FiFolder,
+  FiLock,
+  FiArchive
+} from 'react-icons/fi';
+import { FaRegFolderOpen, FaRegFolder } from 'react-icons/fa6';
+import StudyInfoPanel from './panels/StudyInfoPanel';
 
 
 export interface FileNode {
@@ -350,11 +357,28 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
 
   return (
     <Box className="file-explorer" p="3" style={{ height: '100%', overflow: 'auto' }}>
-      <Flex align="center" justify="center" py="4" >
-        <Text size="3" weight="bold">
-          Структура Файла Исследования
-        </Text>
-
+      <StudyInfoPanel />
+      
+      <Flex align="center" justify="center" py="4" gap="4" >
+          <Text size="3" weight="bold">
+            Центральный Файл Исследования
+          </Text>
+          {currentStudy && (
+            <Button
+              size="1"
+              variant="ghost"
+              color="gray"
+              onClick={() => {
+                
+                updateContext({ isStudyInfoPanelOpen: true })
+                console.log(context)
+              
+              }}
+              style={{ padding: '4px 4px' }}
+            >
+              <FiInfo size={14} />
+            </Button>
+          )}
       </Flex>
       <Separator mb="4" style={{ width: '100%' }} />
 

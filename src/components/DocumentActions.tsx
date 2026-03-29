@@ -1,5 +1,5 @@
 // components/DocumentActions.tsx
-import React, { useContext, useEffect, useRef } from 'react';
+import React, { useContext } from 'react';
 import {
   FiFilePlus,
   FiSend,
@@ -15,20 +15,16 @@ import {
 import { Flex, Button, Tooltip } from '@radix-ui/themes';
 import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
-import { useDocumentDelete } from '@/hooks/useDocumentDelete';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { ViewLevel } from '@/types/types';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
 import { UserRole } from '@/types/types';
-import { Document } from '@/types/document';
 import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
-import { useNotification } from '@/wrappers/NotificationContext';
-import { useDocumentUpload } from '@/hooks/useDocumentUpload';
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 
 interface DocumentActionsProps {
-  onAction?: (action: DocumentAction) => void;
+  //onAction?: (action: DocumentAction) => void;
   className?: string;
   onDocumentDeleted?: () => void;
   onDocumentRestored?: () => void;
@@ -123,35 +119,18 @@ export const actionConfig: Partial<Record<DocumentAction, ActionConfigProps>> = 
 const MIN_WIDTH = 700; // Width buttons container
 
 const DocumentActions: React.FC<DocumentActionsProps> = ({ 
-  onAction, 
   className = '',
 }) => {
   const { user } = useAuth();
   const mainContext = useContext(MainContext);
-  //const { addNotification } = useNotification();
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
   const { context } = mainContext;
   const { selectedFolder, selectedDocument, currentSite, currentLevel, currentStudy} = context;
-  // Необходимо для уменьшения кнопок при сужении контейнера
+  
+  // Хук для уменьшения кнопок при сужении контейнера
   const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
   
-  //const { isDeleting, isRestoring, error } = useDocumentDelete();
   const { handleAction } = useDocumentActionHandler();
-
-  // const prevSelectedDocumentRef = useRef<Document | null>(null);
-
-  // useEffect(() => {
-  //   if (selectedDocument !== prevSelectedDocumentRef.current) {
-  //     prevSelectedDocumentRef.current = selectedDocument;
-  //   }
-  // }, [selectedDocument]);
-
-// Обработка ошибок удаления через глобальные уведомления
-  // useEffect(() => {
-  //   if (error) {
-  //     addNotification('error', error);
-  //   }
-  // }, [error, addNotification]);
 
   // Определяет какие кнопки показать 
   const availableActions = getAvailableDocumentActions(
@@ -167,9 +146,9 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   };
 
   // Определяем, нужно ли показывать кнопки
-  const shouldShowActions = 
-    (currentLevel === ViewLevel.GENERAL && selectedFolder) ||
-    (currentLevel === ViewLevel.SITE && currentSite && selectedFolder);
+  const shouldShowActions = (currentLevel === ViewLevel.GENERAL && selectedFolder)
+  || (currentLevel === ViewLevel.SITE && currentSite && selectedFolder)
+  || (currentLevel === ViewLevel.COUNTRY && selectedFolder);
 
   if (!shouldShowActions || availableActions.length === 0) {
     return null;

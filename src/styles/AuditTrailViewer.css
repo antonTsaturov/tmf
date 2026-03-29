@@ -107,7 +107,7 @@
 
 .table-header {
   display: grid;
-  grid-template-columns: 190px 190px 150px 170px 190px 120px;
+  grid-template-columns: 190px 190px 150px 170px 270px 120px;
   background: #f5f5f5;
   font-weight: 600;
   font-size: 13px;
@@ -121,7 +121,7 @@
 
 .table-row {
   display: grid;
-  grid-template-columns: 190px 190px 150px 170px 190px 120px;
+  grid-template-columns: 190px 190px 150px 170px 270px 120px;
   border-bottom: 1px solid #e0e0e0;
   cursor: pointer;
   transition: background-color 0.2s;

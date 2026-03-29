@@ -93,6 +93,7 @@ export const DocumentTable = `
 
     study_id INTEGER NOT NULL REFERENCES study(id) ON DELETE CASCADE,
     site_id VARCHAR REFERENCES site(id) ON DELETE SET NULL,
+    country VARCHAR(100),
 
     folder_id TEXT NOT NULL,
     folder_name TEXT NOT NULL,

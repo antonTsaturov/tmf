@@ -28,7 +28,8 @@ export interface MainContextProps {
   isArchivePanelOpen: boolean;
   isUnarchivePanelOpen: boolean;
   isEditTitlePanelOpen: boolean;
-  isRestorePanelOpen: boolean
+  isRestorePanelOpen: boolean;
+  isStudyInfoPanelOpen: boolean;
 }
 
 interface MainContextType {
@@ -57,7 +58,8 @@ const defaultContext: MainContextProps = {
   isArchivePanelOpen: false,
   isUnarchivePanelOpen: false,
   isEditTitlePanelOpen: false,
-  isRestorePanelOpen: false
+  isRestorePanelOpen: false,
+  isStudyInfoPanelOpen: false
 };
 
 export const MainContext = createContext<MainContextType | undefined>(undefined);
