@@ -1,8 +1,9 @@
 // lib/auth/auth.service.ts
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { ENV } from '@/lib/env';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const JWT_SECRET = ENV.JWT_SECRET;
 const JWT_EXPIRES_IN = '24h';
 
 export interface JwtPayload {

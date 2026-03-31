@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { getDocumentById } from '@/lib/db/document';
+import { logger } from '@/lib/logger';
 
 export async function softDeleteHandler(
   request: NextRequest,
@@ -60,7 +61,7 @@ export async function softDeleteHandler(
     });
 
   } catch (error) {
-    console.error('Error soft deleting document:', error);
+    logger.error('Error soft deleting document:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

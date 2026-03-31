@@ -158,7 +158,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     if (!isFolder) return;
 
     if (context.currentLevel === ViewLevel.SITE && !currentSite) {
-      console.log('Please select a site first');
       return;
     }
 
@@ -371,7 +370,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
               onClick={() => {
                 
                 updateContext({ isStudyInfoPanelOpen: true })
-                console.log(context)
+                // Context loaded
               
               }}
               style={{ padding: '4px 4px' }}

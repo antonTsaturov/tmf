@@ -5,10 +5,17 @@ import { v4 as uuidv4 } from 'uuid';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
 import { logger } from '@/lib/logger';
 import { ensureTablesExist } from '@/lib/db/document';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
 
 
 // Получение документов при просмотре содержимого папки
 export async function GET(request: NextRequest) {
+  return applyRateLimit(RATE_LIMIT_PRESETS.documentApi, request, async () => {
+    return handleGetDocuments(request);
+  });
+}
+
+async function handleGetDocuments(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const study_id = searchParams.get('study_id');
   const site_id = searchParams.get('site_id');
@@ -198,6 +205,12 @@ export async function GET(request: NextRequest) {
 
 // Создание документа
 export async function POST(request: NextRequest) {
+  return applyRateLimit(RATE_LIMIT_PRESETS.documentApi, request, async () => {
+    return handlePostDocument(request);
+  });
+}
+
+async function handlePostDocument(request: NextRequest) {
   const client = getPool();
   
   try {
@@ -210,7 +223,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { 
-      study_id, 
+      study_id,
       site_id, 
       country,
       folder_id, 

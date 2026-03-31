@@ -26,6 +26,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
 import { useDocumentRestore } from '@/hooks/useDocumentRestore';
+import { logger } from '@/lib/logger';
 
 interface RestoreDocumentPanelProps {
   onDocumentRestored?: (updatedDoc: Document) => void;
@@ -129,7 +130,7 @@ const RestoreDocumentPanel: React.FC<RestoreDocumentPanelProps> = ({
         addNotification('error', result.error);
       }
     } catch (error) {
-      console.error('Error restoring document:', error);
+      logger.error('Error restoring document', error);
       addNotification('error', 'Error restoring document');
     }
   };
@@ -162,7 +163,6 @@ const RestoreDocumentPanel: React.FC<RestoreDocumentPanelProps> = ({
   // Only show if panel is open and document is deleted
   if (!isRestorePanelOpen || !selectedDocument || !selectedDocument.is_deleted) return null;
 
-  //console.log('selectedDocument: ', selectedDocument)
   return (
     <>
       <Dialog.Root open={isRestorePanelOpen} onOpenChange={(open) => !open && !isRestoring && handleCancel()}>

@@ -1,5 +1,6 @@
 // hooks/usePDFCache.ts
 import { useState, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 interface CachedPDF {
   id: string;
@@ -23,13 +24,13 @@ export const usePDFCache = () => {
 
   const log = useCallback((...args: any[]) => {
     if (DEBUG) {
-      console.log('📦 [PDF Cache]:', ...args);
+      logger.debug('[PDF Cache]', ...args);
     }
   }, []);
 
   const logError = useCallback((...args: any[]) => {
     if (DEBUG) {
-      console.error('❌ [PDF Cache Error]:', ...args);
+      logger.error('[PDF Cache Error]', ...args);
     }
   }, []);
 

@@ -1,6 +1,93 @@
 /**
- * Logger utility for application
- * Using console-based logging for server-side operations
+ * 🎯 СТРУКТУРИРОВАННАЯ СИСТЕМА ЛОГИРОВАНИЯ
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * 📍 ГДЕ ЗАПИСЫВАЮТСЯ ЛОГИ
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * 1. КОНСОЛЬ (stdout/stderr) - ВСЕГДА включена:
+ *    - DEBUG логи: только в разработке (NODE_ENV='development')
+ *    - INFO, WARN, ERROR логи: всегда выводятся
+ *    
+ *    Пример вывода:
+ *    [2026-03-31T10:23:45.123Z] [INFO] AUTH: LOGIN_SUCCESS | {...}
+ *    [2026-03-31T10:24:10.456Z] [WARN] AUTH_ERROR: LOGIN_INVALID
+ *    [2026-03-31T10:25:30.789Z] [ERROR] Database connection failed
+ * 
+ * 2. ФАЙЛОВАЯ СИСТЕМА (только production):
+ *    Логи можно перенаправить в файл командой:
+ *    npm run start > app.log 2>&1
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * 🔍 КАК ПРОСМАТРИВАТЬ ЛОГИ
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * РАЗРАБОТКА (development):
+ *    npm run dev
+ *    → логи видны прямо в терминале, обновляются в реальном времени
+ * 
+ * PRODUCTION:
+ *    # Запуск с логированием в файл
+ *    npm run start > logs/app.log 2>&1 &
+ * 
+ *    # Просмотр в реальном времени
+ *    tail -f logs/app.log
+ * 
+ *    # Последние 100 строк
+ *    tail -100 logs/app.log
+ * 
+ *    # Фильтрация по типам:
+ *    grep "AUTH" logs/app.log              # все логи аутентификации
+ *    grep "\[ERROR\]" logs/app.log         # только ошибки
+ *    grep "LOGIN_BLOCKED" logs/app.log     # блокировки входа
+ * 
+ *    # Анализ:
+ *    grep "LOGIN_INVALID_PASSWORD" logs/app.log | wc -l  # кол-во попыток
+ *    grep '"ip":"192.168.1.1"' logs/app.log            # логи по IP
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * 📝 ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * import { logger } from '@/lib/logger';
+ * 
+ * // Информационный лог
+ * logger.info('User registered', { userId: user.id, email: user.email });
+ * 
+ * // Предупреждение
+ * logger.warn('Slow query detected', { queryTime: '5000ms', query: 'SELECT...' });
+ * 
+ * // Ошибка с исключением
+ * try {
+ *   await riskyOperation();
+ * } catch (error) {
+ *   logger.error('Operation failed', error, { userId: user.id });
+ * }
+ * 
+ * // Специализированные методы
+ * logger.authLog('LOGIN_SUCCESS', userId, 'Logged in successfully', { ip });
+ * logger.dbLog('USER_UPDATE', 'users', { changes: 2 });
+ * logger.documentLog('UPLOAD', documentId, { size: '5MB' });
+ * 
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * ⚠️ ВАЖНЫЕ ПРАВИЛА
+ * ═══════════════════════════════════════════════════════════════════════════
+ * 
+ * ✅ ЛОГИРУЙ:
+ *    - Попытки аутентификации и блокировки
+ *    - Критические ошибки и исключения
+ *    - Операции с данными (insert, update, delete)
+ *    - IP адреса (для безопасности)
+ * 
+ * ❌ НЕ ЛОГИРУЙ:
+ *    - Пароли и приватные ключи
+ *    - API токены и JWT
+ *    - Полные кредитные карты
+ *    - Чувствительные персональные данные
  */
 
 export enum LogLevel {
@@ -84,8 +171,8 @@ class Logger {
     this.log(LogLevel.WARN, message, data);
   }
 
-  error(message: string, error?: Error | null, data?: any): void {
-    this.log(LogLevel.ERROR, message, data, error || undefined);
+  error(message: string, error?: Error | unknown | null, data?: any): void {
+    this.log(LogLevel.ERROR, message, data, error instanceof Error ? error : undefined);
   }
 
   // Специализированные методы для разных модулей

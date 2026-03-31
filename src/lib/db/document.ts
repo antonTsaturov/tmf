@@ -1,5 +1,6 @@
 import { getPool, createTable } from '@/lib/db/index';
 import { Tables } from './schema';
+import { logger } from '@/lib/logger';
 
 // Функция для получения документа (должна использоваться только в loadEntity)
 export async function getDocumentById(id: string) {
@@ -11,7 +12,7 @@ export async function getDocumentById(id: string) {
     );
     return rows[0] || null;
   } catch (error) {
-    console.error('Error fetching document:', error);
+    logger.error('Error fetching document:', error);
     return null;
   }
 }
@@ -20,13 +21,13 @@ export async function ensureTablesExist() {
   try {
     // Создаем таблицу document если её нет
     await createTable(Tables.DOCUMENT);
-    console.log('Table "document" ensured');
+    logger.info('Table "document" ensured');
 
     // Дополнительно: создаем индексы и триггеры после создания таблиц
     await ensureIndexesAndTriggers();
 
   } catch (error) {
-    console.error('Error ensuring tables exist:', error);
+    logger.error('Error ensuring tables exist:', error);
     throw error;
   }
 }
@@ -87,11 +88,11 @@ export async function ensureIndexesAndTriggers() {
           FOR EACH ROW
           EXECUTE FUNCTION update_document_current_version();
       `);
-      console.log('Trigger "trigger_update_document_current_version" created');
+      logger.info('Trigger "trigger_update_document_current_version" created');
     }
 
   } catch (error) {
-    console.error('Error ensuring indexes and triggers:', error);
+    logger.error('Error ensuring indexes and triggers:', error);
     throw error;
   }
 }

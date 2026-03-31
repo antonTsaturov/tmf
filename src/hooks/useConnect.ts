@@ -46,7 +46,5 @@ export const useConnectivity = (checkInterval = 30000) => {
     };
   }, [user, checkInterval]);
 
-  //console.log('🔍 Ping check:', { user: !!user, isOnline });
-
   return { isOnline };
 };

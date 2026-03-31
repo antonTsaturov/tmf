@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       //   const tableExists = await this.checkTableExists(client, table);
 
       //   if (!tableExists) {
-      //     console.log(`Table ${table} does not exist, creating it...`);
+      //     logger.info(`Table ${table} does not exist, creating it...`);
       //     await createTable(table);
       //     // Возвращаем пустой массив, так как таблица только что создана
       //     return NextResponse.json([], { status: 200 });

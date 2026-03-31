@@ -1,13 +1,13 @@
 //src/components/UserSettings.tsx
 'use client'
 import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { 
-  Dialog, 
-  Tabs, 
-  Flex, 
-  Text, 
-  TextField, 
-  Button, 
+import {
+  Dialog,
+  Tabs,
+  Flex,
+  Text,
+  TextField,
+  Button,
   Box,
   IconButton,
   Separator,
@@ -21,6 +21,7 @@ import { EyeOpenIcon, EyeClosedIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { FaUser } from "react-icons/fa";
 import { useNotification } from '@/wrappers/NotificationContext';
+import { logger } from '@/lib/logger';
 
 interface UserSettingsProps {
   open: boolean;
@@ -47,19 +48,19 @@ const UserPassword = ({ onSuccess, externalLoading, onLoadingChange }: UserPassw
     e.preventDefault();
 
     if (!newPassword || !confirmPassword || !currentPassword) {
-      console.log('Все поля должны быть заполнены')
+      logger.warn('Password change: empty fields');
       addNotification('error', 'Все поля должны быть заполнены');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      console.log('Новые пароли не совпадают')
+      logger.warn('Password change: passwords do not match');
       addNotification('error', 'Новые пароли не совпадают');
       return;
     }
 
     if (newPassword.length < 8) {
-      console.log('Пароль должен быть не менее 8 символов')
+      logger.warn('Password change: password too short');
       addNotification('error', 'Пароль должен быть не менее 8 символов');
       return;
     }
@@ -71,7 +72,7 @@ const UserPassword = ({ onSuccess, externalLoading, onLoadingChange }: UserPassw
     //const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(newPassword);
 
     if (!hasUpperCase || !hasLowerCase || !hasNumbers ) { // || !hasSpecialChar
-      console.log('Not match pass requirements')
+      logger.warn('Password change: does not meet requirements');
       addNotification('error', 'Not match pass requirements');
       return;
     }
@@ -109,6 +110,7 @@ const UserPassword = ({ onSuccess, externalLoading, onLoadingChange }: UserPassw
         addNotification('error', String(data.error) || 'Ошибка при смене пароля');
       }
     } catch (error) {
+      logger.error('Password change: network error', error);
       addNotification('error', 'Сетевая ошибка');
     } finally {
       onLoadingChange(false); // Выключаем загрузку через родителя

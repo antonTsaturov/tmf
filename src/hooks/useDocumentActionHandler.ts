@@ -4,6 +4,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
 import { Document } from '@/types/document';
 import { useDocumentUpload } from './useDocumentUpload';
+import { logger } from '@/lib/logger';
 
 interface UseDocumentActionHandlerReturn {
   handleAction: (action: DocumentAction, doc?: Document) => void;
@@ -54,7 +55,7 @@ export const useDocumentActionHandler = (): UseDocumentActionHandlerReturn => {
         handleFileSelect();
         break;
       default:
-        console.log('Action not implemented:', action);
+        logger.warn('Action not implemented', { action });
     }
   }, [updateContext]);
 

@@ -6,6 +6,7 @@
 // import { withAudit } from '@/lib/audit/audit.middleware';
 // import { AuditAction, AuditEntity } from '@/types/types';
 // import { AuditConfig } from '@/lib/audit/audit.middleware';
+// import { logger } from '@/lib/logger';
 
 // async function restoreVersionHandler(
 //   documentId: string,
@@ -53,7 +54,7 @@
 //       document: doc,
 //     });
 //   } catch (error) {
-//     console.error('Error restoring version:', error);
+//     logger.error('Error restoring version:', error);
 //     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
 //   } finally {
 //     client.release();

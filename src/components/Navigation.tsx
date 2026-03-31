@@ -9,6 +9,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { IoIosArrowForward } from "react-icons/io";
 import React from 'react';
 import { ViewLevel } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 interface StudySiteNavigationProps {
   onStudyChange?: (study: Study | undefined) => void;
@@ -93,7 +94,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
 
   /* Получаем список стран на основе assigned_site_id пользователя для фильтрации
   * центров по странам
-  */ 
+  */
   useEffect(() => {
     if (currentLevel === ViewLevel.SITE && user?.assigned_site_id && sites.length > 0) {
       // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны
@@ -103,7 +104,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
         .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
 
       setCountryFilter(assignedCountries);
-      console.log('assignedCountries: ', assignedCountries)
+      logger.debug('Assigned countries', { countries: assignedCountries });
     }
     
     if (currentStudy?.countries.length === 1) {

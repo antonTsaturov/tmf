@@ -26,6 +26,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useRename } from '@/hooks/useRename';
 import { Document } from "@/types/document";
+import { logger } from '@/lib/logger';
 
 interface EditDocumentPanelProps {
   onTitleChange?: (newTitle: string) => void;
@@ -126,7 +127,7 @@ const EditDocumentPanel: React.FC<EditDocumentPanelProps> = ({
       onRenameSuccess?.(updatedDoc);
       updateContext({ isEditTitlePanelOpen: false });
       } else {
-        console.log('Error in update document in folder')
+        logger.warn('Error updating document in folder');
       }
     }
   };

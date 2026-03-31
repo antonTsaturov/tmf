@@ -1,10 +1,11 @@
 
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
+import { ENV } from '@/lib/env';
 
 export async function getIAMToken() {
   const key = JSON.parse(
-    fs.readFileSync('ya_cloud-iam_key.json', 'utf8')
+    fs.readFileSync(ENV.YC_IAM_KEY_PATH, 'utf8')
   );
 
   const now = Math.floor(Date.now() / 1000);

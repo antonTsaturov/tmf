@@ -1,5 +1,4 @@
 Bugs.
-1) audit trail пишет с ошибками
 
 Features.
 1) Добавть возможность удалить файл из кэша предпросмотра
@@ -11,7 +10,7 @@ Features.
 9) Дашборд со статистикой и метриками
 
 12) сортировка документов в папке (название / дате создания)
-13) Глобальная архивация
+
 14) интеграция с email
 
 16) Добавить опцию запроса на восстановление удаленного документа
@@ -23,13 +22,11 @@ Features.
 
 
 Критические (Must-have):
-✅ Реализовать блокировку аккаунта после 5 неудачных попыток
-✅ Удалить все debug console.log и добавить proper logger
 ✅ Заменить hardcoded default JWT_SECRET, добавить валидацию env
 ✅ Добавить rate limiting на все API endpoints
 ✅ Добавить CORS, CSRF, security headers (Helmet)
 ✅ Создать .env.example с документацией всех переменных
-✅ Добавить health check и monitoring endpoints
+⏳ Добавить health check и monitoring endpoints
 
 Важные (Should-have):
 Napisati хотя бы основные unit tests

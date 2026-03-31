@@ -1,6 +1,7 @@
 import { getPool } from './index';
 import { Study } from '@/types/types';
 import { Tables } from './schema';
+import { logger } from '@/lib/logger';
 
 export async function createOrUpdateRecord(table: Tables, id: number | string, updates: Partial<Study>) {
 
@@ -25,8 +26,8 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
     
     if (checkResult.rowCount === 0) {
       // Создаем новую запись
-      console.log(`createOrUpdateRecord: Creating new record in table ${table} with id ${id}`);
-      
+      logger.info(`createOrUpdateRecord: Creating new record in table ${table} with id ${id}`);
+
       const allFields = ['id', ...fields];
       const placeholders = allFields.map((_, idx) => `$${idx + 1}`).join(', ');
       const insertValues = [id, ...values];
@@ -38,13 +39,13 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
       `;
       
       const result = await client.query(insertQuery, insertValues);
-      console.log(`createOrUpdateRecord: Record in table ${table} with id ${id} created.`);
+      logger.info(`createOrUpdateRecord: Record in table ${table} with id ${id} created.`);
       return result.rows[0];
       
     } else {
       // Обновляем существующую запись
-      console.log(`createOrUpdateRecord: Updating record in table ${table} with id ${id}`);
-      
+      logger.info(`createOrUpdateRecord: Updating record in table ${table} with id ${id}`);
+
       const setClause = fields.map((field, idx) => `${field} = $${idx + 1}`).join(', ');
       const updateValues = [...values, id];
       
@@ -55,14 +56,14 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
         RETURNING *;
       `;
       
-      console.log('updateQuery, updateValues: ', updateQuery, updateValues)
+      logger.debug('updateQuery, updateValues: ', { query: updateQuery, values: updateValues })
       const result = await client.query(updateQuery, updateValues);
-      console.log(`createOrUpdateRecord: Record with id ${id} in table ${table} was updated.`);
+      logger.info(`createOrUpdateRecord: Record with id ${id} in table ${table} was updated.`);
       return result.rows[0];
     }
     
   } catch (err) {
-    console.error('createOrUpdateRecord: Error:', err);
+    logger.error('createOrUpdateRecord: Error:', err);
     throw err;
   }
 }

@@ -6,6 +6,7 @@ import { MdCached } from "react-icons/md";
 import { usePDFCache } from '@/hooks/usePDFCache';
 import '../styles/PDFViewer.css';
 import { Flex, Spinner } from '@radix-ui/themes';
+import { logger } from '@/lib/logger';
 
 interface PDFViewerProps {
   onClose?: () => void;
@@ -82,8 +83,8 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
         setPdfUrl(url);
         
       } catch (err) {
-        console.error('Error loading PDF:', err);
-        setError('Не удалось загрузить PDF');
+        logger.error('Error loading PDF', err);
+        setError('Failed to load PDF');
       } finally {
         setLoading(false);
       }
@@ -135,8 +136,8 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
       window.URL.revokeObjectURL(url);
       
     } catch (err) {
-      console.error('Download error:', err);
-      alert('Не удалось скачать документ');
+      logger.error('Download error', err);
+      alert('Failed to download document');
     }
   };
 

@@ -4,6 +4,7 @@ import { Study, StudyStatus } from '@/types/types';
 import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
+import { logger } from '@/lib/logger';
 import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
 import StatusBadge from './StatusBadge';
 import { StructurePreview } from './StructurePreview';
@@ -333,7 +334,7 @@ const StudyManager: FC = () => {
     if (respond) {
       // Update local state if writing to db was successful
       setStudies(prev => [...prev, newStudy]);
-      console.log('Added new study:', newStudy);
+      logger.info('Added new study', { studyId: newStudy.id, protocol: newStudy.protocol });
     }
     
     // Clear form
@@ -346,7 +347,7 @@ const StudyManager: FC = () => {
       const studyIndex = prev.findIndex(study => study.id === id);
       
       if (studyIndex === -1) {
-        console.warn(`Study with id ${id} not found in state`);
+        logger.warn(`Study with id ${id} not found in state`);
         return prev;
       }
       
@@ -362,7 +363,7 @@ const StudyManager: FC = () => {
       
         // Сохраняем изменения в БД (асинхронно, не блокируя UI)
       saveStudy(Tables.STUDY, updatedStudy).catch(err => {
-        console.error('Failed to save study updates:', err);
+        logger.error('Failed to save study updates', err);
       });
       // Создаем копию массива и заменяем элемент
       const newStudies = [...prev];

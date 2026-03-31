@@ -2,6 +2,7 @@
 // новый хук, который передает в компонент только обновленный номер версии документа
 import { useState } from 'react';
 import { Document } from '@/types/document';
+import { logger } from '@/lib/logger';
 
 interface NewVersionUploadResult {
   success: boolean;
@@ -80,7 +81,7 @@ export const useDocumentNewVersion = () => {
         version: result.version.document_number, // возвращается только номер версии
       };
     } catch (error) {
-      console.error('New version upload error:', error);
+      logger.error('New version upload error', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Неизвестная ошибка',

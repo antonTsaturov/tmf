@@ -6,6 +6,7 @@ import { getTable, getTablePartial, createOrUpdateTable } from '@/lib/api/fetch'
 import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { useAuth } from '@/wrappers/AuthProvider';
+import { logger } from '@/lib/logger';
 
 export function useStudies() {
   const [studies, setStudies] = useState<Study[]>([]);
@@ -30,7 +31,7 @@ export function useStudies() {
       }
       return data;
     } catch (err) {
-      console.error(err);
+      logger.error('Error loading data', err);
     } finally {
       setLoading(false);
       isFetching.current = false; // Разблокируем после завершения
@@ -55,7 +56,7 @@ export function useStudies() {
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users');
-      console.error('Error loading users table:', err);
+      logger.error('Error loading users table', err);
     } finally {
       setLoading(false);
     }
@@ -78,7 +79,7 @@ export function useStudies() {
       
     } catch (err) {
       setError(err instanceof Error ? err.message : `Failed to load ${table}`);
-      console.error(`Error loading ${table}:`, err);
+      logger.error(`Error loading ${table}`, err);
       return [] as T[];
     } finally {
       setLoading(false);
@@ -93,7 +94,7 @@ export function useStudies() {
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save study');
-      console.error('Error saving study:', err);
+      logger.error('Error saving study', err);
       throw err;
     } finally {
       setLoading(false);
@@ -107,7 +108,7 @@ export function useStudies() {
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save site');
-      console.error('Error saving site: ', err);
+      logger.error('Error saving site', err);
       throw err;
     } finally {
       setLoading(false);
@@ -121,7 +122,7 @@ export function useStudies() {
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save user');
-      console.error('Error saving user: ', err);
+      logger.error('Error saving user', err);
       throw err;
     } finally {
       setLoading(false);

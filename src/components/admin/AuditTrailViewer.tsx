@@ -154,7 +154,6 @@ const AuditTrailViewer: React.FC<AuditTrailViewerProps> = ({
     return text.substring(0, maxLength) + '...';
   };
 
-  //console.log(state.logs)
   return (
     <div className="audit-trail-viewer">
       <div className="audit-header">

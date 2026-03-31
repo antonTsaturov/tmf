@@ -10,6 +10,7 @@ import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
 import { deleteRecord } from '@/lib/api/fetch';
 import { CountrySelector, SelectorValue } from '../PseudoSelector';
+import { logger } from '@/lib/logger';
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -324,9 +325,9 @@ const SiteManager: FC<SiteManagerProps> = () => {
         const loadedSites = await loadTable(Tables.SITE);
         const sites = loadedSites as unknown as StudySite[];
         setAllSites(sites || []);
-        console.log('All sites loaded:', sites);
+        logger.info('All sites loaded', { count: sites?.length });
       } catch (error) {
-        console.error('Error loading all sites:', error);
+        logger.error('Error loading all sites', error);
         setAllSites([]);
       }
     };
@@ -339,7 +340,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
     if (currentStudyId) {
       const filtered = allSites.filter(site => site.study_id === currentStudyId);
       setFilteredSites(filtered);
-      console.log(`Filtered sites for study ${currentStudyId}:`, filtered);
+      logger.debug(`Filtered sites for study ${currentStudyId}`, { count: filtered.length });
     } else {
       setFilteredSites([]); // Если исследование не выбрано, показываем пустой список
     }
@@ -416,7 +417,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
         principal_investigator: '' 
       });
     } catch (error) {
-      console.error('Error adding site:', error);
+      logger.error('Error adding site', error);
       alert('Failed to add site. Please try again.');
     }
   }, [newSiteForm, currentStudyId, saveSite, updateAllSites]);
@@ -435,7 +436,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
       // Обновляем локальное состояние
       updateAllSites(updatedSite, 'update');
     } catch (error) {
-      console.error('Error updating site:', error);
+      logger.error('Error updating site', error);
       alert('Failed to update site. Please try again.');
     }
   }, [allSites, saveSite, updateAllSites]);
@@ -456,7 +457,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
         }
       }
     } catch (error) {
-      console.error('Error deleting site:', error);
+      logger.error('Error deleting site', error);
       alert('Failed to delete site. Please try again.');
     }
   }, [allSites, updateAllSites]);
@@ -464,7 +465,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
   // Генерация объекта структуры для предпросмотра
   useEffect(() => {
     setSiteObject(filteredSites);
-    console.log('Current filtered sites:', filteredSites);
+    logger.debug('Current filtered sites', { count: filteredSites.length });
   }, [filteredSites]);
 
   // Сброс
@@ -491,7 +492,7 @@ const SiteManager: FC<SiteManagerProps> = () => {
 
   const studyHandler = (studyId: number | null) => {
     setCurrentStudyId(studyId);
-    console.log('Selected study:', studyId);
+    logger.info('Selected study', { studyId });
   };
 
   const studyCountriesList = studies.find(study => study.id === currentStudyId)?.countries;

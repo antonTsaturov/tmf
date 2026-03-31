@@ -1,5 +1,7 @@
 // lib/audit/audit.middleware.ts
 
+import { logger } from '@/lib/logger';
+
 /*
   цепочка выполнения withAudit()
   ├─ подготовка ctx
@@ -95,7 +97,7 @@ export function withAudit(
       try {
         oldValue = await config.getOldValue(ctx, req);
       } catch (err) {
-        console.error("Audit oldValue error", err);
+        logger.error('Audit oldValue error', err);
       }
     }
 
@@ -131,7 +133,7 @@ export function withAudit(
 
         site_id: siteId,
         study_id: studyId,
-      }).catch(console.error);
+      }).catch((err) => logger.error('Audit log failed', err));
 
       return response;
 
@@ -156,17 +158,13 @@ export function withAudit(
 
         site_id: siteId,
         study_id: studyId,
-      }).catch(console.error);
+      }).catch((err) => logger.error('Audit log failed on error', err));
 
       throw error;
 
     } finally {
-
       const duration = Date.now() - start;
-
-      console.log(
-        `[AUDIT] ${config.action} ${config.entityType}:${entityId} ${duration}ms`
-      );
+      logger.auditLog(config.action, user.user_id?.toString(), config.entityType, entityId, { duration });
     }
   };
 }

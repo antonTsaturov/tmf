@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hash, compare } from 'bcryptjs';
 import { getPool } from '@/lib/db/index';
 import { checkAuth } from '@/lib/auth/check-auth';
+import { logger } from '@/lib/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
 
 export async function POST(request: NextRequest) {
   // Проверяем авторизацию
@@ -11,6 +13,13 @@ export async function POST(request: NextRequest) {
     return auth.response;
   }
 
+  // Apply rate limiting after authentication
+  return applyRateLimit(RATE_LIMIT_PRESETS.changePassword, request, async () => {
+    return handleChangePassword(request, auth);
+  });
+}
+
+async function handleChangePassword(request: NextRequest, auth: any) {
   const client = getPool();
 
   try {
@@ -111,7 +120,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Change password error:', error);
+    logger.error('Change password error:', error);
     return NextResponse.json(
       { error: 'Внутренняя ошибка сервера' },
       { status: 500 }

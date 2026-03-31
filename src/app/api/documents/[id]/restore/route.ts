@@ -1,5 +1,5 @@
 // app/api/documents/[id]/restore/route.ts
-/* 
+/*
   Восстановление удалённого документа (только для ADMIN)
   Восстановленный документ автоматически получает статус draft
 */
@@ -9,6 +9,7 @@ import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditContext } from '@/lib/audit/audit.middleware';
 import { getDocumentById } from '@/lib/db/document';
 import { AuditAction } from '@/types/audit';
+import { logger } from '@/lib/logger';
 
 
 // Handler for restoring document
@@ -85,7 +86,7 @@ export async function restoreHandler(
     });
 
   } catch (error) {
-    console.error('Error restoring document:', error);
+    logger.error('Error restoring document:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

@@ -6,6 +6,7 @@ import { Document } from '@/types/document';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
+import { logger } from '@/lib/logger';
 import { 
   Box, 
   Card, 
@@ -137,7 +138,7 @@ const DocumentDetails: React.FC = () => {
     // review_comment?: string | null;
   };
 
-  console.log('Document Details document: ', doc)
+  logger.debug('Document Details', { document: doc });
 
   return (
     <div className="document-details">

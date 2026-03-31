@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPool } from '@/lib/db'
 import { AuditService } from '@/lib/audit/audit.service'
+import { logger } from '@/lib/logger'
 
 type SqlParam = string | number | boolean | null
 
@@ -193,7 +194,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error fetching pending reviews:', error)
+    logger.error('Error fetching pending reviews:', error)
 
     return NextResponse.json(
       { error: 'Internal server error' },

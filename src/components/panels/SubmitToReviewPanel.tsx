@@ -32,6 +32,7 @@ import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { useAuth } from "@/wrappers/AuthProvider";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
+import { logger } from '@/lib/logger';
 
 interface SubmitToReviewPanelProps {
   studyId: number;
@@ -78,7 +79,7 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
 
       
       const data = await response.json();
-      console.log(data)
+      logger.debug('Reviewers loaded', { count: data.users?.length });
       setReviewers(data.users || []);
 
       // Автоматически выбираем первого, если есть
@@ -87,8 +88,8 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
 
       }
       } catch (err) {
-        console.error('Error loading reviewers:', err);
-        setError('Не удалось загрузить список рецензентов');
+        logger.error('Error loading reviewers', err);
+        setError('Failed to load reviewers');
       } finally {
         setLoading(false);
       }
@@ -125,9 +126,9 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
         }
       }
     } catch (err) {
-      addNotification('error', 'Ошибка при отправке на ревью');
-      console.error('Error submitting for review:', err);
-      setError('Ошибка при отправке на ревью');
+      addNotification('error', 'Error submitting for review');
+      logger.error('Error submitting for review', err);
+      setError('Error submitting for review');
     }
   };
 

@@ -25,6 +25,7 @@ import {
 import { useDocumentDelete } from "@/hooks/useDocumentDelete";
 import { MainContext } from "@/wrappers/MainContext";
 import { useNotification } from '@/wrappers/NotificationContext';
+import { logger } from '@/lib/logger';
 
 interface DeleteDocumentPanelProps {
   onDocumentDeleted?: () => void;
@@ -137,8 +138,8 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
         setDeletionReason("");
       }
     } catch (error) {
-      console.error('Error deleting document:', error);
-      addNotification('error', 'Ошибка при удалении документа');
+      logger.error('Error deleting document', error);
+      addNotification('error', 'Error deleting document');
     }
   };
 

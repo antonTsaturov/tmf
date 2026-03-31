@@ -1,6 +1,7 @@
 // app/api/ping/route.ts
 import { NextResponse } from 'next/server';
 import { getPool } from '@/lib/db'
+import { logger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +20,8 @@ export async function GET() {
     });
     
   } catch (error) {
-    console.error('❌ Ping failed (DB connection error):', error);
-    
+    logger.error('❌ Ping failed (DB connection error):', error);
+
     // Возвращаем 503, чтобы фронтенд понял, что проблема на сервере/в сети
     return NextResponse.json({ 
       status: 'error', 

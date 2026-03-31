@@ -182,10 +182,119 @@ src/
 - **AuditTrailViewer** — просмотр полного журнала аудита с фильтрацией
 - **DragAndDropOverlay** — поддержка drag & drop для загрузки файлов
 
+## 🔐 Настройка окружения (Environment Setup)
+
+### Обязательные переменные окружения
+
+Перед запуском приложения необходимо установить следующие переменные окружения:
+
+| Переменная | Описание | Пример |
+|-----------|---------|--------|
+| **JWT_SECRET** | Секретный ключ для подписи JWT токенов (≥32 символов) | `openssl rand -base64 32` |
+| **DATABASE_URL** | Строка подключения к PostgreSQL | `postgresql://user:pass@host/db` |
+| **YC_IAM_KEY_PATH** | Путь к файлу ключа IAM Yandex Cloud | `./ya_cloud-iam_key.json` |
+| **NODE_ENV** | Окружение (development, production, test) | `production` |
+
+### Быстрый старт
+
+1. **Скопируйте шаблон конфигурации**:
+```bash
+cp .env.local.example .env.local
+```
+
+2. **Сгенерируйте JWT_SECRET**:
+```bash
+openssl rand -base64 32
+```
+
+3. **Отредактируйте `.env.local`** с правильными значениями:
+```bash
+JWT_SECRET=<your-generated-secret>
+DATABASE_URL=postgresql://user:password@host:5432/database
+YC_IAM_KEY_PATH=./ya_cloud-iam_key.json
+NODE_ENV=development
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
+```
+
+4. **Валидация автоматическая**: При запуске `npm run build` или `npm run dev` приложение автоматически проверит наличие и корректность всех переменных окружения.
+
+⚠️ **ВНИМАНИЕ**: Никогда не коммитьте `.env.local` в git! Добавите в `.gitignore`.
+
+### Для production
+
+Используйте систему управления секретами:
+- **AWS**: Secrets Manager / Parameter Store
+- **Azure**: Key Vault
+- **Kubernetes**: Secrets API
+- **Docker**: Docker Secrets
+- **HashiCorp**: Vault
+
+Подробная инструкция: [docs/SECURITY.md](./docs/SECURITY.md)
+
 ## Запуск
 
 ```bash
-npm run dev   # режим разработки
-npm run build # сборка
-npm run start # production
+npm run dev   # режим разработки (с горячей перезагрузкой)
+npm run build # сборка для production
+npm run start # production сервер
 ```
+
+## 🔒 Функции безопасности
+
+### 1. Security Headers (Helmet)
+Автоматическое применение HTTP-заголовков безопасности для защиты от:
+- **XSS атак** (Content-Security-Policy)
+- **Clickjacking** (X-Frame-Options)
+- **MIME sniffing** (X-Content-Type-Options)
+- **Man-in-the-middle** (HSTS в production)
+
+### 2. CORS (Cross-Origin Resource Sharing)
+- Валидация источников запросов
+- Предотвращение несанкционированного доступа к API
+- Автоматическое разрешение `localhost` в разработке
+- Production: явное указание разрешенных доменов в `.env`
+
+### 3. CSRF Protection (Cross-Site Request Forgery)
+- Генерация и валидация CSRF токенов
+- One-time use токены (автоматически "съедаются" после использования)
+- Поддержка 24-часовых сессий
+- Автоматическое удаление просроченных токенов
+
+**Использование в React-компонентах**:
+```typescript
+// 1. Получить CSRF токен
+const { token: csrfToken } = useCSRFToken();
+
+// 2. Отправить с запросом
+fetch('/api/documents/12/delete', {
+  method: 'DELETE',
+  headers: { 'X-CSRF-Token': csrfToken },
+  credentials: 'include'
+});
+```
+
+**Полная документация**: [docs/SECURITY_HEADERS_CORS_CSRF.md](./docs/SECURITY_HEADERS_CORS_CSRF.md)
+
+### 4. Rate Limiting
+- Ограничение количества запросов к критичным эндпоинтам
+- IP-based отслеживание
+- Разные лимиты для разных операций:
+  - **Login**: 5 попыток за 15 минут
+  - **Password change**: 10 попыток за 1 час
+  - **Document upload**: 20 загрузок за 1 час
+
+**Документация**: [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md)
+
+### 5. Логирование и аудит
+- Структурированная система логирования всех операций
+- Отслеживание IP-адреса, user-agent, session ID
+- Полный журнал аудита в базе данных
+
+**Документация**: [docs/LOGGING.md](./docs/LOGGING.md)
+
+## 📝 Логирование
+
+**Логирование**: [docs/LOGGING.md](./docs/LOGGING.md)  
+**Безопасность**: [docs/SECURITY.md](./docs/SECURITY.md)  
+**Security Headers, CORS, CSRF**: [docs/SECURITY_HEADERS_CORS_CSRF.md](./docs/SECURITY_HEADERS_CORS_CSRF.md)  
+**Rate Limiting**: [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md)

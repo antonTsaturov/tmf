@@ -45,6 +45,7 @@ import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
 import DocumentReviewPanel from "./panels/ReviewDocumentPanel";
 import { MainContext } from '@/wrappers/MainContext';
 import { Document } from '@/types/document';
+import { logger } from '@/lib/logger';
 
 interface PaginationInfo {
   total: number;
@@ -114,8 +115,8 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
       setDocuments(data.documents);
       setPagination(data.pagination);
     } catch (error) {
-      console.error('Error fetching pending reviews:', error);
-      addNotification('error', 'Ошибка при загрузке документов');
+      logger.error('Error fetching pending reviews', error);
+      addNotification('error', 'Error loading documents');
     } finally {
       setLoading(false);
     }

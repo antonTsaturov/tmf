@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from './auth.service';
 import { getPool } from '@/lib/db/index';
+import { logger } from '@/lib/logger';
 
 export async function checkAuth(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
@@ -41,6 +42,6 @@ export async function getAuthenticatedUser(request: NextRequest) {
     );
     return result.rows[0] || null;
   } catch (error) {
-    console.log('getAuthenticatedUser error: ', error)
+    logger.error('getAuthenticatedUser error: ', error)
   }
 }

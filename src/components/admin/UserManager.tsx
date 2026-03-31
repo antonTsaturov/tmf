@@ -11,6 +11,7 @@ import { RoleSelector, SelectorValue, SiteSelector, StudySelector } from '../Pse
 import { deleteRecord } from '@/lib/api/fetch';
 import { getPermissionsForRole} from '@/lib/auth/permissions';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -447,7 +448,6 @@ const UserManager: FC<UserManagerProps> = () => {
   useEffect(() => {
     if (newUserForm.roles.length > 0) {
       const newPermissions = getPermissionsForRole(newUserForm.roles);
-      //console.log('newPermissions: ', newPermissions)
       setNewUserForm(prev => ({
         ...prev,
         permissions: newPermissions
@@ -506,7 +506,7 @@ const UserManager: FC<UserManagerProps> = () => {
       });
       loadUsers();
     } else {
-      console.log('User nod saved in DB')
+      logger.warn('User not saved in DB');
     }
 
   }, [newUserForm, addUser]);
@@ -527,7 +527,7 @@ const UserManager: FC<UserManagerProps> = () => {
     if (response) {
       removeUser(id);
     } else {
-      console.log('Error. User record not deleted')
+      logger.error('Error: User record not deleted');
     }
   }, [removeUser]);
 
@@ -543,10 +543,8 @@ const UserManager: FC<UserManagerProps> = () => {
 
       const allData = {...managedUsers, ...newUserForm};
       setUserObject(allData);
-      //console.log('Users Structure:', newUserForm);
     };
     generateUserObject();
-    //console.log('Structure generated')
   }, [newUserForm, managedUsers, loadTablePartial]);
 
   // Функция для загрузки списка пользователей
@@ -555,34 +553,32 @@ const UserManager: FC<UserManagerProps> = () => {
     try {
       const loadedUsers = await loadAllUsers();
       const studyUsers = loadedUsers as unknown as StudyUser[];
-      console.log('studyUsers: ', studyUsers)
+      logger.info('Users loaded', { count: studyUsers?.length });
       if (studyUsers ) {
         setManagedUsers(studyUsers);
       } else {
         setManagedUsers([]);
       }
     } catch (error) {
-      console.error('Error loading users:', error);
+      logger.error('Error loading users', error);
       setManagedUsers([]);
     }
   };
 
-  // Загрузка пользователей и центров 
+  // Загрузка пользователей и центров
   useEffect(() => {
     const loadSites = async () => {
       try {
         const loadedSites = await loadTable(Tables.SITE);
         const userSites = loadedSites as unknown as StudySite[]
-        console.log('userSites: ', userSites)
-
+        logger.info('Sites loaded', { count: userSites?.length });
         if (userSites ) {
           setSites(userSites);
         } else {
           setSites([]);
         }
-        //console.log('Sites loaded:', sites)
       } catch (error) {
-        console.error('Error loading sites:', error);
+        logger.error('Error loading sites', error);
         setSites([]);
       }
     };

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
 import { getPool } from '@/lib/db/index';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error checking auth:', error);
+    logger.error('Error checking auth:', error);
     return NextResponse.json({ user: null, error: 'Failed to check authentication' }, { status: 500 });
   }
 }

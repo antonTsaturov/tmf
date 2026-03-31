@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, DB_INITIALIZED } from '@/lib/db/index';
 import { ensureTablesExist } from '@/lib/db/document';
 import { AuditService } from '@/lib/audit/audit.service';
+import { logger } from '@/lib/logger';
 
 // Получить документы исследования для проверки перед архивацией
 export async function GET(request: NextRequest) {
@@ -138,7 +139,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching documents for archivation:', error);
+    logger.error('Error fetching documents for archivation:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -228,7 +229,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     await client.query('ROLLBACK'); // Откатываем всё при любой ошибке
-    console.error('Archivation failed:', error);
+    logger.error('Archivation failed:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   } finally {
     client.release(); // Возвращаем клиента в пул

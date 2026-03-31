@@ -12,6 +12,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentUnarchive } from "@/hooks/useDocumentUnarchive";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
+import { logger } from '@/lib/logger';
 
 interface UnarchiveDocumentPanelProps {
   onDocumentUnarchived?: (updatedDoc: Document) => void;
@@ -51,8 +52,8 @@ const UnarchiveDocumentPanel: React.FC<UnarchiveDocumentPanelProps> = ({ onDocum
         onDocumentUnarchived(result.data.document);
       }
     } catch (error) {
-      console.error('Error unarchiving document:', error);
-      addNotification('error', 'Ошибка при разархивации документа');
+      logger.error('Error unarchiving document', error);
+      addNotification('error', 'Error unarchiving document');
     }
   };
 

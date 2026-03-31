@@ -7,6 +7,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useUpload } from '@/wrappers/UploadContext';
 import { Document as DocumentVersion } from '@/types/document';
+import { logger } from '@/lib/logger';
 
 type ProgressCallback = (index: number, progress: number, document?: any) => void;
 
@@ -210,7 +211,7 @@ export const useDocumentUpload = () => {
       };
 
     } catch (error) {
-      console.error('Upload error:', error);
+      logger.error('Document upload error', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -246,7 +247,6 @@ export const useDocumentUpload = () => {
 
       const file = files[0];
       const preview = { file, document: selectedDocument as DocumentVersion};
-      console.log(typeof upload.setNewVersion)
       if (typeof upload.setNewVersion === 'function') {
         upload.setNewVersion(preview);
         updateContext({ isNewVersionPanelOpen: true });

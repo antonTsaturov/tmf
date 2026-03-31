@@ -3,6 +3,7 @@ import { useState, useCallback, useContext } from 'react';
 import { Document, DocumentAction } from '@/types/document';
 import { StudyUser, UserRole } from '@/types/types';
 import { MainContext } from '@/wrappers/MainContext';
+import { logger } from '@/lib/logger';
 
 interface UseDocumentToReviewReturn {
   // Состояния
@@ -55,11 +56,11 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     reviewerId: string, // Кому отправлено на ревью
     comment?: string,
     userId?: string, // Кто отправил на ревью
-    userRole?: string 
+    userRole?: string
   ): Promise<Document | boolean> => {
 
     if (!documentId || !reviewerId || !userId || !userRole) {
-      console.log('Отсутствуют необходимые данные');
+      logger.warn('Missing required data for review submission');
       return false;
     }
 
@@ -87,7 +88,7 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log(errorData.error || 'Failed to submit for review');
+        logger.error('Failed to submit for review', { error: errorData.error });
         return false;
       }
 
@@ -100,8 +101,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
       
       return result.document;
     } catch (err) {
-      console.error('Error submitting for review:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка при отправке на ревью');
+      logger.error('Error submitting for review', err);
+      setError(err instanceof Error ? err.message : 'Error submitting for review');
       return false;
     } finally {
       setSubmitting(false);
@@ -118,11 +119,11 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
     documentId: string,
     comment?: string,
     userId?: string,
-    userRole?: string 
+    userRole?: string
   ): Promise<Document | boolean> => {
 
     if (!documentId ) {
-      console.log('Отсутствуют необходимые данные');
+      logger.warn('Missing required data for approval');
       return false;
     }
         
@@ -150,8 +151,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
       return result.document;
 
     } catch (err) {
-      console.error('Error approving document:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка при утверждении документа');
+      logger.error('Error approving document', err);
+      setError(err instanceof Error ? err.message : 'Error approving document');
       return false;
     } finally {
       //setLoading(false);
@@ -185,7 +186,7 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error (errorData.error || 'Failed to reject document');
+        logger.error('Failed to reject document', { error: errorData.error });
         return false;
       }
 
@@ -193,8 +194,8 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
       return result.document;
 
     } catch (err) {
-      console.error('Error rejecting document:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка при отклонении документа');
+      logger.error('Error rejecting document', err);
+      setError(err instanceof Error ? err.message : 'Error rejecting document');
       return false;
     }
 

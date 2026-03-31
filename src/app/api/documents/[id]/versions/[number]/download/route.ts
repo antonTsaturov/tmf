@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { getIAMToken } from '@/lib/yc-iam';
 import { createHash } from 'crypto';
+import { logger } from '@/lib/logger';
 
 // скачать конкретную версию
 export async function GET(
@@ -82,7 +83,7 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error('Error downloading version:', error);
+    logger.error('Error downloading version:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

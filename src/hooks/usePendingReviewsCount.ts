@@ -4,6 +4,7 @@ import { useAuth } from '@/wrappers/AuthProvider';
 import { ActionRoleMap } from '@/domain/document/document.policy';
 import { DocumentAction } from '@/types/document';
 import { UserRole } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 const canApprove = (userRole: UserRole): boolean => {
   return ActionRoleMap[DocumentAction.APPROVE].includes(userRole);
@@ -30,7 +31,7 @@ export function usePendingReviewsCount() {
         const data = await response.json();
         setCount(data.pagination.total);
       } catch (error) {
-        console.error('Error fetching pending count:', error);
+        logger.error('Error fetching pending reviews count', error);
         setCount(0);
       } finally {
         setLoading(false);

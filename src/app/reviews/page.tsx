@@ -56,6 +56,7 @@ import '../../styles/MyReviews.css';
 import { FileIcon } from 'react-file-icon';
 import { useFolderNameByMap } from '@/hooks/useFolderName';
 import { Study } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 
 interface PaginationInfo {
@@ -123,8 +124,8 @@ export default function MyReviewsPage() {
         total: data.pagination.total
       }));
     } catch (error) {
-      console.error('Error fetching pending reviews:', error);
-      addNotification('error', 'Ошибка при загрузке документов');
+      logger.error('Error fetching pending reviews', error);
+      addNotification('error', 'Error loading documents');
     } finally {
       setLoading(false);
     }
@@ -274,7 +275,6 @@ export default function MyReviewsPage() {
     );
   }
 
-  //console.log('selectedDocument: ', selectedDocument )
   return (
     <div className="main-box" style={{ 
       height: '95vh', // 95% доступной высоты экрана

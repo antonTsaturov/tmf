@@ -2,6 +2,7 @@ import { FC, useState, useEffect, useCallback, useContext } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { StudyStatus } from '@/types/types';
+import { logger } from '@/lib/logger';
 import {
   Card,
   Flex,
@@ -107,7 +108,7 @@ const StudyArchivation: FC = () => {
         canArchive: data.stats.canArchive
       });
     } catch (err) {
-      console.error('Failed to fetch documents:', err);
+      logger.error('Failed to fetch documents', err);
       setError('Failed to load documents');
     } finally {
       setIsLoading(false);
@@ -141,7 +142,7 @@ const StudyArchivation: FC = () => {
       // Refresh documents after archiving
       await fetchDocuments();
     } catch (err) {
-      console.error('Failed to archive documents:', err);
+      logger.error('Failed to archive documents', err);
       setError('Failed to archive documents');
     } finally {
       setIsArchiving(false);
@@ -152,7 +153,6 @@ const StudyArchivation: FC = () => {
     return percent.toFixed(1);
   };
 
-  console.log()
   return (
     <Card>
       <Flex direction="column" gap="4">

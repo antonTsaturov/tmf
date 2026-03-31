@@ -1,5 +1,6 @@
 // hooks/useEntityState.ts
 import { useState, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 type Entity = { id: string | number };
 
@@ -15,7 +16,7 @@ export function useEntityState<T extends Entity>(
       const entityIndex = prev.findIndex(entity => entity.id === id);
       
       if (entityIndex === -1) {
-        console.warn(`Entity with id ${id} not found in state`);
+        logger.warn('Entity not found in state', { entityId: id });
         return prev;
       }
       
@@ -25,7 +26,7 @@ export function useEntityState<T extends Entity>(
       // Сохраняем в БД, если передан saveFunction
       if (saveFunction) {
         saveFunction(updatedEntity).catch(err => {
-          console.error('Failed to save entity updates:', err);
+          logger.error('Failed to save entity updates', err);
         });
       }
       
@@ -41,7 +42,7 @@ export function useEntityState<T extends Entity>(
     
     if (saveFunction) {
       saveFunction(entity).catch(err => {
-        console.error('Failed to save new entity:', err);
+        logger.error('Failed to save new entity', err);
       });
     }
   }, [saveFunction]);
@@ -59,14 +60,14 @@ export function useEntityState<T extends Entity>(
       
       updates.forEach(update => {
         if (update.id === undefined) return;
-        
+
         const index = newEntities.findIndex(e => e.id === update.id);
         if (index !== -1) {
           newEntities[index] = { ...newEntities[index], ...update };
-          
+
           if (saveFunction) {
             saveFunction(newEntities[index]).catch(err => {
-              console.error('Failed to save entity updates:', err);
+              logger.error('Failed to save entity updates', err);
             });
           }
         }

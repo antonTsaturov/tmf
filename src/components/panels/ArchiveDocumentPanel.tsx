@@ -29,6 +29,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentArchive } from "@/hooks/useDocumentArchive";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
+import { logger } from '@/lib/logger';
 
 interface ArchiveDocumentPanelProps {
   onDocumentArchived?: (updatedDoc: Document) => void;
@@ -69,12 +70,11 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
         addNotification('success', 'Документ успешно архивирован');
         updateContext({ isArchivePanelOpen: false });
         updateContext({ selectedDocument: null });
-        //console.log(result)
         onDocumentArchived(result.data.document);
       }
     } catch (error) {
-      console.error('Error archiving document:', error);
-      addNotification('error', 'Ошибка при архивации документа');
+      logger.error('Error archiving document', error);
+      addNotification('error', 'Error archiving document');
     }
   };
 

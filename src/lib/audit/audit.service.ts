@@ -5,6 +5,7 @@ import { NextRequest } from "next/server";
 import { getPool } from "@/lib/db";
 import { AuditLogEntry } from '@/types/audit';
 import { PoolClient } from "pg";
+import { logger } from '@/lib/logger';
 
 
 const MAX_JSON_SIZE = 20000; // защита от огромных payload
@@ -99,8 +100,7 @@ export class AuditService {
       await client.query(query, values);
 
     } catch (error) {
-
-      console.error("[AUDIT] insert failed", error);
+      logger.error('[AUDIT] insert failed', error);
     } 
   }
 

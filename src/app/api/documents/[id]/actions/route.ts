@@ -9,6 +9,7 @@ import { AuditService } from '@/lib/audit/audit.service';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { Transitions } from '@/domain/document/document.transitions';
 import { AuditAction, AuditEntity } from '@/types/audit';
+import { logger } from '@/lib/logger';
 
 interface ActionRequest {
   action: DocumentAction;
@@ -39,7 +40,6 @@ export async function applyDocumentActionHandler(
     
     // 1. Получаем данные ТЕКУЩЕГО авторизованного пользователя через сервис
     const user = AuditService.getUserFromRequest(request);
-    //console.log('user: ', user)
     // Извлекаем данные из сессии, а не из body для безопасности
     const currentUserId = user.user_id?.toString();
     const currentUserRoles = user.user_role || [];
@@ -104,7 +104,7 @@ export async function applyDocumentActionHandler(
     if ([DocumentAction.APPROVE, DocumentAction.REJECT].includes(action)) {
       const submittedTo = document.review_submitted_to
         const isAssignedReviewer = submittedTo === currentUserId;
-        console.log('submittedTo  currentUserId: ', submittedTo,  currentUserId)
+        logger.debug('submittedTo  currentUserId: ', { submittedTo, currentUserId })
         // ЕСЛИ не админ И не назначенный ревьюер -> ОШИБКА
         if (!isSystemAdmin && !isAssignedReviewer) {
             return NextResponse.json({ 
@@ -289,7 +289,7 @@ export async function applyDocumentActionHandler(
     });
 
   } catch (error) {
-    console.error('Error applying document action:', error);
+    logger.error('Error applying document action:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -324,12 +324,12 @@ export const POST = withAudit(
       const client = getPool();
       try {
         const { rows } = await client.query(
-          'SELECT review_status FROM document_version dv JOIN document d ON d.current_version_id = dv.id WHERE d.id = $1', 
+          'SELECT review_status FROM document_version dv JOIN document d ON d.current_version_id = dv.id WHERE d.id = $1',
           [id]
         );
         return rows[0] || null;
       } catch (error) {
-        console.log('getOldValue error:', error)
+        logger.error('getOldValue error:', error)
       }
     },
 

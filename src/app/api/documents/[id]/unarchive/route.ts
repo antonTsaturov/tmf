@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { getDocumentById } from '@/lib/db/document';
+import { logger } from '@/lib/logger';
 
 export async function unarchiveHandler(
   request: NextRequest,
@@ -85,7 +86,7 @@ export async function unarchiveHandler(
     });
 
   } catch (error) {
-    console.error('Error unarchiving document:', error);
+    logger.error('Error unarchiving document:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

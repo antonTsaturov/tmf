@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching reviewers:', error);
+    logger.error('Error fetching reviewers:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

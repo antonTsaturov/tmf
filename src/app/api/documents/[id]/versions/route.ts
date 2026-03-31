@@ -8,6 +8,7 @@ import { getDocumentVersionS3Key } from "@/lib/s3-path";
 import { uploadFileWithIAM } from "@/lib/s3-upload";
 import { withAudit, AuditContext } from "@/lib/audit/audit.middleware";
 import { AuditAction, AuditEntity } from "@/types/audit";
+import { logger } from "@/lib/logger";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
@@ -57,7 +58,7 @@ export async function GET(
 
     return NextResponse.json({ versions });
   } catch (error) {
-    console.error("Error fetching versions:", error);
+    logger.error("Error fetching versions:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -184,7 +185,7 @@ async function uploadNewVersionHandler(
     }
 
   } catch (error) {
-    console.error("Upload handler error:", error);
+    logger.error("Upload handler error:", error);
     return NextResponse.json(
       { error: "Internal server error", details: error instanceof Error ? error.message : "Unknown" },
       { status: 500 }

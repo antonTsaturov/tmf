@@ -2,6 +2,7 @@ import { FC, useState } from "react";
 import '../styles/PresudoSelector.css';
 import { UserRole, StudySite, SiteStatus, Study, StudyUser, ROLE_CONFIG } from "@/types/types";
 import { COUNTRIES } from "@/lib/constants";
+import { logger } from '@/lib/logger';
 import {
   Flex,
   Text,
@@ -569,7 +570,7 @@ export const SiteSelector: FC<{
       // При поиске также приводим к одному типу
       const foundSite = filteredOptions.find(site => String(site.id) === String(id));
       if (!foundSite) {
-        console.warn(`Site with id ${id} not found in filtered options`);
+        logger.warn(`Site with id ${id} not found in filtered options`);
       }
       return {
         id: Number(id), // Преобразуем в число для консистентности

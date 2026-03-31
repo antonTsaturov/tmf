@@ -6,6 +6,7 @@ import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/yc-iam';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { logger } from '@/lib/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
 
 // Функция для кодирования метаданных в ASCII
 function encodeMetadata(value: string): string {
@@ -349,7 +350,7 @@ async function uploadHandler(
   } 
 }
 
-export const POST = withAudit(
+const auditedHandler = withAudit(
   {
     action: 'CREATE',
     entityType: 'document',
@@ -377,3 +378,10 @@ export const POST = withAudit(
   },
   uploadHandler
 );
+
+// Wrap with rate limiting
+export async function POST(request: NextRequest) {
+  return applyRateLimit(RATE_LIMIT_PRESETS.upload, request, async () => {
+    return auditedHandler(request);
+  });
+}

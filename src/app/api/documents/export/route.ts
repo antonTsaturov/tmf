@@ -10,6 +10,7 @@ import crypto from "crypto";
 import { buildFileNameWithMode, buildFolderMap, buildFolderPathWithMode } from "@/lib/s3-export";
 import { buildAuditCsv } from "@/lib/audit/buildAuditCsv";
 import { getAuditLogs } from "@/lib/audit/getAuditLogs";
+import { logger } from "@/lib/logger";
 
 const limit = pLimit(10);
 const BUCKET_NAME = process.env.YC_BUCKET_NAME!;
@@ -201,9 +202,9 @@ export async function GET(req: NextRequest) {
       } catch (err: any) {
         const isChecksumError = err.message.includes("Checksum mismatch");
         if (isChecksumError) stats.checksumFailed++;
-        
+
         const errorMsg = `Error: ${doc.document_name} | File: ${doc.file_name} | Reason: ${err.message}`;
-        console.error(errorMsg);
+        logger.error(errorMsg);
         stats.failed.push(errorMsg);
       }
     }))

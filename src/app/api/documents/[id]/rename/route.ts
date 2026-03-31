@@ -4,6 +4,7 @@ import { getPool } from '@/lib/db/index';
 import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditContext } from '@/lib/audit/audit.middleware';
 import { Tables } from '@/lib/db/schema';
+import { logger } from '@/lib/logger';
 
 // Function to get document with its current version for audit
 export async function getDocumentForAudit(documentId: string) {
@@ -23,7 +24,7 @@ export async function getDocumentForAudit(documentId: string) {
     `, [documentId]);
     return rows[0] || null;
   } catch (error) {
-    console.error('Error fetching document for audit:', error);
+    logger.error('Error fetching document for audit:', error);
     return null;
   }
 }
@@ -74,7 +75,7 @@ async function getFullDocument(documentId: string) {
     `, [documentId]);
     return rows[0] || null;
   } catch (error) {
-    console.error('Error fetching full document:', error);
+    logger.error('Error fetching full document:', error);
     return null;
   }
 }
@@ -222,7 +223,7 @@ export async function renameHandler(
     });
 
   } catch (error) {
-    console.error('Error renaming document:', error);
+    logger.error('Error renaming document:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

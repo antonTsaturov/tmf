@@ -1,12 +1,13 @@
 import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
+import { logger } from '@/lib/logger';
 
 
 // GET запрос: Получить все исследования | центры / пользователей /
 export async function getTable(table: Tables) {
   try {
-    console.log('Fetching table:', table);
-    
+    logger.debug('Fetching table:', table);
+
     // Убедимся, что table - это строка и правильно форматируется
     const tableName = String(table);
     const url = `/api/${tableName}`;
@@ -27,7 +28,7 @@ export async function getTable(table: Tables) {
 
     return await response.json();
   } catch (error) {
-    console.error('getTable - Error:', {
+    logger.error('getTable - Error:', {
       table,
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined
@@ -54,8 +55,8 @@ export async function getTablePartial(table: Tables, params: Record<string, any>
     cache: 'no-store',
   });
 
-  console.log(url.toString())
-  
+  logger.debug('API URL:', url.toString())
+
   return response.json();
 }
 
@@ -76,7 +77,7 @@ export async function createOrUpdateTable(table: Tables, data: Partial<Study | S
 
     return await response.json();
   } catch (error) {
-    console.error(`Error creating/updating ${table} table: `, error);
+    logger.error(`Error creating/updating ${table} table: `, error);
     throw error;
   }
 }
@@ -98,7 +99,7 @@ export async function deleteRecord(table: Tables, recordId: string | number) {
 
     return await response.json();
   } catch (error) {
-    console.error('Error deleting record: ', error);
+    logger.error('Error deleting record: ', error);
     throw error;
   }
 }

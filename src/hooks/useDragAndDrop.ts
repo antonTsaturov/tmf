@@ -1,5 +1,6 @@
 // hooks/useDragAndDrop.ts
 import { useState, useCallback, DragEvent, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 interface UseDragAndDropOptions {
   onDropFiles: (files: File[]) => void;
@@ -26,7 +27,6 @@ export const useDragAndDrop = ({
   const handleDragEnter = useCallback((e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Drag enter')
     if (disabled) return;
 
     // Проверяем, что перетаскиваются файлы

@@ -3,6 +3,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Document, DocumentAction } from "@/types/document";
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
+import { logger } from '@/lib/logger';
 
 import FilePreviewPanel from "./panels/FilePreviewPanel";
 import NewVersionUploadPanel from "./panels/NewVersionDocumentPanel";
@@ -147,7 +148,6 @@ const FolderContentViewer: React.FC = () => {
 
   }, []);  
 
-  //console.log('selectedDocument: ', selectedDocument)
   const handleAddNewDocument = useCallback((updatedDoc: Document | Document[]) => {
     setDocumentsData(prevData => {
       if (!prevData) return null;
@@ -202,7 +202,7 @@ const FolderContentViewer: React.FC = () => {
       setDocumentsData(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error loading documents');
-      console.error('Error loading folder contents:', err);
+      logger.error('Error loading folder contents', err);
     } finally {
       setIsLoading(false);
     }
@@ -622,10 +622,10 @@ const FolderContentViewer: React.FC = () => {
       />
       <FilePreviewPanel
         onUploadSuccess={(updatedDoc) => handleAddNewDocument(updatedDoc)}
-        onUploadError={(error) => console.error('Upload error:', error)}
+        onUploadError={(error) => logger.error('Upload error', error)}
       />
       <NewVersionUploadPanel
-        onUploadError={(error) => console.error('Upload error:', error)}
+        onUploadError={(error) => logger.error('Upload error', error)}
         onSuccess={(version) => handleNewVersionSuccess(version)}
       />
       <SubmitToReviewPanel

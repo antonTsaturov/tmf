@@ -5,8 +5,16 @@ import { getPool } from '@/lib/db';
 import { UserQueries } from '@/lib/db/schema';
 import { UserStatus } from '@/types/types';
 import { logger } from '@/lib/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
 
 export async function POST(request: NextRequest) {
+  // Apply rate limiting to login endpoint
+  return applyRateLimit(RATE_LIMIT_PRESETS.login, request, async () => {
+    return handleLogin(request);
+  });
+}
+
+async function handleLogin(request: NextRequest) {
   const client = getPool();
   const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
   

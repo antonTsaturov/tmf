@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateRecord } from '@/lib/db/study';
 import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables, UserQueries } from '@/lib/db/schema';
+import { logger } from '@/lib/logger';
 
 export class StudyApiHandler {
   // GET: get all records from table
@@ -14,9 +15,9 @@ export class StudyApiHandler {
       if (!DB_INITIALIZED) {
       // Проверяем существование таблицы
         const tableExists = await this.checkTableExists(client, table);
-        
+
         if (!tableExists) {
-          console.log(`Table ${table} does not exist, creating it...`);
+          logger.info(`Table ${table} does not exist, creating it...`);
           await createTable(table);
           // Возвращаем пустой массив, так как таблица только что создана
           return NextResponse.json([], { status: 200 });
@@ -33,10 +34,10 @@ export class StudyApiHandler {
       return NextResponse.json(result.rows, { status: 200 });
       
     } catch (err) {
-      console.error(`GET /api/${table} error: `, err);
-      return NextResponse.json({ 
-        error: `Failed to fetch data from ${table}`, 
-        details: String(err) 
+      logger.error(`GET /api/${table} error: `, err);
+      return NextResponse.json({
+        error: `Failed to fetch data from ${table}`,
+        details: String(err)
       }, { status: 500 });
       
     }
@@ -65,8 +66,8 @@ export class StudyApiHandler {
     
     try {
       client = getPool();
-      console.log('request.nextUrl.searchParams', request.nextUrl.searchParams);
-      
+      logger.info('request.nextUrl.searchParams', request.nextUrl.searchParams);
+
       // Получаем ID исследования из параметров запроса
       const studyId = request.nextUrl.searchParams.get('studyId');
       
@@ -90,10 +91,10 @@ export class StudyApiHandler {
       } catch (dbError) {
         const errorMessage = String(dbError);
         
-        if (errorMessage.includes(`relation "${table}" does not exist`) || 
+        if (errorMessage.includes(`relation "${table}" does not exist`) ||
             errorMessage.includes(`table "${table}" does not exist`)) {
-          
-          console.log(`Table ${table} does not exist, creating it...`);
+
+          logger.info(`Table ${table} does not exist, creating it...`);
           await createTable(table);
           return NextResponse.json([], { status: 200 });
         }
@@ -102,12 +103,12 @@ export class StudyApiHandler {
       }
       
     } catch (err) {
-      console.error(`GET /api/${table} error:`, err);
+      logger.error(`GET /api/${table} error:`, err);
       return NextResponse.json(
-        { 
-          error: `Failed to fetch data from table ${table}`, 
-          details: String(err) 
-        }, 
+        {
+          error: `Failed to fetch data from table ${table}`,
+          details: String(err)
+        },
         { status: 500 }
       );
       
@@ -151,10 +152,10 @@ export class StudyApiHandler {
         );
       }
     } catch (err) {
-      console.error(`POST /api/${table} error: `, err);
-      return NextResponse.json({ 
-        error: `Failed to create or update ${table}`, 
-        details: String(err) 
+      logger.error(`POST /api/${table} error: `, err);
+      return NextResponse.json({
+        error: `Failed to create or update ${table}`,
+        details: String(err)
       }, { status: 500 });
     }
   }
@@ -193,7 +194,7 @@ export class StudyApiHandler {
             [siteIdAsNumber]
           );
           
-          console.log(`Cleaned up site ID ${siteIdAsNumber} from users' assigned_site_id arrays`);
+          logger.info(`Cleaned up site ID ${siteIdAsNumber} from users' assigned_site_id arrays`);
         }
         
         // Удаляем саму запись
@@ -228,10 +229,10 @@ export class StudyApiHandler {
       }
 
     } catch (err) {
-      console.error(`DELETE /api/${table} error: `, err);
-      return NextResponse.json({ 
-        error: `Failed to delete record in ${table}`, 
-        details: String(err) 
+      logger.error(`DELETE /api/${table} error: `, err);
+      return NextResponse.json({
+        error: `Failed to delete record in ${table}`,
+        details: String(err)
       }, { status: 500 });
     }
   }

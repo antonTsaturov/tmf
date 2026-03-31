@@ -36,6 +36,7 @@ import { Document } from '@/types/document';
 import { ROLE_CONFIG, UserRole } from '@/types/types';
 import { FaUser } from 'react-icons/fa';
 import { DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document.status';
+import { logger } from '@/lib/logger';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;
@@ -107,9 +108,9 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
       handleClose();
       onReviewComplete?.();
     } catch (err) {
-      console.error('Error approving document:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка при утверждении документа');
-      addNotification('error', 'Ошибка при утверждении документа');
+      logger.error('Error approving document', err);
+      setError(err instanceof Error ? err.message : 'Error approving document');
+      addNotification('error', 'Error approving document');
     } finally {
       setLoading(false);
     }
@@ -153,9 +154,9 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
       handleClose();
       onReviewComplete?.();
     } catch (err) {
-      console.error('Error rejecting document:', err);
-      setError(err instanceof Error ? err.message : 'Ошибка при отклонении документа');
-      addNotification('error', 'Ошибка при отклонении документа');
+      logger.error('Error rejecting document', err);
+      setError(err instanceof Error ? err.message : 'Error rejecting document');
+      addNotification('error', 'Error rejecting document');
     } finally {
       setLoading(false);
     }
@@ -219,7 +220,7 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
       const isAssigned = currentUser === reviewAssignedTo;
       setIsAssignment(isAssigned);
     } else {
-      console.log('checkAssignment Failed!')
+      logger.warn('Check assignment failed');
     }
 
   };

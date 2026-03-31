@@ -1,17 +1,18 @@
 import { getPool } from './index';
 import { StudySite } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 export async function bulkSaveData(sites: StudySite[]) {
   if (!sites || sites.length === 0) {
-    console.log('bulkSaveSites: No sites to save');
+    logger.info('bulkSaveSites: No sites to save');
     return [];
   }
 
   const client = getPool();
   
   try {
-    console.log(`bulkSaveSites: Saving ${sites.length} sites...`);
-    
+    logger.info(`bulkSaveSites: Saving ${sites.length} sites...`);
+
     // Начинаем транзакцию
     await client.query('BEGIN');
     
@@ -61,7 +62,7 @@ export async function bulkSaveData(sites: StudySite[]) {
           
           const result = await client.query(updateQuery, updateValues);
           savedSites.push(result.rows[0]);
-          console.log(`bulkSaveSites: Site ${existingSite.id} updated`);
+          logger.info(`bulkSaveSites: Site ${existingSite.id} updated`);
           
         } else {
           // СОЗДАЕМ новый сайт
@@ -81,11 +82,11 @@ export async function bulkSaveData(sites: StudySite[]) {
           
           const result = await client.query(insertQuery, insertValues);
           savedSites.push(result.rows[0]);
-          console.log(`bulkSaveSites: Site ${siteId} created`);
+          logger.info(`bulkSaveSites: Site ${siteId} created`);
         }
         
       } catch (siteError) {
-        console.error(`bulkSaveSites: Error saving site:`, site, siteError);
+        logger.error(`bulkSaveSites: Error saving site:`, siteError, { siteData: site });
         // Продолжаем с другими сайтами
         continue;
       }
@@ -93,14 +94,14 @@ export async function bulkSaveData(sites: StudySite[]) {
     
     // Фиксируем транзакцию
     await client.query('COMMIT');
-    
-    console.log(`bulkSaveSites: Successfully saved ${savedSites.length} out of ${sites.length} sites`);
+
+    logger.info(`bulkSaveSites: Successfully saved ${savedSites.length} out of ${sites.length} sites`);
     return savedSites;
     
   } catch (err) {
     // Откатываем транзакцию при ошибке
     await client.query('ROLLBACK');
-    console.error('bulkSaveSites: Transaction error:', err);
+    logger.error('bulkSaveSites: Transaction error:', err);
     throw err;
     
   }

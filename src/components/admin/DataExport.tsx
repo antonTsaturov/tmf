@@ -2,6 +2,7 @@ import { FC, useState, useEffect, useCallback, useContext } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { StudyStatus } from '@/types/types';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
+import { logger } from '@/lib/logger';
 import {
   Card,
   Flex,
@@ -122,7 +123,7 @@ const DataExport: FC = () => {
         canExport: allArchivedOrDeleted && activeDocuments > 0
       });
     } catch (err) {
-      console.error('Failed to fetch documents:', err);
+      logger.error('Failed to fetch documents', err);
       setError('Failed to load documents');
     } finally {
       setIsLoading(false);
@@ -176,7 +177,7 @@ const DataExport: FC = () => {
       window.URL.revokeObjectURL(url);
 
     } catch (err) {
-      console.error('Failed to export documents:', err);
+      logger.error('Failed to export documents', err);
       setError('Failed to export documents');
       setProgress(0);
     } finally {

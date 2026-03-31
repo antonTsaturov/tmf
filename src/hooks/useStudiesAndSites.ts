@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { Study } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 // interface Study {
 //   id: number;
@@ -47,7 +48,7 @@ export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
       const studiesMap = new Map(studiesData.map(study => [study.id, study]));
       setStudies(studiesMap);
     } catch (err) {
-      console.error('Error fetching studies:', err);
+      logger.error('Error fetching studies', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch studies');
     }
   }, [user]);
@@ -63,7 +64,7 @@ export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
       const sitesMap = new Map(sitesData.map(site => [site.id, site]));
       setSites(sitesMap);
     } catch (err) {
-      console.error('Error fetching sites:', err);
+      logger.error('Error fetching sites', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch sites');
     }
   }, [user]);
@@ -74,7 +75,7 @@ export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
     try {
       await Promise.all([fetchStudies(), fetchSites()]);
     } catch (err) {
-      console.error('Error refreshing data:', err);
+      logger.error('Error refreshing studies and sites data', err);
     } finally {
       setLoading(false);
     }

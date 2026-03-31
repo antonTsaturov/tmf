@@ -28,6 +28,7 @@ import {
 } from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
 import { Study, StudySite } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 interface DocumentStats {
   total: number;
@@ -72,7 +73,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
           setDocumentStats(data.stats);
         }
       } catch (error) {
-        console.error('Error fetching document stats:', error);
+        logger.error('Error fetching document stats', error);
       } finally {
         setLoading(false);
       }
