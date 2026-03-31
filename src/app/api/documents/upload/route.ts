@@ -5,6 +5,7 @@ import { Tables } from '@/lib/db/schema';
 import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/yc-iam';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
+import { logger } from '@/lib/logger';
 
 // Функция для кодирования метаданных в ASCII
 function encodeMetadata(value: string): string {
@@ -51,7 +52,7 @@ async function uploadFileWithIAM(
 
     return true;
   } catch (error) {
-    console.error('Error in uploadFileWithIAM:', error);
+    logger.error('Error in uploadFileWithIAM', error instanceof Error ? error : null);
     throw error;
   }
 }
@@ -144,7 +145,7 @@ async function uploadHandler(
         metadata
       );
     } catch (uploadError) {
-      console.error('Failed to upload to S3:', uploadError);
+      logger.error('Failed to upload to S3', uploadError instanceof Error ? uploadError : null);
       return NextResponse.json(
         { 
           error: 'Failed to upload file to storage', 
@@ -335,7 +336,7 @@ async function uploadHandler(
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error uploading document:', error);
+    logger.error('Error uploading document', error instanceof Error ? error : null);
     
     return NextResponse.json(
       { 

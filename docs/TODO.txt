@@ -20,6 +20,27 @@ Features.
 20) Лог доступов
 24) Пакетная отправка на ревью
 
-возможность просмотра подробной информации об исследовании / центры для обычных пользователей
 
 
+Критические (Must-have):
+✅ Реализовать блокировку аккаунта после 5 неудачных попыток
+✅ Удалить все debug console.log и добавить proper logger
+✅ Заменить hardcoded default JWT_SECRET, добавить валидацию env
+✅ Добавить rate limiting на все API endpoints
+✅ Добавить CORS, CSRF, security headers (Helmet)
+✅ Создать .env.example с документацией всех переменных
+✅ Добавить health check и monitoring endpoints
+
+Важные (Should-have):
+Napisati хотя бы основные unit tests
+Добавить API documentation
+Настроить proper error tracking (Sentry)
+Создать backup strategy
+Добавить database migration system
+
+Nice-to-have:
+Load test и performance tuning
+Redis кэширование
+API versioning
+Graceful shutdown
+Comprehensive logging

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, DB_INITIALIZED } from '@/lib/db/index';
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
+import { logger } from '@/lib/logger';
 import { ensureTablesExist } from '@/lib/db/document';
 
 
@@ -187,7 +188,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching documents:', error);
+    logger.error('Error fetching documents', error instanceof Error ? error : null);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -258,7 +259,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newDocument, { status: 201 });
 
   } catch (error) {
-    console.error('Error creating document:', error);
+    logger.error('Error creating document', error instanceof Error ? error : null);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

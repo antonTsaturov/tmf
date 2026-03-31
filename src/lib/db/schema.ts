@@ -173,6 +173,7 @@ export const UserTable = `
     assigned_study_id INTEGER[] DEFAULT '{}',
     assigned_site_id INTEGER[] DEFAULT '{}',
     failed_login_attempts INTEGER DEFAULT 0,
+    lock_until TIMESTAMPTZ,
     password_changed_at TIMESTAMPTZ,
     last_login TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -230,10 +231,10 @@ const getSafeUserFields = () => `
   assigned_study_id,
   assigned_site_id,
   failed_login_attempts,
+  lock_until,             -- поле для работы блокировки
   password_changed_at,
   last_login
 `;
-
 // Функции для работы с пользователями
 export const UserQueries = {
   // Поиск пользователей по исследованию

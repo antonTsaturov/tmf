@@ -3,6 +3,7 @@
 import { StudyApiHandler } from '@/app/api/base';
 import { NextRequest, NextResponse } from 'next/server';
 import { Tables, UserQueries } from '@/lib/db/schema';
+import { logger } from '@/lib/logger';
 import { getPool, DB_INITIALIZED, createTable } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/auth/check-auth';
 
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(result.rows, { status: 200 });
       
     } catch (err) {
-      console.error(`GET /api/study error: `, err);
+      logger.error('GET /api/study error', err instanceof Error ? err : null);
       return NextResponse.json({ 
         error: `Failed to fetch data from study`, 
         details: String(err) 

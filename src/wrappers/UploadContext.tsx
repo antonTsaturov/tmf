@@ -14,6 +14,7 @@ export interface FilePreview {
   studyId: number;
   siteId: string | number;
   createdBy: string | number;
+  country?: string;
 }
 
 // Интерфейс для загрузки новой версии документа

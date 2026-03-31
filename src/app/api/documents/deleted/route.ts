@@ -4,13 +4,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { AuthService } from '@/lib/auth/auth.service';
+import { logger } from '@/lib/logger';
 
 
 export async function GET(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
   const payload = authToken ? AuthService.verifyToken(authToken) : null;
 
-  console.log(payload)
+  logger.debug('Fetching deleted documents');
+  logger.debug('Auth payload', { payload });
   if (!payload) {
     return NextResponse.json({ error: 'Forbidden. Admin access required.' }, { status: 403 });
   }
@@ -66,7 +68,7 @@ export async function GET(request: NextRequest) {
       count: documents.length,
     });
   } catch (error) {
-    console.error('Error fetching deleted documents:', error);
+    logger.error('Error fetching deleted documents', error instanceof Error ? error : null);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   } 
 }

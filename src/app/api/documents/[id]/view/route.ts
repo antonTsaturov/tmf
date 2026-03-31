@@ -1,6 +1,7 @@
 // app/api/documents/[id]/view/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
+import { logger } from '@/lib/logger';
 import { getIAMToken } from '@/lib/yc-iam';
 import { createHash } from 'crypto';
 
@@ -74,7 +75,7 @@ export async function GET(
     });
 
     if (!response.ok) {
-      console.error('Failed to fetch from storage:', response.status, response.statusText);
+      logger.error('Failed to fetch from storage', null, { status: response.status, statusText: response.statusText });
       return NextResponse.json(
         { error: 'Failed to fetch document from storage' },
         { status: 502 }
@@ -101,7 +102,7 @@ export async function GET(
     });
 
   } catch (error) {
-    console.error('Error serving PDF:', error);
+    logger.error('Error serving PDF', error instanceof Error ? error : null);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

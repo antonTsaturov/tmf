@@ -4,15 +4,18 @@ import { AuthService } from '@/lib/auth/auth.service';
 import { getPool } from '@/lib/db';
 import { UserQueries } from '@/lib/db/schema';
 import { UserStatus } from '@/types/types';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   const client = getPool();
+  const clientIp = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
   
   try {
     const { email, password } = await request.json();
 
     // 1. Валидация
     if (!email || !password) {
+      logger.authError('LOGIN_INVALID_INPUT', undefined, 'Email and password are required');
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
@@ -29,34 +32,48 @@ export async function POST(request: NextRequest) {
 
     // 3. Проверить пользователя
     if (!user) {
+      logger.authError('LOGIN_USER_NOT_FOUND', undefined, `Email: ${email}`, { ip: clientIp });
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    if (user.status === UserStatus.TERMINATED) {
+    // 4. Проверить блокировку (до проверки пароля)
+    const currentAttempts = Number(user.failed_login_attempts || 0);
+    const lockUntil = user.lock_until ? new Date(user.lock_until) : null;
+    const now = new Date();
+
+    if (lockUntil && lockUntil > now) {
+      const remainingMinutes = Math.ceil((lockUntil.getTime() - now.getTime()) / 60000);
+      
+      logger.authError('LOGIN_ACCOUNT_LOCKED', user.id, `Locked for ${remainingMinutes} min`, { ip: clientIp });
+      
       return NextResponse.json(
-        { error: 'Account is deactivated' },
-        { status: 403 }
+        { 
+          error: `Account is locked. Try again in ${remainingMinutes} minutes`,
+          lockUntil: lockUntil.toISOString()
+        },
+        { status: 423 }
       );
+    } 
+
+    // Если блокировка была, но время вышло — сбрасываем в БД
+    if (lockUntil && lockUntil <= now) {
+      await client.query(
+        `UPDATE users SET failed_login_attempts = 0, lock_until = NULL WHERE id = $1`,
+        [user.id]
+      );
+      // Обновляем локальный объект, чтобы не сработали старые данные в Step 6
+      user.failed_login_attempts = 0;
+      user.lock_until = null;
     }
 
-    // 4. Проверить, первый ли это вход (last_login === null)
+    // 5. Проверить, первый ли это вход (last_login === null)
     const isFirstLogin = user.last_login === null || user.last_login === undefined;
     
-    // 5. Если это первый вход
+    // 6. Если это первый вход
     if (isFirstLogin) {
-      // Проверяем пароль как есть (предполагаем, что в БД хранится открытый пароль)
-      // const isPasswordValid = password === user.password_hash;
-      
-      // if (!isPasswordValid) {
-      //   return NextResponse.json(
-      //     { error: 'Invalid credentials' },
-      //     { status: 401 }
-      //   );
-      // }
-      
       // Хэшируем пароль и сохраняем в БД
       const hashedPassword = await AuthService.hashPassword(password);
       
@@ -70,8 +87,8 @@ export async function POST(request: NextRequest) {
         [hashedPassword, UserStatus.ACTIVE, user.id]
       );
       
-      // Обновляем объект пользователя с новым хэшем для дальнейшего использования
       user.password_hash = hashedPassword;
+      logger.authLog('LOGIN_FIRST_LOGIN_SUCCESS', user.id, 'First login completed', { ip: clientIp });
       
     } else {
       // Обычная проверка через bcrypt
@@ -81,90 +98,55 @@ export async function POST(request: NextRequest) {
       );
 
       if (!isValidPassword) {
-        // Увеличиваем счетчик неудачных попыток
-        // TODO: сделать блокировку после 5 неудачных попыток
         const newAttempts = user.failed_login_attempts + 1;
-        // let lockUntil = null;
+        let lockUntilISOString: string | null = null;
+        let updateQuery: string;
+        let params: any[];
+
+        // Блокировка после 5 неудачных попыток
+        if (newAttempts >= 5) {
+          const lockUntilDate = new Date(Date.now() + 15 * 60 * 1000); // 15 минут
+          lockUntilISOString = lockUntilDate.toISOString();
+          updateQuery = `UPDATE users SET failed_login_attempts = $1, lock_until = $2 WHERE id = $3`;
+          params = [newAttempts, lockUntilISOString, user.id];
+          logger.authError('LOGIN_ACCOUNT_BLOCKED', user.id, `Blocked after ${newAttempts} failed attempts`, { ip: clientIp, lockUntil: lockUntilISOString });
+        } else {
+          updateQuery = `UPDATE users SET failed_login_attempts = $1 WHERE id = $2`;
+          params = [newAttempts, user.id];
+          logger.authError('LOGIN_INVALID_PASSWORD', user.id, `Failed attempt ${newAttempts}/5`, { ip: clientIp });
+        }
         
-        // // Блокировка после 5 неудачных попыток
-        // if (newAttempts >= 5) {
-        //   lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 минут
-        // }
-        
-        await client.query(
-          `UPDATE users 
-           SET failed_login_attempts = $1
-           WHERE id = $2`,
-          [newAttempts, user.id]
-        );
+        const updateResult = await client.query(updateQuery, params);
+        logger.debug('Login attempt recorded', { userId: user.id, newAttempts, rowsAffected: updateResult.rowCount, locked: newAttempts >= 5 });
         
         return NextResponse.json(
-          { error: 'Invalid credentials' },
-          { status: 401 }
+          { 
+            error: newAttempts >= 5 
+              ? 'Too many failed attempts. Account locked for 15 minutes'
+              : 'Invalid credentials',
+            attempts: newAttempts,
+            maxAttempts: 5,
+            ...(lockUntilISOString && { lockUntil: lockUntilISOString })
+          },
+          { status: newAttempts >= 5 ? 423 : 401 }
         );
       }
-      // if (!isValidPassword) {
-      //   // Увеличиваем счетчик неудачных попыток
-      //   const newAttempts = user.failed_login_attempts + 1;
-      //   let lockUntil = null;
-      //   let errorMessage = 'Invalid credentials';
-      //   let statusCode = 401;
-        
-      //   // Блокировка после 5 неудачных попыток
-      //   if (newAttempts >= 5) {
-      //     lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 минут
-          
-      //     // Проверяем, не заблокирован ли уже пользователь
-      //     if (user.lock_until && new Date(user.lock_until) > new Date()) {
-      //       const remainingTime = Math.ceil(
-      //         (new Date(user.lock_until) - new Date()) / 60000
-      //       );
-      //       errorMessage = `Account is locked. Try again in ${remainingTime} minutes`;
-      //     } else {
-      //       errorMessage = 'Too many failed attempts. Account locked for 15 minutes';
-      //     }
-          
-      //     // Устанавливаем код 423 (Locked) для заблокированного аккаунта
-      //     if (newAttempts === 5) {
-      //       statusCode = 423;
-      //     }
-      //   }
-        
-      //   // Обновляем данные пользователя
-      //   await client.query(
-      //     `UPDATE users 
-      //     SET failed_login_attempts = $1,
-      //         lock_until = $2,
-      //         updated_at = CURRENT_TIMESTAMP
-      //     WHERE id = $3`,
-      //     [newAttempts, lockUntil, user.id]
-      //   );
-        
-      //   return NextResponse.json(
-      //     { 
-      //       error: errorMessage,
-      //       attempts: newAttempts,
-      //       maxAttempts: 5,
-      //       ...(lockUntil && { lockUntil: lockUntil.toISOString() })
-      //     },
-      //     { status: statusCode }
-      //   );
-      // }
+
       // Сбросить счетчик неудачных попыток при успешном входе
       await client.query(
         `UPDATE users 
-         SET failed_login_attempts = 0
+         SET failed_login_attempts = 0, lock_until = NULL
          WHERE id = $1`,
         [user.id]
       );
-    }
 
-    // 6. Обновить last_login (если это не первый вход, т.к. при первом уже обновили)
-    if (!isFirstLogin) {
+      // Обновить last_login
       await client.query(
         `UPDATE users SET last_login = NOW() WHERE id = $1`,
         [user.id]
       );
+
+      logger.authLog('LOGIN_SUCCESS', user.id, 'Successfully logged in', { ip: clientIp });
     }
 
     // 7. Создать JWT токен
@@ -186,7 +168,7 @@ export async function POST(request: NextRequest) {
         role: user.role,
         assigned_site_id: user.assigned_site_id,
         study_id: user.study_id,
-        is_first_login: isFirstLogin // Флаг для фронтенда
+        is_first_login: isFirstLogin
       }
     });
 
@@ -195,14 +177,16 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60, // 24 часа
+      maxAge: 24 * 60 * 60,
       path: '/'
     });
 
     return response;
 
   } catch (error) {
-    console.error('Login error:', error);
+    logger.error('Login endpoint error', error instanceof Error ? error : null, { 
+      ip: clientIp 
+    });
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

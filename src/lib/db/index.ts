@@ -1,5 +1,6 @@
 import { Pool } from 'pg';
 import { Tables, tableSQLMap, tableSQLDepend } from './schema';
+import { logger } from '@/lib/logger';
 
 export const DB_INITIALIZED = true;
 
@@ -26,11 +27,11 @@ export const getPool = () => {
     })
 
     global.pgPool.on("connect", () => {
-      console.log("PostgreSQL pool connected")
+      logger.dbLog('POOL_CONNECTED')
     })
 
     global.pgPool.on("error", (err) => {
-      console.error("PostgreSQL pool error", err)
+      logger.dbError('POOL_ERROR', undefined, err instanceof Error ? err.message : String(err))
     })
   }
 
@@ -56,7 +57,7 @@ export async function createTable(table: Tables) {
     }
   
   } catch (err) {
-    console.error(`createTable: Failed to create table "${table}". `, err);
+    logger.dbError('CREATE_TABLE_FAILED', table, err instanceof Error ? err.message : String(err));
     throw err;
 
   }
@@ -75,7 +76,7 @@ async function createTableIfNotExists(client: any, table: Tables) {
   const tableExists = checkResult.rows[0].exists;
 
   if (tableExists) {
-    console.log(`createTable: Table "${table}" already exists. Skipping creation.`);
+    logger.dbLog('TABLE_ALREADY_EXISTS', table);
     return;
   }
 
@@ -86,7 +87,7 @@ async function createTableIfNotExists(client: any, table: Tables) {
   }
 
   await client.query(query);
-  console.log(`createTable: Table "${table}" created successfully.`);
+  logger.dbLog('TABLE_CREATED', table);
 }
 
 async function addDocumentCurrentVersionFK(client: any) {
@@ -104,7 +105,7 @@ async function addDocumentCurrentVersionFK(client: any) {
   const exists = result.rows[0].exists;
 
   if (exists) {
-    console.log(`Constraint "${constraintName}" already exists. Skipping.`);
+    logger.dbLog('CONSTRAINT_ALREADY_EXISTS', constraintName);
     return;
   }
 
@@ -116,5 +117,5 @@ async function addDocumentCurrentVersionFK(client: any) {
     ON DELETE SET NULL
   `);
 
-  console.log(`Constraint "${constraintName}" created successfully.`);
+  logger.dbLog('CONSTRAINT_CREATED', constraintName);
 }
