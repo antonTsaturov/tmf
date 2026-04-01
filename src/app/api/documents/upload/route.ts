@@ -7,6 +7,7 @@ import { getIAMToken } from '@/lib/yc-iam';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { logger } from '@/lib/logger';
 import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
+import { validateFileUpload, getAllowedFileTypes } from '@/lib/file-security';
 
 // Функция для кодирования метаданных в ASCII
 function encodeMetadata(value: string): string {
@@ -109,10 +110,21 @@ async function uploadHandler(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const maxSize = 100 * 1024 * 1024;
-    if (buffer.length > maxSize) {
+    // Validate file security (MIME type, size, executable check, extensions)
+    const fileValidation = validateFileUpload(file, buffer);
+    if (!fileValidation.valid) {
+      logger.authLog('UPLOAD_VALIDATION_FAILED', createdBy, fileValidation.errorCode, {
+        fileName,
+        error: fileValidation.error,
+        details: fileValidation.details,
+      });
+      
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 100MB' },
+        { 
+          error: fileValidation.error,
+          errorCode: fileValidation.errorCode,
+          details: fileValidation.details 
+        },
         { status: 400 }
       );
     }

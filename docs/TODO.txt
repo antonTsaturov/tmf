@@ -22,14 +22,19 @@ Features.
 
 
 Критические (Must-have):
-✅ Заменить hardcoded default JWT_SECRET, добавить валидацию env
-✅ Добавить rate limiting на все API endpoints
-✅ Добавить CORS, CSRF, security headers (Helmet)
-✅ Создать .env.example с документацией всех переменных
+
 ⏳ Добавить health check и monitoring endpoints
+✅ Unit tests - добавлены comprehensive тесты (src/__tests__/)
 
 Важные (Should-have):
-Napisati хотя бы основные unit tests
+✅ Napisati хотя бы основные unit tests - ВЫПОЛНЕНО
+  - auth.test.ts (JWT, роли, permissions)
+  - document-lifecycle.test.ts (state machine)
+  - versioning.test.ts (версионирование)
+  - audit.test.ts (логирование)
+  - account-locking.test.ts (блокировка)
+  - file-security.test.ts (валидация файлов)
+  - rate-limiting.test.ts (rate limits)
 Добавить API documentation
 Настроить proper error tracking (Sentry)
 Создать backup strategy

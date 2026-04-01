@@ -29,7 +29,7 @@ export interface Document {
   study_id: number;
   site_id: number | string | null;
   country?: string;
-  folder_name: string;
+  folder_name?: string;
   tmf_zone: string | null;
   tmf_artifact: string | null;
   status: DocumentWorkFlowStatus;

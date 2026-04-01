@@ -63,25 +63,60 @@ export const useDocumentUpload = () => {
       return;
     }
 
+    const ALLOWED_TYPES = ['.pdf', '.txt'];
+    const ALLOWED_MIME_TYPES = ['application/pdf', 'text/plain'];
+
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.pdf,application/pdf,.txt,text/plain';
     input.multiple = true;
-    
+
     input.onchange = (e) => {
       const target = e.target as HTMLInputElement;
       const files = target.files;
-      
+
       if (!files || files.length === 0) return;
-      
-      const filesArray = Array.from(files);
-      
+
+      // Validate file types
+      const invalidFiles: { name: string; type: string }[] = [];
+      const validFiles: File[] = [];
+
+      Array.from(files).forEach(file => {
+        const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+        const isValidType = ALLOWED_TYPES.includes(fileExtension) || 
+                           ALLOWED_MIME_TYPES.includes(file.type);
+        
+        if (!isValidType) {
+          invalidFiles.push({ name: file.name, type: file.type || 'unknown' });
+        } else {
+          validFiles.push(file);
+        }
+      });
+
+      if (invalidFiles.length > 0) {
+        const fileNames = invalidFiles.map(f => f.name).join(', ');
+        logger.warn('File type validation failed', { 
+          invalidFiles: invalidFiles.map(f => ({ name: f.name, type: f.type })),
+          allowedTypes: ALLOWED_TYPES.join(', ')
+        });
+        addNotification(
+          'error', 
+          `Недопустимый тип файлов: ${fileNames}. Разрешены только PDF файлы.`
+        );
+        if (validFiles.length === 0) {
+          input.remove();
+          return;
+        }
+      }
+
+      const filesArray = validFiles.length > 0 ? validFiles : Array.from(files);
+
       setPreview({
         files: filesArray,
         folderId: selectedFolder.id,
         folderName: selectedFolder.name,
         size: filesArray.reduce((total, file) => total + file.size, 0),
-        customName: filesArray.length === 1 
+        customName: filesArray.length === 1
           ? filesArray[0].name.replace(/\.[^/.]+$/, '')
           : `${filesArray.length} файлов`,
         studyId: currentStudy?.id!,
@@ -90,7 +125,7 @@ export const useDocumentUpload = () => {
         createdBy: user.id,
         ...(filesArray.length === 1 && { file: filesArray[0] })
       });
-      
+
       input.remove();
     };
     
@@ -200,7 +235,18 @@ export const useDocumentUpload = () => {
 
         } catch (fileError) {
           clearInterval(progressInterval);
-          onProgress?.(i, 0); // Сброс прогресса при ошибке
+          onProgress?.(i, 0);
+          
+          // Log with more context
+          const errorMessage = fileError instanceof Error ? fileError.message : String(fileError);
+          logger.error('File upload failed', fileError, {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type,
+            documentId,
+            folderId: options.folderId
+          });
+          
           throw fileError;
         }
       }
@@ -211,10 +257,15 @@ export const useDocumentUpload = () => {
       };
 
     } catch (error) {
-      logger.error('Document upload error', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Document upload error', error, { 
+        filesCount: files.length,
+        folderId: options.folderId,
+        studyId: options.studyId 
+      });
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        error: errorMessage,
       };
     } finally {
       setTimeout(() => {

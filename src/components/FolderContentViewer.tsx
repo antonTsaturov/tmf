@@ -622,10 +622,15 @@ const FolderContentViewer: React.FC = () => {
       />
       <FilePreviewPanel
         onUploadSuccess={(updatedDoc) => handleAddNewDocument(updatedDoc)}
-        onUploadError={(error) => logger.error('Upload error', error)}
+        onUploadError={(error) => logger.error('File upload error', error, { 
+          folderId: selectedFolder?.id,
+          studyId: currentStudy?.id 
+        })}
       />
       <NewVersionUploadPanel
-        onUploadError={(error) => logger.error('Upload error', error)}
+        onUploadError={(error) => logger.error('New version upload error', error, {
+          documentId: selectedDocument?.id
+        })}
         onSuccess={(version) => handleNewVersionSuccess(version)}
       />
       <SubmitToReviewPanel

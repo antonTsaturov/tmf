@@ -103,6 +103,7 @@ interface LogEntry {
   message: string;
   data?: any;
   error?: string;
+  stack?: string;
 }
 
 class Logger {
@@ -119,23 +120,60 @@ class Logger {
   private formatLog(entry: LogEntry): string {
     const { timestamp, level, message, data } = entry;
     let output = `[${timestamp}] [${level}] ${message}`;
-    
+
     if (data) {
       output += ` | ${JSON.stringify(data)}`;
     }
-    
+
+    if (entry.error) {
+      output += ` | Error: ${entry.error}`;
+    }
+
     return output;
   }
 
-  private log(level: LogLevel, message: string, data?: any, error?: Error): void {
+  /**
+   * Extracts error information from any error type
+   */
+  private extractErrorInfo(error: unknown): { message: string; stack?: string; name?: string } {
+    if (error instanceof Error) {
+      return {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+      };
+    }
+
+    if (typeof error === 'string') {
+      return { message: error };
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      // Handle error-like objects (e.g., from fetch responses)
+      const errorObj = error as Record<string, unknown>;
+      const message = typeof errorObj.message === 'string' 
+        ? errorObj.message 
+        : JSON.stringify(errorObj);
+      const stack = typeof errorObj.stack === 'string' ? errorObj.stack : undefined;
+      const name = typeof errorObj.name === 'string' ? errorObj.name : undefined;
+      return { message, stack, name };
+    }
+
+    return { message: String(error) };
+  }
+
+  private log(level: LogLevel, message: string, data?: any, error?: unknown): void {
     if (!this.shouldLog(level)) return;
+
+    const errorInfo = error ? this.extractErrorInfo(error) : undefined;
 
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
       data,
-      error: error?.message,
+      error: errorInfo?.message,
+      stack: this.isDevelopment ? errorInfo?.stack : undefined,
     };
 
     const formatted = this.formatLog(entry);
@@ -152,8 +190,11 @@ class Logger {
         break;
       case LogLevel.ERROR:
         console.error(formatted);
-        if (error?.stack) {
-          console.error(error.stack);
+        // Only show stack trace in development for better production logs
+        if (this.isDevelopment && errorInfo?.stack) {
+          console.error('\n--- Stack Trace ---');
+          console.error(errorInfo.stack);
+          console.error('--- End Stack Trace ---\n');
         }
         break;
     }
@@ -171,8 +212,8 @@ class Logger {
     this.log(LogLevel.WARN, message, data);
   }
 
-  error(message: string, error?: Error | unknown | null, data?: any): void {
-    this.log(LogLevel.ERROR, message, data, error instanceof Error ? error : undefined);
+  error(message: string, error?: unknown | null, data?: any): void {
+    this.log(LogLevel.ERROR, message, data, error ?? undefined);
   }
 
   // Специализированные методы для разных модулей

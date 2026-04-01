@@ -52,9 +52,29 @@ export async function GET(
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const etag = version.checksum
-      ? `"${version.checksum}"`
-      : `"${createHash('md5').update(Buffer.from(arrayBuffer)).digest('hex')}"`;
+
+    // 🔒 Проверка контрольной суммы для целостности файла
+    const calculatedChecksum = createHash('sha256').update(Buffer.from(arrayBuffer)).digest('hex');
+    
+    if (version.checksum && calculatedChecksum !== version.checksum.toLowerCase()) {
+      logger.error('Checksum verification failed', null, {
+        documentId: id,
+        versionNumber,
+        expected: version.checksum,
+        calculated: calculatedChecksum,
+        fileName: version.file_name
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'File integrity check failed',
+          message: 'The file has been corrupted or modified in storage'
+        },
+        { status: 500 }
+      );
+    }
+
+    const etag = version.checksum ? `"${version.checksum}"` : `"${calculatedChecksum}"`;
 
     const ifNoneMatch = request.headers.get('if-none-match');
     if (ifNoneMatch === etag) {

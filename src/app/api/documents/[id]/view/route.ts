@@ -84,10 +84,28 @@ export async function GET(
 
     const arrayBuffer = await response.arrayBuffer();
 
-    // Вычисляем ETag на основе содержимого, если его нет в БД
-    const contentEtag = document.checksum 
-      ? etag 
-      : `"${createHash('md5').update(Buffer.from(arrayBuffer)).digest('hex')}"`;
+    // 🔒 Проверка контрольной суммы для целостности файла
+    const calculatedChecksum = createHash('sha256').update(Buffer.from(arrayBuffer)).digest('hex');
+    
+    if (document.checksum && calculatedChecksum !== document.checksum.toLowerCase()) {
+      logger.error('Checksum verification failed', null, {
+        documentId: id,
+        expected: document.checksum,
+        calculated: calculatedChecksum,
+        fileName: document.file_name
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'File integrity check failed',
+          message: 'The file has been corrupted or modified in storage'
+        },
+        { status: 500 }
+      );
+    }
+
+    // Вычисляем ETag на основе содержимого
+    const contentEtag = document.checksum ? etag : `"${calculatedChecksum}"`;
 
     // Возвращаем PDF с ETag
     return new NextResponse(arrayBuffer, {

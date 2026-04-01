@@ -63,6 +63,18 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
         });
 
         if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          
+          if (response.status === 500 && errorData.error === 'File integrity check failed') {
+            logger.error('PDF checksum verification failed', null, {
+              documentId: selectedDocument.id,
+              fileName: selectedDocument.file_name
+            });
+            setError('Файл повреждён в хранилище. Обратитесь к администратору.');
+            setLoading(false);
+            return;
+          }
+          
           throw new Error('Failed to load PDF');
         }
 

@@ -12,6 +12,9 @@
  * - DATABASE_URL: PostgreSQL connection string
  * - YC_IAM_KEY_PATH: Path to Yandex Cloud IAM service account key JSON
  * 
+ * Optional environment variables:
+ * - MAX_FILE_SIZE: Maximum file upload size in bytes (default: 104857600 = 100MB)
+ * 
  * Usage in next.config.ts:
  *   export const config = {
  *     runtime: 'nodejs',
@@ -24,6 +27,7 @@ interface EnvConfig {
   DATABASE_URL: string;
   YC_IAM_KEY_PATH: string;
   NODE_ENV: 'development' | 'production' | 'test';
+  MAX_FILE_SIZE?: number;
 }
 
 /**
@@ -65,6 +69,19 @@ export function validateEnv(): EnvConfig {
     errors.push(`❌ NODE_ENV must be 'development', 'production', or 'test', got '${nodeEnv}'`);
   }
 
+  // MAX_FILE_SIZE validation (optional, with default)
+  let maxFileSize: number | undefined;
+  if (process.env.MAX_FILE_SIZE) {
+    const parsed = parseInt(process.env.MAX_FILE_SIZE, 10);
+    if (isNaN(parsed) || parsed <= 0) {
+      errors.push('❌ MAX_FILE_SIZE must be a positive number (in bytes)');
+    } else if (parsed < 1024 * 1024) {
+      errors.push('⚠️  MAX_FILE_SIZE is less than 1MB, file uploads may not work as expected');
+    } else {
+      maxFileSize = parsed;
+    }
+  }
+
   // Log all errors and fail if any exist
   if (errors.length > 0) {
     // Only log to stderr in Node.js (not in browser)
@@ -101,6 +118,7 @@ export function validateEnv(): EnvConfig {
     DATABASE_URL: dbUrl!,
     YC_IAM_KEY_PATH: iamKeyPath!,
     NODE_ENV: nodeEnv as any,
+    MAX_FILE_SIZE: maxFileSize,
   };
 
   // Log success on first run (only in development, server-side)
@@ -116,4 +134,5 @@ export const ENV = {
   DATABASE_URL: process.env.DATABASE_URL!,
   YC_IAM_KEY_PATH: process.env.YC_IAM_KEY_PATH!,
   NODE_ENV: process.env.NODE_ENV as 'development' | 'production' | 'test',
+  MAX_FILE_SIZE: process.env.MAX_FILE_SIZE ? parseInt(process.env.MAX_FILE_SIZE, 10) : 104857600, // 100MB default
 };
