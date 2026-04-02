@@ -20,8 +20,10 @@ import {
 import { FiDownload, FiInfo, FiUser } from 'react-icons/fi';
 import { useFolderName } from '@/hooks/useFolderName';
 import { DocumentVersionRow } from '@/types/document';
+import { useNotification } from '@/wrappers/NotificationContext';
 
 const DocumentDetails: React.FC = () => {
+  const { addNotification } = useNotification();
   const getFolderName = useFolderName();
   const mainContext = useContext(MainContext);
   if (!mainContext) return null;
