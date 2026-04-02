@@ -48,6 +48,7 @@ jobs:
           username: anton
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
             docker pull ghcr.io/antontsaturov/etmf-app:latest
             docker stop etmf-app || true
             docker rm etmf-app || true
@@ -55,5 +56,5 @@ jobs:
               --name etmf-app \
               --restart always \
               -p 3000:3000 \
-              --env-file /root/.env \
+              --env-file /home/anton/.env \
               ghcr.io/antontsaturov/etmf-app:latest
