@@ -1,0 +1,56 @@
+name: Deploy eTMF
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🟢 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run tests
+        run: npm run test --if-present
+
+      - name: 🏗 Build app
+        run: npm run build
+
+      - name: 🐳 Build Docker image
+        run: docker build -t etmf-app .
+
+      - name: 🏷 Tag image
+        run: docker tag etmf-app ghcr.io/antontsatur0v/etmf-app:latest
+
+      - name: 🔐 Login to GitHub Container Registry
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antonTsaturov --password-stdin
+
+      - name: 📤 Push image
+        run: docker push ghcr.io/antontsatur0v/etmf-app:latest
+
+      - name: 🚀 Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 31.169.124.166
+          username: anton
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            docker pull ghcr.io/antontsatur0v/etmf-app:latest
+            docker stop etmf-app || true
+            docker rm etmf-app || true
+            docker run -d \
+              --name etmf-app \
+              --restart always \
+              -p 3000:3000 \
+              --env-file /root/.env \
+              ghcr.io/antontsatur0v/etmf-app:latest
