@@ -341,6 +341,8 @@ const FolderContentViewer: React.FC = () => {
       </Flex>
     );
   }
+  
+  console.log(selectedDocument)
 
   return (
     <Box 
@@ -361,7 +363,7 @@ const FolderContentViewer: React.FC = () => {
       }}
     >
 
-      {/* 3. Визуальный оверлей при перетаскивании файла */}
+      {/* Визуальный оверлей при перетаскивании файла */}
       <DragAndDropOverlay dragover={isDragOver} />
 
       {/* Заголовок с информацией о папке - фиксированный */}

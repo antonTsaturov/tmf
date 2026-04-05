@@ -1,120 +1,134 @@
 /**
  * POST /api/auth/refresh
- * 
- * Refresh access token using refresh token
- * 
- * Request body:
- * {
- *   "refreshToken": "..."
- * }
- * 
+ *
+ * Refresh access token using the current session.
+ * The client sends the existing access token via cookies (auth-token).
+ * The server extracts sessionId from the token (even if expired),
+ * verifies the session is still active, and issues a new access token.
+ *
  * Response:
  * {
  *   "accessToken": "...",
- *   "refreshToken": "...",
  *   "expiresIn": 900
  * }
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService, type RefreshTokenPayload, type JwtPayload } from '@/lib/auth/auth.service';
-import { updateSessionActivity, getSession, verifyRefreshToken } from '@/lib/auth/session';
+import { AuthService, type JwtPayload } from '@/lib/auth/auth.service';
+import { updateSessionActivity, getSession } from '@/lib/auth/session';
+import { getPool } from '@/lib/db';
 import { logger } from '@/lib/logger';
+import jwt from 'jsonwebtoken';
+import { ENV } from '@/lib/env';
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { refreshToken } = body;
+    // Get the current access token from cookie
+    const authToken = request.cookies.get('auth-token')?.value;
 
-    if (!refreshToken) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Refresh token required' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Verify refresh token
-    const payload = AuthService.verifyRefreshToken(refreshToken);
-    if (!payload) {
-      logger.authLog('REFRESH_TOKEN_INVALID', undefined, 'Invalid refresh token', {
+    if (!authToken) {
+      logger.authLog('REFRESH_NO_COOKIE', undefined, 'No auth-token cookie found', {
         ip: request.headers.get('x-forwarded-for') || 'unknown',
       });
-      
+
       return new NextResponse(
-        JSON.stringify({ error: 'Invalid refresh token' }),
+        JSON.stringify({ error: 'No authentication token provided' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Get session and verify
-    const session = getSession(payload.sessionId);
-    if (!session) {
-      logger.authLog('REFRESH_TOKEN_SESSION_EXPIRED', payload.id.toString(), 'Session expired', {
-        sessionId: payload.sessionId,
+    // Try to verify the access token first (might still be valid)
+    let sessionId: string | null = null;
+    let userId: number | null = null;
+    let userEmail: string | null = null;
+
+    const validPayload = AuthService.verifyAccessToken(authToken);
+    if (validPayload) {
+      sessionId = validPayload.sessionId || null;
+      userId = validPayload.id;
+      userEmail = validPayload.email;
+    } else {
+      // Token expired — decode without verification to extract sessionId
+      try {
+        const decoded = jwt.decode(authToken) as { sessionId?: string; id?: number; email?: string } | null;
+        if (decoded) {
+          sessionId = decoded.sessionId || null;
+          userId = decoded.id || null;
+          userEmail = decoded.email || null;
+        }
+      } catch {
+        // ignore decode errors
+      }
+    }
+
+    if (!sessionId) {
+      logger.authLog('REFRESH_NO_SESSION', userId?.toString() || 'unknown', 'No sessionId in token', {
+        ip: request.headers.get('x-forwarded-for') || 'unknown',
       });
-      
+
+      return new NextResponse(
+        JSON.stringify({ error: 'No session found in token' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify session is still active (not invalidated, not idle-timed-out)
+    const session = getSession(sessionId);
+    if (!session) {
+      logger.authLog('REFRESH_SESSION_EXPIRED', userId?.toString() || 'unknown', 'Session expired or invalid', {
+        sessionId: sessionId.substring(0, 20),
+      });
+
       return new NextResponse(
         JSON.stringify({ error: 'Session expired' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // Verify refresh token hash matches stored value
+    // Update session activity
+    updateSessionActivity(sessionId);
+
+    // Fetch user role from database
+    let userRole = 'user';
     try {
-      if (!AuthService.verifyRefreshTokenHash(refreshToken, session.refreshTokenHash)) {
-        logger.authLog('REFRESH_TOKEN_MISMATCH', payload.id.toString(), 'Token mismatch', {
-          sessionId: payload.sessionId,
-        });
-        
-        return new NextResponse(
-          JSON.stringify({ error: 'Invalid refresh token' }),
-          { status: 401, headers: { 'Content-Type': 'application/json' } }
-        );
+      const client = getPool();
+      const result = await client.query(
+        `SELECT role FROM users WHERE id = $1`,
+        [session.userId]
+      );
+
+      if (result.rows[0]) {
+        userRole = result.rows[0].role;
       }
     } catch (error) {
-      logger.warn('REFRESH_TOKEN_VERIFICATION_FAILED', { error });
-      return new NextResponse(
-        JSON.stringify({ error: 'Token verification failed' }),
-        { status: 401, headers: { 'Content-Type': 'application/json' } }
-      );
+      logger.warn('Failed to fetch user role during refresh', { userId: session.userId, error });
     }
 
-    // Update session activity
-    updateSessionActivity(payload.sessionId);
-
-    // Generate new tokens
+    // Generate new access token
     const accessTokenPayload: JwtPayload = {
-      id: payload.id,
-      email: payload.email,
-      role: 'user', // You'll need to fetch actual role from DB
+      id: session.userId,
+      email: session.userEmail,
+      role: userRole,
       study_id: [],
       assigned_site_id: [],
-      sessionId: payload.sessionId,
+      sessionId: session.sessionId,
     };
 
     const newAccessToken = AuthService.generateAccessToken(accessTokenPayload);
-    const newRefreshToken = AuthService.generateRefreshToken({
-      id: payload.id,
-      email: payload.email,
-      sessionId: payload.sessionId,
-      tokenVersion: payload.tokenVersion,
+
+    logger.authLog('REFRESH_SUCCESS', session.userId.toString(), 'Token refreshed', {
+      sessionId: sessionId.substring(0, 20),
     });
 
-    logger.authLog('REFRESH_TOKEN_SUCCESS', payload.id.toString(), 'Token refreshed', {
-      sessionId: payload.sessionId,
-    });
-
-    // Set new access token in cookie (refresh token stays the same)
+    // Set new access token in cookie
     const response = new NextResponse(
       JSON.stringify({
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
         expiresIn: 15 * 60, // 15 minutes in seconds
       }),
       { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
 
-    // Update auth-token cookie with new access token
     response.cookies.set('auth-token', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -125,39 +139,11 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    logger.error('REFRESH_TOKEN_ERROR', error);
-    
+    logger.error('REFRESH_ERROR', error);
+
     return new NextResponse(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 }
-
-/**
- * Client-side usage (React hook):
- * 
- * ```typescript
- * export function useTokenRefresh() {
- *   const refresh = async (refreshToken: string) => {
- *     const response = await fetch('/api/auth/refresh', {
- *       method: 'POST',
- *       headers: { 'Content-Type': 'application/json' },
- *       body: JSON.stringify({ refreshToken }),
- *       credentials: 'include'
- *     });
- *     
- *     if (response.ok) {
- *       const data = await response.json();
- *       // Store new tokens
- *       localStorage.setItem('refreshToken', data.refreshToken);
- *       return data.accessToken;
- *     }
- *     
- *     return null;
- *   };
- *   
- *   return { refresh };
- * }
- * ```
- */

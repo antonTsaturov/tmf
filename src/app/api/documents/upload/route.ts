@@ -8,6 +8,7 @@ import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { logger } from '@/lib/logger';
 import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
 import { validateFileUpload, getAllowedFileTypes } from '@/lib/file-security';
+import { NotificationService } from '@/services/notification.service';
 
 // Функция для кодирования метаданных в ASCII
 function encodeMetadata(value: string): string {
@@ -342,6 +343,22 @@ async function uploadHandler(
       last_uploaded_at: formattedVersions[0]?.uploaded_at,
       last_uploader: formattedVersions[0]?.uploader || null
     };
+
+    // Send notification to study users about new document
+    try {
+      await NotificationService.notifyNewDocument(
+        newDocument.study_id.toString(),
+        {
+          documentName: documentName || fileName,
+          documentType: fileType,
+          uploadedBy: createdBy,
+          uploadedAt: new Date().toISOString(),
+        }
+      );
+    } catch (notificationError) {
+      // Log but don't fail the upload if notification fails
+      logger.error('Failed to send document notification:', notificationError);
+    }
 
     return NextResponse.json({
       success: true,

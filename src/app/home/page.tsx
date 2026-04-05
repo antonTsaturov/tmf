@@ -2,22 +2,14 @@
 
 import { useRef, useContext } from 'react';
 import '../../styles/Home.css';
-import FileExplorer, { FileNode } from '../../components/FileExplorer';
+import FileExplorer from '../../components/FileExplorer';
 import UserMenu from '@/components/UserMenu';
-// import Modal from '@/components/Modal';
-import { useModal } from '@/hooks/useModal';
-// import FoldersStructureManager from '@/components/admin/FoldersStructureManager';
-// import SiteManager from '@/components/admin/SiteManager';
-// import StudyManager from '@/components/admin/StudyManager';
-// import UserManager from '@/components/admin/UserManager';
-import { Button, Tabs, Box} from '@radix-ui/themes';
+import { Tabs } from '@radix-ui/themes';
 import StudySiteNavigation from '@/components/Navigation';
 import FolderContentViewer from '@/components/FolderContentViewer';
 import DocumentActions from '@/components/DocumentActions';
-// import AuditTrailViewer from '@/components/admin/AuditTrailViewer';
 import PDFViewer from '@/components/PDFViewer';
 import DocumentDetails from '@/components/DocumentDetails';
-// import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
 import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
@@ -32,59 +24,11 @@ interface MainWindowProps {
 const Home: React.FC<MainWindowProps> = () => {
 
   const sidebarRef = useRef<HTMLDivElement>(null);
-  // const { modalProps, isOpen } = useModal();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedDocument, isRightFrameOpen, isModal } = context!;
+  const { selectedDocument, isRightFrameOpen } = context!;
 
   return (
     <div className="sidebarresizable-root">
-
-      {/* <Modal {...modalProps}>
-        <Tabs.Root defaultValue="tab1">
-          <Tabs.List >
-            <Tabs.Trigger  value="tab1">
-                Studies Management
-            </Tabs.Trigger>
-            <Tabs.Trigger  value="tab2">
-                Project Folder Structure
-            </Tabs.Trigger>
-            <Tabs.Trigger  value="tab3">
-                Sites Management
-            </Tabs.Trigger>
-            <Tabs.Trigger value="tab4">
-                Users Management
-            </Tabs.Trigger>
-            <Tabs.Trigger value="tab5">
-                Audit Trail
-            </Tabs.Trigger>
-            <Tabs.Trigger value="tab6">
-                Deleted documents
-            </Tabs.Trigger>
-          </Tabs.List>
-          {isModal && (
-          <Box pt="5">
-              <Tabs.Content value="tab1">
-                  <StudyManager />
-              </Tabs.Content>
-              <Tabs.Content  value="tab2">
-                  <FoldersStructureManager />
-              </Tabs.Content>
-              <Tabs.Content  value="tab3">
-                  <SiteManager />
-              </Tabs.Content>
-              <Tabs.Content  value="tab4">
-                  <UserManager />
-              </Tabs.Content>
-              <Tabs.Content  value="tab5">
-                  <AuditTrailViewer />
-              </Tabs.Content>
-              <Tabs.Content value="tab6">
-                <DeletedDocumentsViewer />
-              </Tabs.Content>
-          </Box>)
-          }
-        </Tabs.Root>
-      </Modal> */}
 
       <header className="toolbar-header">
         <StudySiteNavigation /> 

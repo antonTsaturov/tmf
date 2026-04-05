@@ -102,21 +102,58 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-// Mock session storage
-const mockSessionStorage = new Map<string, any>();
+// Mock session storage — exposed for test assertions
+export const mockSessionStorage = new Map<string, any>();
 jest.mock('@/lib/auth/session', () => {
   const actualSession = jest.requireActual('@/lib/auth/session');
   return {
     ...actualSession,
-    sessions: mockSessionStorage,
-    createSession: jest.fn().mockImplementation((sessionId: string, data: any) => {
-      mockSessionStorage.set(sessionId, data);
+    createSession: jest.fn().mockImplementation((params: { userId: number; userEmail: string; refreshTokenHash: string }) => {
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      const now = Date.now();
+      const session = {
+        sessionId,
+        userId: params.userId,
+        userEmail: params.userEmail,
+        createdAt: now,
+        lastActivityAt: now,
+        expiresAt: now + 24 * 60 * 60 * 1000, // 24 hours
+        refreshTokenHash: params.refreshTokenHash,
+        isValid: true,
+      };
+      mockSessionStorage.set(sessionId, session);
+      return session;
     }),
     getSession: jest.fn().mockImplementation((sessionId: string) => {
-      return mockSessionStorage.get(sessionId) || null;
+      const session = mockSessionStorage.get(sessionId);
+      if (!session || !session.isValid) return null;
+      if (session.expiresAt < Date.now()) {
+        session.isValid = false;
+        return null;
+      }
+      const idleTimeout = 30 * 60 * 1000; // 30 minutes
+      if ((Date.now() - session.lastActivityAt) > idleTimeout) {
+        session.isValid = false;
+        return null;
+      }
+      return session;
     }),
     invalidateSession: jest.fn().mockImplementation((sessionId: string) => {
-      mockSessionStorage.delete(sessionId);
+      const session = mockSessionStorage.get(sessionId);
+      if (session) {
+        session.isValid = false;
+        setTimeout(() => mockSessionStorage.delete(sessionId), 1000);
+        return true;
+      }
+      return false;
+    }),
+    updateSessionActivity: jest.fn().mockImplementation((sessionId: string) => {
+      const session = mockSessionStorage.get(sessionId);
+      if (session && session.isValid) {
+        session.lastActivityAt = Date.now();
+        return true;
+      }
+      return false;
     }),
   };
 });

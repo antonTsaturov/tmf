@@ -27,6 +27,11 @@ export interface RefreshTokenPayload {
   tokenVersion: number; // Incremented on logout to invalidate old refresh tokens
 }
 
+export interface ResetTokenPayload {
+  type: 'password_reset';
+  email: string;
+}
+
 export class AuthService {
   /**
    * Generate short-lived access token
@@ -137,8 +142,42 @@ export class AuthService {
   // Проверка, является ли пароль уже хэшированным
   static isPasswordHashed(password: string): boolean {
     // bcrypt хэши начинаются с $2a$, $2b$, $2y$
-    return password.startsWith('$2a$') || 
-           password.startsWith('$2b$') || 
+    return password.startsWith('$2a$') ||
+           password.startsWith('$2b$') ||
            password.startsWith('$2y$');
+  }
+
+  /**
+   * Generate password reset token (15 min expiry)
+   */
+  static generateResetToken(email: string): string {
+    const payload: ResetTokenPayload = {
+      type: 'password_reset',
+      email,
+    };
+
+    return jwt.sign(payload, JWT_SECRET, {
+      expiresIn: '15m',
+      algorithm: 'HS256'
+    });
+  }
+
+  /**
+   * Verify password reset token
+   */
+  static verifyResetToken(token: string): ResetTokenPayload | null {
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET, {
+        algorithms: ['HS256']
+      }) as ResetTokenPayload;
+
+      if (decoded.type !== 'password_reset') {
+        return null;
+      }
+
+      return decoded;
+    } catch (error) {
+      return null;
+    }
   }
 }

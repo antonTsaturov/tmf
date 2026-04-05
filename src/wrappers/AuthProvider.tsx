@@ -1,10 +1,11 @@
 // src/wrappers/AuthProvider.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AUTH_DISABLED } from '@/proxy';
 import { Spinner, Flex, Text } from '@radix-ui/themes';
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 
 
 interface User {
@@ -92,11 +93,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       method: 'POST',
       credentials: 'include'
     });
-    
+
     setUser(null);
     //router.push('/login');
     window.location.href = '/login'; // Жесткая перезагрузка страницы
   };
+
+  // Handle token refresh failure — force logout
+  const handleRefreshFailure = useCallback(() => {
+    setUser(null);
+    window.location.href = '/login';
+  }, []);
+
+  // Automatic token refresh every 10 minutes
+  useTokenRefresh({
+    onRefreshFailure: handleRefreshFailure,
+    enabled: !!user, // Only refresh when user is authenticated
+  });
 
   // Автоматический редирект на логин, если пользователь не авторизован
   useEffect(() => {

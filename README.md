@@ -292,9 +292,45 @@ fetch('/api/documents/12/delete', {
 
 **Документация**: [docs/LOGGING.md](./docs/LOGGING.md)
 
-## 📝 Логирование
+### 6. Автоматическое обновление токенов
+- Access token живёт 15 минут, автоматически обновляется каждые 10 минут через `useTokenRefresh` hook
+- Refresh failed → автоматический редирект на страницу входа
+- Сессия хранится 7 дней с контролем активности (idle timeout 30 мин)
+
+### 7. Бэкапы и восстановление
+- **Автоматические** — ежедневный cron в 3:00 AM
+- **PostgreSQL** — `pg_dump` custom format, сжатие, верификация целостности
+- **S3 файлы** — полный снимок бакета документов с архивацией
+- **Remote storage** — загрузка в отдельный S3-бакет для бэкапов (rule 3-2-1)
+- **Retention** — 30 дней локально, 90 дней в S3
+- **Восстановление** — интерактивный скрипт с подтверждением и опцией restore-to-new-database
+- **API** — ручное управление через `/api/admin/backup/*` (только ADMIN)
+
+**Команды**:
+```bash
+# Запустить бэкап вручную
+./src/scripts/backup.sh
+
+# Посмотреть доступные бэкапы
+./src/scripts/restore.sh --list
+
+# Восстановить из последнего бэкапа
+./src/scripts/restore.sh
+
+# Восстановить из конкретного бэкапа
+./src/scripts/restore.sh 2025-01-15_030000
+
+# Только БД или только S3
+./src/scripts/restore.sh --db-only
+./src/scripts/restore.sh --s3-only
+```
+
+**Настройка**: скопируйте `src/scripts/backup.env.example` → `src/scripts/backup.env` и заполните учётные данные.
+
+## 📝 Документация
 
 **Логирование**: [docs/LOGGING.md](./docs/LOGGING.md)  
 **Безопасность**: [docs/SECURITY.md](./docs/SECURITY.md)  
 **Security Headers, CORS, CSRF**: [docs/SECURITY_HEADERS_CORS_CSRF.md](./docs/SECURITY_HEADERS_CORS_CSRF.md)  
-**Rate Limiting**: [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md)
+**Rate Limiting**: [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md)  
+**Changelog**: [CHANGELOG.md](./CHANGELOG.md)

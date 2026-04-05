@@ -1,6 +1,7 @@
 // app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { AuthService } from '@/lib/auth/auth.service';
+import { AuthService, JwtPayload } from '@/lib/auth/auth.service';
+import { createSession } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
 import { UserQueries } from '@/lib/db/schema';
 import { UserStatus } from '@/types/types';
@@ -157,16 +158,26 @@ async function handleLogin(request: NextRequest) {
       logger.authLog('LOGIN_SUCCESS', user.id, 'Successfully logged in', { ip: clientIp });
     }
 
-    // 7. Создать JWT токен
-    const token = AuthService.generateToken({
+    // 7. Создать сессию
+    const session = createSession({
+      userId: user.id,
+      userEmail: user.email,
+      refreshTokenHash: AuthService.hashRefreshToken('login_' + Date.now()),
+    });
+
+    // 8. Создать JWT access token с sessionId
+    const tokenPayload: JwtPayload = {
       id: user.id,
       email: user.email,
       role: user.role,
       study_id: user.study_id,
       assigned_site_id: user.assigned_site_id,
-    });
+      sessionId: session.sessionId,
+    };
 
-    // 8. Вернуть ответ с токеном
+    const token = AuthService.generateAccessToken(tokenPayload);
+
+    // 9. Вернуть ответ с токеном
     const response = NextResponse.json({
       success: true,
       user: {
@@ -180,12 +191,12 @@ async function handleLogin(request: NextRequest) {
       }
     });
 
-    // 9. Установить токен в cookie
+    // 10. Установить токен в cookie
     response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 24 * 60 * 60,
+      maxAge: 15 * 60, // 15 minutes (matches ACCESS_TOKEN_EXPIRY)
       path: '/'
     });
 

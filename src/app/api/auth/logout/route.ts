@@ -18,22 +18,30 @@ export async function POST(request: NextRequest) {
   try {
     // Get session ID from auth token cookie
     const authToken = request.cookies.get('auth-token')?.value;
-    
+
     let userId: number | null = null;
     let sessionId: string | null = null;
-    
+
     if (authToken) {
       const payload = AuthService.verifyAccessToken(authToken);
       if (payload) {
         userId = payload.id;
         sessionId = payload.sessionId || null;
+      } else {
+        // Token expired — decode without verification to get sessionId
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.decode(authToken) as { sessionId?: string; id?: number } | null;
+        if (decoded) {
+          sessionId = decoded.sessionId || null;
+          userId = decoded.id || null;
+        }
       }
     }
 
     // Invalidate session
     if (sessionId) {
       const invalidated = invalidateSession(sessionId);
-      
+
       if (invalidated && userId) {
         logger.authLog('LOGOUT_SUCCESS', userId.toString(), 'Session invalidated', {
           sessionId: sessionId.substring(0, 20),
@@ -59,13 +67,13 @@ export async function POST(request: NextRequest) {
       expires: new Date(0),
       path: '/',
     });
-    
+
     response.cookies.set('session_id', '', {
       httpOnly: true,
       expires: new Date(0),
       path: '/',
     });
-    
+
     response.cookies.set('refresh-token', '', {
       httpOnly: true,
       expires: new Date(0),
@@ -75,19 +83,19 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     logger.error('LOGOUT_ERROR', error);
-    
+
     // Still clear cookies even if error occurs
     const response = NextResponse.json({
       success: true,
       message: 'Logged out (with errors)'
     }, { status: 200 });
-    
+
     response.cookies.set('auth-token', '', {
       httpOnly: true,
       expires: new Date(0),
       path: '/',
     });
-    
+
     return response;
   }
 }

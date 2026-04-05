@@ -18,3 +18,54 @@ Features:
 ✅ Добавить rate limiting на все API endpoints
 ✅ Добавить CORS, CSRF, security headers (Helmet)
 ✅ Создать .env.example с документацией всех переменных
+
+
+
+Структура файлов
+src/scripts/
+├── backup.sh              # Основной скрипт бэкапа
+├── restore.sh             # Скрипт восстановления
+└── backup.env.example     # Шаблон конфига (скопировать → backup.env)
+
+src/lib/backup/
+└── backup.service.ts      # TypeScript сервис для API
+
+src/app/api/admin/backup/
+└── route.ts               # API эндпоинты
+Что делает backup.sh
+Шаг	Действие
+Pre-flight	Проверяет pg_dump, aws CLI, переменные окружения
+DB backup	pg_dump -F c -Z 9 (custom format, max compression)
+Verify	pg_restore --list — проверяет что архив не битый
+S3 upload	Копирует .dump.gz в отдельный backup-бакет
+S3 files	aws s3 sync + локальный .tar.gz архив
+Cleanup	Удаляет локальные старше 30 дней, S3 старше 90
+Alert	Шлёт статус в Slack (success/failed/warning)
+Что делает restore.sh
+./restore.sh --list                    # Показать все бэкапы
+./restore.sh                           # Восстановить из последнего
+./restore.sh 2025-01-15_030000         # Конкретная дата
+./restore.sh --db-only                 # Только БД
+./restore.sh --s3-only                 # Только S3 файлы
+Спрашивает подтверждение перед перезаписью
+Предлагает создать бэкап текущего состояния
+Может восстановить в новую БД (безопасный режим)
+API эндпоинты (только ADMIN)
+Метод	Путь	Действие
+POST	/api/admin/backup/run	Запустить бэкап
+GET	/api/admin/backup/status	Статус + список бэкапов
+POST	/api/admin/backup/cleanup?older_than=7	Удалить старые
+Как настроить
+Создать backup.env:
+
+cp src/scripts/backup.env.example src/scripts/backup.env
+# Заполнить пароли и S3 ключи
+Создать отдельный бакет для бэкапов в Yandex Cloud:
+
+tmf-backups  (не тот же, что tmf!)
+Установить зависимости на сервере:
+
+apt install postgresql-client awscli
+Добавить в crontab:
+
+0 3 * * * /scripts/backup.sh >> /var/log/backup.log 2>&1

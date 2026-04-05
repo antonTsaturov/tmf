@@ -19,9 +19,6 @@ import {
 } from '@radix-ui/react-icons';
 import {
   FiInfo,
-  FiFolder,
-  FiLock,
-  FiArchive
 } from 'react-icons/fi';
 import { FaRegFolderOpen, FaRegFolder } from 'react-icons/fa6';
 import StudyInfoPanel from './panels/StudyInfoPanel';

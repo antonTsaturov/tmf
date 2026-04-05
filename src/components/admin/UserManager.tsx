@@ -1,12 +1,52 @@
 'use client'
 import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
-import '@/styles/SiteManager.css';
+import {
+  Box,
+  Flex,
+  Text,
+  Heading,
+  Button,
+  TextField,
+  Select,
+  Badge,
+  Card,
+  Separator,
+  Table,
+  IconButton,
+  Dialog,
+  DropdownMenu,
+  Tooltip,
+  Code,
+  Strong,
+  Em,
+  Avatar,
+  DataList,
+  Callout,
+  Inset,
+  Spinner,
+  ScrollArea,
+} from '@radix-ui/themes';
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiCheck,
+  FiX,
+  FiSave,
+  FiUsers,
+  FiUserCheck,
+  FiUserX,
+  FiUserMinus,
+  FiRefreshCw,
+  FiAlertCircle,
+  FiCheckCircle,
+} from 'react-icons/fi';
 import { AdminContext } from '@/wrappers/AdminContext';
-import { CustomSelect } from '../Select';
 import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study, ROLE_CONFIG as roleConfig } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
 import { useEntityState } from '@/hooks/useEntityState';
+import { useNotification } from '@/wrappers/NotificationContext';
 import { RoleSelector, SelectorValue, SiteSelector, StudySelector } from '../PseudoSelector';
 import { deleteRecord } from '@/lib/api/fetch';
 import { getPermissionsForRole} from '@/lib/auth/permissions';
@@ -35,13 +75,13 @@ interface UserManagerProps {
 
 // Компонент бейджа статуса
 const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false }) => {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const statusConfig = {
-    [UserStatus.ACTIVE]: { label: 'Active', color: '#51cf66', icon: '🟢' },
-    [UserStatus.INACTIVE]: { label: 'Inactive', color: '#868e96', icon: '⚪' },
-    [UserStatus.PENDING]: { label: 'Pending', color: '#ff922b', icon: '🟡' },
-    [UserStatus.TERMINATED]: { label: 'Terminated', color: '#ff6b6b', icon: '🔴' },
+    [UserStatus.ACTIVE]: { label: 'Active', color: 'green', icon: '🟢' },
+    [UserStatus.INACTIVE]: { label: 'Inactive', color: 'gray', icon: '⚪' },
+    [UserStatus.PENDING]: { label: 'Pending', color: 'orange', icon: '🟡' },
+    [UserStatus.TERMINATED]: { label: 'Terminated', color: 'red', icon: '🔴' },
   };
 
   const config = statusConfig[status];
@@ -49,59 +89,45 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
   const handleStatusChange = (newStatus: UserStatus) => {
     if (onChange) {
       onChange(newStatus);
-      setIsEditing(false);
+      setIsOpen(false);
     }
   };
 
-  if (isEditing) {
-    return (
-      <div className="status-editor">
-        {Object.entries(statusConfig).map(([statusKey, config]) => (
-          <button
-            key={statusKey}
-            className="status-option"
-            onClick={() => handleStatusChange(statusKey as UserStatus)}
-            style={{ backgroundColor: config.color }}
-            title={config.label}
-          >
-            {config.icon}
-          </button>
-        ))}
-        <button 
-          className="status-cancel"
-          onClick={() => setIsEditing(false)}
-        >
-          ✕
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div 
-      className={`status-badge ${editable ? 'editable' : ''}`}
-      style={{ backgroundColor: config.color }}
-      onClick={editable ? () => setIsEditing(true) : undefined}
-      title={editable ? 'Click to change status' : config.label}
-    >
-      {config.icon} {config.label}
-    </div>
+    <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenu.Trigger>
+        <Badge
+          size="2"
+          color={config.color as any}
+          style={{ cursor: editable ? 'pointer' : 'default' }}
+        >
+          {config.icon} {config.label}
+        </Badge>
+      </DropdownMenu.Trigger>
+      {editable && (
+        <DropdownMenu.Content>
+          {Object.entries(statusConfig).map(([statusKey, cfg]) => (
+            <DropdownMenu.Item
+              key={statusKey}
+              onClick={() => handleStatusChange(statusKey as UserStatus)}
+            >
+              {cfg.icon} {cfg.label}
+            </DropdownMenu.Item>
+          ))}
+        </DropdownMenu.Content>
+      )}
+    </DropdownMenu.Root>
   );
 };
 
 // Компонент бейджа роли
 const RoleBadge: FC<{ role: UserRole }> = ({ role }) => {
-
   const config = roleConfig[role];
 
   return (
-    <span 
-      className="role-badge"
-      style={{ color: config.color, fontWeight: 600 }}
-      title={config.label}
-    >
+    <Badge size="1" variant="soft" color={config.color as any}>
       {config.label}
-    </span>
+    </Badge>
   );
 };
 
@@ -202,66 +228,71 @@ const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, on
 
 
   return (
-    <div
-      className="site-item" // Используем те же классы для единообразия
-      style={{ animationDelay: `${index * 0.05}s` }}
-      onKeyDown={handleKeyDown}
-      data-testid={`user-${user.id}`}
-    >
-      <div className="site-item-rows">
-        <div className="site-item-first-row">
-          <div className="site-item-first-row-left-block">
-            <div className="site-index">
-              <span className="index-number">{index + 1}</span>
-            </div>
+    <Card variant="surface">
+      <Flex direction="column" gap="3">
+        {/* First Row */}
+        <Flex align="start" justify="between" gap="4">
+          <Flex align="start" gap="3" style={{ flex: 1 }}>
+            {/* Index Number */}
+            <Flex direction="column" align="center">
+              <Flex
+                align="center"
+                justify="center"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 'var(--radius-full)',
+                  backgroundColor: 'var(--accent-3)',
+                  flexShrink: 0
+                }}
+              >
+                <Text size="2" weight="bold" color="indigo">
+                  {index + 1}
+                </Text>
+              </Flex>
+            </Flex>
 
-            <div className="site-details">
+            {/* User Details */}
+            <Flex direction="column" gap="2" style={{ flex: 1, minWidth: 0 }}>
               {isEditing ? (
-                <div className="edit-form">
-                  <input
-                    type="text"
+                <Flex direction="column" gap="2">
+                  <TextField.Root
                     value={editData.name}
                     onChange={handleInputChange('name')}
                     placeholder="Full name *"
-                    className="site-input"
                     autoFocus
-                    required
                   />
-                  <input
+                  <TextField.Root
                     type="email"
                     value={editData.email}
                     onChange={handleInputChange('email')}
                     placeholder="Email *"
-                    className="site-input"
-                    required
                   />
-                  <input
-                    type="text"
+                  <TextField.Root
                     value={editData.title}
                     onChange={handleInputChange('title')}
                     placeholder="Job Title"
-                    className="site-input"
                   />
-                  
-                  <select
+                  <Select.Root
                     value={editData.organisation}
-                    onChange={handleSelectChange('organisation')}
-                    className="site-input"
-                    required
+                    onValueChange={(value) => setEditData(prev => ({
+                      ...prev,
+                      organisation: value as OrganisationType
+                    }))}
                   >
-                    <option value="">Select Organisation *</option>
-                    <option value="CRO">CRO</option>
-                    <option value="SPONSOR">Sponsor</option>
-                    <option value="SITE">Site</option>
-                  </select>
-
-                  <RoleSelector 
+                    <Select.Trigger placeholder="Select organisation" />
+                    <Select.Content>
+                      <Select.Item value="CRO">CRO</Select.Item>
+                      <Select.Item value="SPONSOR">Sponsor</Select.Item>
+                      <Select.Item value="SITE">Site</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                  <RoleSelector
                     selectedValues={editData.role as UserRole[]}
                     onChange={handleRolesChange}
                     placeholder="Select user roles..."
                     disabled={false}
                   />
-
                   <SiteSelector
                     user={user}
                     availableOptions={sites}
@@ -276,139 +307,164 @@ const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, on
                     availableOptions={studies}
                     selectedValues={editData.assigned_study_id as number[]}
                     onChange={handleStudyChange}
-                    placeholder="Select sites..."
+                    placeholder="Select studies..."
                     disabled={false}
-                    //showSiteDetails={true}
-                  />            
-                </div>
+                  />
+                </Flex>
               ) : (
-                <div className="display-details">
-                  <div className="study-header">
-                    <h3 className="site-name">{user.name}</h3>
-                    <span className="site-number">{user.email}</span>
-                  </div>
-
-                  <div className="site-meta">
-                    <div className="site-meta-item">
-                      <span className="meta-label">Title: </span>
-                      <span className="meta-value">
-                        {user.title || 'Not specified'}
-                      </span>
-                    </div>
-                    <div className="site-meta-item">
-                      <span className="meta-label">Organisation: </span>
-                      <span className="meta-value">
-                        {user.organisation}
-                      </span>
-                    </div>
-                    <div className="site-meta-item">
-                      <span className="meta-label">Role: </span>
-                      <span className="meta-value roles-list">
-                        {user.role.map(role => (
-                          <RoleBadge key={role} role={role} />
-                        ))}
-                      </span>
-                    </div>
-                    <div className="site-meta-item">
-                      <span className="meta-label">Last Login: </span>
-                      <span className="meta-value">
-                        {user.last_login 
-                          ? new Date(user.last_login).toLocaleDateString() 
-                          : 'Never'
-                        }
-                      </span>
-                    </div>
-                    <div className="site-meta-item">
-                      <span className="meta-label">Assigned Studies: </span>
-                      <span className="meta-value">
-                        {studies && user
-                          ? studies.filter(study => user.assigned_study_id.includes(Number(study.id))).map((study) => (
-                            <li style={{marginLeft: '20px'}} key={study.id}>
-                              {study.protocol}
-                            </li>))
-                          : 'No studies assigned'
-                        }
-                      </span>
-                    </div>
-                    <div className="site-meta-item">
-                      <span className="meta-label">Assigned Sites: </span>
-                      <span className="meta-value">
-                        {sites && user
-                          ?
-                          sites
-                          .filter(site => user.assigned_site_id.includes(Number(site.id)))
-                          .map((site) => (
-                            <li style={{marginLeft: '20px'}} key={site.id}>
-                              {site.name}
-                            </li>))
-                          : 'No sites assigned'
-                        }
-                      </span>
-                    </div>
-
-                  </div>
-                </div>
+                <Flex direction="column" gap="2">
+                  <Flex align="center" gap="2" wrap="wrap">
+                    <Text size="2" weight="bold" style={{ wordBreak: 'break-word', maxWidth: '100%' }}>
+                      {user.name}
+                    </Text>
+                    <Badge color="gray" variant="soft" size="1">
+                      {user.email}
+                    </Badge>
+                  </Flex>
+                  <Flex gap="2" wrap="wrap" direction="column">
+                    {user.title && (
+                      <Flex gap="1" align="center">
+                        <Text size="1" color="gray">Title:</Text>
+                        <Text size="1">{user.title}</Text>
+                      </Flex>
+                    )}
+                    <Flex gap="1" align="center">
+                      <Text size="1" color="gray">Organisation:</Text>
+                      <Text size="1">{user.organisation}</Text>
+                    </Flex>
+                  </Flex>
+                  <Flex gap="1" align="center" wrap="wrap">
+                    <Text size="1" color="gray">Roles:</Text>
+                    <Flex gap="1" wrap="wrap">
+                      {user.role.map(role => (
+                        <RoleBadge key={role} role={role} />
+                      ))}
+                    </Flex>
+                  </Flex>
+                  {user.assigned_study_id.length > 0 && (
+                    <Flex gap="2">
+                      <Tooltip content={
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {studies
+                            .filter(study => user.assigned_study_id.includes(Number(study.id)))
+                            .map(study => (
+                              <Text key={study.id} size="1">{study.protocol}</Text>
+                            ))
+                          }
+                        </span>
+                      }>
+                        <Badge color="gray" variant="surface" style={{ cursor: 'pointer' }}>
+                          <Flex gap="1" align="center">
+                            <Text size="1">{user.assigned_study_id.length}</Text>
+                            <Text size="1" color="gray">Studies</Text>
+                          </Flex>
+                        </Badge>
+                      </Tooltip>
+                      <Tooltip content={
+                        <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {sites
+                            .filter(site => user.assigned_site_id.includes(Number(site.id)))
+                            .map(site => (
+                              <Text key={site.id} size="1">{site.name}</Text>
+                            ))
+                          }
+                        </span>
+                      }>
+                        <Badge color="gray" variant="surface" style={{ cursor: 'pointer' }}>
+                          <Flex gap="1" align="center">
+                            <Text size="1">{user.assigned_site_id.length}</Text>
+                            <Text size="1" color="gray">Sites</Text>
+                          </Flex>
+                        </Badge>
+                      </Tooltip>
+                    </Flex>
+                  )}
+                </Flex>
               )}
-            </div>
-          </div>
+            </Flex>
+          </Flex>
 
-          <div className="site-status">
-            <StatusBadge 
+          {/* Status */}
+          <Flex direction="column" gap="2">
+            <Text size="1" weight="medium">
+              Change status
+            </Text>
+            <StatusBadge
               status={user.status}
               onChange={(newStatus) => onUpdate(user.id, { status: newStatus })}
               editable={!isEditing}
             />
-          </div>
-        </div>
-        <div className="site-item-second-row">
-          <div className="site-actions">
-            {isEditing ? (
-              <>
-                <button 
-                  onClick={handleSave}
-                  className="action-button save-button"
-                  title="Save changes"
-                >
-                  💾 Save
-                </button>
-                <button 
-                  onClick={handleCancel}
-                  className="action-button cancel-button"
-                  title="Cancel editing"
-                >
-                  ✕ Cancel
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="action-button edit-button"
-                  title="Edit user"
-                >
-                  ✏️ Edit
-                </button>
-                <button 
-                  onClick={() => onDelete(user.id)}
-                  className="action-button delete-button"
-                  title="Delete user"
-                >
-                  🗑️ Delete
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+          </Flex>
+        </Flex>
+
+        {/* Second Row - Actions */}
+        <Separator size="4" />
+        <Flex justify="end" gap="2">
+          {isEditing ? (
+            <>
+              <Button
+                size="2"
+                color="green"
+                onClick={handleSave}
+              >
+                <Flex gap="2" align="center">
+                  <FiCheck />
+                  Save
+                </Flex>
+              </Button>
+              <Button
+                size="2"
+                variant="soft"
+                color="gray"
+                onClick={handleCancel}
+              >
+                <Flex gap="2" align="center">
+                  <FiX />
+                  Cancel
+                </Flex>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                size="2"
+                variant="surface"
+                onClick={() => setIsEditing(true)}
+              >
+                <Flex gap="2" align="center">
+                  <FiEdit2 />
+                  Edit
+                </Flex>
+              </Button>
+              <Button
+                size="2"
+                variant="soft"
+                color="red"
+                onClick={() => onDelete(user.id)}
+              >
+                <Flex gap="2" align="center">
+                  <FiTrash2 />
+                  Delete
+                </Flex>
+              </Button>
+            </>
+          )}
+        </Flex>
+      </Flex>
+    </Card>
   );
 };
 
 // Основной компонент
 const UserManager: FC<UserManagerProps> = () => {
   const { studies, saveUser, loadTable, loadTablePartial, loadAllUsers } = useContext(AdminContext)!;
+  const { addNotification } = useNotification();
 
   const [sites, setSites] = useState<StudySite[]>([]);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<StudyUser | null>(null);
+  const [filterSite, setFilterSite] = useState<number | null>(null);
+  const [filterStudy, setFilterStudy] = useState<number | null>(null);
   
   const { 
     entities: managedUsers, 
@@ -464,14 +520,14 @@ const UserManager: FC<UserManagerProps> = () => {
   // Добавление нового пользователя
   const handleAddUser = useCallback( async () => {
     if (!newUserForm.name.trim() || !newUserForm.email.trim()) {
-      alert('Please fill all required fields: Name and Email.');
+      addNotification('info', 'Please fill all required fields: Name and Email.');
       return;
     }
 
     // Валидация email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newUserForm.email)) {
-      alert('Please enter a valid email address.');
+      addNotification('info', 'Please enter a valid email address.');
       return;
     }
 
@@ -492,24 +548,29 @@ const UserManager: FC<UserManagerProps> = () => {
       created_at: new Date().toISOString()
     };
 
-    const response = await saveUser(Tables.USERS, newUser);
-    if (response) {
-      setNewUserForm({ 
-        name: '', 
-        email: '', 
-        title: '', 
-        organisation: 'CRO',
-        roles: [],
-        assigned_site_id: [],
-        assigned_study_id: [],
-        permissions: undefined
-      });
-      loadUsers();
-    } else {
-      logger.warn('User not saved in DB');
+    try {
+      const response = await saveUser(Tables.USERS, newUser);
+      if (response) {
+        addNotification('success', `User ${newUser.name} has been created successfully. Welcome email sent to ${newUser.email}.`);
+        setNewUserForm({
+          name: '',
+          email: '',
+          title: '',
+          organisation: 'CRO',
+          roles: [],
+          assigned_site_id: [],
+          assigned_study_id: [],
+          permissions: undefined
+        });
+        loadUsers();
+      } else {
+        addNotification('error', 'Failed to save user to database.');
+      }
+    } catch (err) {
+      addNotification('error', 'An error occurred while creating the user.');
     }
 
-  }, [newUserForm, addUser]);
+  }, [newUserForm, addUser, addNotification]);
 
   // Обновление пользователя
   const handleUpdateUser = useCallback((id: StudyUser['id'], updates: Partial<StudyUser>) => {
@@ -517,19 +578,30 @@ const UserManager: FC<UserManagerProps> = () => {
   }, [updateUser]);
 
   // Удаление пользователя
-  const handleDeleteUser = useCallback( async (id: StudyUser['id']) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) {
-      return;
+  const handleDeleteUser = useCallback((id: StudyUser['id']) => {
+    const user = managedUsers.find(u => u.id === id);
+    setUserToDelete(user || null);
+    setDeleteConfirmOpen(true);
+  }, [managedUsers]);
+
+  const confirmDeleteUser = useCallback(async () => {
+    if (!userToDelete) return;
+
+    try {
+      const response = await deleteRecord(Tables.USERS, userToDelete.id);
+      if (response) {
+        removeUser(userToDelete.id);
+        addNotification('success', `User ${userToDelete.name} has been deleted successfully.`);
+      } else {
+        addNotification('error', 'Failed to delete user from database.');
+      }
+    } catch (err) {
+      addNotification('error', 'An error occurred while deleting the user.');
+    } finally {
+      setDeleteConfirmOpen(false);
+      setUserToDelete(null);
     }
-    
-    
-    const response = await deleteRecord(Tables.USERS, id);
-    if (response) {
-      removeUser(id);
-    } else {
-      logger.error('Error: User record not deleted');
-    }
-  }, [removeUser]);
+  }, [userToDelete, removeUser, addNotification]);
 
   const [userObject, setUserObject] = useState<any>([]);
   // Генерация объекта структуры
@@ -559,8 +631,9 @@ const UserManager: FC<UserManagerProps> = () => {
       } else {
         setManagedUsers([]);
       }
-    } catch (error) {
-      logger.error('Error loading users', error);
+    } catch (err) {
+      logger.error('Error loading users', err);
+      addNotification('error', 'Failed to load users from database.');
       setManagedUsers([]);
     }
   };
@@ -637,164 +710,301 @@ const UserManager: FC<UserManagerProps> = () => {
 
   const stats = getStats();
 
-  
+  // Filter users based on selected site and study
+  const filteredUsers = managedUsers?.filter(user => {
+    const matchesSite = filterSite === null || user.assigned_site_id.includes(filterSite);
+    const matchesStudy = filterStudy === null || user.assigned_study_id.includes(filterStudy);
+    return matchesSite && matchesStudy;
+  });
+
+
   return (
-    <div className="site-manager-container">
-      <div className="site-manager-header">
-        <h2>Users Management</h2>
-        <div className="controls">
-          <button 
+    <Flex direction="column" gap="4" p="4">
+      {/* Header */}
+      <Card>
+        <Flex align="center" justify="between">
+          <Heading size="4">
+            <FiUsers style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            Users Management
+          </Heading>
+          <Button
+            variant="soft"
+            color="gray"
             onClick={handleReset}
-            className="action-button reset-button"
           >
-            🔄 Reset
-          </button>
-        </div>
-      </div>
-      
-      <div className="edit-block">
-        {/* Форма добавления нового пользователя */}
-        <div className="add-site-form">
-          <h3>➕ New User</h3>
-          <div className="site-form-grid">
+            <FiRefreshCw /> Reset View
+          </Button>
+        </Flex>
+      </Card>
 
-            
-            {/* <CustomSelect
-              studies={studies}
-              studyHandler={studyHandler}
-            /> */}
+      <Flex gap="4" wrap="wrap">
+        {/* Add User Form */}
+        <Card variant="surface" style={{ flex: '1 1 400px', maxWidth: 500 }}>
+          <Flex direction="column" gap="3">
+            <Heading size="3">
+              <Flex gap="2" align="center">
+                <FiPlus />
+                Add New User
+              </Flex>
+            </Heading>
+            <Flex direction="column" gap="3">
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Full Name *</Text>
+                <TextField.Root
+                  value={newUserForm.name}
+                  onChange={(e) => setNewUserForm(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="John Doe"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Email *</Text>
+                <TextField.Root
+                  type="email"
+                  value={newUserForm.email}
+                  onChange={(e) => setNewUserForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="john@example.com"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Job Title *</Text>
+                <TextField.Root
+                  value={newUserForm.title}
+                  onChange={(e) => setNewUserForm(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Clinical Research Associate"
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Organisation *</Text>
+                <Select.Root
+                  value={newUserForm.organisation}
+                  onValueChange={(value) => setNewUserForm(prev => ({
+                    ...prev,
+                    organisation: value as OrganisationType
+                  }))}
+                >
+                  <Select.Trigger placeholder="Select organisation" />
+                  <Select.Content>
+                    <Select.Item value="CRO">CRO</Select.Item>
+                    <Select.Item value="SPONSOR">Sponsor</Select.Item>
+                    <Select.Item value="SITE">Site</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Role *</Text>
+                <RoleSelector
+                  selectedValues={newUserForm.roles}
+                  onChange={handleRolesChange}
+                  placeholder="Select user roles..."
+                  disabled={false}
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Assigned Study</Text>
+                <StudySelector
+                  availableOptions={studies}
+                  selectedValues={newUserForm.assigned_study_id}
+                  onChange={handleStudyChange}
+                  placeholder="Select studies..."
+                  disabled={false}
+                />
+              </Flex>
+              <Flex direction="column" gap="1">
+                <Text size="1" weight="medium">Assigned Sites</Text>
+                <SiteSelector
+                  availableOptions={sites}
+                  selectedValues={newUserForm.assigned_site_id}
+                  onChange={handleSitesChange}
+                  placeholder="Select assigned sites..."
+                  disabled={false}
+                />
+              </Flex>
+              <Button
+                size="2"
+                color="green"
+                onClick={handleAddUser}
+                disabled={
+                  !newUserForm.name.trim()
+                  || !newUserForm.email.trim()
+                  || !newUserForm.title.trim()
+                  || !newUserForm.organisation.trim()
+                  || newUserForm.roles.length < 1
+                }
+              >
+                <Flex gap="2" align="center">
+                  <FiPlus />
+                  Add User
+                </Flex>
+              </Button>
+              <Text size="1" color="gray">* Required fields</Text>
+            </Flex>
+          </Flex>
+        </Card>
 
-            <label>Full Name*</label>
-            <input
-              type="text"
-              value={newUserForm.name}
-              onChange={(e) => setNewUserForm(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Full name *"
-              className="form-input"
-              required
-            />
-            
-            <label>Email*</label>
-            <input
-              type="email"
-              value={newUserForm.email}
-              onChange={(e) => setNewUserForm(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="Email address *"
-              className="form-input"
-              required
-            />
-            
-            <label>Job Title</label>
-            <input
-              type="text"
-              value={newUserForm.title}
-              onChange={(e) => setNewUserForm(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Job title"
-              className="form-input"
-            />
-            
-            <label>Organisation*</label>
-            <select
-              value={newUserForm.organisation}
-              onChange={(e) => setNewUserForm(prev => ({ 
-                ...prev, 
-                organisation: e.target.value as OrganisationType 
-              }))}
-              className="form-input"
-              required
-            >
-              <option value="CRO">CRO</option>
-              <option value="SPONSOR">Sponsor</option>
-              <option value="SITE">Site</option>
-            </select>
-            
-            <label>Role</label>
-            <RoleSelector 
-              selectedValues={newUserForm.roles}
-              onChange={handleRolesChange}
-              placeholder="Select user roles..."
-              disabled={false}
-            />
+        {/* Users List */}
+        <Card style={{ flex: '2 1 500px' }}>
+          <Flex direction="column" gap="3">
+            {/* Filters */}
+            <Flex gap="3" align="end" p="2" style={{ borderBottom: '1px solid var(--gray-4)' }}>
+              <Box style={{ flex: 1 }}>
+                <Text size="1" weight="medium" mb="1">Filter by Study</Text>
+                <Select.Root
+                  value={filterStudy?.toString() || 'all'}
+                  onValueChange={(value) => {
+                    const studyValue = value === 'all' ? null : Number(value);
+                    setFilterStudy(studyValue);
+                    // Reset site filter when study changes
+                    setFilterSite(null);
+                  }}
+                >
+                  <Select.Trigger placeholder="All studies" style={{ width: '100%' }} />
+                  <Select.Content>
+                    <Select.Item value="all">All studies</Select.Item>
+                    {studies.map(study => (
+                      <Select.Item key={study.id} value={study.id.toString()}>
+                        {study.protocol}
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+              </Box>
 
-            <label>Assigned Study</label>   
-            <StudySelector
-              availableOptions={studies}
-              selectedValues={newUserForm.assigned_study_id}
-              onChange={handleStudyChange}
-              placeholder="Select studies..."
-              disabled={false}
-              //multiple={true}
-            />
-            <label>Assigned Sites</label>
-            <SiteSelector 
-              availableOptions={sites}
-              selectedValues={newUserForm.assigned_site_id}
-              onChange={handleSitesChange}
-              placeholder="Select assigned sites..."
-              disabled={false}
-            />            
- 
-            <button 
-              onClick={handleAddUser}
-              className="add-button"
-              disabled={!newUserForm.name.trim() || !newUserForm.email.trim()}
-            >
-              Add User
-            </button>
-          </div>
-        </div>
 
-        {/* Список пользователей */}
-        <div className="sites-list">
-          <div className="list-header">
-            <div className="header-index">#</div>
-            <div className="header-details">User Details</div>
-            <div className="header-status">Status</div>
-          </div>
-          <div className="sites-list-items">
-            {managedUsers?.map((user, index) => (
-              <UserItem
-                sites={sites}
-                key={user.id}
-                user={user}
-                studies={studies}
-                index={index}
-                onUpdate={handleUpdateUser}
-                onDelete={handleDeleteUser}
-              />
-            ))}
-          </div>          
-        </div>
-      </div>
+              <Box style={{ flex: 1 }}>
+                <Text size="1" weight="medium" mb="1">Filter by Site</Text>
+                <Select.Root
+                  value={filterSite?.toString() || 'all'}
+                  onValueChange={(value) => setFilterSite(value === 'all' ? null : Number(value))}
+                >
+                  <Select.Trigger placeholder="All sites" style={{ width: '100%' }} />
+                  <Select.Content>
+                    <Select.Item value="all">All sites</Select.Item>
+                    {sites
+                      .filter(site => filterStudy === null || site.study_id === filterStudy)
+                      .map(site => (
+                        <Select.Item key={site.id} value={site.id.toString()}>
+                          {site.name}
+                        </Select.Item>
+                      ))
+                    }
+                  </Select.Content>
+                </Select.Root>
+              </Box>
 
-      {/* Статистика */}
-      <div className="stats-bar">
-        <div className="stat-item">
-          <span className="stat-label">Total Users:</span>
-          <span className="stat-value">{stats.total}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Active:</span>
-          <span className="stat-value active">{stats.active}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Pending:</span>
-          <span className="stat-value inactive">{stats.pending}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Inactive:</span>
-          <span className="stat-value locked">{stats.inactive}</span>
-        </div>
-        <div className="stat-item">
-          <span className="stat-label">Terminated:</span>
-          <span className="stat-value terminated">{stats.terminated}</span>
-        </div>
-      </div>
-      
-      <StructurePreview
-        structure={userObject}
-      />
-    </div>
+
+            </Flex>
+
+            {/* List Header */}
+            <Flex align="center" gap="3" p="2" style={{ borderBottom: '1px solid var(--gray-4)' }}>
+              <Box style={{ width: 32, flexShrink: 0 }}>
+                <Text size="1" weight="medium" color="gray">#</Text>
+              </Box>
+              <Box style={{ flex: 1 }}>
+                <Text size="1" weight="medium" color="gray">User Details</Text>
+              </Box>
+              <Box>
+                <Text size="1" weight="medium" color="gray">Status</Text>
+              </Box>
+              <Box style={{ width: 120 }}>
+                <Text size="1" weight="medium" color="gray">Actions</Text>
+              </Box>
+            </Flex>
+
+            {filteredUsers?.length === 0 ? (
+              <Flex align="center" justify="center" p="6">
+                <Flex direction="column" align="center" gap="3">
+                  <FiUsers size={48} color="var(--gray-8)" />
+                  <Heading size="3">
+                    {managedUsers?.length === 0 ? 'No users yet' : 'No users match filters'}
+                  </Heading>
+                  <Text size="2" color="gray">
+                    {managedUsers?.length === 0 
+                      ? 'Add your first user using the form above'
+                      : 'Try adjusting the filters'}
+                  </Text>
+                </Flex>
+              </Flex>
+            ) : (
+              <ScrollArea style={{ maxHeight: 600 }}>
+                <Flex direction="column" gap="2" p="2">
+                  {filteredUsers?.map((user, index) => (
+                    <UserItem
+                      sites={sites}
+                      key={user.id}
+                      user={user}
+                      studies={studies}
+                      index={index}
+                      onUpdate={handleUpdateUser}
+                      onDelete={handleDeleteUser}
+                    />
+                  ))}
+                </Flex>
+              </ScrollArea>
+            )}
+          </Flex>
+        </Card>
+      </Flex>
+
+      {/* Stats Bar */}
+      <Card>
+        <Flex gap="4" wrap="wrap" justify="center">
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Total Users:</Text>
+            <Text size="2" weight="bold">{stats.total}</Text>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Active:</Text>
+            <Badge color="green" variant="soft">{stats.active}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Pending:</Text>
+            <Badge color="orange" variant="soft">{stats.pending}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Inactive:</Text>
+            <Badge color="gray" variant="soft">{stats.inactive}</Badge>
+          </Flex>
+          <Separator orientation="vertical" />
+          <Flex gap="2" align="center">
+            <Text size="1" color="gray">Terminated:</Text>
+            <Badge color="red" variant="soft">{stats.terminated}</Badge>
+          </Flex>
+        </Flex>
+      </Card>
+
+      {/* Structure Preview */}
+      <StructurePreview structure={userObject} />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <Dialog.Content maxWidth="450px">
+          <Dialog.Title>Confirm Delete</Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            Are you sure you want to delete user <Strong>{userToDelete?.name}</Strong>? 
+            This action cannot be undone.
+          </Dialog.Description>
+          <Flex gap="3" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray">
+                Cancel
+              </Button>
+            </Dialog.Close>
+            <Dialog.Close>
+              <Button
+                variant="solid"
+                color="red"
+                onClick={confirmDeleteUser}
+              >
+                <FiTrash2 /> Delete User
+              </Button>
+            </Dialog.Close>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+    </Flex>
   );
 };
 

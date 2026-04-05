@@ -27,7 +27,6 @@ import {
   FiAlertCircle
 } from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
-import { Study, StudySite } from '@/types/types';
 import { logger } from '@/lib/logger';
 
 interface DocumentStats {
@@ -67,7 +66,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
       setLoading(true);
       try {
-        const response = await fetch(`/api/documents/archive?study_id=${currentStudy.id}`);
+        const response = await fetch(`/api/documents/stats?study_id=${currentStudy.id}`);
         if (response.ok) {
           const data = await response.json();
           setDocumentStats(data.stats);
@@ -394,25 +393,6 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                         <Progress value={documentStats.deletedPercent} size="1" color="red" />
                       </Flex>
                     </Flex>
-
-                    {/* Archive Availability */}
-                    {documentStats.canArchive && (
-                      <Flex
-                        p="3"
-                        gap="2"
-                        align="center"
-                        style={{
-                          backgroundColor: 'var(--green-3)',
-                          borderRadius: 'var(--radius-2)',
-                          border: '1px solid var(--green-6)'
-                        }}
-                      >
-                        <FiCheckCircle size={18} color="var(--green-9)" />
-                        <Text size="2" color="green">
-                          All documents are approved. Study is ready for archiving.
-                        </Text>
-                      </Flex>
-                    )}
 
                     {!documentStats.canArchive && documentStats.draft > 0 && (
                       <Flex

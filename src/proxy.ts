@@ -74,13 +74,20 @@ export function proxy(request: NextRequest) {
     const isAuthenticated = !!payload;
 
     // Специальная обработка для страницы логина
-    if (pathname === '/' || pathname === '/login' || pathname.startsWith('/login?')) {
+    if (pathname === '/login' || pathname.startsWith('/login?')) {
       // Если пользователь уже авторизован - редирект на главную
       if (isAuthenticated) {
         response = NextResponse.redirect(new URL('/home', request.url));
       } else {
         // Иначе показываем страницу логина
         response = NextResponse.next();
+      }
+    } else if (pathname === '/') {
+      // Корневой путь: если не авторизован - редирект на логин, если авторизован - на home
+      if (isAuthenticated) {
+        response = NextResponse.redirect(new URL('/home', request.url));
+      } else {
+        response = NextResponse.redirect(new URL('/login', request.url));
       }
     } else if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
       // Пропустить другие публичные пути
