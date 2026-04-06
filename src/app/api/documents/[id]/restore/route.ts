@@ -9,7 +9,7 @@ import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditContext } from '@/lib/audit/audit.middleware';
 import { getDocumentById } from '@/lib/db/document';
 import { AuditAction } from '@/types/audit';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 
 // Handler for restoring document

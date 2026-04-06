@@ -12,7 +12,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentUnarchive } from "@/hooks/useDocumentUnarchive";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface UnarchiveDocumentPanelProps {
   onDocumentUnarchived?: (updatedDoc: Document) => void;

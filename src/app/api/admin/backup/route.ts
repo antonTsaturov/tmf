@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { checkAuth, getAuthenticatedUser } from '@/lib/auth/check-auth';
 import { backupService } from '@/lib/backup/backup.service';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // ─── Admin check helper ──────────────────────────────────────────────────────
 async function requireAdmin(request: NextRequest): Promise<{ authenticated: boolean; response?: NextResponse }> {

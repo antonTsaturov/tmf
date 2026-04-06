@@ -36,7 +36,7 @@ import { Document } from '@/types/document';
 import { ROLE_CONFIG, UserRole } from '@/types/types';
 import { FaUser } from 'react-icons/fa';
 import { DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document.status';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface DocumentReviewPanelProps {
   onReviewComplete?: () => void;

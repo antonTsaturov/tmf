@@ -172,7 +172,7 @@ The validator provides helpful error messages:
 
 ### Environment Validation Module
 
-**File**: [src/lib/env.ts](../src/lib/env.ts)
+**File**: [src/lib/config/env.ts](../src/lib/config/env.ts)
 
 This module:
 - Validates all environment variables on import
@@ -182,7 +182,7 @@ This module:
 
 **Usage**:
 ```typescript
-import { ENV } from '@/lib/env';
+import { ENV } from '@/lib/config/env';
 
 const jwtSecret = ENV.JWT_SECRET;
 const dbUrl = ENV.DATABASE_URL;
@@ -195,17 +195,17 @@ const iamKeyPath = ENV.YC_IAM_KEY_PATH;
 
 Updated to use validated JWT_SECRET:
 ```typescript
-import { ENV } from '@/lib/env';
+import { ENV } from '@/lib/config/env';
 const JWT_SECRET = ENV.JWT_SECRET;
 ```
 
 ### Yandex Cloud IAM
 
-**File**: [src/lib/yc-iam.ts](../src/lib/yc-iam.ts)
+**File**: [src/lib/cloud/yc-iam.ts](../src/lib/cloud/yc-iam.ts)
 
 Updated to use validated IAM key path:
 ```typescript
-import { ENV } from '@/lib/env';
+import { ENV } from '@/lib/config/env';
 fs.readFileSync(ENV.YC_IAM_KEY_PATH, 'utf8')
 ```
 

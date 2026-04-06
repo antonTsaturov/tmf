@@ -6,7 +6,7 @@ import { getTable, getTablePartial, createOrUpdateTable } from '@/lib/api/fetch'
 import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { useAuth } from '@/wrappers/AuthProvider';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export function useStudies() {
   const [studies, setStudies] = useState<Study[]>([]);

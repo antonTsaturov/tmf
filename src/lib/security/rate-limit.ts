@@ -1,16 +1,15 @@
 /**
  * 🚦 NEXT.JS ROUTE HANDLER WRAPPER FOR RATE LIMITING
- * 
+ *
  * Since Next.js API routes don't support Express middleware directly,
  * this wrapper function allows applying rate limiters to route handlers.
- * 
+ *
  * Usage:
  * ```
- * import { rateLimitWrapper } from '@/lib/rate-limit-wrapper';
- * import { loginLimiter } from '@/lib/rate-limit';
- * 
+ * import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
+ *
  * export async function POST(request: NextRequest) {
- *   return rateLimitWrapper(loginLimiter, request, async () => {
+ *   return applyRateLimit(RATE_LIMIT_PRESETS.login, request, async () => {
  *     // Your route logic here
  *   });
  * }
@@ -18,7 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import type RateLimit from 'express-rate-limit';
 
 /**

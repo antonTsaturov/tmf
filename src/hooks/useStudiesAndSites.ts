@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { Study } from '@/types/types';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // interface Study {
 //   id: number;

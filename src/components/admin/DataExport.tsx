@@ -2,7 +2,7 @@ import { FC, useState, useEffect, useCallback, useContext } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { StudyStatus } from '@/types/types';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import {
   Card,
   Flex,

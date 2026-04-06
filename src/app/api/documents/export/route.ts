@@ -7,10 +7,10 @@ import { PassThrough } from "stream";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
 import crypto from "crypto";
-import { buildFileNameWithMode, buildFolderMap, buildFolderPathWithMode } from "@/lib/s3-export";
+import { buildFileNameWithMode, buildFolderMap, buildFolderPathWithMode } from "@/lib/cloud/s3-export";
 import { buildAuditCsv } from "@/lib/audit/buildAuditCsv";
 import { getAuditLogs } from "@/lib/audit/getAuditLogs";
-import { logger } from "@/lib/logger";
+import { logger } from "@/lib/utils/logger";
 
 const limit = pLimit(10);
 const BUCKET_NAME = process.env.YC_BUCKET_NAME!;

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { AuditFilters } from '@/types/audit';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

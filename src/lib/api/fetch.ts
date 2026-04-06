@@ -1,6 +1,6 @@
 import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 
 // GET запрос: Получить все исследования | центры / пользователей /

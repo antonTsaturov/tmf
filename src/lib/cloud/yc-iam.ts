@@ -1,7 +1,7 @@
 
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
-import { ENV } from '@/lib/env';
+import { ENV } from '@/lib/config/env';
 
 export async function getIAMToken() {
   const key = JSON.parse(

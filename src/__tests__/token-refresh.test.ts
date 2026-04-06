@@ -22,7 +22,7 @@ jest.mock('@/lib/db', () => ({
 }));
 
 // ─── Mock logger ────────────────────────────────────────────────────
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -40,7 +40,7 @@ jest.mock('@/lib/logger', () => ({
 }));
 
 // ─── Mock ENV ───────────────────────────────────────────────────────
-jest.mock('@/lib/env', () => ({
+jest.mock('@/lib/config/env', () => ({
   ENV: {
     JWT_SECRET: 'test-jwt-secret-key-for-testing-only-12345',
   },

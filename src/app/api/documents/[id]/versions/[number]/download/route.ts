@@ -1,9 +1,9 @@
 // app/api/documents/[id]/versions/[number]/download/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
-import { getIAMToken } from '@/lib/yc-iam';
+import { getIAMToken } from '@/lib/cloud/yc-iam';
 import { createHash } from 'crypto';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // скачать конкретную версию
 export async function GET(

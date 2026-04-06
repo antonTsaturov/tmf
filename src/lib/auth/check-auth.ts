@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from './auth.service';
 import { getPool } from '@/lib/db/index';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function checkAuth(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;

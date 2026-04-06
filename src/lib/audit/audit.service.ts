@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 import { getPool } from "@/lib/db";
 import { AuditLogEntry } from '@/types/audit';
 import { PoolClient } from "pg";
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 
 const MAX_JSON_SIZE = 20000; // защита от огромных payload

@@ -3,7 +3,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Document, DocumentAction } from "@/types/document";
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 import FilePreviewPanel from "./panels/FilePreviewPanel";
 import NewVersionUploadPanel from "./panels/NewVersionDocumentPanel";

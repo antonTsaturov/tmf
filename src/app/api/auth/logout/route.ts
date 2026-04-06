@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
 import { invalidateSession } from '@/lib/auth/session';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(request: NextRequest) {
   try {

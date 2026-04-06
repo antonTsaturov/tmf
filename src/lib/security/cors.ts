@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Allowed origins for CORS requests
@@ -128,10 +128,10 @@ export function handleCorsPreflight(request: NextRequest): NextResponse {
 
 /**
  * Example usage in API route:
- * 
+ *
  * ```typescript
- * import { applyCorsHeaders, handleCorsPreflight } from '@/lib/cors';
- * 
+ * import { applyCorsHeaders, handleCorsPreflight } from '@/lib/security/cors';
+ *
  * export async function OPTIONS(request: NextRequest) {
  *   return handleCorsPreflight(request);
  * }

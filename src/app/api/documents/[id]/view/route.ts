@@ -1,8 +1,8 @@
 // app/api/documents/[id]/view/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
-import { logger } from '@/lib/logger';
-import { getIAMToken } from '@/lib/yc-iam';
+import { logger } from '@/lib/utils/logger';
+import { getIAMToken } from '@/lib/cloud/yc-iam';
 import { createHash } from 'crypto';
 
 export async function GET(

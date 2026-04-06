@@ -10,7 +10,7 @@ import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
 import { deleteRecord } from '@/lib/api/fetch';
 import { CountrySelector, SelectorValue } from '../PseudoSelector';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Пропсы компонентов
 interface StatusBadgeProps {

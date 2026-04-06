@@ -4,11 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 import { createHash } from "crypto";
-import { getDocumentVersionS3Key } from "@/lib/s3-path";
-import { uploadFileWithIAM } from "@/lib/s3-upload";
+import { getDocumentVersionS3Key } from "@/lib/cloud/s3-path";
+import { uploadFileWithIAM } from "@/lib/cloud/s3-upload";
 import { withAudit, AuditContext } from "@/lib/audit/audit.middleware";
 import { AuditAction, AuditEntity } from "@/types/audit";
-import { logger } from "@/lib/logger";
+import { logger } from "@/lib/utils/logger";
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 

@@ -6,7 +6,7 @@ import { Document } from '@/types/document';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { 
   Box, 
   Card, 

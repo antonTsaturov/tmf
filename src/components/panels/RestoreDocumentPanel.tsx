@@ -26,7 +26,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
 import { useDocumentRestore } from '@/hooks/useDocumentRestore';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface RestoreDocumentPanelProps {
   onDocumentRestored?: (updatedDoc: Document) => void;

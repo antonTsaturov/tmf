@@ -2,7 +2,7 @@
 // новый хук, который передает в компонент только обновленный номер версии документа
 import { useState } from 'react';
 import { Document } from '@/types/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface NewVersionUploadResult {
   success: boolean;

@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, DB_INITIALIZED } from '@/lib/db/index';
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { ensureTablesExist } from '@/lib/db/document';
-import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
 
 
 // Получение документов при просмотре содержимого папки

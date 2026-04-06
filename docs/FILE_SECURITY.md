@@ -124,7 +124,7 @@ Returns allowed file types and size limits:
 ### Server-Side Validation
 
 ```typescript
-import { validateFileUpload } from '@/lib/file-security';
+import { validateFileUpload } from '@/lib/security/file-security';
 
 // In your upload handler
 const file = request.files[0];
@@ -188,7 +188,7 @@ YC_IAM_KEY_PATH=...
 
 ### Programmatic Configuration
 
-In `src/lib/file-security.ts`:
+In `src/lib/security/file-security.ts`:
 
 ```typescript
 export const FILE_SECURITY_CONFIG = {

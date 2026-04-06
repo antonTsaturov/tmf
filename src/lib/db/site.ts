@@ -1,6 +1,6 @@
 import { getPool } from './index';
 import { StudySite } from '@/types/types';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function bulkSaveData(sites: StudySite[]) {
   if (!sites || sites.length === 0) {

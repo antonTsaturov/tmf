@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPool } from '@/lib/db'
 import { AuditService } from '@/lib/audit/audit.service'
-import { logger } from '@/lib/logger'
+import { logger } from '@/lib/utils/logger'
 
 type SqlParam = string | number | boolean | null
 

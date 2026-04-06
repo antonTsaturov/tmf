@@ -5,8 +5,8 @@ import { createSession } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
 import { UserQueries } from '@/lib/db/schema';
 import { UserStatus } from '@/types/types';
-import { logger } from '@/lib/logger';
-import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
+import { logger } from '@/lib/utils/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
 
 export async function POST(request: NextRequest) {
   // Apply rate limiting to login endpoint

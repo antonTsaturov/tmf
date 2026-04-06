@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 /**
  * Test Setup - Global mocks and utilities
  */
@@ -85,7 +87,7 @@ jest.mock('next-auth/jwt', () => ({
 }));
 
 // Mock logger to avoid console output in tests
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),

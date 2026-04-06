@@ -26,7 +26,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useRename } from '@/hooks/useRename';
 import { Document } from "@/types/document";
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface EditDocumentPanelProps {
   onTitleChange?: (newTitle: string) => void;

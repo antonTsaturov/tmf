@@ -1,6 +1,6 @@
 import { getPool, createTable } from '@/lib/db/index';
 import { Tables } from './schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Функция для получения документа (должна использоваться только в loadEntity)
 export async function getDocumentById(id: string) {

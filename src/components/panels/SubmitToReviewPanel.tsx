@@ -32,7 +32,7 @@ import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { useAuth } from "@/wrappers/AuthProvider";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface SubmitToReviewPanelProps {
   studyId: number;

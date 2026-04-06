@@ -51,7 +51,7 @@ import { RoleSelector, SelectorValue, SiteSelector, StudySelector } from '../Pse
 import { deleteRecord } from '@/lib/api/fetch';
 import { getPermissionsForRole} from '@/lib/auth/permissions';
 import { v4 as uuidv4 } from 'uuid';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Пропсы компонентов
 interface StatusBadgeProps {

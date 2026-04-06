@@ -1,4 +1,4 @@
-// @/lib/s3-export.ts
+// @/lib/cloud/s3-export.ts
 
 interface ExportDoc {
   study_id: number | string;

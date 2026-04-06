@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db/index';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { getDocumentById } from '@/lib/db/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function unarchiveHandler(
   request: NextRequest,

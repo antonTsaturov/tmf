@@ -13,7 +13,7 @@ import {
   DocumentReviewEmailData,
   EmailSendOptions
 } from './types';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export class EmailService {
   private static instance: EmailService;

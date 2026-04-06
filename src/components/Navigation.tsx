@@ -9,7 +9,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { IoIosArrowForward } from "react-icons/io";
 import React from 'react';
 import { ViewLevel } from '@/types/types';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface StudySiteNavigationProps {
   onStudyChange?: (study: Study | undefined) => void;

@@ -202,7 +202,7 @@ jest.mock('bcryptjs', () => ({
 }));
 
 // Logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   logger: { error: jest.fn(), info: jest.fn(), /* ... */ },
 }));
 

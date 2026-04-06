@@ -1,8 +1,8 @@
 import { FC, useState } from "react";
 import '../styles/PresudoSelector.css';
 import { UserRole, StudySite, SiteStatus, Study, StudyUser, ROLE_CONFIG } from "@/types/types";
-import { COUNTRIES } from "@/lib/constants";
-import { logger } from '@/lib/logger';
+import { COUNTRIES } from "@/lib/config/constants";
+import { logger } from '@/lib/utils/logger';
 import {
   Flex,
   Text,

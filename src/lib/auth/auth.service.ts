@@ -2,7 +2,7 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { ENV } from '@/lib/env';
+import { ENV } from '@/lib/config/env';
 
 const JWT_SECRET = ENV.JWT_SECRET;
 const REFRESH_SECRET = ENV.JWT_SECRET + '_refresh'; // Use different salt for refresh tokens

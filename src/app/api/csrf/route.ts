@@ -8,8 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createCsrfToken } from '@/lib/csrf';
-import { logger } from '@/lib/logger';
+import { createCsrfToken } from '@/lib/security/csrf';
+import { logger } from '@/lib/utils/logger';
 import crypto from 'crypto';
 
 /**

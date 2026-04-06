@@ -3,7 +3,7 @@
 import { StudyApiHandler } from '@/app/api/base';
 import { NextRequest, NextResponse } from 'next/server';
 import { Tables, UserQueries } from '@/lib/db/schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { getPool, DB_INITIALIZED, createTable } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/auth/check-auth';
 

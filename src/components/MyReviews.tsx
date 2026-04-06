@@ -45,7 +45,7 @@ import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
 import DocumentReviewPanel from "./panels/ReviewDocumentPanel";
 import { MainContext } from '@/wrappers/MainContext';
 import { Document } from '@/types/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface PaginationInfo {
   total: number;

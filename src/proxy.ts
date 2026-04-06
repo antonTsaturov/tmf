@@ -11,8 +11,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from './lib/auth/auth.service';
-import { getSecurityHeaders } from './lib/security-headers';
-import { applyCorsHeaders, handleCorsPreflight } from './lib/cors';
+import { getSecurityHeaders } from './lib/security/security-headers';
+import { applyCorsHeaders, handleCorsPreflight } from './lib/security/cors';
 
 // Публичные пути (не требуют авторизации)
 const PUBLIC_PATHS = [

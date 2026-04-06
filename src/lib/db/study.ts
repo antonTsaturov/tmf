@@ -1,7 +1,7 @@
 import { getPool } from './index';
 import { Study } from '@/types/types';
 import { Tables } from './schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function createOrUpdateRecord(table: Tables, id: number | string, updates: Partial<Study>) {
 

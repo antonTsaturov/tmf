@@ -9,8 +9,8 @@
  * - Global rate limiting (200 per 15 min)
  */
 
-//import { RATE_LIMITS } from '@/lib/rate-limit';
-import { RATE_LIMIT_PRESETS as RATE_LIMITS } from '@/lib/rate-limit-wrapper';
+//import { RATE_LIMITS } from '@/lib/security/rate-limit';
+import { RATE_LIMIT_PRESETS as RATE_LIMITS } from '@/lib/security/rate-limit';
 
 describe('Rate Limiting - Configuration', () => {
   describe('RATE_LIMITS', () => {

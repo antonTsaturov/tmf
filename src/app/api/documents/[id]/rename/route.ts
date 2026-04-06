@@ -4,7 +4,7 @@ import { getPool } from '@/lib/db/index';
 import { withAudit } from '@/lib/audit/audit.middleware';
 import { AuditContext } from '@/lib/audit/audit.middleware';
 import { Tables } from '@/lib/db/schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Function to get document with its current version for audit
 export async function getDocumentForAudit(documentId: string) {

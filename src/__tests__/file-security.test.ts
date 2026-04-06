@@ -13,7 +13,7 @@ import {
   validateFileUpload,
   FILE_SECURITY_CONFIG,
   getAllowedFileTypes,
-} from '@/lib/file-security';
+} from '@/lib/security/file-security';
 
 describe('File Security - Configuration', () => {
   describe('FILE_SECURITY_CONFIG', () => {

@@ -3,7 +3,7 @@ import { useState, useCallback, useContext } from 'react';
 import { Document, DocumentAction } from '@/types/document';
 import { StudyUser, UserRole } from '@/types/types';
 import { MainContext } from '@/wrappers/MainContext';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface UseDocumentToReviewReturn {
   // Состояния

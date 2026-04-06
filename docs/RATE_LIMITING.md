@@ -136,7 +136,7 @@ Set `NODE_ENV=production` to enable rate limiting locally.
 
 ### Custom Rate Limits
 
-To change rate limit values, edit [src/lib/rate-limit-wrapper.ts](../src/lib/rate-limit-wrapper.ts):
+To change rate limit values, edit [src/lib/security/rate-limit-wrapper.ts](../src/lib/security/rate-limit-wrapper.ts):
 
 ```typescript
 // Example: Increase login limit to 10 attempts

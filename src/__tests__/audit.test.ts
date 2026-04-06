@@ -22,7 +22,7 @@ jest.mock('@/lib/db', () => ({
 }));
 
 // Mock logger
-jest.mock('@/lib/logger', () => ({
+jest.mock('@/lib/utils/logger', () => ({
   logger: {
     error: jest.fn(),
   },

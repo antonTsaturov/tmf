@@ -9,7 +9,7 @@ import { AuditService } from '@/lib/audit/audit.service';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { Transitions } from '@/domain/document/document.transitions';
 import { AuditAction, AuditEntity } from '@/types/audit';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface ActionRequest {
   action: DocumentAction;

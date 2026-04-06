@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
 import { getPool } from '@/lib/db/index';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;

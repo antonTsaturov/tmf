@@ -3,7 +3,7 @@ import React, { useContext } from 'react';
 import { Flex, Tooltip, Box } from '@radix-ui/themes';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { IoIosCheckmark } from "react-icons/io";
-import { Colors } from '@/lib/constants';
+import { Colors } from '@/lib/config/constants';
 import { MainContext } from '@/wrappers/MainContext';
 
 interface DocumentStatusIndicatorProps {

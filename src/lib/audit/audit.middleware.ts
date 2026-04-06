@@ -1,6 +1,6 @@
 // lib/audit/audit.middleware.ts
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 /*
   цепочка выполнения withAudit()

@@ -6,7 +6,7 @@ import { MdCached } from "react-icons/md";
 import { usePDFCache } from '@/hooks/usePDFCache';
 import '../styles/PDFViewer.css';
 import { Flex, Spinner } from '@radix-ui/themes';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface PDFViewerProps {
   onClose?: () => void;

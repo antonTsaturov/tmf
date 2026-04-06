@@ -17,9 +17,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService, type JwtPayload } from '@/lib/auth/auth.service';
 import { updateSessionActivity, getSession } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import jwt from 'jsonwebtoken';
-import { ENV } from '@/lib/env';
+import { ENV } from '@/lib/config/env';
 
 export async function POST(request: NextRequest) {
   try {

@@ -21,7 +21,7 @@ import { EyeOpenIcon, EyeClosedIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { FaUser } from "react-icons/fa";
 import { useNotification } from '@/wrappers/NotificationContext';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface UserSettingsProps {
   open: boolean;

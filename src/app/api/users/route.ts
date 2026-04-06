@@ -5,7 +5,7 @@ import { Tables } from '@/lib/db/schema';
 import { getPool } from '@/lib/db';
 import { NotificationService } from '@/services/notification.service';
 import { AuthService } from '@/lib/auth/auth.service';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import crypto from 'crypto';
 
 // Создаем экземпляр класса

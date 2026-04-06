@@ -4,7 +4,7 @@ import { useAuth } from '@/wrappers/AuthProvider';
 import { ActionRoleMap } from '@/domain/document/document.policy';
 import { DocumentAction } from '@/types/document';
 import { UserRole } from '@/types/types';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 const canApprove = (userRole: UserRole): boolean => {
   return ActionRoleMap[DocumentAction.APPROVE].includes(userRole);

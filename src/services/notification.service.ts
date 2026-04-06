@@ -2,7 +2,7 @@
 import { getPool } from '@/lib/db';
 import { EmailService } from '@/lib/email/email.service';
 import { DocumentInfo } from '@/lib/email/types';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export interface StudyUser {
   id: number;

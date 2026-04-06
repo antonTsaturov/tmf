@@ -27,7 +27,7 @@ import {
   FiAlertCircle
 } from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface DocumentStats {
   total: number;

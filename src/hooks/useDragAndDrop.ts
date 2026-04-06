@@ -1,6 +1,6 @@
 // hooks/useDragAndDrop.ts
 import { useState, useCallback, DragEvent, useRef } from 'react';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface UseDragAndDropOptions {
   onDropFiles: (files: File[]) => void;

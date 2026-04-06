@@ -3,11 +3,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { createHash } from 'crypto';
-import { getIAMToken } from '@/lib/yc-iam';
+import { getIAMToken } from '@/lib/cloud/yc-iam';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
-import { logger } from '@/lib/logger';
-import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
-import { validateFileUpload, getAllowedFileTypes } from '@/lib/file-security';
+import { logger } from '@/lib/utils/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
+import { validateFileUpload, getAllowedFileTypes } from '@/lib/security/file-security';
 import { NotificationService } from '@/services/notification.service';
 
 // Функция для кодирования метаданных в ASCII

@@ -25,7 +25,7 @@ import {
 import { useDocumentDelete } from "@/hooks/useDocumentDelete";
 import { MainContext } from "@/wrappers/MainContext";
 import { useNotification } from '@/wrappers/NotificationContext';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface DeleteDocumentPanelProps {
   onDocumentDeleted?: () => void;

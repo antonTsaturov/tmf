@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createOrUpdateRecord } from '@/lib/db/study';
 import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables, UserQueries } from '@/lib/db/schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export class StudyApiHandler {
   // GET: get all records from table

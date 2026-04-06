@@ -29,7 +29,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentArchive } from "@/hooks/useDocumentArchive";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { Document } from '@/types/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface ArchiveDocumentPanelProps {
   onDocumentArchived?: (updatedDoc: Document) => void;

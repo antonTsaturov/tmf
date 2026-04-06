@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { hash, compare } from 'bcryptjs';
 import { getPool } from '@/lib/db/index';
 import { checkAuth } from '@/lib/auth/check-auth';
-import { logger } from '@/lib/logger';
-import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
+import { logger } from '@/lib/utils/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
 
 export async function POST(request: NextRequest) {
   // Проверяем авторизацию

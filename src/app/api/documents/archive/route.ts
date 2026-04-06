@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, DB_INITIALIZED } from '@/lib/db/index';
 import { ensureTablesExist } from '@/lib/db/document';
 import { AuditService } from '@/lib/audit/audit.service';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 // Получить документы исследования для проверки перед архивацией
 export async function GET(request: NextRequest) {

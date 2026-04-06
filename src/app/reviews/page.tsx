@@ -47,7 +47,7 @@ import PDFViewer from '@/components/PDFViewer';
 import '../../styles/MyReviews.css';
 import { FileIcon } from 'react-file-icon';
 import { useFolderNameByMap } from '@/hooks/useFolderName';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 
 interface PaginationInfo {

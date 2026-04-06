@@ -4,7 +4,7 @@ import { Study, StudyStatus } from '@/types/types';
 import { deleteRecord } from '@/lib/api/fetch';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Tables } from '@/lib/db/schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 import { CountrySelector, SelectorValue } from '@/components/PseudoSelector';
 import StatusBadge from './StatusBadge';
 import { StructurePreview } from './StructurePreview';

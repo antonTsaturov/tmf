@@ -148,7 +148,7 @@ AUDIT: UPDATE_DOCUMENT — обновление документа с логир
 
 ### Импорт
 ```typescript
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 ```
 
 ### Примеры использования

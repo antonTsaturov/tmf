@@ -1,4 +1,4 @@
-import { getIAMToken } from '@/lib/yc-iam';
+import { getIAMToken } from './yc-iam';
 
 
 function encodeMetadata(value: string): string {

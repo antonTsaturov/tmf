@@ -30,16 +30,16 @@ jobs:
         run: npm run build
 
       - name: 🐳 Build Docker image
-        run: docker build -t etmf-app .
+        run: docker build -t tmf-app .
 
       - name: 🏷 Tag image
-        run: docker tag etmf-app ghcr.io/antontsaturov/etmf-app:latest
+        run: docker tag tmf-app ghcr.io/antontsaturov/tmf-app:latest
 
       - name: 🔐 Login to GitHub Container Registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
 
       - name: 📤 Push image
-        run: docker push ghcr.io/antontsaturov/etmf-app:latest
+        run: docker push ghcr.io/antontsaturov/tmf-app:latest
 
       - name: 🚀 Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -49,12 +49,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
-            docker pull ghcr.io/antontsaturov/etmf-app:latest
-            docker stop etmf-app || true
-            docker rm etmf-app || true
+            docker pull ghcr.io/antontsaturov/tmf-app:latest
+            docker stop tmf-app || true
+            docker rm tmf-app || true
             docker run -d \
-              --name etmf-app \
+              --name tmf-app \
               --restart always \
               -p 127.0.0.1:3000:3000 \
               --env-file /home/anton/.env \
-              ghcr.io/antontsaturov/etmf-app:latest
+              ghcr.io/antontsaturov/tmf-app:latest

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/db';
 import { AuthService } from '@/lib/auth/auth.service';
 import { NotificationService } from '@/services/notification.service';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export async function POST(req: NextRequest) {
   try {

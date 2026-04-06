@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
 import { AuthService } from '@/lib/auth/auth.service';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 
 export async function GET(request: NextRequest) {

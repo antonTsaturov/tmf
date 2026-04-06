@@ -2,8 +2,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, DB_INITIALIZED } from '@/lib/db/index';
 import { ensureTablesExist } from '@/lib/db/document';
-import { logger } from '@/lib/logger';
-import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/rate-limit-wrapper';
+import { logger } from '@/lib/utils/logger';
+import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
 
 // Получить статистику документов по исследованию (независимо от статуса исследования)
 export async function GET(request: NextRequest) {

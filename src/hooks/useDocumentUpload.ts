@@ -1,13 +1,13 @@
 // // hooks/useDocumentUpload.ts
 import { useContext, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { getDocumentVersionS3Key } from '@/lib/s3-path';
+import { getDocumentVersionS3Key } from '@/lib/cloud/s3-path';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { MainContext } from '@/wrappers/MainContext';
 import { useNotification } from '@/wrappers/NotificationContext';
 import { useUpload } from '@/wrappers/UploadContext';
 import { Document as DocumentVersion } from '@/types/document';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 type ProgressCallback = (index: number, progress: number, document?: any) => void;
 

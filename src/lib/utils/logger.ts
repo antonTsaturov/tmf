@@ -52,7 +52,7 @@
  * 📝 ПРИМЕРЫ ИСПОЛЬЗОВАНИЯ
  * ═══════════════════════════════════════════════════════════════════════════
  * 
- * import { logger } from '@/lib/logger';
+ * import { logger } from '@/lib/utils/logger';
  * 
  * // Информационный лог
  * logger.info('User registered', { userId: user.id, email: user.email });

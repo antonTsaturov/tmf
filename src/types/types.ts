@@ -5,7 +5,7 @@ export { StudyStatus } from './study';
 export type { Study } from './study';
 export { SiteStatus } from './site';
 export type { StudySite } from './site';
-export { Colors } from '@/lib/constants';
+export { Colors } from '@/lib/config/constants';
 
 // Import for internal use
 //import type { UserRole as UserRoleType } from './user';

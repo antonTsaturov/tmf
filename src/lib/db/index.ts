@@ -1,6 +1,6 @@
 import { Pool } from 'pg';
 import { Tables, tableSQLMap, tableSQLDepend } from './schema';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 export const DB_INITIALIZED = true;
 

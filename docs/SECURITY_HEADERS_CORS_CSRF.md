@@ -44,7 +44,7 @@ Security headers protect against common web vulnerabilities:
 
 ### Configuration Location
 
-**src/lib/security-headers.ts**
+**src/lib/security/security-headers.ts**
 
 ```typescript
 export const securityHeaders = {
@@ -105,7 +105,7 @@ Allows browser to make requests to API from different origins safely.
 
 ### Configuration Location
 
-**src/lib/cors.ts**
+**src/lib/security/cors.ts**
 
 ### Allowed Origins
 
@@ -218,7 +218,7 @@ Prevents malicious sites from making requests on your behalf.
 
 ### Implementation
 
-**Location:** `src/lib/csrf.ts` and `src/app/api/csrf/route.ts`
+**Location:** `src/lib/security/csrf.ts` and `src/app/api/csrf/route.ts`
 
 ### Token Generation
 
@@ -301,7 +301,7 @@ export function DocumentDeleteForm() {
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
-import { requireCsrfToken } from '@/lib/csrf';
+import { requireCsrfToken } from '@/lib/security/csrf';
 
 export async function DELETE(request: NextRequest) {
   try {

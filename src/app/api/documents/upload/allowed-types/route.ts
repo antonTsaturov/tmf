@@ -1,7 +1,7 @@
 // src/app/api/documents/upload/allowed-types/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllowedFileTypes } from '@/lib/file-security';
-import { logger } from '@/lib/logger';
+import { getAllowedFileTypes } from '@/lib/security/file-security';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * GET /api/documents/upload/allowed-types

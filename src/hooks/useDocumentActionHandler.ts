@@ -4,7 +4,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
 import { Document } from '@/types/document';
 import { useDocumentUpload } from './useDocumentUpload';
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/utils/logger';
 
 interface UseDocumentActionHandlerReturn {
   handleAction: (action: DocumentAction, doc?: Document) => void;
