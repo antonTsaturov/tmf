@@ -16,9 +16,9 @@ set -euo pipefail
 # ─── Load environment ──────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [[ -f "${SCRIPT_DIR}/backup.env" ]]; then
+if [[ -f "${SCRIPT_DIR}/.env" ]]; then
   set -a
-  source "${SCRIPT_DIR}/backup.env"
+  source "${SCRIPT_DIR}/.env"
   set +a
 fi
 

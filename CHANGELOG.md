@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Backup system** — Production-ready PostgreSQL + S3 backup system:
   - `src/scripts/backup.sh` — Automated backup script with compression, verification, S3 upload, retention policies, and Slack alerts
   - `src/scripts/restore.sh` — Restore script with safety prompts, pre-restore backup option, and ability to restore to a new database
-  - `src/scripts/backup.env.example` — Environment template for backup configuration
+  - `src/scripts/.env.example` — Environment template for backup configuration
   - `src/lib/backup/backup.service.ts` — TypeScript backup service for programmatic backup management
   - `POST /api/admin/backup/run` — API endpoint to trigger backup from web interface
   - `GET /api/admin/backup/status` — API endpoint to check backup status

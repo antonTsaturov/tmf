@@ -58,7 +58,7 @@ POST	/api/admin/backup/cleanup?older_than=7	Удалить старые
 Как настроить
 Создать backup.env:
 
-cp src/scripts/backup.env.example src/scripts/backup.env
+cp src/scripts/.env.example src/scripts/.env
 # Заполнить пароли и S3 ключи
 Создать отдельный бакет для бэкапов в Yandex Cloud:
 

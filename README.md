@@ -325,7 +325,7 @@ fetch('/api/documents/12/delete', {
 ./src/scripts/restore.sh --s3-only
 ```
 
-**Настройка**: скопируйте `src/scripts/backup.env.example` → `src/scripts/backup.env` и заполните учётные данные.
+**Настройка**: скопируйте `src/scripts/.env.example` → `src/scripts/.env` и заполните учётные данные.
 
 ## 📝 Документация
 
