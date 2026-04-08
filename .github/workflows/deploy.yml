@@ -48,13 +48,52 @@ jobs:
           username: anton
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
+            # docker pull ghcr.io/antontsaturov/tmf-app:latest
+            # docker stop tmf-app || true
+            # docker rm tmf-app || true
+            # docker run -d \
+            #   --name tmf-app \
+            #   --restart always \
+            #   -p 127.0.0.1:3000:3000 \
+            #   --env-file /home/anton/.env \
+            #   ghcr.io/antontsaturov/tmf-app:latest
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
             docker pull ghcr.io/antontsaturov/tmf-app:latest
+            
+            # Создаем директорию для скриптов
+            mkdir -p /home/anton/scripts
+
+            # ОЧИЩАЕМ старые скрипты (опционально)
+            # rm -rf /home/anton/scripts/*            
+            
+            # Временный контейнер для извлечения скриптов
+            docker create --name tmf-temp ghcr.io/antontsaturov/tmf-app:latest
+            
+            # Копируем скрипты из контейнера на хост
+            # Путь внутри контейнера зависит от вашей структуры
+            docker cp tmf-temp:/app/src/scripts/. /home/anton/scripts/ 2>/dev/null || \
+            docker cp tmf-temp:/src/scripts/. /home/anton/scripts/ 2>/dev/null || \
+            docker cp tmf-temp:/scripts/. /home/anton/scripts/ 2>/dev/null || \
+            echo "⚠️ Директория со скриптами не найдена"
+            
+            # Удаляем временный контейнер
+            docker rm tmf-temp
+            
+            # Делаем все скрипты исполняемыми
+            chmod +x /home/anton/scripts/*.sh
+            
+            # Копируем .env файл в директорию скриптов (если нужно)
+            cp /home/anton/.env /home/anton/scripts/.env 2>/dev/null || true
+            
+            # Останавливаем и удаляем старый контейнер
             docker stop tmf-app || true
             docker rm tmf-app || true
+            
+            # Запускаем новый контейнер
             docker run -d \
               --name tmf-app \
               --restart always \
               -p 127.0.0.1:3000:3000 \
               --env-file /home/anton/.env \
-              ghcr.io/antontsaturov/tmf-app:latest
+              ghcr.io/antontsaturov/tmf-app:latest            

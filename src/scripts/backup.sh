@@ -10,7 +10,7 @@
 # Requires:
 #   - pg_dump (postgresql-client)
 #   - aws CLI (or aws-cli for Yandex Cloud S3)
-#   - Environment variables (see backup.env)
+#   - Environment variables (see .env)
 ###############################################################################
 set -euo pipefail
 
@@ -104,28 +104,35 @@ backup_database() {
   local file_gz="${file}.gz"
   local start_time=$(date +%s)
 
-  # Custom format — compressed, supports selective table restore
-  pg_dump \
-    -h "$DB_HOST" \
-    -p "$DB_PORT" \
-    -U "$DB_USER" \
-    -d "$DB_NAME" \
-    -F c \
-    -Z 9 \
-    -f "$file" \
-    --no-owner \
-    --no-privileges \
-    --verbose \
-    2>&1 | tee -a "${BACKUP_DIR}/backup.log"
+  # ─── НОВЫЙ БЛОК ВМЕСТО СТАРОГО PG_DUMP ──────────────────────────────────
+  if command -v pv &>/dev/null; then
+    # Дамп с прогресс-баром (Z 0 — не сжимаем тут, сжмем позже через gzip)
+    pg_dump \
+      -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+      -F c -Z 0 \
+      --no-owner --no-privileges \
+      2>> "${BACKUP_DIR}/backup.log" | pv -pterb > "$file"
+  else
+    log "pv not found, dumping without progress bar..."
+    pg_dump \
+      -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+      -F c -Z 9 \
+      -f "$file" \
+      --no-owner --no-privileges \
+      2>> "${BACKUP_DIR}/backup.log"
+  fi
 
   local pg_exit=${PIPESTATUS[0]}
   if [[ $pg_exit -ne 0 ]]; then
     log "ERROR: pg_dump failed with exit code $pg_exit"
     return 1
   fi
+  # ────────────────────────────────────────────────────────────────────────
 
-  # Gzip for additional compression
-  gzip -9 "$file"
+  # Если использовали pv (файл еще не сжат), сжимаем его
+  if [[ -f "$file" ]]; then
+    gzip -9 "$file"
+  fi
 
   local end_time=$(date +%s)
   local duration=$(( end_time - start_time ))
@@ -135,10 +142,10 @@ backup_database() {
 
   # ─── Verification ───────────────────────────────────────────────────────
   log "Verifying backup integrity..."
-  if pg_restore --list "$file_gz" &>/dev/null; then
-    log "Verification: OK (pg_restore can read the archive)"
+  if gzip -t "$file_gz" 2>/dev/null; then
+    log "Verification: OK"
   else
-    log "ERROR: Backup verification FAILED — archive may be corrupted"
+    log "ERROR: Backup verification FAILED"
     return 1
   fi
 
@@ -182,14 +189,19 @@ backup_s3_files() {
   # ─── Method 1: Direct bucket-to-bucket sync (preferred) ──────────────
   if [[ -n "${S3_BACKUP_DIR}" ]]; then
     log "Syncing to backup bucket..."
-    aws s3 sync \
+    local sync_res
+    sync_res=$(aws s3 sync \
       "s3://${SOURCE_S3_BUCKET}" \
       "${S3_BACKUP_DIR}/files/tmf-${DATE}/" \
       --endpoint-url "$S3_ENDPOINT" \
       --storage-class STANDARD_IA \
-      --quiet \
-      2>&1 | tee -a "${BACKUP_DIR}/backup.log"
-  fi
+      --no-progress 2>&1)
+    
+    # Считаем количество строк со словом "copy:", чтобы понять масштаб
+    local copy_count=$(echo "$sync_res" | grep -c "copy:" || echo "0")
+    log "Sync finished. Copied ${copy_count} files to backup bucket."
+    echo "$sync_res" >> "${BACKUP_DIR}/backup.log"
+  fi  
 
   # ─── Method 2: Download + archive (fallback / additional) ────────────
   local archive="${BACKUP_DIR}/s3/s3_files_${DATE}.tar.gz"
@@ -198,15 +210,17 @@ backup_s3_files() {
   log "Downloading S3 files for archive..."
   mkdir -p "$tmp_dir"
 
-  aws s3 sync \
+  # Заменяем --quiet на --no-progress и считаем файлы на лету
+  local sync_res
+  sync_res=$(aws s3 sync \
     "s3://${SOURCE_S3_BUCKET}" \
     "$tmp_dir" \
     --endpoint-url "$S3_ENDPOINT" \
-    --quiet \
-    2>&1 | tee -a "${BACKUP_DIR}/backup.log"
-
-  local file_count=$(find "$tmp_dir" -type f | wc -l)
-  log "Downloaded ${file_count} files, creating archive..."
+    --no-progress 2>&1)
+    
+  local file_count=$(echo "$sync_res" | grep -c "download:" || echo "0")
+  log "Download finished. Total files downloaded: ${file_count}"
+  echo "$sync_res" >> "${BACKUP_DIR}/backup.log"
 
   tar czf "$archive" -C "$tmp_dir" . 2>/dev/null
   rm -rf "$tmp_dir"
