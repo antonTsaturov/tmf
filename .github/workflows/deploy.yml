@@ -48,17 +48,11 @@ jobs:
           username: anton
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
-            # docker pull ghcr.io/antontsaturov/tmf-app:latest
-            # docker stop tmf-app || true
-            # docker rm tmf-app || true
-            # docker run -d \
-            #   --name tmf-app \
-            #   --restart always \
-            #   -p 127.0.0.1:3000:3000 \
-            #   --env-file /home/anton/.env \
-            #   ghcr.io/antontsaturov/tmf-app:latest
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
+
+            # Сохраняем текущую версию как previous перед обновлением
+            docker tag ghcr.io/antontsaturov/tmf-app:latest ghcr.io/antontsaturov/tmf-app:previous 2>/dev/null || true            
+            
             docker pull ghcr.io/antontsaturov/tmf-app:latest
             
             # Создаем директорию для скриптов

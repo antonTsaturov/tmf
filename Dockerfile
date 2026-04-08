@@ -1,18 +1,58 @@
-FROM node:20-alpine
+# FROM node:20-alpine
 
+# WORKDIR /app
+
+# COPY package*.json ./
+# RUN npm ci
+
+# COPY . .
+
+# RUN npm run build
+
+# ENV NODE_ENV=production
+
+# EXPOSE 3000
+
+# CMD ["npm", "start"]
+
+# # HEALTHCHECK CMD curl --fail http://localhost:3000/health || exit 1
+
+# --- ЭТАП 1: Установка зависимостей ---
+FROM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
-
 COPY package*.json ./
 RUN npm ci
 
+# --- ЭТАП 2: Сборка проекта ---
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
+# Отключаем телеметрию Next.js для ускорения
+ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
-ENV NODE_ENV=production
+# --- ЭТАП 3: Финальный образ (Production) ---
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Создаем системного пользователя для безопасности
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# Копируем ТОЛЬКО необходимые файлы из этапа сборки
+COPY --from=builder /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
 
 EXPOSE 3000
+ENV PORT 3000
 
-CMD ["npm", "start"]
-
-# HEALTHCHECK CMD curl --fail http://localhost:3000/health || exit 1
+# Запускаем через встроенный сервер node (быстрее и легче, чем npm start)
+CMD ["node", "server.js"]

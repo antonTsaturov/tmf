@@ -4,7 +4,7 @@ import type { NextConfig } from 'next';
 import './src/lib/config/env';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: 'standalone'
 };
 
 export default nextConfig;
