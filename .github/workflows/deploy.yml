@@ -65,7 +65,6 @@ jobs:
             docker create --name tmf-temp ghcr.io/antontsaturov/tmf-app:latest
             
             # Копируем скрипты из контейнера на хост
-            # Путь внутри контейнера зависит от вашей структуры
             docker cp tmf-temp:/app/src/scripts/. /home/anton/scripts/ 2>/dev/null || \
             docker cp tmf-temp:/src/scripts/. /home/anton/scripts/ 2>/dev/null || \
             docker cp tmf-temp:/scripts/. /home/anton/scripts/ 2>/dev/null || \
