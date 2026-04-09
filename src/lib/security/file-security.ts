@@ -102,18 +102,18 @@ const BLOCKED_EXTENSIONS = new Set([
  * File magic numbers (signatures) for common file types
  * Used to detect file type regardless of extension/MIME type
  */
-const _FILE_SIGNATURES: Record<string, Array<{ bytes: number[], offset: number }>> = {
-  'pdf': [{ bytes: [0x25, 0x50, 0x44, 0x46], offset: 0 }], // %PDF
-  'zip': [{ bytes: [0x50, 0x4B, 0x03, 0x04], offset: 0 }], // PK..
-  'rar': [{ bytes: [0x52, 0x61, 0x72, 0x21], offset: 0 }], // Rar!
-  '7z': [{ bytes: [0x37, 0x7A, 0xBC, 0xAF], offset: 0 }], // 7z..
-  'gzip': [{ bytes: [0x1F, 0x8B], offset: 0 }], // ..
-  'doc': [{ bytes: [0xD0, 0xCF, 0x11, 0xE0], offset: 0 }], // Ole2
-  'png': [{ bytes: [0x89, 0x50, 0x4E, 0x47], offset: 0 }], // .PNG
-  'jpeg': [{ bytes: [0xFF, 0xD8, 0xFF], offset: 0 }], // ÿØÿ
-  'gif': [{ bytes: [0x47, 0x49, 0x46], offset: 0 }], // GIF
-  'exe': [{ bytes: [0x4D, 0x5A], offset: 0 }], // MZ (DOS/Windows executable)
-};
+// const _FILE_SIGNATURES: Record<string, Array<{ bytes: number[], offset: number }>> = {
+//   'pdf': [{ bytes: [0x25, 0x50, 0x44, 0x46], offset: 0 }], // %PDF
+//   'zip': [{ bytes: [0x50, 0x4B, 0x03, 0x04], offset: 0 }], // PK..
+//   'rar': [{ bytes: [0x52, 0x61, 0x72, 0x21], offset: 0 }], // Rar!
+//   '7z': [{ bytes: [0x37, 0x7A, 0xBC, 0xAF], offset: 0 }], // 7z..
+//   'gzip': [{ bytes: [0x1F, 0x8B], offset: 0 }], // ..
+//   'doc': [{ bytes: [0xD0, 0xCF, 0x11, 0xE0], offset: 0 }], // Ole2
+//   'png': [{ bytes: [0x89, 0x50, 0x4E, 0x47], offset: 0 }], // .PNG
+//   'jpeg': [{ bytes: [0xFF, 0xD8, 0xFF], offset: 0 }], // ÿØÿ
+//   'gif': [{ bytes: [0x47, 0x49, 0x46], offset: 0 }], // GIF
+//   'exe': [{ bytes: [0x4D, 0x5A], offset: 0 }], // MZ (DOS/Windows executable)
+// };
 
 /**
  * Validates if a file has dangerous magic number

@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
   const studyProtocol = studyRows[0].protocol;
   const folderMap = buildFolderMap(studyRows[0].folders_structure);
 
-  const query = "";
+  let query = "";
   const params = [studyId];
 
   // Получаем документы

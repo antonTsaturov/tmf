@@ -19,7 +19,7 @@ import { updateSessionActivity, getSession } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
 import { logger } from '@/lib/utils/logger';
 import jwt from 'jsonwebtoken';
-import { _ENV } from '@/lib/config/env';
+import { ENV } from '@/lib/config/env';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,21 +40,18 @@ export async function POST(request: NextRequest) {
     // Try to verify the access token first (might still be valid)
     let sessionId: string | null = null;
     let userId: number | null = null;
-    let _userEmail: string | null = null;
 
     const validPayload = AuthService.verifyAccessToken(authToken);
     if (validPayload) {
       sessionId = validPayload.sessionId || null;
       userId = validPayload.id;
-      _userEmail = validPayload.email;
     } else {
       // Token expired — decode without verification to extract sessionId
       try {
-        const decoded = jwt.decode(authToken) as { sessionId?: string; id?: number; email?: string } | null;
+        const decoded = jwt.decode(authToken) as { sessionId?: string; id?: number } | null;
         if (decoded) {
           sessionId = decoded.sessionId || null;
           userId = decoded.id || null;
-          _userEmail = decoded.email || null;
         }
       } catch {
         // ignore decode errors

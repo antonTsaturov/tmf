@@ -252,13 +252,6 @@ export const UserQueries = {
     ORDER BY id ASC
   `,
 
-  // Поиск пользователей по роли
-  getUsersByRole: (_role: string) => `
-    SELECT ${getSafeUserFields()}
-    FROM ${Tables.USERS}
-    WHERE $1 = ANY(role)
-    ORDER BY name ASC
-  `,
 
   // Получение пользователя для аутентификации (с паролем)
   getUserForAuthentication: (email: boolean = true) => `
@@ -268,75 +261,7 @@ export const UserQueries = {
     FROM ${Tables.USERS}
     WHERE ${email ? 'email' : 'id'} = $1
   `,
-
-  // Получение всех пользователей исследования с определенной ролью
-  getUsersByStudyAndRole: (_studyId: number, _role: string) => `
-    SELECT ${getSafeUserFields()}
-    FROM ${Tables.USERS}
-    WHERE $1 = ANY(assigned_study_id)
-      AND $2 = ANY(roles)
-    ORDER BY name ASC
-  `,
   
-  // Обновление статуса пользователя
-  updateUserStatus: (_userId: number, _status: string) => `
-    UPDATE ${Tables.USERS} 
-    SET status = $2, updated_at = NOW()
-    WHERE id = $1
-    RETURNING *
-  `,
-  
-  // Сброс счетчика неудачных попыток входа
-  resetFailedLoginAttempts: (_userId: number) => `
-    UPDATE ${Tables.USERS} 
-    SET failed_login_attempts = 0, updated_at = NOW()
-    WHERE id = $1
-  `,
-  
-  // Добавление исследования пользователю
-  addStudyToUser: (_userId: number, _studyId: number) => `
-    UPDATE ${Tables.USERS} 
-    SET assigned_study_id = array_append(assigned_study_id, $2),
-        updated_at = NOW()
-    WHERE id = $1
-    RETURNING assigned_study_id
-  `,
-  
-  // Удаление исследования у пользователя
-  removeStudyFromUser: (_userId: number, _studyId: number) => `
-    UPDATE ${Tables.USERS} 
-    SET assigned_study_id = array_remove(assigned_study_id, $2),
-        updated_at = NOW()
-    WHERE id = $1
-    RETURNING assigned_study_id
-  `,
-
-  // Добавление центров пользователю
-  addSiteToUser: (_userId: number, _siteId: number) => `
-    UPDATE ${Tables.USERS} 
-    SET assigned_site_id = array_append(assigned_site_id, $2),
-        updated_at = NOW()
-    WHERE id = $1
-    RETURNING assigned_site_id
-  `,
-  
-  // Удаление исследования у пользователя
-  removeSiteFromUser: (_userId: number, _siteId: number) => `
-    UPDATE ${Tables.USERS} 
-    SET assigned_site_id = array_remove(assigned_site_id, $2),
-        updated_at = NOW()
-    WHERE id = $1
-    RETURNING assigned_site_id
-  `,
-  
-  // Обновление разрешений пользователя
-  updateUserPermissions: (_userId: number, _permissions: any) => `
-    UPDATE ${Tables.USERS} 
-    SET permissions = $2::jsonb,
-        updated_at = NOW()
-    WHERE id = $1
-    RETURNING permissions
-  `
 };
 
 export const tableSQLMap: Record<Tables, string> = {
