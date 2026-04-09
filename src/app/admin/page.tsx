@@ -1,61 +1,14 @@
 // app/admin/page.tsx
 'use client';
-import { useState, useEffect, useContext, useMemo } from 'react';
 import { 
-  Container, 
-  Flex, 
   Text, 
-  Card, 
   Box, 
-  Heading,
   Button,
-  Badge,
-  Table,
-  TextField,
-  Select,
-  Spinner,
-  Separator,
-  IconButton,
-  Tooltip,
-  AlertDialog,
   Tabs
 } from '@radix-ui/themes';
-import {
-  FiSearch,
-  FiFilter,
-  FiFileText,
-  FiCheckCircle,
-  FiXCircle,
-  FiEye,
-  FiDownload,
-  FiClock,
-  FiUser,
-  FiFolder,
-  FiCalendar,
-  FiChevronLeft,
-  FiChevronRight,
-  FiRefreshCw,
-  FiX
-} from 'react-icons/fi';
-import { useAuth } from '@/wrappers/AuthProvider';
-import { useNotification } from '@/wrappers/NotificationContext';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { MainContext } from '@/wrappers/MainContext';
-
-import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
-import DocumentReviewPanel from "@/components/panels/ReviewDocumentPanel";
-import { Document } from '@/types/document';
 import UserMenu from '@/components/UserMenu';
-import { DocumentModeToggle } from '@/components/DocumentModeToggle';
-import DocumentDetails from '@/components/DocumentDetails';
-import PDFViewer from '@/components/PDFViewer';
 import '../../styles/MyReviews.css';
-import { FileIcon } from 'react-file-icon';
-import { useFolderNameByMap } from '@/hooks/useFolderName';
-import { Study } from '@/types/types';
 import AuditTrailViewer from '@/components/admin/AuditTrailViewer';
 import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
 import FoldersStructureManager from '@/components/admin/FoldersStructureManager';

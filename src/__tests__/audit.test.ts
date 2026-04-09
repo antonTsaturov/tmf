@@ -12,6 +12,7 @@ import { AuditService } from '@/lib/audit/audit.service';
 import { AuditLogEntry } from '@/types/audit';
 import { UserRole } from '@/types/user';
 import { NextRequest } from 'next/server';
+import { PoolClient } from 'pg';
 
 // Mock getPool
 const mockQuery = jest.fn();
@@ -122,11 +123,13 @@ describe('AuditService', () => {
     });
 
     it('should not throw on serialization errors', async () => {
-      const circularEntry: any = {
+      const circularPayload: { self?: unknown } = {};
+      circularPayload.self = circularPayload;
+
+      const circularEntry: AuditLogEntry = {
         ...mockAuditEntry,
-        new_value: {} as any,
+        new_value: circularPayload,
       };
-      circularEntry.new_value.self = circularEntry; // Circular reference
 
       await AuditService.log(circularEntry);
       expect(mockQuery).toHaveBeenCalled();
@@ -216,7 +219,7 @@ describe('AuditService', () => {
     it('should extract session ID from cookies', () => {
       const mockRequest = {
         headers: {
-          get: (name: string) => null,
+          get: () => null,
           has: () => false,
         },
         cookies: {
@@ -234,7 +237,7 @@ describe('AuditService', () => {
     it('should generate session ID if not present in cookies', () => {
       const mockRequest = {
         headers: {
-          get: (name: string) => null,
+          get: () => null,
           has: () => false,
         },
         cookies: {
@@ -320,7 +323,7 @@ describe('AuditService', () => {
         },
       ];
 
-      await AuditService.bulkLog(mockClient as any, entries);
+      await AuditService.bulkLog(mockClient as unknown as PoolClient, entries);
 
       expect(mockClient.query).toHaveBeenCalledTimes(1);
       expect(mockClient.query).toHaveBeenCalledWith(
@@ -330,14 +333,14 @@ describe('AuditService', () => {
     });
 
     it('should handle empty entries array', async () => {
-      await AuditService.bulkLog(mockClient as any, []);
+      await AuditService.bulkLog(mockClient as unknown as PoolClient, []);
       expect(mockClient.query).not.toHaveBeenCalled();
     });
 
     it('should include all entries in bulk insert', async () => {
       const entries: AuditLogEntry[] = Array(5).fill(mockAuditEntry);
 
-      await AuditService.bulkLog(mockClient as any, entries);
+      await AuditService.bulkLog(mockClient as unknown as PoolClient, entries);
 
       const query = mockClient.query.mock.calls[0][0];
       // Should have 5 sets of placeholders

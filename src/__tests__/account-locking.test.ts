@@ -348,7 +348,6 @@ describe('Change Password - Attempt Tracking', () => {
 
   it('should reject same password on change', () => {
     const newPassword = 'same-as-old';
-    const oldPasswordHash = 'hashed-password-12345';
     
     // Should check that new password is different
     expect(newPassword).not.toBe('completely-new-password');

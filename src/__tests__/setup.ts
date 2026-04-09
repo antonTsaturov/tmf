@@ -7,6 +7,8 @@
 import type { Document, DocumentVersionRow } from '@/types/document';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
 
+type MockEntity = Record<string, unknown>;
+
 // Mock console to reduce noise in tests
 global.console = {
   ...console,
@@ -33,7 +35,7 @@ jest.mock('crypto', () => {
     createHash: (algorithm: string) => {
       const hash = actualCrypto.createHash(algorithm);
       const originalUpdate = hash.update.bind(hash);
-      hash.update = (data: any) => {
+      hash.update = (data: string | Buffer) => {
         // For testing, return predictable hash for known inputs
         if (algorithm === 'sha256' && data === 'test content') {
           hash.digest = () => 'a948904f2f0f479b8f8564cbf12dac6b0c1f30e5c5f5b3e5a5f5e5d5c5b5a594';
@@ -105,7 +107,18 @@ jest.mock('@/lib/utils/logger', () => ({
 }));
 
 // Mock session storage — exposed for test assertions
-export const mockSessionStorage = new Map<string, any>();
+type MockSession = {
+  sessionId: string;
+  userId: number;
+  userEmail: string;
+  createdAt: number;
+  lastActivityAt: number;
+  expiresAt: number;
+  refreshTokenHash: string;
+  isValid: boolean;
+};
+
+export const mockSessionStorage = new Map<string, MockSession>();
 jest.mock('@/lib/auth/session', () => {
   const actualSession = jest.requireActual('@/lib/auth/session');
   return {
@@ -163,7 +176,7 @@ jest.mock('@/lib/auth/session', () => {
 // Test utilities
 export const testUtils = {
   // Create a mock user
-  createMockUser: (overrides?: Partial<any>) => ({
+  createMockUser: (overrides?: Partial<MockEntity>) => ({
     id: 'test-user-id',
     email: 'test@example.com',
     name: 'Test User',
@@ -175,7 +188,7 @@ export const testUtils = {
   }),
 
   // Create a mock study
-  createMockStudy: (overrides?: Partial<any>) => ({
+  createMockStudy: (overrides?: Partial<MockEntity>) => ({
     id: 'test-study-id',
     name: 'Test Study',
     protocol_number: 'TEST-001',
@@ -184,7 +197,7 @@ export const testUtils = {
   }),
 
   // Create a mock site
-  createMockSite: (overrides?: Partial<any>) => ({
+  createMockSite: (overrides?: Partial<MockEntity>) => ({
     id: 'test-site-id',
     name: 'Test Site',
     study_id: 'test-study-id',
@@ -240,7 +253,7 @@ export const testUtils = {
   }),
 
   // Create a mock audit event
-  createMockAuditEvent: (overrides?: Partial<any>) => ({
+  createMockAuditEvent: (overrides?: Partial<MockEntity>) => ({
     id: 'test-audit-id',
     user_id: 'test-user-id',
     user_email: 'test@example.com',
@@ -272,7 +285,7 @@ declare global {
   }
 }
 
-(global as any).testUtils = testUtils;
+global.testUtils = testUtils;
 
 // After each test cleanup
 afterEach(() => {

@@ -211,7 +211,7 @@ describe('Token Refresh - JWT Flow', () => {
 
     it('should return null for expired access token', () => {
       // Create a token with very short expiry by modifying the service temporarily
-      const token = AuthService.generateAccessToken(mockPayload);
+      AuthService.generateAccessToken(mockPayload);
 
       // Wait for token to expire (in real scenario would be 15 min)
       // For test, use obviously invalid token

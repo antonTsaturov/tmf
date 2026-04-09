@@ -13,7 +13,7 @@ import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { mockDocument, mockDocumentVersion } from './setup';
 
 describe('Document Versioning', () => {
-  const createMockDocument = (version: number): Document => mockDocument({
+  const createMockDocument = (): Document => mockDocument({
     id: 'doc-1',
     study_id: 1,
     site_id: 'site-1',

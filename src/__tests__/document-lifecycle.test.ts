@@ -11,7 +11,6 @@
 import { Document } from '@/types/document';
 import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { Transitions, SiteStatusTransitions, StudyStatusTransitions } from '@/domain/document/document.transitions';
-import { SiteStatus, StudyStatus } from '@/types/types';
 import { DocumentAction } from '@/types/document';
 import { mockDocument } from './setup';
 
@@ -358,7 +357,7 @@ describe('Document Lifecycle - Integration', () => {
       
       statuses.forEach(status => {
         const doc = createDocument(status);
-        const actions = Transitions[doc.status];
+        Transitions[doc.status];
         // Note: SOFT_DELETE is only in draft status per current implementation
         // This test documents the current behavior
       });
