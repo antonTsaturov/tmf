@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  quality-gate:
+    name: Lint, Test, Build
+    runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-test-jwt-secret-at-least-32-characters
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci_db
+      YC_IAM_KEY_PATH: ./ci-iam-key.json
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create dummy IAM key file for env validation
+        run: echo '{}' > ci-iam-key.json
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test (CI mode)
+        run: npm run test:ci
+
+      - name: Build
+        run: npm run build
