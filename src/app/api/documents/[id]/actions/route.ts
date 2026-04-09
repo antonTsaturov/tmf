@@ -118,35 +118,35 @@ export async function applyDocumentActionHandler(
     }
 
     let newReviewStatus: string | null = document.review_status;
-    let newDocumentStatus: DocumentWorkFlowStatus = currentStatus;
+    let _newDocumentStatus: DocumentWorkFlowStatus = currentStatus;
 
     switch (action) {
       case DocumentAction.SUBMIT_FOR_REVIEW:
         newReviewStatus = 'submitted';
-        newDocumentStatus = DocumentWorkFlowStatus.IN_REVIEW;
+        _newDocumentStatus = DocumentWorkFlowStatus.IN_REVIEW;
         break;
       case DocumentAction.APPROVE:
         newReviewStatus = 'approved';
-        newDocumentStatus = DocumentWorkFlowStatus.APPROVED;
+        _newDocumentStatus = DocumentWorkFlowStatus.APPROVED;
         break;
       case DocumentAction.REJECT:
         newReviewStatus = 'rejected';
-        newDocumentStatus = DocumentWorkFlowStatus.DRAFT;
+        _newDocumentStatus = DocumentWorkFlowStatus.DRAFT;
         break;
       case DocumentAction.ARCHIVE:
-        newDocumentStatus = DocumentWorkFlowStatus.ARCHIVED;
+        _newDocumentStatus = DocumentWorkFlowStatus.ARCHIVED;
         break;
       case DocumentAction.UNARCHIVE:
-        newDocumentStatus = DocumentWorkFlowStatus.DRAFT;
+        _newDocumentStatus = DocumentWorkFlowStatus.DRAFT;
         break;
       case DocumentAction.SOFT_DELETE:
-        newDocumentStatus = DocumentWorkFlowStatus.DELETED;
+        _newDocumentStatus = DocumentWorkFlowStatus.DELETED;
         break;
       case DocumentAction.RESTORE:
-        newDocumentStatus = DocumentWorkFlowStatus.DRAFT;
+        _newDocumentStatus = DocumentWorkFlowStatus.DRAFT;
         break;
       default:
-        newDocumentStatus = currentStatus;
+        _newDocumentStatus = currentStatus;
     }
 
     // ОБНОВЛЕНИЕ ДЛЯ APPROVE И REJECT

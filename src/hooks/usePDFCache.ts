@@ -20,7 +20,7 @@ const DEBUG = false;
 
 export const usePDFCache = () => {
   const [isInitialized, setIsInitialized] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<Object>({});
+  const [debugInfo, setDebugInfo] = useState<object>({});
 
   const log = useCallback((...args: any[]) => {
     if (DEBUG) {
@@ -39,13 +39,13 @@ export const usePDFCache = () => {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-      request.onerror = (event) => {
+      request.onerror = (_event) => {
         const error = request.error;
         logError('Failed to open database:', error);
         reject(error);
       };
 
-      request.onsuccess = (event) => {
+      request.onsuccess = (_event) => {
         const db = request.result;
         log('Database opened successfully', {
           name: db.name,
@@ -177,13 +177,13 @@ export const usePDFCache = () => {
         log('Putting data into store...');
         const request = store.put(cachedPDF);
 
-        request.onerror = (event) => {
+        request.onerror = (_event) => {
           logError('Failed to cache PDF:', request.error);
           setDebugInfo(prev => ({ ...prev, lastError: request.error }));
           reject(request.error);
         };
 
-        request.onsuccess = (event) => {
+        request.onsuccess = (_event) => {
           log('✅ PDF successfully cached!');
           
           // Проверяем, что данные действительно сохранились
@@ -203,7 +203,7 @@ export const usePDFCache = () => {
           log('Transaction completed');
         };
 
-        transaction.onerror = (event) => {
+        transaction.onerror = (_event) => {
           logError('Transaction error:', transaction.error);
         };
       });
@@ -310,7 +310,7 @@ export const usePDFCache = () => {
     return new Promise((resolve) => {
       const request = indexedDB.open(DB_NAME);
       
-      request.onsuccess = (event) => {
+      request.onsuccess = (_event) => {
         const db = request.result;
         const exists = db.objectStoreNames.contains(STORE_NAME);
         log(`Database exists: ${exists}`);

@@ -88,7 +88,7 @@ const Home: React.FC<MainWindowProps> = () => {
                       <div className="right-frame-placeholder">
                         <div className="placeholder-icon">🔒</div>
                         <div className="placeholder-text">
-                          Документ "{selectedDocument.document_name}" был удален<br />
+                          Документ &quot;{selectedDocument.document_name}&quot; был удален<br />
                           <span style={{fontSize: '13px', color: '#6c757d'}}>Просмотр недоступен</span>
                         </div>
                       </div>

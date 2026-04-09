@@ -8,7 +8,7 @@ import { logger } from '@/lib/utils/logger';
  * Returns information about allowed file types and size limits
  * Useful for frontend to show users what can be uploaded
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const allowedTypes = getAllowedFileTypes();
     
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 /**
  * OPTIONS handler for CORS
  */
-export async function OPTIONS(request: NextRequest) {
+export async function OPTIONS(_request: NextRequest) {
   return new NextResponse(null, {
     headers: {
       'Allow': 'GET, OPTIONS',

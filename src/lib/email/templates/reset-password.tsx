@@ -55,14 +55,14 @@ export const ResetPasswordEmail = ({
                 ⏱️ This link will expire in <strong>{expiryMinutes} minutes</strong> for security purposes.
               </Text>
               <Text style={infoText}>
-                If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+                If you didn&apos;t request a password reset, you can safely ignore this email. Your password will remain unchanged.
               </Text>
             </Section>
 
             <Hr style={divider} />
 
             <Text style={paragraph}>
-              If the button doesn't work, copy and paste this link into your browser:
+              If the button doesn&apos;t work, copy and paste this link into your browser:
             </Text>
             <Text style={linkText}>
               {resetUrl}

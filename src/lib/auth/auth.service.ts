@@ -64,7 +64,7 @@ export class AuthService {
       return jwt.verify(token, JWT_SECRET, {
         algorithms: ['HS256']
       }) as JwtPayload;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -77,7 +77,7 @@ export class AuthService {
       return jwt.verify(token, REFRESH_SECRET, {
         algorithms: ['HS256']
       }) as RefreshTokenPayload;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -176,7 +176,7 @@ export class AuthService {
       }
 
       return decoded;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }

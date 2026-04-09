@@ -238,7 +238,7 @@ const getSafeUserFields = () => `
 // Функции для работы с пользователями
 export const UserQueries = {
   // Поиск пользователей по исследованию
-  getUsersByStudy: (studyId: number) => `
+  getUsersByStudy: (_studyId: number) => `
     SELECT ${getSafeUserFields()}
     FROM ${Tables.USERS}
     WHERE $1 = ANY(assigned_study_id)
@@ -253,7 +253,7 @@ export const UserQueries = {
   `,
 
   // Поиск пользователей по роли
-  getUsersByRole: (role: string) => `
+  getUsersByRole: (_role: string) => `
     SELECT ${getSafeUserFields()}
     FROM ${Tables.USERS}
     WHERE $1 = ANY(role)
@@ -270,7 +270,7 @@ export const UserQueries = {
   `,
 
   // Получение всех пользователей исследования с определенной ролью
-  getUsersByStudyAndRole: (studyId: number, role: string) => `
+  getUsersByStudyAndRole: (_studyId: number, _role: string) => `
     SELECT ${getSafeUserFields()}
     FROM ${Tables.USERS}
     WHERE $1 = ANY(assigned_study_id)
@@ -279,7 +279,7 @@ export const UserQueries = {
   `,
   
   // Обновление статуса пользователя
-  updateUserStatus: (userId: number, status: string) => `
+  updateUserStatus: (_userId: number, _status: string) => `
     UPDATE ${Tables.USERS} 
     SET status = $2, updated_at = NOW()
     WHERE id = $1
@@ -287,14 +287,14 @@ export const UserQueries = {
   `,
   
   // Сброс счетчика неудачных попыток входа
-  resetFailedLoginAttempts: (userId: number) => `
+  resetFailedLoginAttempts: (_userId: number) => `
     UPDATE ${Tables.USERS} 
     SET failed_login_attempts = 0, updated_at = NOW()
     WHERE id = $1
   `,
   
   // Добавление исследования пользователю
-  addStudyToUser: (userId: number, studyId: number) => `
+  addStudyToUser: (_userId: number, _studyId: number) => `
     UPDATE ${Tables.USERS} 
     SET assigned_study_id = array_append(assigned_study_id, $2),
         updated_at = NOW()
@@ -303,7 +303,7 @@ export const UserQueries = {
   `,
   
   // Удаление исследования у пользователя
-  removeStudyFromUser: (userId: number, studyId: number) => `
+  removeStudyFromUser: (_userId: number, _studyId: number) => `
     UPDATE ${Tables.USERS} 
     SET assigned_study_id = array_remove(assigned_study_id, $2),
         updated_at = NOW()
@@ -312,7 +312,7 @@ export const UserQueries = {
   `,
 
   // Добавление центров пользователю
-  addSiteToUser: (userId: number, siteId: number) => `
+  addSiteToUser: (_userId: number, _siteId: number) => `
     UPDATE ${Tables.USERS} 
     SET assigned_site_id = array_append(assigned_site_id, $2),
         updated_at = NOW()
@@ -321,7 +321,7 @@ export const UserQueries = {
   `,
   
   // Удаление исследования у пользователя
-  removeSiteFromUser: (userId: number, siteId: number) => `
+  removeSiteFromUser: (_userId: number, _siteId: number) => `
     UPDATE ${Tables.USERS} 
     SET assigned_site_id = array_remove(assigned_site_id, $2),
         updated_at = NOW()
@@ -330,7 +330,7 @@ export const UserQueries = {
   `,
   
   // Обновление разрешений пользователя
-  updateUserPermissions: (userId: number, permissions: any) => `
+  updateUserPermissions: (_userId: number, _permissions: any) => `
     UPDATE ${Tables.USERS} 
     SET permissions = $2::jsonb,
         updated_at = NOW()

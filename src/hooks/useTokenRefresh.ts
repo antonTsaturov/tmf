@@ -4,7 +4,6 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes (access token lives 15 min)
-const RETRY_DELAY = 60 * 1000; // 1 minute retry delay on failure
 
 interface UseTokenRefreshOptions {
   onRefreshSuccess?: (accessToken: string) => void;
@@ -22,7 +21,7 @@ interface UseTokenRefreshOptions {
  */
 export function useTokenRefresh(options?: UseTokenRefreshOptions) {
   const { onRefreshSuccess, onRefreshFailure, enabled = true } = options || {};
-  const router = useRouter();
+  const _router = useRouter();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isRefreshingRef = useRef(false);
 

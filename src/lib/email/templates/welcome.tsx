@@ -9,7 +9,6 @@ import {
   Text,
   Button,
   Hr,
-  Link,
 } from '@react-email/components';
 import { WelcomeEmailData } from '../types';
 

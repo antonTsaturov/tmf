@@ -231,7 +231,7 @@ export async function renameHandler(
   }
 }
 
-const getDocId = (req: NextRequest) =>
+const _getDocId = (req: NextRequest) =>
   req.nextUrl.pathname.split('/').filter(Boolean)[2];
 
 

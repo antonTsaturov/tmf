@@ -336,7 +336,7 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
     if (searchTree.id === folderId) return { folder: searchTree, parent: null };
     
     const searchInChildren = (children: Folder[], parent: Folder): FolderPosition | null => {
-      for (let child of children) {
+      for (const child of children) {
         if (child.id === folderId) {
           return { folder: child, parent };
         }

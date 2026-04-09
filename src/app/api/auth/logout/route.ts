@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
 import { invalidateSession } from '@/lib/auth/session';
 import { logger } from '@/lib/utils/logger';
+import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,7 +30,6 @@ export async function POST(request: NextRequest) {
         sessionId = payload.sessionId || null;
       } else {
         // Token expired — decode without verification to get sessionId
-        const jwt = require('jsonwebtoken');
         const decoded = jwt.decode(authToken) as { sessionId?: string; id?: number } | null;
         if (decoded) {
           sessionId = decoded.sessionId || null;

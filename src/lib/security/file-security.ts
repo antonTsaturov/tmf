@@ -102,7 +102,7 @@ const BLOCKED_EXTENSIONS = new Set([
  * File magic numbers (signatures) for common file types
  * Used to detect file type regardless of extension/MIME type
  */
-const FILE_SIGNATURES: Record<string, Array<{ bytes: number[], offset: number }>> = {
+const _FILE_SIGNATURES: Record<string, Array<{ bytes: number[], offset: number }>> = {
   'pdf': [{ bytes: [0x25, 0x50, 0x44, 0x46], offset: 0 }], // %PDF
   'zip': [{ bytes: [0x50, 0x4B, 0x03, 0x04], offset: 0 }], // PK..
   'rar': [{ bytes: [0x52, 0x61, 0x72, 0x21], offset: 0 }], // Rar!

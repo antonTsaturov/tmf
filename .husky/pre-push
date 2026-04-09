@@ -1,0 +1,24 @@
+#!/bin/sh
+
+echo "🔍 Running pre-push checks..."
+
+echo "📦 Running linter..."
+npm run lint
+LINT_EXIT=$?
+
+if [ $LINT_EXIT -ne 0 ]; then
+  echo "❌ Lint failed. Push aborted."
+  exit 1
+fi
+
+echo "🧪 Running tests..."
+npm run test:ci
+TEST_EXIT=$?
+
+if [ $TEST_EXIT -ne 0 ]; then
+  echo "❌ Tests failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ All checks passed!"
+exit 0

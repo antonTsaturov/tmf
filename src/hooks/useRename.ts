@@ -19,7 +19,7 @@ interface UseRenameReturn {
 export const useRename = (): UseRenameReturn => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { updateContext } = useContext(MainContext)!;
+  const { updateContext: _updateContext } = useContext(MainContext)!;
   const { user } = useAuth()!;
 
   // Rename document

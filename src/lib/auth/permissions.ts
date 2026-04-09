@@ -235,7 +235,7 @@ export function checkMultiplePermissions(
 export function checkPermissionInContext(
   role: UserRole,
   permissionKey: keyof UserPermissions,
-  context: {
+  _context: {
     studyId?: number;
     siteId?: number;
     userId?: number; // Для проверки OWN разрешений

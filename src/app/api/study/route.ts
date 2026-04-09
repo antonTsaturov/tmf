@@ -2,9 +2,9 @@
 
 import { StudyApiHandler } from '@/app/api/base';
 import { NextRequest, NextResponse } from 'next/server';
-import { Tables, UserQueries } from '@/lib/db/schema';
+import { Tables } from '@/lib/db/schema';
 import { logger } from '@/lib/utils/logger';
-import { getPool, DB_INITIALIZED, createTable } from '@/lib/db';
+import { getPool } from '@/lib/db';
 import { getAuthenticatedUser } from '@/lib/auth/check-auth';
 
 // Создаем экземпляр класса

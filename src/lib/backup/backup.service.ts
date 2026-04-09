@@ -7,7 +7,7 @@
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { existsSync, readdirSync, statSync } from 'fs';
+import { existsSync, readdirSync, statSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { logger } from '@/lib/utils/logger';
 
@@ -91,16 +91,16 @@ export class BackupService {
       };
     } catch (error) {
       const duration = (Date.now() - startTime) / 1000;
-      const stderr = (error as any).stderr || '';
+      const _stderr = (error as any).stderr || '';
 
       logger.error('Backup failed', error instanceof Error ? error : null, {
         duration,
-        stderr,
+        stderr: _stderr,
       });
 
       return {
         success: false,
-        message: `Backup failed: ${stderr.split('\n').filter((l: string) => l.includes('ERROR')).join('; ') || 'Unknown error'}`,
+        message: `Backup failed: ${_stderr.split('\n').filter((l: string) => l.includes('ERROR')).join('; ') || 'Unknown error'}`,
         duration,
       };
     }
@@ -154,7 +154,7 @@ export class BackupService {
         const filePath = join(dir, file);
         const stat = statSync(filePath);
         if (stat.mtimeMs < cutoffDate) {
-          require('fs').unlinkSync(filePath);
+          unlinkSync(filePath);
           removed++;
         }
       }

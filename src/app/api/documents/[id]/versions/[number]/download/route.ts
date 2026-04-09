@@ -87,7 +87,7 @@ export async function GET(
       });
     }
 
-    const ext = version.file_name?.split('.').pop() || 'pdf';
+    const _ext = version.file_name?.split('.').pop() || 'pdf';
     const disposition =
       request.nextUrl.searchParams.get('inline') === 'true'
         ? `inline; filename="${version.file_name || 'document.pdf'}"`

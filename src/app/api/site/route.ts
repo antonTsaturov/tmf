@@ -5,7 +5,7 @@ import { Tables } from '@/lib/db/schema';
 // Создаем экземпляр класса
 const studyApiHandler = new StudyApiHandler();
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return studyApiHandler.getTable(Tables.SITE);
 }
 

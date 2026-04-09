@@ -357,7 +357,7 @@ describe('Document Lifecycle - Integration', () => {
       
       statuses.forEach(status => {
         const doc = createDocument(status);
-        Transitions[doc.status];
+        void Transitions[doc.status];
         // Note: SOFT_DELETE is only in draft status per current implementation
         // This test documents the current behavior
       });

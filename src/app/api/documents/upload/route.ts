@@ -7,7 +7,7 @@ import { getIAMToken } from '@/lib/cloud/yc-iam';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { logger } from '@/lib/utils/logger';
 import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
-import { validateFileUpload, getAllowedFileTypes } from '@/lib/security/file-security';
+import { validateFileUpload } from '@/lib/security/file-security';
 import { NotificationService } from '@/services/notification.service';
 
 // Функция для кодирования метаданных в ASCII
@@ -204,7 +204,7 @@ async function uploadHandler(
     const versionNumber = (existingVersions[0]?.count || 0) + 1;
 
     // Вставляем версию документа
-    const { rows: [newVersion] } = await client.query(`
+    const { rows: [_newVersion] } = await client.query(`
       INSERT INTO document_version (
         id, document_id, document_number, document_name,
         file_name, file_path, file_type, file_size, checksum,

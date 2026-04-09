@@ -43,8 +43,8 @@ export async function GET(req: NextRequest) {
   const studyProtocol = studyRows[0].protocol;
   const folderMap = buildFolderMap(studyRows[0].folders_structure);
 
-  let query = "";
-  let params = [studyId];
+  const query = "";
+  const params = [studyId];
 
   // Получаем документы
   if (type === "full") {
@@ -164,7 +164,7 @@ export async function GET(req: NextRequest) {
     docs.map(doc => limit(async () => {
       try {
         const url = new URL(doc.file_path);
-        let keyParts = url.pathname.replace(/^\//, '').split('/');
+        const keyParts = url.pathname.replace(/^\//, '').split('/');
         if (keyParts[0] === BUCKET_NAME) keyParts.shift();
         const cleanKey = keyParts.join('/');
 

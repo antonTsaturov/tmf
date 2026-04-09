@@ -10,7 +10,7 @@ import {
   Button,
   Hr,
 } from '@react-email/components';
-import { DocumentNotificationEmailData, DocumentInfo } from '../types';
+import { DocumentNotificationEmailData } from '../types';
 
 export const NewDocumentEmail = ({
   recipientName,
