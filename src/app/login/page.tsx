@@ -7,6 +7,7 @@ import Link from 'next/link';
 import styles from './LoginPage.module.css';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'v0.0.0-dev';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -226,7 +227,7 @@ export default function LoginPage() {
         <div className={styles.footer}>
           <div className={styles.footerText}>
             <p>© {new Date().getFullYear()} ExploreTMF System</p>
-            <p className={styles.footerVersion}>ver. beta • Secure access required</p>
+            <p className={styles.footerVersion}>ver. {APP_VERSION} • Secure access required</p>
           </div>
         </div>
       </div>

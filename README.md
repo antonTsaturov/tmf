@@ -1,336 +1,240 @@
 # eTMF
 
-**eTMF** — электронная система управления Trial Master File (eTMF) для клинических исследований.
+`eTMF` — веб-система управления Trial Master File для клинических исследований.  
+Проект покрывает полный цикл работы с документами: загрузка, версионирование, рецензирование, аудит, архивирование, восстановление и администрирование исследований/центров/пользователей.
 
-## Назначение
+## Что делает система
 
-Система для управления документами Trial Master File в фармацевтических/клинических испытаниях: исследования (studies), исследовательские центры (sites), структурированное хранение и версионирование документов.
+- Управляет документами исследования на уровнях `GENERAL`, `COUNTRY`, `SITE`
+- Поддерживает жизненный цикл документа (`draft` -> `in_review` -> `approved` -> `archived`)
+- Хранит версии документов и позволяет откатываться/восстанавливать
+- Дает ролевой доступ (admin, monitor, investigator и др.) с проверкой прав на действия
+- Ведет аудит действий пользователей с метаданными запроса
+- Поддерживает экспорт и администрирование данных через UI и API
 
-## Стек технологий
+## Технологический стек
 
-| Компонент | Технология |
-|-----------|------------|
-| Frontend | Next.js 16, React 19, Radix UI |
-| Backend | Next.js API Routes |
-| База данных | PostgreSQL |
-| Файлы | AWS S3 или Yandex Cloud Object Storage |
+### Core
+- Next.js `16.1.6` (App Router)
+- React `19.2.3`
+- TypeScript `^5`
 
-## Доменная модель
+### Backend и инфраструктура
+- PostgreSQL (`pg`)
+- Object Storage через AWS SDK v3 (используется с YC S3-compatible endpoint)
+- JWT-аутентификация (`jsonwebtoken`)
+- Безопасность: `helmet`, `express-rate-limit`, CSRF/CORS middleware
+- Email/уведомления: `resend`, `@react-email/components`
 
-| Сущность | Описание |
-|----------|----------|
-| **Study** | Исследование (протокол, спонсор, CRO, страны, статусы: planned/ongoing/completed и др.) |
-| **Site** | Исследовательский центр (клиника, страна, город, PI, статусы: planned/opened/closed) |
-| **Document** | Документ TMF с версиями, привязкой к папкам (tmf_zone, tmf_artifact), поддержка General/Country/Site уровней |
-| **Country** | Уровень документов, специфичные для одной страны (без привязки к конкретному site) |
-| **User** | Пользователь с ролями (admin, study_manager, monitor, investigator и др.) и организациями (CRO, SPONSOR, SITE) |
+### UI
+- Radix UI (`@radix-ui/themes` и пакеты меню)
+- CSS-модули и кастомные стили в `src/styles`
 
-## Уровни просмотра документов (ViewLevel)
+## Архитектура проекта
 
-| Уровень | Описание | Фильтрация |
-|---------|----------|-----------|
-| **GENERAL** | Общие документы на уровне исследования | `study_id` только, нет site_id, нет country |
-| **COUNTRY** | Документы, специфичные для одной страны | `study_id` + `country` |
-| **SITE** | Документы конкретного исследовательского центра | `study_id` + `site_id` |
-| **ROOT** | Системный уровень (для просмотра и управления директориями) | - |
-
-## Функциональность
-
-- **Документы**: загрузка, просмотр PDF, версионирование, удаление
-- **Структура папок**: управление иерархией TMF-папок на разных уровнях (General, Country, Site)
-- **Исследования**: управление списком исследований, поддержка многоцентровых и международных исследований
-- **Уровни просмотра**: 
-  - **General Level**: общие документы для всего исследования
-  - **Country Level**: документы, специфичные для одной страны в исследовании
-  - **Site Level**: документы конкретного исследовательского центра
-- **Центры**: управление сайтами с привязкой к странам
-- **Пользователи**: управление пользователями и правами (просмотр, загрузка, одобрение и т.п.)
-- **Audit Trail**: полный журнал аудита действий с информацией о пользователе, IP и сессии
-- **Аутентификация**: вход/выход, JWT, проверка прав
-- **Рецензирование**: процесс одобрения/отклонения документов с комментариями
-- **Архивация**: возможность архивировать документы и восстанавливать их
-- **Управление версиями**: отслеживание истории изменений документов
-
-## Структура src
-
-```
+```text
 src/
-├── app/
-│   ├── page.tsx, layout.tsx      — главная страница и layout
-│   ├── admin/                    — административные страницы
-│   ├── login/                    — страница входа
-│   ├── reviews/                  — страница отложенных рецензий
-│   ├── home/                     — домашняя страница (основная работа)
-│   └── api/                      — API routes
-│       ├── documents/            — управление документами
-│       ├── study/                — управление исследованиями
-│       ├── site/                 — управление центрами
-│       ├── users/                — управление пользователями
-│       ├── audit/                — просмотр журнала аудита
-│       ├── metrics/              — метрики
-│       └── auth/                 — аутентификация
-├── components/   — UI-компоненты (FileExplorer, PDFViewer, DocumentDetails и др.)
-├── lib/
-│   ├── db/       — PostgreSQL schema и запросы
-│   ├── auth/     — JWT и проверка прав
-│   ├── api/      — утилиты для API запросов
-│   ├── audit/    — логирование аудита
-│   ├── metrics/  — метрики исследований
-│   ├── s3-*.ts   — Yandex Cloud Object Storage операции
-│   └── yc-iam.ts — IAM токены Yandex Cloud
-├── hooks/        — React hooks (useApi, useModal, useDocumentUpload и др.)
-├── wrappers/     — провайдеры контекста (AuthProvider, MainContext, AdminContext и др.)
-├── types/        — TypeScript типы и интерфейсы
-├── domain/       — бизнес-логика
-├── styles/       — CSS стили для компонентов
-└── proxy.ts      — прокси для API
+  app/                 # страницы и API route handlers (Next App Router)
+    api/               # backend-эндпоинты
+  components/          # UI-компоненты (основные, admin, panels)
+  hooks/               # React-хуки для API и UI-состояния
+  wrappers/            # контексты приложения (auth/main/admin/upload/notifications)
+  domain/              # доменные правила, transitions, policy
+  lib/                 # db, auth, audit, security, cloud, metrics, backup, email
+  types/               # типы доменных сущностей и API
+  __tests__/           # unit/integration-like тесты бизнес-логики
+  scripts/             # shell-скрипты backup/restore
 ```
 
-## Архитектурные особенности
+## Основные страницы
 
-### Frontend (React/Next.js)
-- **Pages**: `/home`, `/dashboard`, `/reviews`, `/login`
-- **Components**: Модульные UI компоненты для управления документами, навигации и административных функций
-- **State Management**: Context API с MainContext, AuthProvider, AdminContext и NotificationContext
-- **Styling**: Radix UI компоненты с кастомными CSS стилями
+- `/login` — вход в систему, запуск flow восстановления пароля
+- `/reset-password` — установка нового пароля по токену
+- `/home` — основной рабочий интерфейс eTMF
+  - навигация по исследованию/стране/центру
+  - дерево папок и список документов
+  - действия с документами (upload/review/archive/delete/restore/rename)
+  - preview PDF и карточка метаданных
+- `/reviews` — очередь документов, назначенных на рецензию
+- `/admin` — административные разделы (studies, sites, users, audit, deleted docs, archivation, export)
 
-### Backend (Next.js API Routes)
-- **Authentication**: JWT-базированная система с ролевой моделью доступа
-- **Database**: PostgreSQL с пулом соединений
-- **Storage**: Yandex Cloud Object Storage для файлов документов
-- **Security**: Валидация ввода, аудит событий, хеширование паролей
+## API (кратко)
 
-## Ключевые возможности
+### Auth и системные
+- `POST /api/auth/login`
+- `GET /api/auth/check`
+- `POST /api/auth/logout`
+- `POST /api/auth/refresh`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
+- `POST /api/auth/change-password`
+- `GET /api/csrf`
+- `GET /api/ping`
 
-### Управление документами
-- Загрузка/скачивание документов с контролем версий
-- Жизненный цикл документа: Черновик → На рассмотрении → Утвержден → Архивирован
-- История версий с отслеживанием изменений и причин обновления
-- Мягкое удаление и восстановление с ведением истории удаления
-- Архивация/разархивация операции
-- **Поддержка трех уровней документов**:
-  - **General Level**: общие документы на уровне исследования
-  - **Country Level**: документы для конкретной страны (без привязки к site)
-  - **Site Level**: документы конкретного исследовательского центра
+### Documents
+- `GET/POST /api/documents`
+- `POST /api/documents/upload`
+- `GET /api/documents/upload/allowed-types`
+- `GET /api/documents/[id]/view`
+- `GET /api/documents/[id]/versions`
+- `GET /api/documents/[id]/versions/[number]/download`
+- `POST /api/documents/[id]/actions`
+- `DELETE /api/documents/[id]/delete`
+- `POST /api/documents/[id]/restore`
+- `POST /api/documents/[id]/archive`
+- `POST /api/documents/[id]/unarchive`
+- `PUT /api/documents/[id]/rename`
+- `GET/POST /api/documents/archive`
+- `GET /api/documents/deleted`
+- `GET /api/documents/stats`
+- `GET /api/documents/export`
+- `GET /api/documents/reviews/pending`
 
-### Навигация и фильтрация
-- Каскадный выбор исследования → уровень просмотра → страна (если многостраневое) → центр (Site Level)
-- Динамическая фильтрация списка центров по стране при Site Level просмотре
-- Выбор папок в зависимости от текущего уровня просмотра
-
-### Управление пользователями
-- Ролевая модель доступа (Администратор, Менеджер исследования, Монитор и др.)
-- Поддержка нескольких исследований и центров на одного пользователя
-- Назначение пользователей на конкретные исследования и центры
-- Вход с настройкой пароля при первом использовании
-- Фильтрация доступных центров по странам для пользователей Site Level
-
-### Процесс рецензирования
-- Отправка документов на рассмотрение с указанием рецензента
-- Рабочий процесс одобрения/отклонения с причинами
-- Система комментариев для рецензентов и авторов
-- Панель отложенных рассмотрений с прогрессом
-- Отслеживание истории всех рецензий и изменений статуса
-
-### Административные функции
-- Управление исследованиями и центрами
-- Управление структурой папок
-- Управление пользователями
-- Просмотр журнала аудита
-- Просмотр удаленных документов
-
-## Техническая реализация
-
-### Безопасность
-- JWT-аутентификация с HTTP-only куками
-- Ролевая модель доступа
-- Валидация и очистка ввода
-- Журнал аудита для всех действий
-- Хеширование паролей с помощью bcrypt
-
-### Схема базы данных
-- **Study**: Информация о клинических испытаниях с поддержкой многостраневых исследований
-- **Site**: Информация о центрах клинических испытаний с привязкой к странам
-- **Document**: Метаданные документов с поддержкой трех уровней (general, country, site)
-  - `site_id`: привязка к центру (NULL для general и country level документов)
-  - `country`: привязка к стране (только для country level документов)
-- **DocumentVersion**: Информация о версиях документов с отслеживанием истории изменений
-- **Users**: Учетные записи пользователей с ролями и разрешениями
-- **Audit**: Полный журнал аудита со всеми метаданными (IP, user-agent, session_id)
-
-### Хранение файлов
-- Интеграция с Yandex Cloud Object Storage
-- Проверка контрольных сумм файлов
-- Кодирование метаданных для безопасности
+### Справочники и админ-функции
+- `GET/POST/DELETE /api/study`
+- `GET/POST/DELETE /api/site`
+- `GET/POST/DELETE /api/users`
+- `GET /api/users/reviewers`
+- `GET /api/audit`
+- `GET /api/metrics/study`
+- `GET /api/metrics/sites`
+- `GET/POST /api/admin/backup` (`action=run|cleanup`, GET - статус)
 
 ## Доменная логика
-- Система разрешений, сопоставляющая действия с ролями
-- Переходы рабочего процесса документа на основе статуса
-- Комплексные определения типов для всех сущностей
 
-## Основные компоненты
+Ключевая логика по доступным действиям с документом вынесена в:
 
-- **FileExplorer** — файловый менеджер с поддержкой трех уровней просмотра (General, Country, Site)
-- **FolderContentViewer** — просмотр документов в папке с динамической фильтрацией по уровню
-- **PDFViewer** — встроенный просмотр PDF с поддержкой масштабирования и навигации
-- **DocumentDetails** — панель деталей документа с историей версий и метаданными
-- **Navigation** — каскадный селектор: исследование → уровень → страна → центр
-- **DocumentReviewPanel** — рецензирование документов с комментариями
-- **SubmitToReviewPanel** — отправка документов на рассмотрение
-- **ArchiveDocumentPanel** — архивирование/разархивирование документов
-- **AdminPanels** — административные интерфейсы для управления исследованиями, центрами, пользователями и аудитом
-- **AuditTrailViewer** — просмотр полного журнала аудита с фильтрацией
-- **DragAndDropOverlay** — поддержка drag & drop для загрузки файлов
+- `src/domain/document/document.policy.ts` — матрица ролей и действий
+- `src/domain/document/document.transitions.ts` — переходы статусов
+- `src/domain/document/document.logic.ts` — итоговый расчет доступных операций (`getAvailableDocumentActions`)
 
-## 🔐 Настройка окружения (Environment Setup)
+## Контексты и состояние
 
-### Обязательные переменные окружения
+В `src/app/layout.tsx` подключены глобальные провайдеры:
 
-Перед запуском приложения необходимо установить следующие переменные окружения:
+- `AuthProvider`
+- `NotificationProvider`
+- `AdminContextProvider`
+- `UploadProvider`
+- `ContextProvider` (`MainContext`)
 
-| Переменная | Описание | Пример |
-|-----------|---------|--------|
-| **JWT_SECRET** | Секретный ключ для подписи JWT токенов (≥32 символов) | `openssl rand -base64 32` |
-| **DATABASE_URL** | Строка подключения к PostgreSQL | `postgresql://user:pass@host/db` |
-| **YC_IAM_KEY_PATH** | Путь к файлу ключа IAM Yandex Cloud | `./ya_cloud-iam_key.json` |
-| **NODE_ENV** | Окружение (development, production, test) | `production` |
+Основные контексты:
+- `MainContext` — UI-состояние главного экрана
+- `AuthProvider` — текущий пользователь, auth-check, token refresh
+- `AdminContext` — данные/CRUD для админ-панелей
+- `UploadContext` — состояния upload/preview/new version
 
-### Быстрый старт
+## Безопасность
 
-1. **Скопируйте шаблон конфигурации**:
+- JWT cookies + проверка авторизации в `src/proxy.ts`
+- Security headers (`helmet`/custom headers)
+- CORS и preflight обработка
+- CSRF-токены через `GET /api/csrf`
+- Rate limiting на чувствительных маршрутах
+- Аудит действий (`src/lib/audit`)
+- Валидация env при старте через `src/lib/config/env.ts` (подключается в `next.config.ts`)
+
+## Переменные окружения
+
+Скопируйте шаблон:
+
 ```bash
 cp .env.local.example .env.local
 ```
 
-2. **Сгенерируйте JWT_SECRET**:
-```bash
-openssl rand -base64 32
-```
+Минимально обязательные переменные:
 
-3. **Отредактируйте `.env.local`** с правильными значениями:
-```bash
-JWT_SECRET=<your-generated-secret>
-DATABASE_URL=postgresql://user:password@host:5432/database
-YC_IAM_KEY_PATH=./ya_cloud-iam_key.json
-NODE_ENV=development
-NEXT_PUBLIC_API_BASE_URL=http://localhost:3000
-```
+- `JWT_SECRET`
+- `DATABASE_URL`
+- `YC_IAM_KEY_PATH`
+- `NODE_ENV` (`development|production|test`)
 
-4. **Валидация автоматическая**: При запуске `npm run build` или `npm run dev` приложение автоматически проверит наличие и корректность всех переменных окружения.
+Часто используемые дополнительные:
 
-⚠️ **ВНИМАНИЕ**: Никогда не коммитьте `.env.local` в git! Добавите в `.gitignore`.
+- `NEXT_PUBLIC_API_BASE_URL`
+- `CORS_ORIGINS`
+- `MAX_FILE_SIZE`
+- `RESEND_API_KEY`, `EMAIL_FROM`, `APP_URL`
+- backup-переменные из `.env.local.example` (`DB_*`, `BACKUP_*`, `SOURCE_S3_BUCKET`, и т.д.)
 
-### Для production
-
-Используйте систему управления секретами:
-- **AWS**: Secrets Manager / Parameter Store
-- **Azure**: Key Vault
-- **Kubernetes**: Secrets API
-- **Docker**: Docker Secrets
-- **HashiCorp**: Vault
-
-Подробная инструкция: [docs/SECURITY.md](./docs/SECURITY.md)
-
-## Запуск
+## Локальный запуск
 
 ```bash
-npm run dev   # режим разработки (с горячей перезагрузкой)
-npm run build # сборка для production
-npm run start # production сервер
+npm install
+npm run dev
 ```
 
-## 🔒 Функции безопасности
+Скрипты:
 
-### 1. Security Headers (Helmet)
-Автоматическое применение HTTP-заголовков безопасности для защиты от:
-- **XSS атак** (Content-Security-Policy)
-- **Clickjacking** (X-Frame-Options)
-- **MIME sniffing** (X-Content-Type-Options)
-- **Man-in-the-middle** (HSTS в production)
-
-### 2. CORS (Cross-Origin Resource Sharing)
-- Валидация источников запросов
-- Предотвращение несанкционированного доступа к API
-- Автоматическое разрешение `localhost` в разработке
-- Production: явное указание разрешенных доменов в `.env`
-
-### 3. CSRF Protection (Cross-Site Request Forgery)
-- Генерация и валидация CSRF токенов
-- One-time use токены (автоматически "съедаются" после использования)
-- Поддержка 24-часовых сессий
-- Автоматическое удаление просроченных токенов
-
-**Использование в React-компонентах**:
-```typescript
-// 1. Получить CSRF токен
-const { token: csrfToken } = useCSRFToken();
-
-// 2. Отправить с запросом
-fetch('/api/documents/12/delete', {
-  method: 'DELETE',
-  headers: { 'X-CSRF-Token': csrfToken },
-  credentials: 'include'
-});
-```
-
-**Полная документация**: [docs/SECURITY_HEADERS_CORS_CSRF.md](./docs/SECURITY_HEADERS_CORS_CSRF.md)
-
-### 4. Rate Limiting
-- Ограничение количества запросов к критичным эндпоинтам
-- IP-based отслеживание
-- Разные лимиты для разных операций:
-  - **Login**: 5 попыток за 15 минут
-  - **Password change**: 10 попыток за 1 час
-  - **Document upload**: 20 загрузок за 1 час
-
-**Документация**: [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md)
-
-### 5. Логирование и аудит
-- Структурированная система логирования всех операций
-- Отслеживание IP-адреса, user-agent, session ID
-- Полный журнал аудита в базе данных
-
-**Документация**: [docs/LOGGING.md](./docs/LOGGING.md)
-
-### 6. Автоматическое обновление токенов
-- Access token живёт 15 минут, автоматически обновляется каждые 10 минут через `useTokenRefresh` hook
-- Refresh failed → автоматический редирект на страницу входа
-- Сессия хранится 7 дней с контролем активности (idle timeout 30 мин)
-
-### 7. Бэкапы и восстановление
-- **Автоматические** — ежедневный cron в 3:00 AM
-- **PostgreSQL** — `pg_dump` custom format, сжатие, верификация целостности
-- **S3 файлы** — полный снимок бакета документов с архивацией
-- **Remote storage** — загрузка в отдельный S3-бакет для бэкапов (rule 3-2-1)
-- **Retention** — 30 дней локально, 90 дней в S3
-- **Восстановление** — интерактивный скрипт с подтверждением и опцией restore-to-new-database
-- **API** — ручное управление через `/api/admin/backup/*` (только ADMIN)
-
-**Команды**:
 ```bash
-# Запустить бэкап вручную
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run test
+npm run test:watch
+npm run test:coverage
+npm run test:ci
+```
+
+## Тестирование
+
+Тесты находятся в `src/__tests__` и покрывают:
+
+- auth/access control
+- document lifecycle
+- versioning
+- audit logging
+- account locking
+- file security
+- rate limiting
+
+Документация по тестам: `src/__tests__/README.md`
+
+## Docker
+
+Проект содержит multi-stage `Dockerfile` и использует `output: 'standalone'` в Next-конфиге.
+
+Базовый сценарий:
+
+```bash
+docker build -t etmf .
+docker run --env-file .env.local -p 3000:3000 etmf
+```
+
+## Backup и восстановление
+
+Скрипты:
+
+- `src/scripts/backup.sh`
+- `src/scripts/restore.sh`
+
+Примеры:
+
+```bash
 ./src/scripts/backup.sh
-
-# Посмотреть доступные бэкапы
 ./src/scripts/restore.sh --list
-
-# Восстановить из последнего бэкапа
 ./src/scripts/restore.sh
-
-# Восстановить из конкретного бэкапа
-./src/scripts/restore.sh 2025-01-15_030000
-
-# Только БД или только S3
 ./src/scripts/restore.sh --db-only
 ./src/scripts/restore.sh --s3-only
 ```
 
-**Настройка**: скопируйте `src/scripts/.env.example` → `src/scripts/.env` и заполните учётные данные.
+API для ручного запуска/чистки/статуса: `GET/POST /api/admin/backup`
 
-## 📝 Документация
+## Полезная документация
 
-**Логирование**: [docs/LOGGING.md](./docs/LOGGING.md)  
-**Безопасность**: [docs/SECURITY.md](./docs/SECURITY.md)  
-**Security Headers, CORS, CSRF**: [docs/SECURITY_HEADERS_CORS_CSRF.md](./docs/SECURITY_HEADERS_CORS_CSRF.md)  
-**Rate Limiting**: [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md)  
-**Changelog**: [CHANGELOG.md](./CHANGELOG.md)
+- `docs/SECURITY.md`
+- `docs/SECURITY_HEADERS_CORS_CSRF.md`
+- `docs/RATE_LIMITING.md`
+- `docs/LOGGING.md`
+- `docs/FILE_SECURITY.md`
+- `CHANGELOG.md`
+
+## Важные замечания
+
+- Не храните реальные ключи и секреты в репозитории.
+- Для production используйте внешний secret manager.
+- При изменении бизнес-статусов документов синхронизируйте:
+  - `document.transitions.ts`
+  - `document.policy.ts`
+  - тесты в `src/__tests__`
