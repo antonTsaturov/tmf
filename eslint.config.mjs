@@ -7,12 +7,16 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-      "react-hooks/preserve-manual-memoization": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_" }
+      ],      
+      "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/exhaustive-deps": "warn",
-      "react-hooks/rules-of-hooks": "warn",
-      "react-hooks/set-state-in-effect": "warn",
-      "react/no-unescaped-entities": "warn",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/set-state-in-effect": "off",
+      "react/no-unescaped-entities": "off",
       "@typescript-eslint/no-require-imports": "warn",
       "@typescript-eslint/no-non-null-asserted-optional-chain": "warn",
     },

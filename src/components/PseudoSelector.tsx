@@ -13,14 +13,12 @@ import {
   Separator,
   ScrollArea,
   Box,
-  Strong
 } from '@radix-ui/themes';
 import {
   CheckIcon,
   ChevronDownIcon,
   Cross2Icon,
   MagnifyingGlassIcon,
-  CaretSortIcon
 } from '@radix-ui/react-icons';
 
 // Конфигурация для статусов центров

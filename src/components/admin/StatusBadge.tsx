@@ -1,4 +1,4 @@
-import React, { useState, FC } from 'react';
+import { useState, FC } from 'react';
 import { Badge, Button, Flex, Text } from '@radix-ui/themes';
 import { 
   CalendarIcon, 
@@ -7,7 +7,7 @@ import {
   CrossCircledIcon, 
   ArchiveIcon 
 } from '@radix-ui/react-icons';
-import { Study, StudyStatus } from '@/types/types';
+import { StudyStatus } from '@/types/types';
 
 
 interface StatusBadgeProps {

@@ -96,7 +96,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
 };
 
 // Компонент элемента центра
-const SiteItem: FC<SiteItemProps> = ({ studies, currentStudyId, site, index, onUpdate, onDelete, onMove }) => {
+const SiteItem: FC<SiteItemProps> = ({ studies, currentStudyId, site, index, onUpdate, onDelete }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<StudySite>>({
     name: site.name,
@@ -303,7 +303,7 @@ const SiteItem: FC<SiteItemProps> = ({ studies, currentStudyId, site, index, onU
 
 // Основной компонент
 const SiteManager: FC<SiteManagerProps> = () => {
-  const { studies, saveSite, loadTable, loadTablePartial } = useContext(AdminContext)!;
+  const { studies, saveSite, loadTable } = useContext(AdminContext)!;
 
   const [allSites, setAllSites] = useState<StudySite[]>([]); // Все центры из БД
   const [filteredSites, setFilteredSites] = useState<StudySite[]>([]); // Отфильтрованные по исследованию
@@ -469,12 +469,12 @@ const SiteManager: FC<SiteManagerProps> = () => {
   }, [filteredSites]);
 
   // Сброс
-  const handleReset = () => {
-    if (window.confirm('Reset filters? This will clear the current view.')) {
-      setCurrentStudyId(null);
-      // Не сбрасываем allSites, так как это все центры из БД
-    }
-  };
+  // const handleReset = () => {
+  //   if (window.confirm('Reset filters? This will clear the current view.')) {
+  //     setCurrentStudyId(null);
+  //     // Не сбрасываем allSites, так как это все центры из БД
+  //   }
+  // };
 
   // Статистика
   const getStats = () => {

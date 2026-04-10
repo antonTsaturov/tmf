@@ -8,7 +8,6 @@ import {
   Text, 
   Card, 
   Box, 
-  Heading,
   Button,
   Badge,
   Table,
@@ -17,17 +16,12 @@ import {
   Spinner,
   IconButton,
   Tooltip,
-  TextArea,
-  AlertDialog,
-  Inset,
   Separator
 } from '@radix-ui/themes';
 import {
   FiSearch,
   FiFilter,
-  FiFileText,
   FiCheckCircle,
-  FiXCircle,
   FiEye,
   FiDownload,
   FiUser,
@@ -63,7 +57,6 @@ interface MyReviewsModalProps {
 export const MyReviews: React.FC<MyReviewsModalProps> = ({ 
   open, 
   onOpenChange,
-  onReviewComplete 
 }) => {
   const { addNotification } = useNotification();
   const { context, updateContext } = useContext(MainContext)!;
@@ -81,7 +74,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
   // Фильтры
   const [studyFilter, setStudyFilter] = useState('');
   const [siteFilter, setSiteFilter] = useState('');
-  const [folderFilter, setFolderFilter] = useState('');
+  // const [folderFilter, setFolderFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
 
@@ -102,7 +95,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
 
       if (studyFilter) params.append('study_id', studyFilter);
       if (siteFilter) params.append('site_id', siteFilter);
-      if (folderFilter) params.append('folder_id', folderFilter);
+      // if (folderFilter) params.append('folder_id', folderFilter);
       if (searchQuery) params.append('search', searchQuery);
 
       const response = await fetch(`/api/documents/reviews/pending?${params.toString()}`);
@@ -126,7 +119,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
     if (open) {
       fetchPendingReviews();
     }
-  }, [open, pagination.offset, studyFilter, siteFilter, folderFilter, searchQuery]);
+  }, [open, pagination.offset, studyFilter, siteFilter, searchQuery]);
 
   // Обработчики пагинации
   const handleNextPage = () => {

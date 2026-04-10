@@ -13,17 +13,14 @@ import {
   Button,
   Spinner,
   Callout,
-  Table,
   Separator,
   Heading,
   IconButton,
-  Dialog,
   Strong
 } from '@radix-ui/themes';
 import {
   UpdateIcon,
   TrashIcon,
-  PersonIcon,
   CalendarIcon,
   FileIcon,
   ArchiveIcon,

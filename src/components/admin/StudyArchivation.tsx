@@ -21,7 +21,6 @@ import {
   FileIcon,
   UpdateIcon,
   ClockIcon,
-  TrashIcon
 } from '@radix-ui/react-icons';
 import '@/styles/StudyArchivation.css';
 

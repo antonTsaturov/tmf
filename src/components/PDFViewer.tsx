@@ -1,7 +1,7 @@
 // components/PDFViewer.tsx
-import React, { useContext, useEffect, useState, useRef, useCallback } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { FiX, FiDownload, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiDownload, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import { MdCached } from "react-icons/md";
 import { usePDFCache } from '@/hooks/usePDFCache';
 import '../styles/PDFViewer.css';

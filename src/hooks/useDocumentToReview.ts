@@ -1,7 +1,7 @@
 // hooks/useDocumentToReview.ts
 import { useState, useCallback, useContext } from 'react';
 import { Document, DocumentAction } from '@/types/document';
-import { StudyUser, UserRole } from '@/types/types';
+import { StudyUser } from '@/types/types';
 import { MainContext } from '@/wrappers/MainContext';
 import { logger } from '@/lib/utils/logger';
 
@@ -44,7 +44,6 @@ interface UseDocumentToReviewReturn {
 export const useDocumentToReview = (): UseDocumentToReviewReturn => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [documentForReview, setDocumentForReview] = useState<Document | null>(null);
-  const [reviewers, setReviewers] = useState<StudyUser[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { context } = useContext(MainContext)!;
@@ -97,7 +96,6 @@ export const useDocumentToReview = (): UseDocumentToReviewReturn => {
       // Закрываем модальное окно после успешной отправки
       setIsReviewModalOpen(false);
       setDocumentForReview(null);
-      setReviewers([]);
       
       return result.document;
     } catch (err) {

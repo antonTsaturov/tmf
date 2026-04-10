@@ -7,7 +7,6 @@ import {
   Flex, 
   Text, 
   Button, 
-  Badge, 
   Separator 
 } from '@radix-ui/themes';
 import { 

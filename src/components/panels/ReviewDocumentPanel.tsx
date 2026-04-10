@@ -1,5 +1,5 @@
 // components/DocumentReviewPanel.tsx
-import React, { useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { 
   Dialog, 
   Flex, 
@@ -22,10 +22,8 @@ import {
   FiCheckCircle, 
   FiXCircle, 
   FiInfo,
-  FiFileText,
   FiArrowLeft,
   FiMessageSquare,
-  FiUser
 } from 'react-icons/fi';
 import { FaFileLines } from "react-icons/fa6";
 import { MainContext } from '@/wrappers/MainContext';
@@ -35,7 +33,7 @@ import { useDocumentToReview } from '@/hooks/useDocumentToReview';
 import { Document } from '@/types/document';
 import { ROLE_CONFIG, UserRole } from '@/types/types';
 import { FaUser } from 'react-icons/fa';
-import { DocumentLifeCycleStatus, DocumentWorkFlowStatus } from '@/types/document.status';
+import { DocumentWorkFlowStatus } from '@/types/document.status';
 import { logger } from '@/lib/utils/logger';
 
 interface DocumentReviewPanelProps {

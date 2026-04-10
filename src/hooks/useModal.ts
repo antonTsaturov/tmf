@@ -7,7 +7,7 @@ export function useModal() {
     if (!context) {
         throw new Error('useMainContext must be used within ContextProvider');
     }
-    const { context: mainContext, updateContext, resetContext } = context;
+    const { updateContext } = context;
 
 
 	const [isOpen, setIsOpen] = useState(false);

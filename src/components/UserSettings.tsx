@@ -1,6 +1,6 @@
 //src/components/UserSettings.tsx
 'use client'
-import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   Tabs,

@@ -69,7 +69,7 @@ export default function MyReviewsPage() {
   const { context, updateContext } = useContext(MainContext)!;
   const { onDocumentUpdatedId, selectedDocument, isRightFrameOpen } = context;
   const { user } = useAuth()!;
-  const { getStudyProtocol, getSiteName, studies, sites, loading: metadataLoading } = useStudiesAndSites();
+  const { getStudyProtocol, getSiteName, studies, sites } = useStudiesAndSites();
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);

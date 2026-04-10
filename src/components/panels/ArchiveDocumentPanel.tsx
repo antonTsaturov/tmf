@@ -18,9 +18,6 @@ import {
 import { 
   FiX, 
   FiArchive, 
-  FiFolder, 
-  FiCalendar,
-  FiHash,
   FiInfo,
   FiAlertTriangle,
   FiFileText

@@ -16,21 +16,11 @@ const Modal: React.FC<ModalProps> = ({ children }) => {
   if (!context) {
       throw new Error('useMainContext must be used within ContextProvider');
   }
-  const { context: mainContext, updateContext, resetContext } = context;
+  const { context: mainContext } = context;
   
-  const { isOpen, openModal, closeModal, modalProps } = useModal();
+  const { closeModal } = useModal();
 
   const [isVisible, setIsVisible] = useState(false);
-
-  // const handleOverlayClick = () => {
-  //   closeModal?.('overlay');
-  // }
-
-  // const handleClose = (e: React.MouseEvent | React.KeyboardEvent) => {
-  //   e.stopPropagation();
-  //   closeModal?.('close');
-  // };
-
 
   useEffect(() => {
     if (mainContext.isModal) {
@@ -42,22 +32,8 @@ const Modal: React.FC<ModalProps> = ({ children }) => {
       document.body.style.overflow = 'unset';
     }
 
-    // const handleEscape = (e: KeyboardEvent) => {
-    //   if (e.key === 'Escape') closeModal?.('close');
-    // };
-
-    // if (isOpen) {
-    //   document.addEventListener('keydown', handleEscape);
-    // }
-
-    // return () => {
-    //   document.removeEventListener('keydown', handleEscape);
-    //   document.body.style.overflow = 'unset';
-    // };
   }, [mainContext.isModal]);
 
-  // if (!isOpen && !isVisible) return null;
-  
 
   return (
     <div className={`modal-overlay ${isVisible ? 'modal-open' : ''}`} onClick={closeModal}>

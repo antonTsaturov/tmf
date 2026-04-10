@@ -1,4 +1,4 @@
-import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
+import { useState, useCallback, FC, ChangeEvent, useEffect, useContext } from 'react';
 import '@/styles/StudyManager.css';
 import { Study, StudyStatus } from '@/types/types';
 import { deleteRecord } from '@/lib/api/fetch';
@@ -18,10 +18,6 @@ import {
   Separator,
   Heading,
   Box,
-  Strong,
-  Callout,
-  IconButton,
-  Dialog,
   ScrollArea
 } from '@radix-ui/themes';
 import {
@@ -33,7 +29,6 @@ import {
   FileTextIcon,
   PersonIcon,
   ArchiveIcon,
-  MagnifyingGlassIcon
 } from '@radix-ui/react-icons';
 
 export interface StudyItemProps {
@@ -91,13 +86,13 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && isEditing) {
-      handleSave();
-    } else if (e.key === 'Escape') {
-      handleCancel();
-    }
-  };
+  // const handleKeyDown = (e: KeyboardEvent) => {
+  //   if (e.key === 'Enter' && isEditing) {
+  //     handleSave();
+  //   } else if (e.key === 'Escape') {
+  //     handleCancel();
+  //   }
+  // };
 
   // Статистика исследования
   const getStudyStats = () => {

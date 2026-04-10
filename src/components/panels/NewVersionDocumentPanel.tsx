@@ -8,12 +8,10 @@ import {
   Box, 
   Card,
   Badge,
-  TextField,
   Spinner,
   IconButton,
   Separator,
   Tooltip,
-  DataList,
   TextArea
 } from '@radix-ui/themes';
 import { 
@@ -23,7 +21,6 @@ import {
   FiInfo,
   FiAlertCircle,
   FiHash,
-  FiHardDrive
 } from 'react-icons/fi';
 import { MainContext } from '@/wrappers/MainContext';
 import { useAuth } from '@/wrappers/AuthProvider';
@@ -40,12 +37,12 @@ interface NewVersionUploadPanelProps {
 }
 
 const NewVersionDocumentPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadError, onSuccess}) => {
-  const mainContext = useContext(MainContext);
-  if (!mainContext) return null;
-  const { context, updateContext } = mainContext;
+
   const { addNotification } = useNotification();
   const upload = useUpload();
 
+  const mainContext = useContext(MainContext)!;
+  const { context, updateContext } = mainContext;  
 
   const clearPanel = () => {
     if (typeof upload.clearNewVersion === 'function') {

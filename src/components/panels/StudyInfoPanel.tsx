@@ -84,14 +84,14 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
   }, [currentStudy?.id, isStudyInfoPanelOpen]);
 
   // Форматирование даты
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+  // const formatDate = (dateString: string | undefined) => {
+  //   if (!dateString) return 'N/A';
+  //   return new Date(dateString).toLocaleDateString('en-US', {
+  //     year: 'numeric',
+  //     month: 'short',
+  //     day: 'numeric'
+  //   });
+  // };
 
   // Статус исследования
   const getStudyStatusColor = (status: string) => {

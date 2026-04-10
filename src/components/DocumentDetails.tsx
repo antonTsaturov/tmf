@@ -25,13 +25,15 @@ import { useNotification } from '@/wrappers/NotificationContext';
 const DocumentDetails: React.FC = () => {
   const { addNotification } = useNotification();
   const getFolderName = useFolderName();
-  const mainContext = useContext(MainContext);
-  if (!mainContext) return null;
-  const { context } = mainContext;
-  const selectedDocument = context.selectedDocument;
+
+  
   const [versions, setVersions] = useState<DocumentVersionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const mainContext = useContext(MainContext)!;
+  const { context } = mainContext;
+  const selectedDocument = context.selectedDocument;
 
   useEffect(() => {
     if (!selectedDocument?.id) {

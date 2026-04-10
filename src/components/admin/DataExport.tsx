@@ -25,16 +25,16 @@ import {
   ArchiveIcon
 } from '@radix-ui/react-icons';
 
-interface Document {
-  id: string;
-  study_id: number;
-  site_id: string | null;
-  folder_id: string;
-  folder_name: string;
-  status: DocumentWorkFlowStatus;
-  is_archived: boolean;
-  is_deleted: boolean;
-}
+// interface Document {
+//   id: string;
+//   study_id: number;
+//   site_id: string | null;
+//   folder_id: string;
+//   folder_name: string;
+//   status: DocumentWorkFlowStatus;
+//   is_archived: boolean;
+//   is_deleted: boolean;
+// }
 
 interface DocumentStats {
   total: number;

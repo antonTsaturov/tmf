@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useContext } from 'react';
-import '../../styles/Home.css';
+import '@/styles/Home.css';
 import FileExplorer from '../../components/FileExplorer';
 import UserMenu from '@/components/UserMenu';
 import { Tabs } from '@radix-ui/themes';

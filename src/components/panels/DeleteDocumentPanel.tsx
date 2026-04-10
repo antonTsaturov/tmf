@@ -1,4 +1,4 @@
-// components/DeleteDocumentPanel.tsx
+// src/components/panels/DeleteDocumentPanel.tsx
 import React, { useContext, useState, useEffect } from "react";
 import { 
   Dialog, 
@@ -37,7 +37,6 @@ interface DeleteDocumentPanelProps {
 
 const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({ 
   onDocumentDeleted, 
-  onDocumentRestored,
   requireReason = true,
   maxReasonLength = 500,
   reasonPlaceholder = "Enter reason for deletion..."

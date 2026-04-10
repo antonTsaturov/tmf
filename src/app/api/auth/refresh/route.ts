@@ -19,7 +19,6 @@ import { updateSessionActivity, getSession } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
 import { logger } from '@/lib/utils/logger';
 import jwt from 'jsonwebtoken';
-import { ENV } from '@/lib/config/env';
 
 export async function POST(request: NextRequest) {
   try {

@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback, FC, ChangeEvent, KeyboardEvent, useEffect, useContext } from 'react';
+import { useState, useCallback, FC, ChangeEvent, useEffect, useContext } from 'react';
 import {
   Box,
   Flex,
@@ -11,19 +11,10 @@ import {
   Badge,
   Card,
   Separator,
-  Table,
-  IconButton,
   Dialog,
   DropdownMenu,
   Tooltip,
-  Code,
   Strong,
-  Em,
-  Avatar,
-  DataList,
-  Callout,
-  Inset,
-  Spinner,
   ScrollArea,
 } from '@radix-ui/themes';
 import {
@@ -32,14 +23,8 @@ import {
   FiTrash2,
   FiCheck,
   FiX,
-  FiSave,
   FiUsers,
-  FiUserCheck,
-  FiUserX,
-  FiUserMinus,
   FiRefreshCw,
-  FiAlertCircle,
-  FiCheckCircle,
 } from 'react-icons/fi';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study, ROLE_CONFIG as roleConfig } from '@/types/types';
@@ -157,14 +142,14 @@ const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, on
     }));
   };
 
-  const handleSelectChange = (field: keyof StudyUser) => (
-    e: ChangeEvent<HTMLSelectElement>
-  ) => {
-    setEditData(prev => ({
-      ...prev,
-      [field]: e.target.value
-    }));
-  };
+  // const handleSelectChange = (field: keyof StudyUser) => (
+  //   e: ChangeEvent<HTMLSelectElement>
+  // ) => {
+  //   setEditData(prev => ({
+  //     ...prev,
+  //     [field]: e.target.value
+  //   }));
+  // };
 
   const handleSave = () => {
     if (!editData.email || !editData.email.trim() || !editData.name || !editData.name.trim()) {
@@ -196,13 +181,13 @@ const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, on
     setIsEditing(false);
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && isEditing) {
-      handleSave();
-    } else if (e.key === 'Escape') {
-      handleCancel();
-    }
-  };
+  // const handleKeyDown = (e: KeyboardEvent) => {
+  //   if (e.key === 'Enter' && isEditing) {
+  //     handleSave();
+  //   } else if (e.key === 'Escape') {
+  //     handleCancel();
+  //   }
+  // };
 
   const handleRolesChange = (role: SelectorValue[]) => {
     const userRole = role as UserRole[];
