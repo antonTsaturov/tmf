@@ -1,5 +1,6 @@
 // app/reviews/page.tsx
 'use client';
+
 import { useState, useEffect, useContext, useMemo } from 'react';
 import { 
   Flex, 
@@ -83,7 +84,7 @@ export default function MyReviewsPage() {
   // Фильтры
   const [studyFilter, setStudyFilter] = useState(searchParams.get('study_id') || '');
   const [siteFilter, setSiteFilter] = useState(searchParams.get('site_id') || '');
-  const [folderFilter, setFolderFilter] = useState(searchParams.get('folder_id') || '');
+  // const [folderFilter, setFolderFilter] = useState(searchParams.get('folder_id') || '');
   const [levelFilter, setLevelFilter] = useState(searchParams.get('folder_id') || '');
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -189,10 +190,12 @@ export default function MyReviewsPage() {
           // При выборе "Все документы" показываем все документы (и site level и general level)
           return true;
         }
+
         if (levelFilter === 'general') {
           // Только General документы (site_id === null)
           return doc.site_id === null;
         }
+
         if (levelFilter === 'site') {
           // Только Site-level документы (site_id !== null)
           if (!siteId || siteId === "all") {
@@ -201,7 +204,9 @@ export default function MyReviewsPage() {
           // Конкретный центр: site_id !== null + совпадение по ID
           return doc.site_id !== null && doc.site_id.toString() === siteId;
         }
+
         return true;
+
       })();
       
       return matchesSearch && matchesStudy && matchesLevel;
@@ -214,7 +219,6 @@ export default function MyReviewsPage() {
       searchQuery,
       studyFilter,
       siteFilter,
-      folderFilter,
       levelFilter // ← передаём docMode как параметр
     );
   }, [
@@ -222,7 +226,6 @@ export default function MyReviewsPage() {
     searchQuery,
     studyFilter,
     siteFilter,
-    folderFilter,
     levelFilter // ← docMode в зависимостях: при изменении — пересчёт
   ]);
   
@@ -411,8 +414,6 @@ export default function MyReviewsPage() {
             </Flex>
           </Flex>
 
-
-
           <Box pt="4" pr="4" pl="4">
             <Table.Root
               variant="surface"
@@ -421,15 +422,15 @@ export default function MyReviewsPage() {
                 tableLayout: 'fixed',
                 borderCollapse: 'separate',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-              }}                      
+              }}
               >
               {/* Фиксированный заголовок */}
-              <Table.Header 
-                style={{ 
-                  position: 'sticky', 
-                  top: 0, 
+              <Table.Header
+                style={{
+                  position: 'sticky',
+                  top: 0,
                   zIndex: 2, // Чтобы шапка была выше строк при скролле
-                  backgroundColor: 'var(--color-panel-solid)', 
+                  backgroundColor: 'var(--color-panel-solid)',
                   boxShadow: '0 1px 0 var(--gray-5)',
                   borderRadius: 0
                 }}
@@ -445,8 +446,6 @@ export default function MyReviewsPage() {
               </Table.Header>
             </Table.Root>
           </Box>
-
-
 
           {/* Documents Table */}
           <Box pr="4" pl="4" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -473,7 +472,6 @@ export default function MyReviewsPage() {
                       overflow: 'auto',
                       minHeight: 0,
                       maxHeight: '100%',
-                      position: 'relative',
                       borderBottom: '1px solid var(--gray-5)'
                     }}
                   >                 
@@ -495,8 +493,6 @@ export default function MyReviewsPage() {
                           boxShadow: '0 1px 0 var(--gray-5)'
                         }}
                       >
-                        <Table.Row>
-                        </Table.Row>
                       </Table.Header>
 
                       {/* Прокручиваемое тело */}
@@ -546,6 +542,7 @@ export default function MyReviewsPage() {
                               </Flex>
                             </Table.Cell>
 
+                            {/* Study Protocol and Site name  */}
                             <Table.Cell style={{ width: '15%' }}>
                               {doc.review_submitter ? (
                                 <Flex direction="column" gap="1">
@@ -553,7 +550,7 @@ export default function MyReviewsPage() {
                                     {doc.study_id !== null ? getStudyProtocol(doc.study_id) : '—'}
                                   </Text>
                                   <Text size="1" color="gray" style={{ wordBreak: 'break-word' }}>
-                                    {getSiteName(doc.site_id)}
+                                    {getSiteName(doc)}
                                   </Text>
                                 </Flex>
                               ) : (
@@ -565,7 +562,7 @@ export default function MyReviewsPage() {
                             {!isRightFrameOpen && (<Table.Cell style={{ width: '15%' }}>
                               <Flex align="center" gap="2">
                                 <FiFolder size={14} color="var(--gray-9)" />
-                                <Text size="2" style={{ wordBreak: 'break-word' }}>{getFolderNameFromStudiesMap(studies, doc.study_id, doc.folder_id)}</Text>
+                                <Text size="2" style={{  }}>{getFolderNameFromStudiesMap(studies, doc.study_id, doc.folder_id)}</Text>
                               </Flex>
                             </Table.Cell>)}
                             
@@ -672,7 +669,7 @@ export default function MyReviewsPage() {
                   setSearchQuery('');
                   setStudyFilter('');
                   setSiteFilter('');
-                  setFolderFilter('');
+                  //setFolderFilter('');
                 }}>
                   Сбросить фильтры
                 </Button>

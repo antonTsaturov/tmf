@@ -8,7 +8,7 @@ export interface FilePreview {
   files: File[];
   file?: File; // для обратной совместимости
   folderId: string;
-  folderName: string;
+  //folderName: string;
   size: number;
   customName: string;
   studyId: number;
@@ -94,13 +94,14 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         setFilePreviewState({
           files: allFiles,
           folderId: firstPreview.folderId,
-          folderName: firstPreview.folderName,
+          //folderName: firstPreview.folderName,
           size: allFiles.reduce((total, file) => total + file.size, 0),
           customName: allFiles.length === 1 
             ? (firstPreview.customName || allFiles[0].name.replace(/\.[^/.]+$/, ""))
             : `${allFiles.length} файлов`,
           studyId: firstPreview.studyId,
           siteId: firstPreview.siteId,
+          country: firstPreview.country,
           createdBy: firstPreview.createdBy,
           ...(allFiles.length === 1 && { file: allFiles[0] })
         });

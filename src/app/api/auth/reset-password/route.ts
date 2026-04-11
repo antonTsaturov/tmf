@@ -4,6 +4,48 @@ import { getPool } from '@/lib/db';
 import { AuthService } from '@/lib/auth/auth.service';
 import { logger } from '@/lib/utils/logger';
 
+/**
+ * GET: Validate reset token without consuming it.
+ * Used by the frontend to check if the token is valid before showing the form.
+ */
+export async function GET(req: NextRequest) {
+  try {
+    const token = req.nextUrl.searchParams.get('token');
+
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Token is required' },
+        { status: 400 }
+      );
+    }
+
+    const payload = AuthService.verifyResetToken(token);
+    if (!payload) {
+      return NextResponse.json(
+        { error: 'Invalid or expired reset token' },
+        { status: 400 }
+      );
+    }
+
+    const expiresAt = payload.exp ? payload.exp * 1000 : undefined;
+
+    return NextResponse.json({
+      valid: true,
+      email: payload.email,
+      expiresAt,
+    });
+  } catch (error) {
+    logger.error('Error validating reset token:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * POST: Reset password using the token.
+ */
 export async function POST(req: NextRequest) {
   try {
     const { token, newPassword } = await req.json();

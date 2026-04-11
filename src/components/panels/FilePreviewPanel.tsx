@@ -1,4 +1,9 @@
 // components/FilePreviewPanel.tsx
+/*
+* Панель загрузки нового документа. Открывается при нажатии на кнопку "Создать
+" а также при перетаскивании документа в область просмотра содержмого папки
+*/
+
 import React, { useState, useEffect, useContext } from 'react';
 import { 
   Dialog, 
@@ -258,10 +263,11 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
         studyId: String(currentStudy?.id),
         siteId: String(currentSite?.id),
         folderId: upload.filePreview!.folderId,
-        folderName: upload.filePreview!.folderName,
+        //folderName: upload.filePreview!.folderName,
         createdBy: String(upload.filePreview!.createdBy),
         tmfZone: null,
-        tmfArtifact: null
+        tmfArtifact: null,
+        country: upload.filePreview!.country
       }, (index, progress, document) => {
         // 🎯 Обновляем прогресс конкретного файла в состоянии
         setFileItems(prev => prev.map((item, i) => {
@@ -443,9 +449,9 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
               )}
               <Flex align="center" gap="2">
                 <FiFolder size={14} color="var(--gray-9)" />
-                <Badge size="1" variant="soft" color="blue">
+                {/* <Badge size="1" variant="soft" color="blue">
                   {upload.filePreview?.folderName}
-                </Badge>
+                </Badge> */}
               </Flex>
             </Flex>
           </Card>
@@ -656,9 +662,9 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
                   </Flex>
                 </DataList.Label>
                 <DataList.Value>
-                  <Badge size="1" variant="soft" color="blue">
+                  {/* <Badge size="1" variant="soft" color="blue">
                     {upload.filePreview?.folderName}
-                  </Badge>
+                  </Badge> */}
                 </DataList.Value>
               </DataList.Item>
 

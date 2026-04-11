@@ -26,7 +26,7 @@ interface UploadOptions {
   studyId: string; 
   siteId?: string | null;
   folderId: string;
-  folderName: string;
+  //folderName: string;
   createdBy: string | number;
   tmfZone: string | null;
   tmfArtifact: string | null;
@@ -114,7 +114,7 @@ export const useDocumentUpload = () => {
       setPreview({
         files: filesArray,
         folderId: selectedFolder.id,
-        folderName: selectedFolder.name,
+        //folderName: selectedFolder.name,
         size: filesArray.reduce((total, file) => total + file.size, 0),
         customName: filesArray.length === 1
           ? filesArray[0].name.replace(/\.[^/.]+$/, '')
@@ -131,6 +131,7 @@ export const useDocumentUpload = () => {
     
     input.click();
   };
+
 
   // Функция для загрузки нескольких файлов
   const uploadMultipleFiles = async (
@@ -187,7 +188,7 @@ export const useDocumentUpload = () => {
         formData.append('s3Key', s3Key);
         formData.append('studyId', String(options.studyId));
         formData.append('folderId', options.folderId);
-        formData.append('folderName', options.folderName);
+        //formData.append('folderName', options.folderName);
         formData.append('createdBy', String(options.createdBy));
         formData.append('fileName', fileName);
         formData.append('documentName', documentName);

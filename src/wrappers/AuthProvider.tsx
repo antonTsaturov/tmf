@@ -113,9 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Автоматический редирект на логин, если пользователь не авторизован
   useEffect(() => {
-    if ( !AUTH_DISABLED )
-    if (!loading && !user && pathname !== '/login') {
-      router.push(`/login?from=${encodeURIComponent(pathname)}`);
+    if (!AUTH_DISABLED) {
+      const publicPaths = ['/login', '/reset-password'];
+      if (!loading && !user && !publicPaths.includes(pathname)) {
+        router.push(`/login?from=${encodeURIComponent(pathname)}`);
+      }
     }
   }, [user, loading, pathname, router]);
 

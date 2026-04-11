@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { Study } from '@/types/types';
 import { logger } from '@/lib/utils/logger';
+import { Document } from '@/types/document';
+import { ViewLevel } from '@/types/types';
+
 
 // interface Study {
 //   id: number;
@@ -17,6 +20,7 @@ interface Site {
   number: number;
   study_id: number;
   status: string;
+  country: string;
 }
 
 interface UseStudiesAndSitesReturn {
@@ -27,7 +31,7 @@ interface UseStudiesAndSitesReturn {
   refresh: () => Promise<void>;
   getStudyName: (studyId: number) => string;
   getStudyProtocol: (studyId: number) => string;
-  getSiteName: (siteId: string | number | null) => string;
+  getSiteName: (doc: Document) => string;
 }
 
 export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
@@ -95,10 +99,26 @@ export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
     return study?.protocol || `Протокол ${studyId}`;
   }, [studies]);
 
-  const getSiteName = useCallback((siteId: string | number | null): string => {
-    if (!siteId) return 'General Level Document';
-    const site = sites.get(siteId);
-    return site?.name || `Центр ${siteId}`;
+  const getSiteName = useCallback((doc: Document): string => {
+    // Определяем уровень документа по Folder ID
+    // Folder ID имеет вид "ViewLevel-UUID"
+    const docLevel = doc.folder_id.split('-', 1)[0];
+    if (docLevel === ViewLevel.GENERAL) {
+      return 'General Level Document';
+
+    }
+    if (docLevel === ViewLevel.SITE) {
+      const site = sites.get(String(doc.site_id));
+      return site?.name || `Центр ${String(doc.site_id)}`;
+
+    }
+    if (docLevel === ViewLevel.COUNTRY) {
+      const country = doc.country;
+      return `Country Level Document (${country || 'Unknown'})`;
+
+    }
+    console.log(doc)
+    return docLevel;
   }, [sites]);
 
   return {

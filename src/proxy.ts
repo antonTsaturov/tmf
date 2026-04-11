@@ -18,9 +18,11 @@ import { applyCorsHeaders, handleCorsPreflight } from './lib/security/cors';
 const PUBLIC_PATHS = [
   '/api/auth/login',
   '/api/auth/logout',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/reset-password',
   '/api/csrf',
   '/_next/static',
-  '/_next/image',
   '/favicon.ico'
 ];
 

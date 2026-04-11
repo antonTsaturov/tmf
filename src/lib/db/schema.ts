@@ -96,7 +96,7 @@ export const DocumentTable = `
     country VARCHAR(100),
 
     folder_id TEXT NOT NULL,
-    folder_name TEXT NOT NULL,
+    folder_name TEXT,
     tmf_zone TEXT,
     tmf_artifact TEXT,
 

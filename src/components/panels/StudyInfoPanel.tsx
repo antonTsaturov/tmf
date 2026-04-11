@@ -11,7 +11,8 @@ import {
   Separator,
   Spinner,
   Table,
-  Progress
+  Progress,
+  Tabs
 } from '@radix-ui/themes';
 import {
   FiX,
@@ -24,10 +25,15 @@ import {
   FiClock,
   FiArchive,
   FiTrash2,
-  FiAlertCircle
+  FiAlertCircle,
+  FiEdit3
 } from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
+import { AdminContext } from "@/wrappers/AdminContext";
+import { StudySite } from "@/types/types";
 import { logger } from '@/lib/utils/logger';
+import { getTable } from '@/lib/api/fetch';
+import { Tables } from '@/lib/db/schema';
 
 interface DocumentStats {
   total: number;
@@ -52,9 +58,40 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite, isStudyInfoPanelOpen } = context;
+  const { studies } = useContext(AdminContext)!;
 
   const [loading, setLoading] = useState(false);
   const [documentStats, setDocumentStats] = useState<DocumentStats | null>(null);
+  const [studySites, setStudySites] = useState<StudySite[]>([]);
+  const [selectedSiteTab, setSelectedSiteTab] = useState<string>('');
+
+  // Load all sites for the current study
+  useEffect(() => {
+    if (!currentStudy?.id) {
+      setStudySites([]);
+      setSelectedSiteTab('');
+      return;
+    }
+
+    const loadSites = async () => {
+      try {
+        const allSites = await getTable(Tables.SITE);
+        const filteredSites = (allSites as StudySite[]).filter(
+          (site: StudySite) => Number(site.study_id) === Number(currentStudy.id)
+        );
+        setStudySites(filteredSites);
+        if (filteredSites.length > 0) {
+          setSelectedSiteTab(String(filteredSites[0].id));
+        }
+      } catch (error) {
+        logger.error('Error loading sites for study', error);
+      }
+    };
+
+    loadSites();
+  }, [currentStudy?.id]);
+
+  const selectedSite = studySites.find(s => String(s.id) === selectedSiteTab);
 
   // Загрузка статистики документов
   useEffect(() => {
@@ -224,73 +261,81 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
             </Card>
 
             {/* Site Information */}
-            {currentSite && (
+            {studySites.length > 0 && (
               <Card size="2" variant="surface">
                 <Flex direction="column" gap="3">
                   <Flex align="center" gap="2" mb="1">
                     <FiMapPin size={18} color="var(--purple-9)" />
-                    <Text size="3" weight="bold">Site Information</Text>
+                    <Text size="3" weight="bold">Sites Information</Text>
                   </Flex>
-                  
+
                   <Separator size="4" />
 
-                  <Table.Root variant="surface">
-                    <Table.Body>
-                      <Table.Row>
-                        <Table.Cell width="40%">
-                          <Text size="2" color="gray">Site Name</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Text size="2" weight="medium">{currentSite.name}</Text>
-                        </Table.Cell>
-                      </Table.Row>
-                      <Table.Row>
-                        <Table.Cell>
-                          <Text size="2" color="gray">Site Number</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Text size="2">№{currentSite.number}</Text>
-                        </Table.Cell>
-                      </Table.Row>
-                      <Table.Row>
-                        <Table.Cell>
-                          <Text size="2" color="gray">Location</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Flex gap="2" align="center">
-                            <FiMapPin size={14} color="var(--gray-9)" />
-                            <Text size="2">{currentSite.city}, {currentSite.country}</Text>
-                          </Flex>
-                        </Table.Cell>
-                      </Table.Row>
-                      <Table.Row>
-                        <Table.Cell>
-                          <Text size="2" color="gray">Principal Investigator</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Text size="2">{currentSite.principal_investigator || 'N/A'}</Text>
-                        </Table.Cell>
-                      </Table.Row>
-                      <Table.Row>
-                        <Table.Cell>
-                          <Text size="2" color="gray">Status</Text>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Badge size="1" color={currentSite.status === 'opened' ? 'green' : 'gray'}>
-                            {currentSite.status}
-                          </Badge>
-                        </Table.Cell>
-                      </Table.Row>
-                      <Table.Row>
-                        <Table.Cell>
-                          <Text size="2" color="gray">Created At</Text>
-                        </Table.Cell>
-                        {/* <Table.Cell>
-                          <Text size="2">{formatDate(currentSite.created_at)}</Text>
-                        </Table.Cell> */}
-                      </Table.Row>
-                    </Table.Body>
-                  </Table.Root>
+                  <Tabs.Root value={selectedSiteTab} onValueChange={setSelectedSiteTab}>
+                    <Tabs.List>
+                      {studySites.map((site) => (
+                        <Tabs.Trigger key={site.id} value={String(site.id)}>
+                          <Text size="1">{site.name}</Text>
+                        </Tabs.Trigger>
+                      ))}
+                    </Tabs.List>
+
+                    {studySites.map((site) => (
+                      <Tabs.Content key={site.id} value={String(site.id)}>
+                        <Flex direction="column" gap="3" mt="3">
+                          <Table.Root variant="surface">
+                            <Table.Body>
+                              <Table.Row>
+                                <Table.Cell width="40%">
+                                  <Text size="2" color="gray">Site Name</Text>
+                                </Table.Cell>
+                                <Table.Cell>
+                                  <Text size="2" weight="medium">{site.name}</Text>
+                                </Table.Cell>
+                              </Table.Row>
+                              <Table.Row>
+                                <Table.Cell>
+                                  <Text size="2" color="gray">Site Number</Text>
+                                </Table.Cell>
+                                <Table.Cell>
+                                  <Text size="2">№{site.number}</Text>
+                                </Table.Cell>
+                              </Table.Row>
+                              <Table.Row>
+                                <Table.Cell>
+                                  <Text size="2" color="gray">Location</Text>
+                                </Table.Cell>
+                                <Table.Cell>
+                                  <Flex gap="2" align="center">
+                                    <FiMapPin size={14} color="var(--gray-9)" />
+                                    <Text size="2">{site.city || 'N/A'}, {site.country || 'N/A'}</Text>
+                                  </Flex>
+                                </Table.Cell>
+                              </Table.Row>
+                              <Table.Row>
+                                <Table.Cell>
+                                  <Text size="2" color="gray">Principal Investigator</Text>
+                                </Table.Cell>
+                                <Table.Cell>
+                                  <Text size="2">{site.principal_investigator || 'N/A'}</Text>
+                                </Table.Cell>
+                              </Table.Row>
+                              <Table.Row>
+                                <Table.Cell>
+                                  <Text size="2" color="gray">Status</Text>
+                                </Table.Cell>
+                                <Table.Cell>
+                                  <Badge size="1" color={site.status === 'opened' ? 'green' : 'gray'}>
+                                    {site.status}
+                                  </Badge>
+                                </Table.Cell>
+                              </Table.Row>
+                            </Table.Body>
+                          </Table.Root>
+                        </Flex>
+                      </Tabs.Content>
+                    ))}
+                  </Tabs.Root>
                 </Flex>
               </Card>
             )}
@@ -312,13 +357,24 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                   </Flex>
                 ) : documentStats ? (
                   <Flex direction="column" gap="4">
-                    {/* Summary Cards */}
+                    {/* Total Card */}
+                    <Card size="1" variant="surface">
+                      <Flex direction="row" align="center" gap="2" justify="between">
+                        <Flex align="center" gap="2">
+                          <FiFileText size={18} color="var(--gray-9)" />
+                          <Text size="2" weight="medium" color="gray">Total Documents</Text>
+                        </Flex>
+                        <Text size="4" weight="bold">{documentStats.total}</Text>
+                      </Flex>
+                    </Card>
+
+                    {/* Status Cards */}
                     <Flex gap="3" wrap="wrap">
                       <Card size="1" style={{ flex: 1, minWidth: 100 }}>
                         <Flex direction="column" align="center" gap="1">
-                          <FiFileText size={20} color="var(--gray-9)" />
-                          <Text size="4" weight="bold">{documentStats.total}</Text>
-                          <Text size="1" color="gray">Total</Text>
+                          <FiEdit3 size={20} color="var(--gray-9)" />
+                          <Text size="4" weight="bold">{documentStats.draft}</Text>
+                          <Text size="1" color="gray">Draft</Text>
                         </Flex>
                       </Card>
                       <Card size="1" style={{ flex: 1, minWidth: 100 }}>

@@ -60,7 +60,7 @@ async function uploadFileWithIAM(
   }
 }
 
-// Основная функция обработки загрузки
+// Основная функция обработки создания объекта документа в базе данных
 async function uploadHandler(
   request: NextRequest,
   ctx: AuditContext
@@ -84,7 +84,7 @@ async function uploadHandler(
     const siteId = formData.get('siteId') as string || null;
     const country = formData.get('country') as string || null;
     const folderId = formData.get('folderId') as string;
-    const folderName = formData.get('folderName') as string;
+    //const folderName = formData.get('folderName') as string;
     const createdBy = formData.get('createdBy') as string;
     const fileName = formData.get('fileName') as string;
     const documentName = formData.get('documentName') as string;
@@ -99,7 +99,7 @@ async function uploadHandler(
       studyId === undefined ||
       Number.isNaN(studyId) ||
       !folderId ||
-      !folderName ||
+      //!folderName ||
       !createdBy
     ) {
       return NextResponse.json(
@@ -178,10 +178,10 @@ async function uploadHandler(
     // Вставляем документ
     const { rows: [newDocument] } = await client.query(`
       INSERT INTO document (
-        id, study_id, site_id, country, folder_id, folder_name, 
+        id, study_id, site_id, country, folder_id, 
         tmf_zone, tmf_artifact, created_by, created_at,
         is_deleted, is_archived
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, false, false)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, false, false)
       RETURNING *
     `, [
       documentId,
@@ -189,7 +189,7 @@ async function uploadHandler(
       normalizedSiteId,
       country || null,
       folderId,
-      folderName,
+      //folderName,
       tmfZone || null,
       tmfArtifact || null,
       createdBy,
@@ -310,7 +310,8 @@ async function uploadHandler(
       study_id: newDocument.study_id,
       site_id: newDocument.site_id,
       folder_id: newDocument.folder_id,
-      folder_name: newDocument.folder_name,
+      //folder_name: newDocument.folder_name,
+      country: newDocument.country,
       tmf_zone: newDocument.tmf_zone,
       tmf_artifact: newDocument.tmf_artifact,
       created_at: newDocument.created_at,

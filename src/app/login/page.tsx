@@ -2,15 +2,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './LoginPage.module.css';
+import { logger } from '@/lib/utils/logger';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? 'v0.0.0-dev';
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? ' 0.0.0-dev';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,8 +43,6 @@ export default function LoginPage() {
       }
 
       // Перенаправление после успешного входа
-      //router.refresh();
-      //router.push('/');
       window.location.href = '/home';
     } catch (err: any) {
       setError(err.message || 'Invalid email or password');
@@ -57,7 +54,7 @@ export default function LoginPage() {
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotEmailError('');
-    
+
     if (!EMAIL_REGEX.test(forgotEmail)) {
       setForgotEmailError('Please enter a valid email address');
       return;
@@ -74,10 +71,19 @@ export default function LoginPage() {
         body: JSON.stringify({ email: forgotEmail }),
       });
 
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      let errorMessage = 'Failed to process request';
+
+      if (contentType.includes('application/json')) {
+        const data = await response.json();
+        errorMessage = data.error || errorMessage;
+      } else {
+        const text = await response.text();
+        logger.error('Forgot password: non-JSON response', { status: response.status, body: text.substring(0, 200) });
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to process request');
+        throw new Error(errorMessage);
       }
 
       setForgotSuccess(true);
@@ -227,7 +233,7 @@ export default function LoginPage() {
         <div className={styles.footer}>
           <div className={styles.footerText}>
             <p>© {new Date().getFullYear()} ExploreTMF System</p>
-            <p className={styles.footerVersion}>ver. {APP_VERSION} • Secure access required</p>
+            <p className={styles.footerVersion}>{APP_VERSION} • Secure access required</p>
           </div>
         </div>
       </div>

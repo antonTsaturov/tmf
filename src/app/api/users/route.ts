@@ -74,8 +74,13 @@ export async function POST(request: NextRequest) {
       return response;
     }
 
-    // Call the base handler to update the user
-    return await studyApiHandler.createOrUpdateTable(Tables.USERS, request);
+    // Updating existing user — create a new request since the body was already consumed
+    const updateRequest = new NextRequest(request.url, {
+      method: 'POST',
+      headers: request.headers,
+      body: JSON.stringify(data),
+    });
+    return await studyApiHandler.createOrUpdateTable(Tables.USERS, updateRequest);
   } catch (error) {
     logger.error('Error in users POST handler:', error);
     return NextResponse.json(

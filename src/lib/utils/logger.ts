@@ -100,6 +100,7 @@ export enum LogLevel {
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
+  location?: string;
   message: string;
   data?: any;
   error?: string;
@@ -117,9 +118,68 @@ class Logger {
     return messageIndex >= currentIndex;
   }
 
+  /**
+   * Parses and formats stack trace to show source file locations
+   * Attempts to extract original source files from Next.js compiled bundles
+   */
+  private parseStackTrace(stack: string): string {
+    const lines = stack.split('\n');
+    const formattedLines: string[] = [];
+
+    for (const line of lines) {
+      // Try to extract file:line:column
+      const match = line.match(/at\s+(?:(.+)\s+\()?\[?([^\s)]+\.(ts|tsx|js|jsx)):(\d+):(\d+)\]?/);
+      if (match) {
+        const [, funcName, filePath, , lineNum, colNum] = match;
+        const srcMatch = filePath.match(/src\/.+/);
+        const displayPath = srcMatch ? srcMatch[0] : filePath.split('/').slice(-3).join('/');
+        const func = funcName ? `${funcName} ` : '';
+        formattedLines.push(`    at ${func}(${displayPath}:${lineNum}:${colNum})`);
+      } else {
+        formattedLines.push(line);
+      }
+    }
+
+    return formattedLines.join('\n');
+  }
+
+  /**
+   * Gets the caller location (file and line number) from the stack trace
+   */
+  private getCallerLocation(): string {
+    const error = new Error();
+    const stack = error.stack;
+    if (!stack) return 'unknown';
+
+    const lines = stack.split('\n');
+    // Stack format: Error\n    at getCallerLocation (logger.ts)\n    at log (logger.ts)\n    at error (logger.ts)\n    at caller (actual-file.ts:123:45)
+    // We want the 5th line (skipping Error + getCallerLocation + log + error + caller)
+    const callerLine = lines[5];
+    if (!callerLine) return 'unknown';
+
+    // Extract file:line:column from "    at functionName (/path/to/file.ts:123:45)"
+    // or "    at /path/to/file.ts:123:45"
+    const match = callerLine.match(/\(?([^)]+\.(ts|tsx|js|jsx)):(\d+):(\d+)\)?/);
+    if (match) {
+      const [, filePath, , line, column] = match;
+      // Extract relative path from project root
+      const srcMatch = filePath.match(/src\/.+/);
+      const path = srcMatch ? srcMatch[0] : filePath.split('/').slice(-3).join('/');
+      return `${path}:${line}:${column}`;
+    }
+
+    return 'unknown';
+  }
+
   private formatLog(entry: LogEntry): string {
-    const { timestamp, level, message, data } = entry;
-    let output = `[${timestamp}] [${level}] ${message}`;
+    const { timestamp, level, location, message, data } = entry;
+    let output = `[${timestamp}] [${level}]`;
+
+    if (location) {
+      output += ` [${location}]`;
+    }
+
+    output += ` ${message}`;
 
     if (data) {
       output += ` | ${JSON.stringify(data)}`;
@@ -166,10 +226,13 @@ class Logger {
     if (!this.shouldLog(level)) return;
 
     const errorInfo = error ? this.extractErrorInfo(error) : undefined;
+    // Capture caller location only for errors (perf optimization)
+    const location = level === LogLevel.ERROR ? this.getCallerLocation() : undefined;
 
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
+      location,
       message,
       data,
       error: errorInfo?.message,
@@ -193,7 +256,7 @@ class Logger {
         // Only show stack trace in development for better production logs
         if (this.isDevelopment && errorInfo?.stack) {
           console.error('\n--- Stack Trace ---');
-          console.error(errorInfo.stack);
+          console.error(this.parseStackTrace(errorInfo.stack));
           console.error('--- End Stack Trace ---\n');
         }
         break;

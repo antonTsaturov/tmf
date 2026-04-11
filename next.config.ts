@@ -22,9 +22,9 @@ function getGitProjectVersion(): string {
   try {
     const commitCount = execSync('git rev-list --count HEAD', { encoding: 'utf-8' }).trim();
     const shortSha = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim();
-    return `v${baseVersion}.${commitCount}+${shortSha}`;
+    return `ver. ${baseVersion}.${commitCount}+${shortSha}`;
   } catch {
-    return `v${baseVersion}`;
+    return `ver. ${baseVersion}`;
   }
 }
 

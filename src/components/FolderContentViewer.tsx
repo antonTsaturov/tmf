@@ -94,12 +94,13 @@ const FolderContentViewer: React.FC = () => {
           folderId: selectedFolder.id,
           folderName: selectedFolder.name,
           size: files.reduce((total, f) => total + f.size, 0),
-          customName: files.length === 1 
+          customName: files.length === 1
             ? files[0].name.replace(/\.[^/.]+$/, "")
             : `${files.length} файлов`,
           studyId: currentStudy.id,
           siteId: currentSite?.id || 'General Level Document',
-          createdBy: user.id
+          createdBy: user.id,
+          country: currentCountry || undefined
         });
       }
     }
