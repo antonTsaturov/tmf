@@ -31,6 +31,13 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# Копируем скрипты и конфиги, устанавливаем ТОЛЬКО production-зависимости
+COPY --from=builder --chown=nextjs:nodejs /app/src/scripts ./src/scripts
+COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/package-lock.json ./package-lock.json
+RUN npm ci --omit=dev
+
 USER nextjs
 
 EXPOSE 3000
