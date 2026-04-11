@@ -95,8 +95,11 @@ export function cleanupRateLimitStore(): void {
   }
 }
 
-// Cleanup every hour
-setInterval(cleanupRateLimitStore, 60 * 60 * 1000);
+// Cleanup every hour (skip in test environment to prevent Jest open handles)
+const isTestEnv = typeof jest !== 'undefined' || process.env.NODE_ENV === 'test';
+if (!isTestEnv) {
+  setInterval(cleanupRateLimitStore, 60 * 60 * 1000);
+}
 
 /**
  * Wrap a route handler with rate limiting

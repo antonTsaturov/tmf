@@ -47,9 +47,21 @@ jest.mock('@/lib/config/env', () => ({
 }));
 
 describe('Token Refresh - Session Management', () => {
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockQuery.mockReset();
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
   });
 
   describe('createSession', () => {

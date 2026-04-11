@@ -221,8 +221,13 @@ function generateSessionId(): string {
 
 /**
  * Run cleanup periodically (every 5 minutes)
+ * Skip in test environment to prevent Jest open handles
  */
-if (typeof global !== 'undefined' && !('__sessionCleanupInterval' in global)) {
+const isTestEnv = typeof global !== 'undefined' && '__sessionCleanupInterval' in global
+  ? false
+  : typeof jest !== 'undefined' || process.env.NODE_ENV === 'test';
+
+if (!isTestEnv) {
   (global as any).__sessionCleanupInterval = setInterval(() => {
     cleanupExpiredSessions();
   }, 5 * 60 * 1000);
