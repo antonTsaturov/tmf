@@ -19,8 +19,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Создаем системного пользователя для безопасности
 RUN addgroup --system --gid 1001 nodejs
@@ -36,12 +36,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/src/scripts ./src/scripts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
-RUN npm ci --omit=dev
+RUN npm ci --omit=dev --ignore-scripts
 
 USER nextjs
 
 EXPOSE 3000
-ENV PORT 3000
+ENV PORT=3000
 
 # Запускаем через встроенный сервер node (быстрее и легче, чем npm start)
 CMD ["node", "server.js"]
