@@ -29,7 +29,6 @@ import {
   FiEdit3
 } from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
-import { AdminContext } from "@/wrappers/AdminContext";
 import { StudySite } from "@/types/types";
 import { logger } from '@/lib/utils/logger';
 import { getTable } from '@/lib/api/fetch';
@@ -57,8 +56,7 @@ interface StudyInfoPanelProps {
 const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, isStudyInfoPanelOpen } = context;
-  const { studies } = useContext(AdminContext)!;
+  const { currentStudy, isStudyInfoPanelOpen } = context;
 
   const [loading, setLoading] = useState(false);
   const [documentStats, setDocumentStats] = useState<DocumentStats | null>(null);
@@ -119,16 +117,6 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
       fetchDocumentStats();
     }
   }, [currentStudy?.id, isStudyInfoPanelOpen]);
-
-  // Форматирование даты
-  // const formatDate = (dateString: string | undefined) => {
-  //   if (!dateString) return 'N/A';
-  //   return new Date(dateString).toLocaleDateString('en-US', {
-  //     year: 'numeric',
-  //     month: 'short',
-  //     day: 'numeric'
-  //   });
-  // };
 
   // Статус исследования
   const getStudyStatusColor = (status: string) => {

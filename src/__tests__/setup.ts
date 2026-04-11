@@ -285,7 +285,7 @@ declare global {
   }
 }
 
-global.testUtils = testUtils;
+(global as unknown as NodeJS.Global & { testUtils: typeof testUtils }).testUtils = testUtils;
 
 // After each test cleanup
 afterEach(() => {
