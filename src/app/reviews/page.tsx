@@ -1,7 +1,7 @@
 // app/reviews/page.tsx
 'use client';
 
-import { useState, useEffect, useContext, useMemo } from 'react';
+import { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { 
   Flex, 
   Text, 
@@ -40,6 +40,7 @@ import { useSearchParams } from 'next/navigation';
 import { MainContext } from '@/wrappers/MainContext';
 
 import { useStudiesAndSites } from '@/hooks/useStudiesAndSites';
+import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import DocumentReviewPanel from "@/components/panels/ReviewDocumentPanel";
 import { Document } from '@/types/document';
 import UserMenu from '@/components/UserMenu';
@@ -59,9 +60,10 @@ interface PaginationInfo {
 }
 
 const VIEW_LEVELS = [
-  { value: 'all', label: 'Все документы' },
-  { value: 'site', label: 'Site Level документы' },
-  { value: 'general', label: 'General Level документы' }
+  { value: 'all', label: 'All documents' },
+  { value: 'site', label: 'Site Level documents' },
+  { value: 'general', label: 'General Level documents' },
+  { value: 'country', label: 'Country Level documents' },
 ];
 
 export default function MyReviewsPage() {
@@ -93,7 +95,7 @@ export default function MyReviewsPage() {
   const [allDocuments, setAllDocuments] = useState<Document[]>([]);
 
   // Загрузка всех документов один раз при монтировании
-  const fetchAllPendingReviews = async () => {
+  const fetchAllPendingReviews = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -102,7 +104,7 @@ export default function MyReviewsPage() {
       });
 
       const response = await fetch(`/api/documents/reviews/pending?${params.toString()}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch pending reviews');
       }
@@ -120,11 +122,18 @@ export default function MyReviewsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addNotification]);
 
   useEffect(() => {
     fetchAllPendingReviews();
   }, []);
+
+  // Keep session alive: refresh token every 10 min and re-fetch documents
+  useTokenRefresh({
+    onRefreshSuccess: () => {
+      fetchAllPendingReviews();
+    },
+  });
 
   // Обработчики пагинации
   const handleNextPage = () => {
@@ -168,11 +177,10 @@ export default function MyReviewsPage() {
 
  // Функция фильтрации
   const filterDocuments = (
-    docs: Document[], 
-    query: string, 
-    studyId?: string, 
-    siteId?: string, 
-    folderId?: string,
+    docs: Document[],
+    query: string,
+    studyId?: string,
+    siteId?: string,
     levelFilter?: string
   ) => {
     return docs.filter(doc => {
@@ -184,29 +192,30 @@ export default function MyReviewsPage() {
       const matchesStudy = !studyId || studyId === "all" || 
         doc.study_id.toString() === studyId;
       
-      //  Фильтр по уровню (general, site, или все)
+      //  Фильтр по уровню (general, country, site, или все)
       const matchesLevel = (() => {
+        const docLevel = doc.folder_id.split('-', 1)[0];
+
         if (!levelFilter || levelFilter === 'all') {
-          // При выборе "Все документы" показываем все документы (и site level и general level)
           return true;
         }
 
         if (levelFilter === 'general') {
-          // Только General документы (site_id === null)
-          return doc.site_id === null;
+          return docLevel === 'general' && doc.site_id === null;
+        }
+
+        if (levelFilter === 'country') {
+          return docLevel === 'country' && doc.site_id === null;
         }
 
         if (levelFilter === 'site') {
-          // Только Site-level документы (site_id !== null)
           if (!siteId || siteId === "all") {
-            return doc.site_id !== null; // все site-level
+            return doc.site_id !== null;
           }
-          // Конкретный центр: site_id !== null + совпадение по ID
           return doc.site_id !== null && doc.site_id.toString() === siteId;
         }
 
         return true;
-
       })();
       
       return matchesSearch && matchesStudy && matchesLevel;
@@ -238,6 +247,7 @@ export default function MyReviewsPage() {
   // Oбработчики фильтров
   const handleStudyFilterChange = (value: string) => {
     setStudyFilter(value === "all" ? "" : value);
+    setSiteFilter(""); // Сбросить фильтр центров при смене исследования
     setPagination(prev => ({ ...prev, offset: 0 }));
   };
 
@@ -278,10 +288,14 @@ export default function MyReviewsPage() {
       <header className="toolbar-header">
         <div className="toolbar-title"></div>
         <Link href="/home">
-          <Button
-            variant="solid"
-            mr="3"
-            >
+          <Button variant="solid" mr="3"
+            onClick={()=> {
+              // Закрыть боковой фрейм, чтобы он так же был закрыт при переходе на /home
+              if (isRightFrameOpen) {
+                updateContext({isRightFrameOpen: false})
+              }
+            }}  
+          >
             <Text align="center">
               eTMF
             </Text>
@@ -363,19 +377,7 @@ export default function MyReviewsPage() {
           
                 {/* Filters */}
               <Flex  gap="6" align="center" wrap="wrap">
-                  <Select.Root value={levelFilter || "all"} onValueChange={handleLevelFilterChange} size="1">
-                    <Select.Trigger placeholder="Уровень" variant="ghost"/>
-                    <Select.Content>
-                      {VIEW_LEVELS.map((level) => (
-                        <Select.Item key={level.value} value={level.value}>
-                          {level.label}
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Root>
-
-
-
+                  {/* Исследование */}
                   <Select.Root value={studyFilter || "all"} onValueChange={handleStudyFilterChange} size="1">
                     <Select.Trigger placeholder="Исследование" variant="ghost"/>
                     <Select.Content>
@@ -388,21 +390,36 @@ export default function MyReviewsPage() {
                     </Select.Content>
                   </Select.Root>
 
-                  <Select.Root 
-                    value={siteFilter || "all"} 
+                  {/* Уровень */}
+                  <Select.Root value={levelFilter || "all"} onValueChange={handleLevelFilterChange} size="1">
+                    <Select.Trigger placeholder="Уровень" variant="ghost"/>
+                    <Select.Content>
+                      {VIEW_LEVELS.map((level) => (
+                        <Select.Item key={level.value} value={level.value}>
+                          {level.label}
+                        </Select.Item>
+                      ))}
+                    </Select.Content>
+                  </Select.Root>
+
+                  {/* Фильтр по конкретному центру */}
+                  <Select.Root
+                    value={siteFilter || "all"}
                     onValueChange={handleSiteFilterChange}
                     size="1"
                   >
                     <Select.Trigger
                       placeholder="Центр"
                       variant="ghost"
-                      disabled={levelFilter === 'general'}
+                      disabled={levelFilter === 'general' || levelFilter === 'country' }
                       className={`${isRightFrameOpen ? "select-fixed-width" : ''}`}
                     />
                     <Select.Content >
                       <Select.Item value="all" disabled={levelFilter === 'general'}>Все центры</Select.Item>
-                      {sites ? Array.from(sites.values()).map((site) => (
-                        <Select.Item key={site.id} value={String(site.id)} disabled={levelFilter === 'general'}>
+                      {sites ? Array.from(sites.values())
+                        .filter((site) => !studyFilter || site.study_id.toString() === studyFilter)
+                        .map((site) => (
+                        <Select.Item key={site.id} value={String(site.id)} disabled={levelFilter === 'general' || levelFilter === 'country' }>
                           <span className="select-item-text" title={site.name}>
                             {site.name}
                           </span>

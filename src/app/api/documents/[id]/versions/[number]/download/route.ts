@@ -87,11 +87,15 @@ export async function GET(
       });
     }
 
-    const _ext = version.file_name?.split('.').pop() || 'pdf';
+    //const _ext = version.file_name?.split('.').pop() || 'pdf';
+    const rawFileName = version.file_name || 'document.pdf';
+    // RFC 5987: ASCII fallback + UTF-8 encoded filename for non-ASCII characters
+    const encodedFileName = encodeURIComponent(rawFileName);
+    const asciiFallback = rawFileName.replace(/[^\x00-\x7F]/g, '_');
     const disposition =
       request.nextUrl.searchParams.get('inline') === 'true'
-        ? `inline; filename="${version.file_name || 'document.pdf'}"`
-        : `attachment; filename="v${versionNumber}_${version.file_name || 'document.pdf'}"`;
+        ? `inline; filename="${asciiFallback}"; filename*=UTF-8''${encodedFileName}`
+        : `attachment; filename="v${versionNumber}_${asciiFallback}"; filename*=UTF-8''v${versionNumber}_${encodedFileName}`;
 
     return new NextResponse(arrayBuffer, {
       headers: {

@@ -1,7 +1,7 @@
 // components/PDFViewer.tsx
 import React, { useContext, useEffect, useState, useRef } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
-import { FiDownload, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
+import { FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import { MdCached } from "react-icons/md";
 import { usePDFCache } from '@/hooks/usePDFCache';
 import '../styles/PDFViewer.css';
@@ -112,46 +112,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
     };
   }, [selectedDocument]);
 
-  const handleDownload = async () => {
-    if (!selectedDocument) return;
-
-    try {
-      // Проверяем кэш сначала
-      const cached = await getCachedPDF(selectedDocument.id);
-      
-      if (cached) {
-        // Скачиваем из кэша
-        const blob = new Blob([cached.data], { type: 'application/pdf' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = selectedDocument.document_name || 'document.pdf';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        return;
-      }
-
-      // Если нет в кэше, скачиваем с сервера
-      const response = await fetch(`/api/documents/${selectedDocument.id}/view`);
-      if (!response.ok) throw new Error('Download failed');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = selectedDocument.document_name || 'document.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-    } catch (err) {
-      logger.error('Download error', err);
-      alert('Failed to download document');
-    }
-  };
 
   useEffect(() => {
     // Если панель закрывается
@@ -201,13 +161,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
           >
             {fullscreen ? <FiMinimize2 /> : <FiMaximize2 />}
           </button>
-          <button 
-            className="icon-button" 
-            onClick={handleDownload}
-            title="Скачать"
-          >
-            <FiDownload />
-          </button>
         </div>
       </div>
 
@@ -223,9 +176,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
           <div className="pdf-viewer-error-state">
             <div className="pdf-viewer-error-icon">⚠️</div>
             <div className="pdf-viewer-error-message">{error}</div>
-            <button className="download-button" onClick={handleDownload}>
-              <FiDownload /> Скачать файл
-            </button>
           </div>
         )}
 
@@ -240,9 +190,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
           >
             <div className="fallback-message">
               <p>Ваш браузер не поддерживает встроенный просмотр PDF.</p>
-              <button className="download-button" onClick={handleDownload}>
-                <FiDownload /> Скачать PDF
-              </button>
             </div>
           </object>
         )}

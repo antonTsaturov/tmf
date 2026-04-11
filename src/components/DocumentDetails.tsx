@@ -7,12 +7,12 @@ import { DocumentLifeCycleStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
 import { logger } from '@/lib/utils/logger';
-import { 
-  Box, 
-  Card, 
-  Flex, 
-  Text, 
-  Badge, 
+import {
+  Box,
+  Card,
+  Flex,
+  Text,
+  Badge,
   IconButton,
   Tooltip,
   Spinner,
@@ -20,10 +20,10 @@ import {
 import { FiDownload, FiInfo, FiUser } from 'react-icons/fi';
 import { useFolderName } from '@/hooks/useFolderName';
 import { DocumentVersionRow } from '@/types/document';
-import { useNotification } from '@/wrappers/NotificationContext';
+import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 
 const DocumentDetails: React.FC = () => {
-  const { addNotification } = useNotification();
+  const { handleDownloadVersion } = useDocumentActionHandler();
   const getFolderName = useFolderName();
 
   
@@ -75,49 +75,6 @@ const DocumentDetails: React.FC = () => {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(n) / Math.log(k));
     return parseFloat((n / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const handleDownloadVersion = async (version: DocumentVersionRow) => {
-    try {
-      const response = await fetch(
-        `/api/documents/${selectedDocument!.id}/versions/${version.document_number}?inline=false`
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        if (response.status === 500 && errorData.error === 'File integrity check failed') {
-          addNotification(
-            'error',
-            `Ошибка целостности файла: ${version.file_name}. Файл мог быть повреждён в хранилище.`
-          );
-          logger.error('Download failed: checksum verification failed', null, {
-            documentId: selectedDocument!.id,
-            versionNumber: version.document_number,
-            fileName: version.file_name
-          });
-          return;
-        }
-
-        addNotification('error', `Ошибка загрузки: ${errorData.message || response.statusText}`);
-        return;
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `v${version.document_number}_${version.file_name}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      addNotification('success', `Файл ${version.file_name} загружен`);
-    } catch (error) {
-      logger.error('Download error', error);
-      addNotification('error', 'Не удалось загрузить файл');
-    }
   };
 
   const renderUserInfo = (user?: { name?: string; email?: string } | null) => {
