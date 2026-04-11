@@ -322,7 +322,7 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
                               <Flex align="center" gap="1">
                                 <Text size="2">{getStudyProtocol(doc.study_id)}</Text>
                               </Flex>
-                              <Text size="1" color="gray">{getSiteName(doc.site_id)}</Text>
+                              <Text size="1" color="gray">{getSiteName(doc)}</Text>
                             </Flex>
                           ) : (
                             <Text size="2" color="gray">—</Text>
