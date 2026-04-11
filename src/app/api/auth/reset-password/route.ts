@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const expiresAt = payload.exp ? payload.exp * 1000 : undefined;
+    const expiresAt = (payload as any).exp ? (payload as any).exp * 1000 : undefined;
 
     return NextResponse.json({
       valid: true,
