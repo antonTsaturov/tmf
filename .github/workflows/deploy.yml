@@ -35,7 +35,12 @@ jobs:
         run: npm run build
 
       - name: 🐳 Build Docker image
-        run: docker build -t tmf-app .
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          COMMIT_COUNT=$(git rev-list --count HEAD)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          APP_VERSION="ver. ${PKG_VERSION}.${COMMIT_COUNT}+${SHORT_SHA}"
+          docker build --build-arg APP_VERSION="$APP_VERSION" -t tmf-app .
 
       - name: 🏷 Tag image
         run: docker tag tmf-app ghcr.io/antontsaturov/tmf-app:latest

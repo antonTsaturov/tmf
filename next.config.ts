@@ -28,7 +28,7 @@ function getGitProjectVersion(): string {
   }
 }
 
-const appVersion = getGitProjectVersion();
+const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || getGitProjectVersion();
 
 const nextConfig: NextConfig = {
   output: 'standalone',
