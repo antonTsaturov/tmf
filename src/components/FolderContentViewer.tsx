@@ -92,7 +92,7 @@ const FolderContentViewer: React.FC = () => {
         upload.setFilePreview({
           files,
           folderId: selectedFolder.id,
-          folderName: selectedFolder.name,
+          //folderName: selectedFolder.name,
           size: files.reduce((total, f) => total + f.size, 0),
           customName: files.length === 1
             ? files[0].name.replace(/\.[^/.]+$/, "")
