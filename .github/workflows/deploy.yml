@@ -93,5 +93,5 @@ jobs:
               --name tmf-app \
               --restart always \
               -p 127.0.0.1:3000:3000 \
-              --env-file /home/anton/.env \
+              --env-file /home/anton/scripts/.env \
               ghcr.io/antontsaturov/tmf-app:latest            
