@@ -35,12 +35,13 @@ export async function GET(req: NextRequest) {
   
   // 1. Получаем структуру папок
   const { rows: studyRows } = await pool.query(
-    `SELECT folders_structure, protocol FROM study WHERE id = $1`,
+    `SELECT folders_structure, protocol, countries FROM study WHERE id = $1`,
     [studyId]
   );
   if (studyRows.length === 0) return new Response("Study not found", { status: 404 });
 
   const studyProtocol = studyRows[0].protocol;
+  const studyCountries: string[] = studyRows[0].countries || [];
   const folderMap = buildFolderMap(studyRows[0].folders_structure);
 
   let query = "";
@@ -50,9 +51,10 @@ export async function GET(req: NextRequest) {
   if (type === "full") {
     // 🔥 ВСЕ версии
     query = `
-      SELECT 
+      SELECT
         d.study_id,
         d.site_id,
+        d.country,
         s.name as site_name, -- Добавляем имя сайта
         d.tmf_zone,
         d.tmf_artifact,
@@ -84,9 +86,10 @@ export async function GET(req: NextRequest) {
   } else {
     // ✅ FINAL (только current)
     query = `
-      SELECT 
+      SELECT
         d.study_id,
         d.site_id,
+        d.country,
         s.name as site_name, -- Добавляем имя сайта
         d.tmf_zone,
         d.tmf_artifact,
@@ -117,6 +120,9 @@ export async function GET(req: NextRequest) {
   }
 
   const { rows: docs } = await pool.query(query, params);
+
+  // Определяем, есть ли в исследовании несколько стран
+  const hasMultipleCountries = studyCountries.length > 1;
 
 
   const stream = new PassThrough();
@@ -188,9 +194,10 @@ export async function GET(req: NextRequest) {
         }
 
         const folderPath = buildFolderPathWithMode(
-          { ...doc, 
+          { ...doc,
             protocol: studyProtocol,
-            folder_name: folderMap.get(doc.folder_id) },
+            folder_name: folderMap.get(doc.folder_id),
+            hasMultipleCountries },
           type
         );
         const fileName = buildFileNameWithMode(doc, type);

@@ -1,9 +1,9 @@
-import React, { useState, useCallback, FC, KeyboardEvent, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, useCallback, FC, KeyboardEvent, ChangeEvent, useEffect, useContext } from 'react';
 import '@/styles/FoldersStructureManager.css';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomSelect } from '../Select'
 import { AdminContext } from '@/wrappers/AdminContext';
-import { FolderType, FolderStatus, Folder, ViewLevel } from '@/types/types';
+import { FolderType, FolderStatus, Folder, FolderLevel } from '@/types/folder';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
 import {
@@ -44,21 +44,21 @@ interface FolderItemProps {
   onDelete: (folderId: string) => void;
   onUpdateName: (folderId: string, newName: string) => void;
   onEditComplete?: (folderId: string) => void;
-  parentLevel?: ViewLevel; // Добавляем уровень родителя
+  parentLevel?: FolderLevel; // Уровень родителя
 }
 
 interface FolderTreeProps {
   initialStructure?: Folder;
 }
 
-export const generateId = (level: ViewLevel): string => `${level}-${uuidv4()}`;
+export const generateId = (level: FolderLevel): string => `${level}-${uuidv4()}`;
 
 export const createNewFolder = (
   name: string = '', 
   type: FolderType = FolderType.FOLDER,
   shouldEdit: boolean = false,
-  level: ViewLevel = ViewLevel.GENERAL, // По умолчанию GENERAL
-  parentLevel?: ViewLevel // Уровень родителя
+  level: FolderLevel = FolderLevel.GENERAL, // По умолчанию GENERAL
+  parentLevel?: FolderLevel // Уровень родителя
 ): Folder & { shouldEdit?: boolean } => {
   // Определяем уровень для новой папки
   let folderLevel = level;
@@ -81,34 +81,37 @@ export const createNewFolder = (
   };
 };
 
-// Создание начальной структуры с двумя корневыми папками
+/*
+* Создание начальной структуры: две обязательные папки GENERAL и SITE.
+* Папка COUNTRY создается только для международных исследоаний (countries.length > 1)
+*/
 export const createInitialStructure = (studyName: string = 'Root Directory', countries?: string[]): Folder => {
-  const rootId = generateId(ViewLevel.ROOT);
+  const rootId = generateId(FolderLevel.ROOT);
   
   const children = [
     {
-      id: generateId(ViewLevel.GENERAL),
+      id: generateId(FolderLevel.GENERAL),
       name: 'General',
       type: FolderType.FOLDER,
-      level: ViewLevel.GENERAL,
+      level: FolderLevel.GENERAL,
       status: FolderStatus.ACTIVE,
       children: [],
       shouldEdit: false
     },
     {
-      id: generateId(ViewLevel.SITE),
+      id: generateId(FolderLevel.SITE),
       name: 'Site Level',
       type: FolderType.FOLDER,
-      level: ViewLevel.SITE,
+      level: FolderLevel.SITE,
       status: FolderStatus.ACTIVE,
       children: [],
       shouldEdit: false
     },
     ...(countries ? [{
-      id: generateId(ViewLevel.COUNTRY),
+      id: generateId(FolderLevel.COUNTRY),
       name: 'Country Level',
       type: FolderType.FOLDER,
-      level: ViewLevel.COUNTRY,
+      level: FolderLevel.COUNTRY,
       status: FolderStatus.ACTIVE,
       children: [],
       shouldEdit: false
@@ -119,7 +122,7 @@ export const createInitialStructure = (studyName: string = 'Root Directory', cou
     id: rootId,
     name: studyName,
     type: FolderType.ROOT,
-    level: ViewLevel.ROOT,
+    level: FolderLevel.ROOT,
     status: FolderStatus.ACTIVE,
     shouldEdit: false,
     children
@@ -171,7 +174,7 @@ const FolderItem: FC<FolderItemProps> = ({
   // Определяем иконку в зависимости от уровня
   const getFolderIcon = () => {
     if (folder.type === FolderType.ROOT) return <HomeIcon />;
-    if (folderLevel === ViewLevel.SITE || folderLevel === ViewLevel.GENERAL) {
+    if (folderLevel === FolderLevel.SITE || folderLevel === FolderLevel.GENERAL) {
       return folder.children.length > 0 ? (isExpanded ? <FaRegFolderOpen /> : <FaRegFolder />) : <FaRegFolder />;
     }
     return folder.children.length > 0 ? (isExpanded ? <FaRegFolderOpen /> : <FaRegFolder />) : <FaRegFolder />;
@@ -179,11 +182,11 @@ const FolderItem: FC<FolderItemProps> = ({
 
   // Получаем цвет фона в зависимости от уровня
   const getFolderBackground = () => {
-    if (folderLevel === ViewLevel.SITE) {
+    if (folderLevel === FolderLevel.SITE) {
       return 'var(--green-3)';
-    } else if (folderLevel === ViewLevel.GENERAL) {
+    } else if (folderLevel === FolderLevel.GENERAL) {
       return 'var(--blue-3)';
-    } else if (folderLevel === ViewLevel.COUNTRY){
+    } else if (folderLevel === FolderLevel.COUNTRY){
       return 'var(--gray-3)';
     }
     return 'transparent';
@@ -253,14 +256,14 @@ return (
                   {folderLevel !== undefined && folder.type !== FolderType.ROOT && (
                     <Badge 
                       size="1" 
-                      color={folderLevel === ViewLevel.SITE ? 'green'
-                              : folderLevel === ViewLevel.GENERAL ? 'blue'
+                      color={folderLevel === FolderLevel.SITE ? 'green'
+                              : folderLevel === FolderLevel.GENERAL ? 'blue'
                               : 'gray' }
                       variant="soft"
                       style={{ flexShrink: 0 }}
                     >
-                      {folderLevel === ViewLevel.SITE ? 'SL' 
-                      : folderLevel === ViewLevel.GENERAL ? 'G'
+                      {folderLevel === FolderLevel.SITE ? 'SL' 
+                      : folderLevel === FolderLevel.GENERAL ? 'G'
                       : 'CL'
                       }
                     </Badge>
@@ -684,12 +687,12 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
             <Separator orientation="vertical" />
             <Flex gap="2" align="center">
               <Text size="1" color="gray">Site Level:</Text>
-              <Badge color="green" variant="soft">{countFoldersByLevel(rootFolder, ViewLevel.SITE)}</Badge>
+              <Badge color="green" variant="soft">{countFoldersByLevel(rootFolder, FolderLevel.SITE)}</Badge>
             </Flex>
             <Separator orientation="vertical" />
             <Flex gap="2" align="center">
               <Text size="1" color="gray">General:</Text>
-              <Badge color="blue" variant="soft">{countFoldersByLevel(rootFolder, ViewLevel.GENERAL)}</Badge>
+              <Badge color="blue" variant="soft">{countFoldersByLevel(rootFolder, FolderLevel.GENERAL)}</Badge>
             </Flex>
             <Separator orientation="vertical" />
             <Flex gap="2" align="center">
@@ -712,7 +715,7 @@ const countFolders = (folder: Folder): number => {
   return count;
 };
 
-const countFoldersByLevel = (folder: Folder, level: ViewLevel): number => {
+const countFoldersByLevel = (folder: Folder, level: FolderLevel): number => {
   let count = folder.level === level ? 1 : 0;
   folder.children.forEach(child => {
     count += countFoldersByLevel(child, level);

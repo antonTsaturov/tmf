@@ -25,8 +25,10 @@ import {
 import { MainContext } from "@/wrappers/MainContext";
 import { useDocumentArchive } from "@/hooks/useDocumentArchive";
 import { useNotification } from '@/wrappers/NotificationContext';
+import { useFolderNameByMap } from '@/hooks/useFolderName';
 import { Document } from '@/types/document';
 import { logger } from '@/lib/utils/logger';
+import { useDocumentLevel } from "@/hooks/useDocumentLevel";
 
 interface ArchiveDocumentPanelProps {
   onDocumentArchived?: (updatedDoc: Document) => void;
@@ -37,8 +39,9 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
   if (!mainContext) throw new Error('ArchiveDocumentPanel must be used within MainContext Provider');
 
   const { context, updateContext } = mainContext;
-  const { isArchivePanelOpen, selectedDocument, currentStudy, currentSite, currentLevel } = context;
+  const { isArchivePanelOpen, selectedDocument, currentStudy, currentSite } = context;
   const { addNotification } = useNotification();
+  const { getFolderNameFromStructure } = useFolderNameByMap();
 
   const { archiveDocument, isArchiving, error } = useDocumentArchive();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -222,9 +225,23 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
                   </Flex>
                 </DataList.Label>
                 <DataList.Value>
-                  <Text size="2">{`${currentLevel === 'site' ? 'Site level' : 'General'}`}</Text>
+                  <Text size="2">{useDocumentLevel(selectedDocument.folder_id)}</Text>
                 </DataList.Value>
               </DataList.Item>
+
+              {
+                useDocumentLevel(selectedDocument.folder_id).includes('Country') && 
+                <DataList.Item>
+                  <DataList.Label minWidth="80px">
+                    <Flex align="center" gap="1">
+                      <Text size="2">Страна</Text>
+                    </Flex>
+                  </DataList.Label>
+                  <DataList.Value>
+                    <Text size="2">{selectedDocument.country}</Text>
+                  </DataList.Value>
+                </DataList.Item>
+              }
 
               <DataList.Item>
                 <DataList.Label minWidth="80px">
@@ -233,7 +250,7 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
                   </Flex>
                 </DataList.Label>
                 <DataList.Value>
-                  <Text size="2">{selectedDocument.folder_name || '—'}</Text>
+                  <Text size="2">{getFolderNameFromStructure(currentStudy?.folders_structure,  selectedDocument.folder_id) || '—'}</Text>
                 </DataList.Value>
               </DataList.Item>
 

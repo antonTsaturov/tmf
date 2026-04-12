@@ -1,4 +1,4 @@
-import { Folder } from './types';
+import { Folder } from "./folder";
 import { StudySite } from './types';
 
 export enum StudyStatus {

@@ -1,9 +1,8 @@
-// @/lib/cloud/s3-export.ts
-
 interface ExportDoc {
   study_id: number | string;
   site_id?: string | null;
   site_name?: string | null;
+  country?: string | null;
   protocol?: string | null;
   tmf_zone?: string | null;
   tmf_artifact?: string | null;
@@ -17,22 +16,35 @@ interface ExportDoc {
  * Строит путь к папке внутри архива или S3 бакета.
  * folder_name здесь — это уже результат маппинга folder_id -> name
  */
-export function buildFolderPath(doc: ExportDoc) {
+export function buildFolderPath(doc: ExportDoc, hasMultipleCountries: boolean = false) {
   const studyRoot = `Study_${doc.protocol || 'Unknown'}`;
-  
-  // Определяем папку уровня
-  const levelFolder = doc.site_id ? "Site Level Documents" : "General Level Documents";
-  
-  // Для сайта добавляем промежуточную папку с ID сайта
-  const siteFolder = doc.site_name 
-    ? `Site_${doc.site_name}` 
-    : (doc.site_id 
-    ? `Site_${doc.site_id}` 
+
+  // Определяем уровень документа
+  const isSiteLevel = !!doc.site_id;
+  const isCountryLevel = !doc.site_id && !!doc.country && hasMultipleCountries;
+
+  const levelFolder = isSiteLevel
+    ? "Site Level Documents"
+    : isCountryLevel
+    ? "Country Level Documents"
+    : "General Level Documents";
+
+  // Для сайта добавляем промежуточную папку с именем сайта
+  const siteFolder = doc.site_name
+    ? `Site_${doc.site_name}`
+    : (doc.site_id
+    ? `Site_${doc.site_id}`
     : null);
-  
+
+  // Для Country level добавляем папку страны
+  const countryFolder = isCountryLevel
+    ? `Country_${doc.country}`
+    : null;
+
   return [
     studyRoot,
     levelFolder,
+    countryFolder,
     siteFolder,
     doc.folder_name
   ]
@@ -90,7 +102,7 @@ export function buildFileNameWithMode(doc: any, mode: string) {
 }
 
 export function buildFolderPathWithMode(doc: any, mode: string) {
-  const base = buildFolderPath(doc);
+  const base = buildFolderPath(doc, doc.hasMultipleCountries);
 
   if (mode !== "full") {
     return base;

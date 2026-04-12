@@ -1,5 +1,5 @@
 // hooks/useFolderName.ts
-import { FolderNode, FoldersStructure } from '@/types/folder';
+import { FolderNode, Folder } from '@/types/folder';
 import { useFolderStructure } from '@/wrappers/FolderStructureContext';
 
 export function useFolderName() {
@@ -25,7 +25,7 @@ export function useFolderpath() {
 export function useFolderNameByMap() {
 
   function findFolderById(
-    node: FolderNode | FoldersStructure,
+    node: FolderNode | Folder,
     folderId: string
   ): FolderNode | null {
     if (node.id === folderId) {
@@ -40,9 +40,10 @@ export function useFolderNameByMap() {
     }
     
     return null;
-  }  
+  }
+
   function getFolderNameFromStructure(
-    structure: FoldersStructure | null | undefined,
+    structure: Folder | null | undefined,
     folderId: string
   ): string | null {
     if (!structure) return null;
@@ -63,6 +64,7 @@ export function useFolderNameByMap() {
   }  
   
   return {
-    getFolderNameFromStudiesMap
+    getFolderNameFromStudiesMap,
+    getFolderNameFromStructure
   }
 }

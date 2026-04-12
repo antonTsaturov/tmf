@@ -9,12 +9,41 @@ export interface FolderNode {
   shouldEdit?: boolean;
 }
 
-export interface FoldersStructure {
+export enum FolderLevel {
+  ROOT = 'root',
+  SITE = 'site',
+  GENERAL = 'general',
+  COUNTRY= 'country'
+};
+
+// export interface FoldersStructure {
+//   id: string;
+//   name: string;
+//   type: 'root';
+//   level: 'general';
+//   status: 'active';
+//   children: FolderNode[];
+//   shouldEdit?: boolean;
+// }
+
+export interface Folder {
   id: string;
   name: string;
-  type: 'root';
-  level: 'general';
-  status: 'active';
-  children: FolderNode[];
-  shouldEdit?: boolean;
+  type: FolderType;
+  level?: FolderLevel;
+  status: FolderStatus;
+  children: Folder[];
+  shouldEdit: boolean;
+}
+
+export enum FolderType {
+  ROOT = 'root',
+  FOLDER = 'folder',
+  SUBFOLDER = 'subfolder'
+}
+
+export enum FolderStatus {
+  ACTIVE = 'active',
+  LOCKED = 'locked',
+  ARCHIVED = 'archived'
 }
