@@ -10,6 +10,7 @@ import { IoIosArrowForward } from "react-icons/io";
 import React from 'react';
 import { ViewLevel } from '@/types/types';
 import { logger } from '@/lib/utils/logger';
+import { useI18n } from '@/hooks/useI18n';
 
 interface StudySiteNavigationProps {
   onStudyChange?: (study: Study | undefined) => void;
@@ -22,6 +23,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   onSiteChange,
   onViewLevelChange,
 }) => {
+  const { t } = useI18n('navigation');
   const { user, loading: authLoading } = useAuth()!;
   /*
   *  studies - стартовая точка загрузки. Объект studies содержит вложенный объект
@@ -131,7 +133,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
     return (
       <Flex p="1" justify="center" align="center" gap="2" ml="2">
         <Spinner size="2" />
-        <Text size="2">Загрузка исследований...</Text>
+        <Text size="2">{t('loadingStudies')}</Text>
       </Flex>
     );
   }
@@ -140,7 +142,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   if (!studies?.length) {
     return (
       <Flex p="3" justify="center">
-        <Text size="2">Нет доступных исследований</Text>
+        <Text size="2">{t('noStudies')}</Text>
       </Flex>
     );
   }
@@ -152,11 +154,11 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         <Select.Root
           size="2"
           key={`study-select-${currentStudy?.id}`}
-          value={currentStudy?.id?.toString() || undefined} 
+          value={currentStudy?.id?.toString() || undefined}
           onValueChange={handleStudyChange}
-          
+
         >
-          <Select.Trigger placeholder="Выберите исследование" variant="surface"/>
+          <Select.Trigger placeholder={t('selectStudy')} variant="surface"/>
           <Select.Content>
             {studies
               .filter(study => user?.assigned_study_id?.includes(study.id))
@@ -169,35 +171,35 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         </Select.Root>
         {currentStudy && <IoIosArrowForward />}
       </Flex>
-      
+
       {/* Шаг 2: Выбор уровня просмотра (показываем только если выбрано исследование) */}
       {currentStudy && (
         <Flex direction="row" gap="3" align="center">
           <Select.Root
             size="2"
             key={`level-select-${currentLevel}-${currentStudy.id}`}
-            value={currentLevel || undefined} 
+            value={currentLevel || undefined}
             onValueChange={(value: ViewLevel) => handleViewLevelChange(value)}
           >
-            <Select.Trigger placeholder="Выберите уровень" />
+            <Select.Trigger placeholder={t('selectLevel')} />
             <Select.Content>
               <Select.Item value={ViewLevel.GENERAL}>
                 <Flex direction="column" gap="1">
-                  <Text>General</Text>
+                  <Text>{t('generalLevel')}</Text>
                 </Flex>
               </Select.Item>
 
               {/* Показываем уровень страны только если стран в исследовании больше одной */}
               {currentStudy.countries.length > 1 && <Select.Item value={ViewLevel.COUNTRY}>
                 <Flex direction="column" gap="1">
-                  <Text>Country Level</Text>
+                  <Text>{t('countryLevel')}</Text>
                 </Flex>
               </Select.Item>}
 
-              {/* Показываем уровень центров только если пользователю назначен vbybvev 1 центр */}
+              {/* Показываем уровень центров только если пользователю назначен хотя бы 1 центр */}
               {user &&  user.assigned_site_id.length > 0 &&  <Select.Item value={ViewLevel.SITE}>
                 <Flex direction="column" gap="1">
-                  <Text>Site Level</Text>
+                  <Text>{t('siteLevel')}</Text>
                 </Flex>
               </Select.Item>}
             </Select.Content>
@@ -205,7 +207,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
           {currentLevel && currentLevel !== ViewLevel.GENERAL && <IoIosArrowForward />}
         </Flex>
       )}
-      
+
       {/* Дополнительный фильтр центров по странам.
           Доступен если пользователю добавлены центры в более чем 1 стране */}
       {currentStudy && currentLevel === ViewLevel.SITE && countryFilter && countryFilter.length > 1 ?
@@ -216,7 +218,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
           value={currentCountry || undefined}
           onValueChange={handleCountryChange}
         >
-          <Select.Trigger placeholder={"Выберите страну"} />
+          <Select.Trigger placeholder={t('selectCountry')} />
           <Select.Content>
             {countryFilter.map((country) => (
               <Select.Item key={country} value={country}>
@@ -242,10 +244,10 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         >
           <Select.Trigger
             placeholder={loading
-              ? "Загрузка центров..."
+              ? t('loadingSites')
               : !sites.length
-                ? "Нет доступных центров"
-                : "Выберите центр"
+                ? t('noSites')
+                : t('selectSite')
             }
           />
           <Select.Content>
@@ -261,7 +263,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         </Select.Root>
       )}
 
-      
+
       {/* Выбор страны  */}
       {currentStudy && currentLevel === ViewLevel.COUNTRY && (
         <Select.Root
@@ -270,7 +272,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
           value={currentCountry || undefined}
           onValueChange={handleCountryChange}
         >
-          <Select.Trigger placeholder={"Выберите страну"} />
+          <Select.Trigger placeholder={t('selectCountry')} />
           <Select.Content>
             {(countryFilter?.length ? countryFilter : currentStudy.countries).map((country) => (
               <Select.Item key={country} value={country}>

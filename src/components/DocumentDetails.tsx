@@ -21,8 +21,10 @@ import { FiDownload, FiInfo, FiUser } from 'react-icons/fi';
 import { useFolderName } from '@/hooks/useFolderName';
 import { DocumentVersionRow } from '@/types/document';
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
+import { useI18n } from '@/hooks/useI18n';
 
 const DocumentDetails: React.FC = () => {
+  const { t } = useI18n('documentDetails');
   const { handleDownloadVersion } = useDocumentActionHandler();
   const getFolderName = useFolderName();
 
@@ -46,14 +48,14 @@ const DocumentDetails: React.FC = () => {
 
     fetch(`/api/documents/${selectedDocument.id}/versions`)
       .then((res) => {
-        if (!res.ok) throw new Error('Не удалось загрузить версии');
+        if (!res.ok) throw new Error(t('loadVersionsFailed'));
         return res.json();
       })
       .then((data) => {
         // API должно возвращать версии с пользовательскими данными
         setVersions(data.versions || []);
       })
-      .catch((err) => setError(err instanceof Error ? err.message : 'Ошибка'))
+      .catch((err) => setError(err instanceof Error ? err.message : t('error')))
       .finally(() => setLoading(false));
   }, [selectedDocument?.id]);
 

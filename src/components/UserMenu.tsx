@@ -5,8 +5,10 @@ import { useState } from "react";
 import { FaUser } from "react-icons/fa";
 import UserSettings from "./UserSettings";
 import { usePathname } from "next/navigation";
+import { useI18n } from "@/hooks/useI18n";
 
 export default function UserDropdownMenu() {
+  const { t } = useI18n('userMenu');
 	const { user, logout } = useAuth()!;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const pathname = usePathname();
@@ -21,7 +23,7 @@ export default function UserDropdownMenu() {
     <>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
-          <Button  color="gray" aria-label="User menu">
+          <Button  color="gray" aria-label={t('userMenu')}>
             <FaUser /> {user?.name}
           </Button>
         </DropdownMenu.Trigger>
@@ -30,31 +32,31 @@ export default function UserDropdownMenu() {
             <>
             <Link href={`${pathname !== '/admin' ? "/admin" : '#' }`}>
               <DropdownMenu.Item >
-                Admin Dashboard
+                {t('adminDashboard')}
               </DropdownMenu.Item>
             </Link>
             <DropdownMenu.Separator />
             </>
           )}
-          <DropdownMenu.Item>Study Metrics</DropdownMenu.Item>
-          
+          <DropdownMenu.Item>{t('studyMetrics')}</DropdownMenu.Item>
+
           <DropdownMenu.Item
             onClick={() => setSettingsOpen(true)}
           >
-            User Settings
+            {t('userSettings')}
           </DropdownMenu.Item>
           <DropdownMenu.Separator  />
           <DropdownMenu.Item onClick={() => logout()}>
-            Exit
+            {t('exit')}
           </DropdownMenu.Item>
 
         </DropdownMenu.Content>
       </DropdownMenu.Root>
 
       {/* Модальное окно настроек */}
-      <UserSettings 
-        open={settingsOpen} 
-        onOpenChange={setSettingsOpen} 
+      <UserSettings
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
       />
 
     </>

@@ -9,6 +9,7 @@ import { AdminContextProvider } from "@/wrappers/AdminContext";
 import { NotificationProvider } from "@/wrappers/NotificationContext";
 import { ConnectivityBanner } from "@/components/ConnectivityBanner"; 
 import { UploadProvider } from "@/wrappers/UploadContext";
+import { LocaleProvider } from "@/wrappers/LocaleProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,20 +40,22 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
       <Theme>
-        <AuthProvider>
-          <NotificationProvider>
-            <AdminContextProvider>
-              <UploadProvider>
-                <ContextProvider>
+        <LocaleProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <AdminContextProvider>
+                <UploadProvider>
+                  <ContextProvider>
 
-                  <ConnectivityBanner /> 
-                  {children}
-                  
-                </ContextProvider>
-              </UploadProvider>
-            </AdminContextProvider>
-          </NotificationProvider>  
-        </AuthProvider>
+                    <ConnectivityBanner />
+                    {children}
+
+                  </ContextProvider>
+                </UploadProvider>
+              </AdminContextProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </LocaleProvider>
       </Theme>
       </body>
     </html>

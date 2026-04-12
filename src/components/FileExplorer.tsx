@@ -21,6 +21,7 @@ import {
 } from 'react-icons/fi';
 import { FaRegFolderOpen, FaRegFolder } from 'react-icons/fa6';
 import StudyInfoPanel from './panels/StudyInfoPanel';
+import { useI18n } from '@/hooks/useI18n';
 
 
 export interface FileNode {
@@ -47,6 +48,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   showFileIcons = true,
   allowMultiSelect = false
 }) => {
+  const { t } = useI18n('folderExplorer');
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const { context, updateContext } = useContext(MainContext)!;
@@ -345,7 +347,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   if (!Array.isArray(filteredData)) {
     return (
       <Flex justify="center" align="center" p="4">
-        <Text color="gray">Нет данных</Text>
+        <Text color="gray">{t('noData')}</Text>
       </Flex>
     );
   }
@@ -356,7 +358,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       
       <Flex align="center" justify="center" py="4" gap="4" >
           <Text size="3" weight="bold">
-            Центральный Файл Исследования
+            {t('masterFileTitle')}
           </Text>
           {currentStudy && (
             <Button
@@ -380,27 +382,27 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       {!currentStudy || !currentLevel ? (
         <Flex direction="column" gap="2" align="center">
           {!currentStudy && (
-            <Text size="2" color="gray">Выберите исследование</Text>
+            <Text size="2" color="gray">{t('selectStudy')}</Text>
           )}
           {currentStudy && !currentLevel && (
-            <Text size="2" color="gray">Выберите уровень просмотра</Text>
+            <Text size="2" color="gray">{t('selectLevel')}</Text>
           )}
         </Flex>
       )
         : currentLevel === ViewLevel.SITE && !currentSite ? (
         <Flex direction="column" gap="2" align="center">
-          <Text size="2" color="gray">Выберите центр</Text>
+          <Text size="2" color="gray">{t('selectSite')}</Text>
         </Flex>)
         : currentLevel === ViewLevel.COUNTRY && !currentCountry ? (
         <Flex direction="column" gap="2" align="center">
-          <Text size="2" color="gray">Выберите страну</Text>
+          <Text size="2" color="gray">{t('selectCountry')}</Text>
         </Flex>
       ) : filteredData.length === 0 ? (
         <Flex direction="column" gap="2" align="center">
           <Text size="2" color="gray">
             {currentLevel === ViewLevel.GENERAL
-              ? 'Нет общих папок'
-              : 'Нет папок показа'}
+              ? t('noGeneralFolders')
+              : t('noSiteFolders')}
           </Text>
         </Flex>
       ) : (

@@ -1,7 +1,21 @@
 import { Study, StudySite, StudyUser } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { logger } from '@/lib/utils/logger';
+import { canRedirectToLogin, redirectToLogin } from './authRedirect';
 
+
+/**
+ * Перенаправить на страницу логина при 401 (сессия истекла)
+ */
+const handleUnauthorized = (response: Response) => {
+  if (response.status === 401) {
+    if (canRedirectToLogin()) {
+      redirectToLogin();
+      return true;
+    }
+  }
+  return false;
+};
 
 // GET запрос: Получить все исследования | центры / пользователей /
 export async function getTable(table: Tables) {
@@ -11,7 +25,7 @@ export async function getTable(table: Tables) {
     // Убедимся, что table - это строка и правильно форматируется
     const tableName = String(table);
     const url = `/api/${tableName}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -19,6 +33,8 @@ export async function getTable(table: Tables) {
       },
       cache: 'no-store',
     });
+
+    if (handleUnauthorized(response)) return;
 
     if (!response.ok) {
       // Добавляем больше информации об ошибке
@@ -39,7 +55,7 @@ export async function getTable(table: Tables) {
 // GET запрос для получения части данных
 export async function getTablePartial(table: Tables, params: Record<string, any>) {
   const url = new URL(`/api/${table}`, window.location.origin);
-  
+
   // Добавляем параметры в URL
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -48,7 +64,7 @@ export async function getTablePartial(table: Tables, params: Record<string, any>
       }
     });
   }
-  
+
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
@@ -56,6 +72,8 @@ export async function getTablePartial(table: Tables, params: Record<string, any>
   });
 
   logger.debug('API URL:', url.toString())
+
+  if (handleUnauthorized(response)) return;
 
   return response.json();
 }
