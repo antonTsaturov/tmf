@@ -50,6 +50,7 @@ import '../../styles/MyReviews.css';
 import { FileIcon } from 'react-file-icon';
 import { useFolderNameByMap } from '@/hooks/useFolderName';
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
+import { useI18n } from '@/hooks/useI18n';
 import { logger } from '@/lib/utils/logger';
 import { Title, TitleFontSize } from '../login/title';
 
@@ -69,6 +70,7 @@ const VIEW_LEVELS = [
 ];
 
 export default function MyReviewsPage() {
+  const { t } = useI18n('reviewsPage');
   const { getFolderNameFromStudiesMap } = useFolderNameByMap();
   const { handleDownloadVersion } = useDocumentActionHandler();
   const { addNotification } = useNotification();
@@ -398,12 +400,12 @@ export default function MyReviewsPage() {
               {/* Бейджи под заголовком */}
               <Flex gap="4" align="center" wrap="wrap">
                 <Badge size="2" variant="soft" color="indigo">
-                  {filteredDocuments.length} {getDeclension(filteredDocuments.length, ['документ найден', 'документа найдено', 'документов найдено'])}
+                  {filteredDocuments.length} {getDeclension(filteredDocuments.length, [t('documentsFound'), t('documentsFound'), t('documentsFound')])}
                 </Badge>
-                
+
                 {/* бейдж для общего количества */}
                 <Badge size="2" variant="soft" color="gray">
-                  Всего: {allDocuments.length} {getDeclension(allDocuments.length, ['документ', 'документа', 'документов'])} {'в ожидании'}
+                  {t('totalWaiting')}: {allDocuments.length} {getDeclension(allDocuments.length, ['документ', 'документа', 'документов'])}
                 </Badge>
               </Flex>
             
@@ -412,9 +414,9 @@ export default function MyReviewsPage() {
               <Flex  gap="6" align="center" wrap="wrap">
                   {/* Исследование */}
                   <Select.Root value={studyFilter || "all"} onValueChange={handleStudyFilterChange} size="1">
-                    <Select.Trigger placeholder="Исследование" variant="ghost"/>
+                    <Select.Trigger placeholder={t('studyFilter')} variant="ghost"/>
                     <Select.Content>
-                      <Select.Item value="all">Все исследования</Select.Item>
+                      <Select.Item value="all">{t('allStudies')}</Select.Item>
                       {studies ? Array.from(studies.values()).map((study) => (
                         <Select.Item key={study.id} value={String(study.id)}>
                           {study.protocol}
@@ -441,14 +443,12 @@ export default function MyReviewsPage() {
                     onValueChange={handleSiteFilterChange}
                     size="1"
                   >
-                    <Select.Trigger
-                      placeholder="Центр"
-                      variant="ghost"
-                      disabled={levelFilter === 'general' || levelFilter === 'country' }
+                    <Select.Trigger placeholder={t('siteFilter')} variant="ghost"
+                      disabled={levelFilter === 'general' || levelFilter === 'country'}
                       className={`${isRightFrameOpen ? "select-fixed-width" : ''}`}
                     />
-                    <Select.Content >
-                      <Select.Item value="all" disabled={levelFilter === 'general'}>Все центры</Select.Item>
+                    <Select.Content>
+                      <Select.Item value="all" disabled={levelFilter === 'general'}>{t('allSites')}</Select.Item>
                       {sites ? Array.from(sites.values())
                         .filter((site) => !studyFilter || site.study_id.toString() === studyFilter)
                         .map((site) => (
@@ -486,12 +486,12 @@ export default function MyReviewsPage() {
                 }}
               >
                 <Table.Row>
-                  <Table.ColumnHeaderCell style={{ width: '30%' }}>Документ</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{`Исследование ${levelFilter === 'site' ? "/ Центр" : ''}`}</Table.ColumnHeaderCell>
-                  {!isRightFrameOpen && (<Table.ColumnHeaderCell style={{ width: '15%' }}>Папка</Table.ColumnHeaderCell>)}
-                  <Table.ColumnHeaderCell style={{ width: '15%' }}>Отправитель</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: '15%' }}>Дата отправки</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell style={{ width: '10%' }} align="center">Действия</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: '30%' }}>{t('document')}</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{`${t('studySite')}${levelFilter === 'site' ? ' / ' + t('site') : ''}`}</Table.ColumnHeaderCell>
+                  {!isRightFrameOpen && (<Table.ColumnHeaderCell style={{ width: '15%' }}>{t('folder')}</Table.ColumnHeaderCell>)}
+                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{t('submitter')}</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: '15%' }}>{t('submittedAt')}</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell style={{ width: '10%' }} align="center">{t('actions')}</Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
             </Table.Root>
@@ -507,10 +507,10 @@ export default function MyReviewsPage() {
             {allDocuments.length === 0 && !loading && (
               <Flex direction="column" align="center" justify="center" gap="4" style={{ height: '100%' }}>
                 <Text size="4" weight="medium" color="gray">
-                  Нет документов, ожидающих ревью
+                  {t('noDocuments')}
                 </Text>
                 <Text size="2" color="gray">
-                  Когда кто-то отправит вам документ на утверждение, он появится здесь
+                  {t('noDocumentsHint')}
                 </Text>
               </Flex>
             )}
@@ -654,7 +654,7 @@ export default function MyReviewsPage() {
                             <Table.Cell style={{ width: '10%' }}>
                               <Flex gap="1" justify="center" align="center">
 
-                                <Tooltip content="Скачать">
+                                <Tooltip content={t('download')}>
                                   <IconButton
                                     size="1"
                                     color="blue"
@@ -673,7 +673,7 @@ export default function MyReviewsPage() {
                                   </IconButton>
                                 </Tooltip>
 
-                                <Tooltip content="Проверить">
+                                <Tooltip content={t('review')}>
                                   <IconButton 
                                     size="1" 
                                     color="green" 
@@ -695,24 +695,16 @@ export default function MyReviewsPage() {
                 {filteredDocuments.length > pagination.limit && (
                   <Flex justify="between" align="center" pt="4" style={{ flexShrink: 0 }}>
                     <Text size="2" color="gray">
-                      Показано {startIndex + 1}-
-                      {endIndex} из {filteredDocuments.length}
+                      {t('pagination').replace('{start}', String(startIndex + 1)).replace('{end}', String(endIndex)).replace('{total}', String(filteredDocuments.length))}
                     </Text>
                     <Flex gap="2">
-                      <Button 
-                        variant="soft" 
-                        onClick={handlePrevPage}
-                        disabled={pagination.offset === 0}
-                      >
+                      <Button variant="soft" onClick={handlePrevPage} disabled={pagination.offset === 0}>
                         <FiChevronLeft />
-                        Назад
+                        {t('back')}
                       </Button>
-                      <Button 
-                        variant="soft" 
-                        onClick={handleNextPage}
-                        disabled={pagination.offset + pagination.limit >= filteredDocuments.length}
-                      >
-                        Вперед
+                      <Button variant="soft" onClick={handleNextPage}
+                        disabled={pagination.offset + pagination.limit >= filteredDocuments.length}>
+                        {t('forward')}
                         <FiChevronRight />
                       </Button>
                     </Flex>
@@ -724,10 +716,10 @@ export default function MyReviewsPage() {
             {allDocuments.length > 0 && displayedCount === 0 && !loading && (
               <Flex direction="column" align="center" justify="center" gap="4" style={{ height: '100%' }}>
                 <Text size="4" weight="medium" color="gray">
-                  Ничего не найдено
+                  {t('nothingFound')}
                 </Text>
                 <Text size="2" color="gray">
-                  Попробуйте изменить параметры фильтрации
+                  {t('noResultsHint')}
                 </Text>
                 <Button variant="soft" onClick={() => {
                   setSearchQuery('');
@@ -735,7 +727,7 @@ export default function MyReviewsPage() {
                   setSiteFilter('');
                   //setFolderFilter('');
                 }}>
-                  Сбросить фильтры
+                  {t('resetFilters')}
                 </Button>
               </Flex>
             )}
@@ -758,8 +750,8 @@ export default function MyReviewsPage() {
 
               <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
                 <Tabs.List>
-                  <Tabs.Trigger value="view">Document preview</Tabs.Trigger>
-                  <Tabs.Trigger value="tab2">Document details</Tabs.Trigger>
+                  <Tabs.Trigger value="view">{t('docPreview')}</Tabs.Trigger>
+                  <Tabs.Trigger value="tab2">{t('docDetails')}</Tabs.Trigger>
                 </Tabs.List>
                 <Tabs.Content value="view" className="right-frame-tab-content">
                   {selectedDocument ? (
@@ -767,8 +759,8 @@ export default function MyReviewsPage() {
                       <div className="right-frame-placeholder">
                         <div className="placeholder-icon">🔒</div>
                         <div className="placeholder-text">
-                          Документ "{selectedDocument.document_name}" был удален<br />
-                          <span style={{fontSize: '13px', color: '#6c757d'}}>Просмотр недоступен</span>
+                          {t('deletedDocTitle').replace('{name}', selectedDocument.document_name)}<br />
+                          <span style={{fontSize: '13px', color: '#6c757d'}}>{t('viewNotAvailable')}</span>
                         </div>
                       </div>
                     ) : (
@@ -778,7 +770,7 @@ export default function MyReviewsPage() {
                     <div className="right-frame-placeholder">
                       <div className="placeholder-icon">📄</div>
                       <div className="placeholder-text">
-                        Выберите документ для просмотра
+                        {t('selectDocHint')}
                       </div>
                     </div>
                   )}                

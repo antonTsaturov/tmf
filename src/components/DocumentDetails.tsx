@@ -97,10 +97,12 @@ const DocumentDetails: React.FC = () => {
   };
 
   const getReviewStatusLabel = (status: string) => {
-    if (!status) return "Черновик"
+    if (!status) return t('statusDraft')
     switch (status) {
-      case 'submitted': return 'Документ отправлен на ревью';
-      case 'approved': return 'Документ утвержден';
+      case 'submitted': return t('statusSubmitted');
+      case 'approved': return t('statusApproved');
+      case 'rejected': return t('statusRejected');
+      default: return status;
     }
   };
 
@@ -109,7 +111,7 @@ const DocumentDetails: React.FC = () => {
       <div className="document-details document-details-empty">
         <div className="document-details-placeholder">
           <div className="placeholder-icon">📋</div>
-          <p>Выберите документ для просмотра сведений</p>
+          <p>{t('noDocumentSelected')}</p>
         </div>
       </div>
     );
@@ -144,32 +146,32 @@ const DocumentDetails: React.FC = () => {
       <div className="document-details-content">
         {/* Основная информация */}
         <section className="document-details-section">
-          <h3 className="document-details-section-title">Основная информация</h3>
+          <h3 className="document-details-section-title">{t('mainInfo')}</h3>
           <dl className="document-details-metadata">
             <div className="metadata-row">
-              <dt>Название</dt>
+              <dt>{t('name')}</dt>
               <dd>{doc.document_name || doc.file_name || '—'}</dd>
             </div>
             <div className="metadata-row">
-              <dt>ID документа</dt>
+              <dt>{t('documentId')}</dt>
               <dd className="metadata-value-monospace">{doc.id}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Статус</dt>
+              <dt>{t('status')}</dt>
               <dd>
                 {doc.status && <DocumentStatusBadge
                   status={
                     doc.is_archived
-                    ? DocumentLifeCycleStatus.ARCHIVED 
+                    ? DocumentLifeCycleStatus.ARCHIVED
                     : doc.is_deleted
-                    ? DocumentLifeCycleStatus.DELETED 
+                    ? DocumentLifeCycleStatus.DELETED
                     : doc.status
                   }
                 />}
               </dd>
             </div>
             <div className="metadata-row">
-              <dt>Папка</dt>
+              <dt>{t('folder')}</dt>
               <dd>{getFolderName(doc.folder_id) || '—'}</dd>
             </div>
             {doc.tmf_zone && <div className="metadata-row">
@@ -185,14 +187,14 @@ const DocumentDetails: React.FC = () => {
 
         {/* Информация о создании */}
         <section className="document-details-section">
-          <h3 className="document-details-section-title">Создание</h3>
+          <h3 className="document-details-section-title">{t('creation')}</h3>
           <dl className="document-details-metadata">
             <div className="metadata-row">
-              <dt>Создан</dt>
+              <dt>{t('created')}</dt>
               <dd>{formatDate(doc.created_at)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Кем создан</dt>
+              <dt>{t('createdBy')}</dt>
               <dd>{renderUserInfo(doc.creator)}</dd>
             </div>
           </dl>
@@ -200,30 +202,30 @@ const DocumentDetails: React.FC = () => {
 
         {/* Информация о последней версии */}
         <section className="document-details-section">
-          <h3 className="document-details-section-title">Последняя версия</h3>
+          <h3 className="document-details-section-title">{t('lastVersion')}</h3>
           <dl className="document-details-metadata">
             <div className="metadata-row">
-              <dt>Номер версии</dt>
+              <dt>{t('versionNumber')}</dt>
               <dd>{doc.document_number || '—'}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Тип файла</dt>
+              <dt>{t('fileType')}</dt>
               <dd>{doc.file_type || '—'}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Размер</dt>
+              <dt>{t('fileSize')}</dt>
               <dd>{formatFileSize(doc.file_size || 0)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Загружена</dt>
+              <dt>{t('uploaded')}</dt>
               <dd>{formatDate(doc.created_at)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Кто загрузил</dt>
+              <dt>{t('uploadedBy')}</dt>
               <dd>{renderUserInfo(doc.creator)}</dd>
             </div>
             <div className="metadata-row">
-              <dt>Контрольная сумма</dt>
+              <dt>{t('checksum')}</dt>
               <dd className="metadata-value-monospace metadata-value-truncate" title={doc.checksum}>
                 {doc.current_version?.checksum || '—'}
               </dd>
@@ -234,57 +236,55 @@ const DocumentDetails: React.FC = () => {
         {/* Информация о ревью */}
         {doc.current_version?.review_status && (
           <section className="document-details-section">
-            <h3 className="document-details-section-title">Ревью</h3>
+            <h3 className="document-details-section-title">{t('review')}</h3>
             <dl className="document-details-metadata">
               <div className="metadata-row">
-                <dt>Статус ревью</dt>
+                <dt>{t('reviewStatus')}</dt>
                 <dd>
                   <span className={`review-status review-status-${doc.current_version?.review_status}`}>
-                    {doc.current_version?.review_status === 'submitted' ? 'Отправлен на ревью' :
-                     doc.current_version?.review_status === 'approved' ? 'Утвержден' :
-                     doc.current_version?.review_status === 'rejected' ? 'Отклонен' : doc.current_version?.review_status}
+                    {getReviewStatusLabel(doc.current_version?.review_status)}
                   </span>
                 </dd>
               </div>
-              
+
               {doc.current_version?.assigned_reviewer && (
                 <div className="metadata-row">
-                  <dt>Назначеный ревьюер</dt>
+                  <dt>{t('assignedReviewer')}</dt>
                   <dd>{renderUserInfo(doc.current_version?.assigned_reviewer)}</dd>
                 </div>
               )}
-              
+
               {doc.current_version?.review_submitted_at && (
                 <div className="metadata-row">
-                  <dt>Когда отправлен</dt>
+                  <dt>{t('submittedAt')}</dt>
                   <dd>{formatDate(doc.current_version?.review_submitted_at)}</dd>
                 </div>
               )}
-              
+
               {doc.current_version?.review_submitter && (
                 <div className="metadata-row">
-                  <dt>Кем отправлен</dt>
+                  <dt>{t('submittedBy')}</dt>
                   <dd>{renderUserInfo(doc.current_version?.review_submitter)}</dd>
                 </div>
               )}
-                            
+
               {doc.current_version?.reviewed_at && (
                 <div className="metadata-row">
-                  <dt>Дата утверждения</dt>
+                  <dt>{t('approvedAt')}</dt>
                   <dd>{formatDate(doc.current_version?.reviewed_at)}</dd>
                 </div>
               )}
 
               {doc.current_version?.approver?.id && (
                 <div className="metadata-row">
-                  <dt>Кем утвержден</dt>
+                  <dt>{t('approvedBy')}</dt>
                   <dd>{renderUserInfo(doc.current_version?.approver)}</dd>
                 </div>
               )}
-              
+
               {doc.current_version?.review_comment && (
                 <div className="metadata-row">
-                  <dt>Комментарий</dt>
+                  <dt>{t('comment')}</dt>
                   <dd className="metadata-review-comment">{doc.current_version?.review_comment}</dd>
                 </div>
               )}
@@ -295,22 +295,22 @@ const DocumentDetails: React.FC = () => {
         {/* Информация об архивировании */}
         {doc.is_archived && (
           <section className="document-details-section">
-            <h3 className="document-details-section-title">Архивация</h3>
+            <h3 className="document-details-section-title">{t('archiving')}</h3>
             <dl className="document-details-metadata">
               <div className="metadata-row">
-                <dt>Документ архивирован</dt>
+                <dt>{t('documentArchived')}</dt>
                 <dd>{formatDate(doc.archived_at || '')}</dd>
               </div>
               {doc.archived_by_info && (
                 <div className="metadata-row">
-                  <dt>Кем архивирован</dt>
+                  <dt>{t('archivedBy')}</dt>
                   <dd>{renderUserInfo(doc.archived_by_info)}</dd>
                 </div>
               )}
 
               {doc.archived_by_info?.archived_at && (
                 <div className="metadata-row">
-                  <dt>Когда архивирован</dt>
+                  <dt>{t('archivedAt')}</dt>
                   <dd>{formatDate(doc.archived_by_info?.archived_at)}</dd>
                 </div>
               )}
@@ -323,23 +323,23 @@ const DocumentDetails: React.FC = () => {
         {/* Информация о разархивировании */}
         {doc.unarchived_at && (
           <section className="document-details-section">
-            <h3 className="document-details-section-title">Возвращен из архива</h3>
+            <h3 className="document-details-section-title">{t('unarchived')}</h3>
             <dl className="document-details-metadata">
               <div className="metadata-row">
-                <dt>Документ разархивирован</dt>
+                <dt>{t('documentUnarchived')}</dt>
                 <dd>{formatDate(doc.unarchived_at || '')}</dd>
               </div>
 
               {doc.unarchived_by_info && (
                 <div className="metadata-row">
-                  <dt>Кем разархивирован</dt>
+                  <dt>{t('unarchivedBy')}</dt>
                   <dd>{renderUserInfo(doc.unarchived_by_info)}</dd>
                 </div>
               )}
 
               {doc.unarchive_reason && (
                 <div className="metadata-row">
-                  <dt>Причина разархивации</dt>
+                  <dt>{t('unarchiveReason')}</dt>
                   <dd>{doc.unarchive_reason}</dd>
                 </div>
               )}
@@ -352,24 +352,24 @@ const DocumentDetails: React.FC = () => {
         {/* Информация об удалении/восстановлении */}
         {doc.is_deleted && (
           <section className="document-details-section">
-            <h3 className="document-details-section-title">Удаление</h3>
+            <h3 className="document-details-section-title">{t('deletion')}</h3>
             <dl className="document-details-metadata">
 
               <div className="metadata-row">
-                <dt>Документ удален</dt>
+                <dt>{t('documentDeleted')}</dt>
                 <dd>{formatDate(doc.deleted_at || '')}</dd>
               </div>
 
               {doc.deleted_by_info && (
                 <div className="metadata-row">
-                  <dt>Кем удален</dt>
+                  <dt>{t('deletedBy')}</dt>
                   <dd>{renderUserInfo(doc.deleted_by_info)}</dd>
                 </div>
               )}
 
               {doc.deletion_reason && (
                 <div className="metadata-row">
-                  <dt>Причина удаления</dt>
+                  <dt>{t('deleteReason')}</dt>
                   <dd>{doc.deletion_reason}</dd>
                 </div>
               )}
@@ -380,21 +380,21 @@ const DocumentDetails: React.FC = () => {
 
         {doc.restored_by && (
           <section className="document-details-section">
-            <h3 className="document-details-section-title">Восстановление</h3>
+            <h3 className="document-details-section-title">{t('restoration')}</h3>
             <dl className="document-details-metadata">
               <div className="metadata-row">
-                <dt>Восстановлен</dt>
+                <dt>{t('restored')}</dt>
                 <dd>{formatDate(doc.restored_at || '')}</dd>
               </div>
               {doc.restorer_info && (
                 <div className="metadata-row">
-                  <dt>Кем восстановлен</dt>
+                  <dt>{t('restoredBy')}</dt>
                   <dd>{renderUserInfo(doc.restorer_info)}</dd>
                 </div>
               )}
               {doc.restoration_reason && (
                 <div className="metadata-row">
-                  <dt>Причина восстановления</dt>
+                  <dt>{t('restorationReason')}</dt>
                   <dd>{doc.restoration_reason}</dd>
                 </div>
               )}
@@ -404,7 +404,7 @@ const DocumentDetails: React.FC = () => {
 
         {/* История версий */}
         {!doc.is_deleted && <section className="document-details-section">
-          <h3 className="document-details-section-title">История версий</h3>
+          <h3 className="document-details-section-title">{t('versionHistory')}</h3>
           <Card size="2">
             {loading  ? (
               <Flex align="center" justify="center" py="6">
@@ -416,7 +416,7 @@ const DocumentDetails: React.FC = () => {
               </Box>
             ) : versions.length === 0 ? (
               <Flex align="center" justify="center" py="6">
-                <Text color="gray">Нет версий</Text>
+                <Text color="gray">{t('noVersions')}</Text>
               </Flex>
             ) : (
               <Flex direction="column" gap="3">
@@ -426,29 +426,29 @@ const DocumentDetails: React.FC = () => {
                       <Box style={{ flex: 1 }}>
                         <Flex align="center" gap="2" mb="1" wrap="wrap">
                           <Badge size="2" variant="solid" color="blue">
-                            Версия {v.document_number}
+                            {t('version')} {v.document_number}
                           </Badge>
                           {v.document_number === doc.document_number && (
                             <Badge size="1" variant="soft" color="green">
-                              Текущая
+                              {t('current')}
                             </Badge>
                           )}
                           <Text size="1" color="gray">
                             {formatDate(v.uploaded_at)}
                           </Text>
                         </Flex>
-                        
+
                         <Flex gap="3" mt="2" wrap="wrap">
                           <Badge size="1" variant="soft" color="gray">
                             {formatFileSize(v.file_size)}
                           </Badge>
-                          
+
                           {v.change_reason && (
                             <Tooltip content={v.change_reason}>
                               <Badge size="1" variant="soft" color="purple">
                                 <Flex align="center" gap="1">
                                   <FiInfo size={10} />
-                                  <Text>Причина изменения</Text>
+                                  <Text>{t('changeReason')}</Text>
                                 </Flex>
                               </Badge>
                             </Tooltip>
@@ -459,30 +459,30 @@ const DocumentDetails: React.FC = () => {
                           <Flex align="center" gap="1" mt="2">
                             <FiUser size={12} color="var(--gray-9)" />
                             <Text size="1" color="gray">
-                              Загрузил: {v.uploader.name || v.uploader.email}
+                              {t('uploadedBy')}: {v.uploader.name || v.uploader.email}
                             </Text>
                           </Flex>
                         )}
 
                         {v.review_status && (
                           <Flex gap="2" mt="2" direction='column' align="start" justify="start">
-                            <Badge 
-                              size="1" 
-                              variant="soft" 
+                            <Badge
+                              size="1"
+                              variant="soft"
                               color={getReviewStatusColor(v.review_status)}
                             >
                               {getReviewStatusLabel(v.review_status)}
                             </Badge>
                             {v.assigned_reviewer && (
                               <Text size="1" color="gray">
-                                → {v.assigned_reviewer.name || v.assigned_reviewer.email}
+                                {t('reviewerAssigned')} {v.assigned_reviewer.name || v.assigned_reviewer.email}
                               </Text>
                             )}
                           </Flex>
                         )}
                       </Box>
-                      
-                      <Tooltip content="Скачать эту версию">
+
+                      <Tooltip content={t('downloadVersion')}>
                         <IconButton 
                           size="2" 
                           variant="soft" 
