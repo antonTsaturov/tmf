@@ -53,7 +53,7 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
   const [isReasonTouched, setIsReasonTouched] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
-  const { deleteDocument, isDeleting, isRestoring, error } = useDocumentDelete();
+  const { deleteDocument, isDeleting, error } = useDocumentDelete();
 
   // Сброс состояния при открытии панели
   useEffect(() => {

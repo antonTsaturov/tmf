@@ -43,6 +43,8 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
   const { addNotification } = useNotification();
   const { getFolderNameFromStructure } = useFolderNameByMap();
 
+  const docLevel = useDocumentLevel(selectedDocument?.folder_id ?? '');
+
   const { archiveDocument, isArchiving, error } = useDocumentArchive();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
@@ -225,12 +227,11 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
                   </Flex>
                 </DataList.Label>
                 <DataList.Value>
-                  <Text size="2">{useDocumentLevel(selectedDocument.folder_id)}</Text>
+                  <Text size="2">{docLevel}</Text>
                 </DataList.Value>
               </DataList.Item>
 
-              {
-                useDocumentLevel(selectedDocument.folder_id).includes('Country') && 
+              {docLevel.includes('Country') && 
                 <DataList.Item>
                   <DataList.Label minWidth="80px">
                     <Flex align="center" gap="1">
