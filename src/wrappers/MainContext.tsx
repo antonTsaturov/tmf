@@ -5,7 +5,7 @@ import { FileNode } from '@/components/FileExplorer';
 import type { Document } from '@/types/document';
 import { Study, StudySite } from '@/types/types';
 import { ViewLevel } from '@/types/types';
-import { FoldersStructure } from '@/types/folder';
+import { Folder } from '@/types/folder';
 import { FolderStructureProvider } from './FolderStructureContext';
 
 export interface MainContextProps {
@@ -76,8 +76,8 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // 🔹 Приводим тип вручную
-  const folderStructure: FoldersStructure | null = 
-    (context.currentStudy?.folders_structure as FoldersStructure) ?? null;
+  const folderStructure: Folder | null = 
+    (context.currentStudy?.folders_structure as Folder) ?? null;
 
   return (
     <MainContext.Provider value={{ 

@@ -2,21 +2,21 @@
 'use client';
 
 import React, { createContext, useContext, useMemo, useCallback } from 'react';
-import { FoldersStructure, FolderNode } from '@/types/folder';
+import { Folder, FolderNode } from '@/types/folder';
 
 interface FolderStructureContextType {
   getFolderName: (folderId: string) => string | null;
   getFolderById: (folderId: string) => FolderNode | null;
   getFolderPath: (folderId: string) => string[];
   getChildren: (folderId: string) => FolderNode[];
-  structure: FoldersStructure | null;
+  structure: Folder | null;
 }
 
 const FolderStructureContext = createContext<FolderStructureContextType | null>(null);
 
 // 🔹 Рекурсивный сбор пути к папке
 function findFolderPath(
-  node: FolderNode | FoldersStructure,
+  node: FolderNode | Folder,
   id: string,
   path: string[] = []
 ): string[] | null {
@@ -38,7 +38,7 @@ function findFolderPath(
 
 // 🔹 Построение flat-мапы для быстрого поиска
 function buildFolderMap(
-  node: FolderNode | FoldersStructure,
+  node: FolderNode | Folder,
   map: Map<string, FolderNode> = new Map()
 ): Map<string, FolderNode> {
   map.set(node.id, node as FolderNode);
@@ -54,7 +54,7 @@ function buildFolderMap(
 
 interface FolderStructureProviderProps {
   children: React.ReactNode;
-  structure: FoldersStructure | null;
+  structure: Folder | null;
 }
 
 export function FolderStructureProvider({

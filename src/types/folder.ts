@@ -16,15 +16,6 @@ export enum FolderLevel {
   COUNTRY= 'country'
 };
 
-// export interface FoldersStructure {
-//   id: string;
-//   name: string;
-//   type: 'root';
-//   level: 'general';
-//   status: 'active';
-//   children: FolderNode[];
-//   shouldEdit?: boolean;
-// }
 
 export interface Folder {
   id: string;
