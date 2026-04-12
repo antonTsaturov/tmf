@@ -553,7 +553,7 @@ const UserManager: FC<UserManagerProps> = () => {
         addNotification('error', 'Failed to save user to database.');
       }
     } catch (err) {
-      addNotification('error', 'An error occurred while creating the user.');
+      addNotification('error', 'An error occurred while creating the user.', err);
     }
 
   }, [newUserForm, addUser, addNotification]);
@@ -582,7 +582,7 @@ const UserManager: FC<UserManagerProps> = () => {
         addNotification('error', 'Failed to delete user from database.');
       }
     } catch (err) {
-      addNotification('error', 'An error occurred while deleting the user.');
+      addNotification('error', 'An error occurred while deleting the user.', err);
     } finally {
       setDeleteConfirmOpen(false);
       setUserToDelete(null);

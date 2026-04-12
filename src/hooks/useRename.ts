@@ -1,7 +1,6 @@
 // hooks/useRename.ts
-import { useState, useCallback, useContext } from 'react';
+import { useState, useCallback } from 'react';
 import { Document } from '@/types/document';
-import { MainContext } from '@/wrappers/MainContext';
 import { useAuth } from '@/wrappers/AuthProvider';
 
 interface RenameResult {
@@ -19,7 +18,6 @@ interface UseRenameReturn {
 export const useRename = (): UseRenameReturn => {
   const [isRenaming, setIsRenaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { updateContext: _updateContext } = useContext(MainContext)!;
   const { user } = useAuth()!;
 
   // Rename document

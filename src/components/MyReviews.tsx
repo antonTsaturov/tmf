@@ -81,7 +81,6 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
   const { 
     getStudyProtocol, 
     getSiteName, 
-    loading: metadataLoading 
   } = useStudiesAndSites();
 
   // Загрузка документов

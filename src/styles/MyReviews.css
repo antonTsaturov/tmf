@@ -9,6 +9,15 @@
   display: flex;
   flex-direction: column;
   z-index: 20;
+  flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.25s ease, opacity 0.25s ease;
+  opacity: 1;
+}
+
+.right-frame.closing {
+  width: 0;
+  opacity: 0;
 }
 
 .right-frame-content {

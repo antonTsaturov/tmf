@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 
 const REFRESH_INTERVAL = 10 * 60 * 1000; // 10 minutes (access token lives 15 min)
 
@@ -21,7 +20,6 @@ interface UseTokenRefreshOptions {
  */
 export function useTokenRefresh(options?: UseTokenRefreshOptions) {
   const { onRefreshSuccess, onRefreshFailure, enabled = true } = options || {};
-  const _router = useRouter();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isRefreshingRef = useRef(false);
 

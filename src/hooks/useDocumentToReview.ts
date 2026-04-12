@@ -1,7 +1,6 @@
 // hooks/useDocumentToReview.ts
 import { useState, useCallback, useContext } from 'react';
 import { Document, DocumentAction } from '@/types/document';
-import { StudyUser } from '@/types/types';
 import { MainContext } from '@/wrappers/MainContext';
 import { logger } from '@/lib/utils/logger';
 
@@ -13,9 +12,6 @@ interface UseDocumentToReviewReturn {
   error: string | null;
   
   // Методы
-  // openReviewModal: (document: Document) => void;
-  // closeReviewModal: () => void;
-  // loadReviewers: (studyId: number, siteId: string | number) => Promise<void>;
   submitForReview: (
     documentId: string,
     reviewerId: string,

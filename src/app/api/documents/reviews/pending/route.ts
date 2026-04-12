@@ -104,6 +104,11 @@ export async function GET(request: NextRequest) {
         creator.name AS creator_name,
         creator.email AS creator_email,
 
+        reviewer.id AS reviewer_id,
+        reviewer.name AS reviewer_name,
+        reviewer.email AS reviewer_email,
+        reviewer.role AS reviewer_role,
+
         COUNT(*) OVER() AS total_count
 
       FROM document_version dv
@@ -117,6 +122,9 @@ export async function GET(request: NextRequest) {
 
       LEFT JOIN users creator
         ON d.created_by = creator.id
+
+      LEFT JOIN users reviewer
+        ON dv.review_submitted_to = reviewer.id
 
       WHERE ${conditions.join(' AND ')}
 
@@ -160,8 +168,6 @@ export async function GET(request: NextRequest) {
       uploaded_at: doc.uploaded_at,
       change_reason: doc.change_reason,
 
-      current_version: doc,
-
       creator: doc.creator_name
         ? {
             name: doc.creator_name,
@@ -182,7 +188,19 @@ export async function GET(request: NextRequest) {
             email: doc.submitter_email,
             role: String(doc.submitter_role)
           }
-        : null
+        : null,
+
+      current_version: {
+        ...doc,
+        assigned_reviewer: doc.reviewer_id
+          ? {
+              id: doc.reviewer_id,
+              name: doc.reviewer_name,
+              email: doc.reviewer_email,
+              role: doc.reviewer_role
+            }
+          : null
+      }
     }))
 
     return NextResponse.json({

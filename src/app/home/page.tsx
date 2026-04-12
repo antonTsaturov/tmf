@@ -5,7 +5,7 @@ import '@/styles/Home.css';
 import FileExplorer from '../../components/FileExplorer';
 import UserMenu from '@/components/UserMenu';
 import { Tabs } from '@radix-ui/themes';
-import StudySiteNavigation from '@/components/Navigation';
+import Navigation from '@/components/Navigation';
 import FolderContentViewer from '@/components/FolderContentViewer';
 import DocumentActions from '@/components/DocumentActions';
 import PDFViewer from '@/components/PDFViewer';
@@ -14,6 +14,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
 import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
 import UserReviewsButton from '@/components/UserReviewsButton';
+import { Title, TitleFontSize } from '../login/title';
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -31,7 +32,8 @@ const Home: React.FC<MainWindowProps> = () => {
     <div className="sidebarresizable-root">
 
       <header className="toolbar-header">
-        <StudySiteNavigation /> 
+        <Title fontSize={TitleFontSize.ExtraSmall} />
+        <Navigation />     
         <div className="toolbar-title"></div>
         <UserReviewsButton/>
         <UserMenu />

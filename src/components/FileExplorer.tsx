@@ -194,7 +194,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     return null;
   };
 
-  const getFileIcon = (extension?: string) => {
+  const getFileIcon = () => {
     // Using generic FileIcon for all files in Radix style
     return <FileIcon width="14" height="14" />;
   };
@@ -287,7 +287,7 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
                   <FaRegFolderOpen width="16" height="16" /> : 
                   <FaRegFolder width="16" height="16" />
               ) : (
-                getFileIcon(node.extension)
+                getFileIcon()
               )}
             </Box>
           )}

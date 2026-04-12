@@ -21,8 +21,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "eTMF",
+  title: "ExploreTMF",
   description: "Manpremo electronic Trial Master File system",
+  icons: {
+    icon: [
+      { url: '/favicon.ico', type: 'image/x-icon' },
+    ],
+  },
 };
 
 export default function RootLayout({

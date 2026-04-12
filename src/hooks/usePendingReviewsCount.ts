@@ -27,7 +27,16 @@ export function usePendingReviewsCount() {
     const fetchCount = async () => {
       try {
         const response = await fetch('/api/documents/reviews/pending?limit=1');
+        if (response.status === 401) {
+          // Пользователь не аутентифицирован — счётчик не нужен
+          setCount(0);
+          return;
+        }
         if (!response.ok) throw new Error('Failed to fetch count');
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('Expected JSON response');
+        }
         const data = await response.json();
         setCount(data.pagination.total);
       } catch (error) {

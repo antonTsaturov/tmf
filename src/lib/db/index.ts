@@ -14,13 +14,13 @@ export const getPool = () => {
       connectionString: process.env.DATABASE_URL,
 
       // максимальное количество соединений
-      max: 10,
+      max: 20,
 
       // сколько соединение может простаивать
       idleTimeoutMillis: 30000,
 
-      // сколько ждать соединение из pool
-      connectionTimeoutMillis: 2000,
+      // сколько ждать соединение из pool (10 секунд)
+      connectionTimeoutMillis: 10000,
 
       // закрывать соединения через время
       maxUses: 7500

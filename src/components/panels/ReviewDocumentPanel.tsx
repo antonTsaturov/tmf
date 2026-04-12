@@ -207,20 +207,26 @@ const ReviewDocumentPanel: React.FC<DocumentReviewPanelProps> = ({ onReviewCompl
 
   // Проверяет что конкретный документ на ревью и назначен залогиненому пользователю
   const checkAssignment = () => {
+    if (!selectedDocument) {
+      setIsAssignment(false);
+      return;
+    }
+
     if (String(user?.role) === UserRole.ADMIN) {
       setIsAssignment(true);
       return;
     }
 
-    if (selectedDocument?.current_version?.assigned_reviewer) {
-      const reviewAssignedTo = String(selectedDocument?.current_version?.assigned_reviewer?.id)
-      const currentUser = String(user?.id);
-      const isAssigned = currentUser === reviewAssignedTo;
-      setIsAssignment(isAssigned);
-    } else {
-      logger.warn('Check assignment failed');
+    const reviewerId = selectedDocument.current_version?.assigned_reviewer?.id;
+    const currentUserId = user?.id;
+
+    // Если ревьюер не назначен или пользователь не авторизован — доступ запрещён
+    if (!reviewerId || !currentUserId) {
+      setIsAssignment(false);
+      return;
     }
 
+    setIsAssignment(String(currentUserId) === String(reviewerId));
   };
 
   useEffect(()=> {

@@ -286,7 +286,7 @@ const FolderContentViewer: React.FC = () => {
     updateContext({ selectedDocument: doc });
   };
 
-  const handleDocumentDoubleClick = (e: React.MouseEvent<HTMLDivElement>, doc: Document) => {
+  const handleDocumentDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation();
   };
 
@@ -521,7 +521,7 @@ const FolderContentViewer: React.FC = () => {
                     <Table.Row 
                       key={doc.id}
                       onClick={(e) => handleDocumentClick(e, doc)}
-                      onDoubleClick={(e) => handleDocumentDoubleClick(e, doc)}
+                      onDoubleClick={(e) => handleDocumentDoubleClick(e)}
                       style={{ 
                         cursor: 'pointer',
                         backgroundColor: selectedDocument?.id === doc.id ? 'var(--blue-3)' : undefined,

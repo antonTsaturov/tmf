@@ -239,7 +239,7 @@ export const useDocumentUpload = () => {
           onProgress?.(i, 0);
           
           // Log with more context
-          const errorMessage = fileError instanceof Error ? fileError.message : String(fileError);
+          //const errorMessage = fileError instanceof Error ? fileError.message : String(fileError);
           logger.error('File upload failed', fileError, {
             fileName: file.name,
             fileSize: file.size,

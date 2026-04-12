@@ -89,7 +89,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
     loadSites();
   }, [currentStudy?.id]);
 
-  const selectedSite = studySites.find(s => String(s.id) === selectedSiteTab);
+  //const selectedSite = studySites.find(s => String(s.id) === selectedSiteTab);
 
   // Загрузка статистики документов
   useEffect(() => {

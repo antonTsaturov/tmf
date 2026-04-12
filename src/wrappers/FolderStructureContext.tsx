@@ -14,25 +14,6 @@ interface FolderStructureContextType {
 
 const FolderStructureContext = createContext<FolderStructureContextType | null>(null);
 
-// 🔹 Рекурсивный поиск папки по ID
-function findFolderById(
-  node: FolderNode | FoldersStructure,
-  id: string
-): FolderNode | null {
-  if (node.id === id) {
-    return node as FolderNode;
-  }
-  
-  if (node.children) {
-    for (const child of node.children) {
-      const found = findFolderById(child, id);
-      if (found) return found;
-    }
-  }
-  
-  return null;
-}
-
 // 🔹 Рекурсивный сбор пути к папке
 function findFolderPath(
   node: FolderNode | FoldersStructure,

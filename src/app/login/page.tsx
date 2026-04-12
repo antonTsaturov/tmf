@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import styles from './LoginPage.module.css';
 import { logger } from '@/lib/utils/logger';
+import { Title } from './title';
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? ' 0.0.0-dev';
@@ -106,13 +107,7 @@ export default function LoginPage() {
       <div className={styles.card}>
         {/* Заголовок */}
         <div className={styles.header}>
-          <h2 className={styles.title}>
-            <span className={styles.exploreText}>Explor</span>
-            <span className={styles.etmfText}>eTMF</span>
-          </h2>
-          {/* <p className={styles.subtitle}>
-            Sign in
-          </p> */}
+          <Title/>
         </div>
 
         {/* Форма */}
@@ -159,7 +154,7 @@ export default function LoginPage() {
                   className={`${styles.input} ${styles.inputBottom} ${password.length > 0 && 'withText'}`}
                   placeholder="Password"
                   disabled={loading}
-                  style={{letterSpacing: password.length > 0 ? '2px' : 'normal'}}
+                  style={{letterSpacing: password.length > 0 ? '0.5px' : 'normal'}}
                 />
                 <button
                   type="button"
@@ -218,13 +213,17 @@ export default function LoginPage() {
             </button>
           </div>
 
-          {/* Ссылка на регистрацию */}
-          <div className={styles.registerLinkContainer}>
-            <p className={styles.registerText}>
+          {/* Связаться с администратором */}
+          <div className={styles.contactLinkContainer}>
+            <p className={styles.contactText}>
               Trouble with account access?{' '}
-              <Link href="#" className={styles.registerLink}>
+              <a
+                href="mailto:admin@exploretmf.ru?subject=Access%20Issue%20-%20ExploreTMF"
+                className={styles.contactLink}
+                data-tooltip="Написать на admin@exploretmf.ru"
+              >
                 Contact administrator
-              </Link>
+              </a>
             </p>
           </div>
         </form>

@@ -17,7 +17,7 @@ interface StudySiteNavigationProps {
   onViewLevelChange?: (level: ViewLevel | undefined) => void;
 }
 
-const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
+const Navigation: React.FC<StudySiteNavigationProps> = ({
   onStudyChange,
   onSiteChange,
   onViewLevelChange,
@@ -129,7 +129,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
 
   if (authLoading || loading) {
     return (
-      <Flex p="1" justify="center" align="center" gap="2">
+      <Flex p="1" justify="center" align="center" gap="2" ml="2">
         <Spinner size="2" />
         <Text size="2">Загрузка исследований...</Text>
       </Flex>
@@ -146,7 +146,7 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   }
 
   return (
-    <Flex direction="row" gap="3">
+    <Flex direction="row" gap="3" ml="5">
       {/* Шаг 1: Выбор исследования */}
       <Flex direction="row" gap="3" align="center">
         <Select.Root
@@ -287,4 +287,4 @@ const StudySiteNavigation: React.FC<StudySiteNavigationProps> = ({
   );
 };
 
-export default StudySiteNavigation;
+export default Navigation;

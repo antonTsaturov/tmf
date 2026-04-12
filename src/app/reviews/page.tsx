@@ -49,7 +49,9 @@ import PDFViewer from '@/components/PDFViewer';
 import '../../styles/MyReviews.css';
 import { FileIcon } from 'react-file-icon';
 import { useFolderNameByMap } from '@/hooks/useFolderName';
+import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 import { logger } from '@/lib/utils/logger';
+import { Title, TitleFontSize } from '../login/title';
 
 
 interface PaginationInfo {
@@ -68,6 +70,7 @@ const VIEW_LEVELS = [
 
 export default function MyReviewsPage() {
   const { getFolderNameFromStudiesMap } = useFolderNameByMap();
+  const { handleDownloadVersion } = useDocumentActionHandler();
   const { addNotification } = useNotification();
   const { context, updateContext } = useContext(MainContext)!;
   const { onDocumentUpdatedId, selectedDocument, isRightFrameOpen } = context;
@@ -172,7 +175,32 @@ export default function MyReviewsPage() {
     setAllDocuments(prev => prev.filter(d => d.id !== onDocumentUpdatedId));
     // Очищаем onDocumentUpdatedId
     return () => updateContext({ onDocumentUpdatedId: undefined });
-  }, [onDocumentUpdatedId]);  
+  }, [onDocumentUpdatedId]);
+
+  const [isRightFrameVisible, setIsRightFrameVisible] = useState(isRightFrameOpen);
+  const [isRightFrameAnimating, setIsRightFrameAnimating] = useState(false);
+
+  // Синхронизация видимости фрейма с контекстом
+  useEffect(() => {
+    if (isRightFrameOpen) {
+      setIsRightFrameVisible(true);
+      setIsRightFrameAnimating(false);
+    } else if (isRightFrameVisible) {
+      setIsRightFrameAnimating(true);
+    }
+  }, [isRightFrameOpen]);
+
+  const handleTransitionEnd = () => {
+    if (!isRightFrameOpen) {
+      setIsRightFrameVisible(false);
+      setIsRightFrameAnimating(false);
+    }
+  };
+
+  const handleRightFrameClose = () => {
+    setIsRightFrameAnimating(true);
+    updateContext({ isRightFrameOpen: false });
+  };  
   
 
  // Функция фильтрации
@@ -286,13 +314,18 @@ export default function MyReviewsPage() {
       overflow: 'hidden' 
     }}>
       <header className="toolbar-header">
-        <div className="toolbar-title"></div>
+        <div className="toolbar-title">
+          <Title
+            fontSize={TitleFontSize.ExtraSmall}
+          />
+          
+        </div>
         <Link href="/home">
           <Button variant="solid" mr="3"
             onClick={()=> {
               // Закрыть боковой фрейм, чтобы он так же был закрыт при переходе на /home
               if (isRightFrameOpen) {
-                updateContext({isRightFrameOpen: false})
+                handleRightFrameClose()
               }
             }}  
           >
@@ -578,8 +611,21 @@ export default function MyReviewsPage() {
                             {/* Folder name */}
                             {!isRightFrameOpen && (<Table.Cell style={{ width: '15%' }}>
                               <Flex align="center" gap="2">
-                                <FiFolder size={14} color="var(--gray-9)" />
-                                <Text size="2" style={{  }}>{getFolderNameFromStudiesMap(studies, doc.study_id, doc.folder_id)}</Text>
+                                <Tooltip content={getFolderNameFromStudiesMap(studies, doc.study_id, doc.folder_id)}>
+                                <Flex align="center" gap="2">
+                                  <FiFolder size={14} color="var(--gray-9)" />
+                                  <Text size="2"
+                                    style={{
+                                      textWrap: 'nowrap',
+                                      textOverflow: 'ellipsis',
+                                      maxWidth: '180px',
+                                      overflow: 'hidden',
+                                    }}
+                                  >
+                                    {getFolderNameFromStudiesMap(studies, doc.study_id, doc.folder_id)}
+                                  </Text>
+                                </Flex>
+                                </Tooltip>
                               </Flex>
                             </Table.Cell>)}
                             
@@ -607,26 +653,27 @@ export default function MyReviewsPage() {
 
                             <Table.Cell style={{ width: '10%' }}>
                               <Flex gap="1" justify="center" align="center">
-                                <Tooltip content="Просмотр">
+
+                                <Tooltip content="Скачать">
                                   <IconButton
                                     size="1"
                                     color="blue"
                                     variant="soft"
-                                    onClick={()=> {
-                                      updateContext({selectedDocument: doc, isRightFrameOpen: true})
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // Устанавливаем документ как выбранный, чтобы handleDownloadVersion мог его найти
+                                      updateContext({ selectedDocument: doc });
+                                      const version = doc.current_version;
+                                      if (version) {
+                                        handleDownloadVersion(version);
+                                      }
                                     }}
-                                    >
-                                    <FiEye size={14} />
-                                  </IconButton>
-                                </Tooltip>
-
-                                <Tooltip content="Скачать">
-                                  <IconButton size="1" color="blue" variant="soft">
+                                  >
                                     <FiDownload size={14} />
                                   </IconButton>
                                 </Tooltip>
 
-                                <Tooltip content="Рассмотреть">
+                                <Tooltip content="Проверить">
                                   <IconButton 
                                     size="1" 
                                     color="green" 
@@ -697,12 +744,15 @@ export default function MyReviewsPage() {
      
 
         {/* Right frame */}
-        {isRightFrameOpen && (
-          <div className="right-frame">
+        {isRightFrameVisible && (
+          <div
+            className={`right-frame ${isRightFrameAnimating ? 'closing' : ''}`}
+            onTransitionEnd={handleTransitionEnd}
+          >
 
             <div className="right-frame-content">
 
-              <button className="right-frame-close-button" onClick={()=> updateContext({isRightFrameOpen: false})}>
+              <button className="right-frame-close-button" onClick={handleRightFrameClose}>
                 <FiX />
               </button>
 
@@ -722,7 +772,7 @@ export default function MyReviewsPage() {
                         </div>
                       </div>
                     ) : (
-                      <PDFViewer onClose={() => updateContext({isRightFrameOpen: false})} />
+                      <PDFViewer onClose={handleRightFrameClose} />
                     )
                   ) : (
                     <div className="right-frame-placeholder">
