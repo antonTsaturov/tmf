@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { ENV } from '@/lib/config/env';
+import { logger } from '@/lib/utils/logger';
 
 const JWT_SECRET = ENV.JWT_SECRET;
 const REFRESH_SECRET = ENV.JWT_SECRET + '_refresh'; // Use different salt for refresh tokens
@@ -64,7 +65,10 @@ export class AuthService {
       return jwt.verify(token, JWT_SECRET, {
         algorithms: ['HS256']
       }) as JwtPayload;
-    } catch (_error) {
+    } catch (error) {
+      logger.authError('VERIFY_ACCESS_TOKEN_FAILED', undefined, error instanceof Error ? error.message : String(error), {
+        tokenPreview: token.substring(0, 20) + '...',
+      });
       return null;
     }
   }
@@ -77,7 +81,8 @@ export class AuthService {
       return jwt.verify(token, REFRESH_SECRET, {
         algorithms: ['HS256']
       }) as RefreshTokenPayload;
-    } catch (_error) {
+    } catch (error) {
+      logger.authError('VERIFY_REFRESH_TOKEN_FAILED', undefined, error instanceof Error ? error.message : String(error));
       return null;
     }
   }
@@ -176,7 +181,8 @@ export class AuthService {
       }
 
       return decoded;
-    } catch (_error) {
+    } catch (error) {
+      logger.authError('VERIFY_RESET_TOKEN_FAILED', undefined, error instanceof Error ? error.message : String(error));
       return null;
     }
   }
