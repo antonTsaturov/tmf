@@ -101,6 +101,7 @@ export class EmailService {
   }
 
   async sendDailyDigest(data: {
+    userId: string | number;
     to: string;
     userName: string;
     newDocuments: any[];
@@ -118,6 +119,11 @@ export class EmailService {
 
     const subject = `Daily Digest: ${total} update${total > 1 ? 's' : ''} in your studies`;
 
+    logger.authLog('DIGEST_SEND_START', String(data.userId), 'Daily digest dispatch', {
+      to: data.to,
+      documentCount: total,
+    });
+
     const react = (
       <DigestEmail
         userName={data.userName}
@@ -128,10 +134,24 @@ export class EmailService {
       />
     );
 
-    return this.sendEmail({
+    const result = await this.sendEmail({
       to: data.to,
       subject,
       react,
     });
+
+    if (result) {
+      logger.authLog('DIGEST_SEND_SUCCESS', String(data.userId), 'Daily digest sent', {
+        to: data.to,
+        documentCount: total,
+      });
+    } else {
+      logger.authError('DIGEST_SEND_FAILED', String(data.userId), 'Daily digest send failed', {
+        to: data.to,
+        documentCount: total,
+      });
+    }
+
+    return result;
   }  
 }
