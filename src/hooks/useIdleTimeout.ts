@@ -27,7 +27,7 @@ interface UseIdleTimeoutOptions {
  */
 export function useIdleTimeout(options: UseIdleTimeoutOptions) {
   const { onIdleTimeout, enabled = true } = options;
-  const lastActivityRef = useRef(Date.now());
+  const lastActivityRef = useRef(0);
   const timeoutHandledRef = useRef(false);
 
   const handleActivity = useCallback(() => {
@@ -37,6 +37,9 @@ export function useIdleTimeout(options: UseIdleTimeoutOptions) {
 
   useEffect(() => {
     if (!enabled) return;
+
+    // Initialize with current time on mount
+    lastActivityRef.current = Date.now();
 
     // Инициализация: слушаем события активности
     ACTIVITY_EVENTS.forEach(event => {
