@@ -42,7 +42,7 @@ export interface FileExplorerProps {
   allowMultiSelect?: boolean;
 }
 
-const FileExplorer: React.FC<FileExplorerProps> = ({
+const FolderExplorer: React.FC<FileExplorerProps> = ({
   onSelect,
   onToggle,
   showFileIcons = true,
@@ -357,25 +357,9 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
       <StudyInfoPanel />
       
       <Flex align="center" justify="center" py="4" gap="4" >
-          <Text size="3" weight="bold">
-            {t('masterFileTitle')}
-          </Text>
-          {currentStudy && (
-            <Button
-              size="1"
-              variant="ghost"
-              color="gray"
-              onClick={() => {
-                
-                updateContext({ isStudyInfoPanelOpen: true })
-                // Context loaded
-              
-              }}
-              style={{ padding: '4px 4px' }}
-            >
-              <FiInfo size={14} />
-            </Button>
-          )}
+        <Text size="3" weight="bold">
+          {t('masterFileTitle')}
+        </Text>
       </Flex>
       <Separator mb="4" style={{ width: '100%' }} />
 
@@ -414,4 +398,4 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   );
 };
 
-export default FileExplorer;
+export default FolderExplorer;

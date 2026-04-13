@@ -38,8 +38,12 @@ export function LanguageSwitcher({ variant = 'select' }: LanguageSwitcherProps) 
       <Box style={{ color: 'var(--gray-11)', display: 'flex' }}>
         <GlobeIcon width="16" height="16" />
       </Box>
-      <Select.Root value={locale} onValueChange={(val) => setLocale(val as 'ru' | 'en')} size="1">
-        <Select.Trigger variant="ghost" />
+      <Select.Root
+        value={locale} 
+        onValueChange={(val) => setLocale(val as 'ru' | 'en')} 
+        size="1"
+      >
+        <Select.Trigger variant="ghost" style={{outline: 'none'}}/>
         <Select.Content>
           {LANGUAGES.map((lang) => (
             <Select.Item key={lang.value} value={lang.value}>

@@ -20,5 +20,14 @@ if [ $TEST_EXIT -ne 0 ]; then
   exit 1
 fi
 
+echo "🏗️  Running test build..."
+npm run build
+BUILD_EXIT=$?
+
+if [ $BUILD_EXIT -ne 0 ]; then
+  echo "❌ Build failed. Push aborted."
+  exit 1
+fi
+
 echo "✅ All checks passed!"
 exit 0

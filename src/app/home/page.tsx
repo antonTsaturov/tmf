@@ -2,7 +2,7 @@
 
 import { useRef, useContext } from 'react';
 import '@/styles/Home.css';
-import FileExplorer from '../../components/FileExplorer';
+import FolderExplorer from '../../components/FolderExplorer';
 import UserMenu from '@/components/UserMenu';
 import { Tabs } from '@radix-ui/themes';
 import Navigation from '@/components/Navigation';
@@ -44,7 +44,7 @@ const Home: React.FC<MainWindowProps> = () => {
         <div ref={sidebarRef} className="sidebar">
           <div className="sidebar-content">
             <div className="sidebar-content-area">
-              <FileExplorer
+              <FolderExplorer
                 showFileIcons={true}
                 allowMultiSelect={true}
               />

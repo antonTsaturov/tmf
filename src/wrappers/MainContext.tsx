@@ -1,7 +1,8 @@
-// MainContext.tsx
+// src/wrappers/MainContext.tsx
 'use client'
+
 import React, { createContext, useState, ReactNode } from 'react';
-import { FileNode } from '@/components/FileExplorer';
+import { FileNode } from '@/components/FolderExplorer';
 import type { Document } from '@/types/document';
 import { Study, StudySite } from '@/types/types';
 import { ViewLevel } from '@/types/types';

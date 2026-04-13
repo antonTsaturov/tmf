@@ -94,13 +94,13 @@ export function proxy(request: NextRequest) {
     } else if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
       // Пропустить другие публичные пути
       response = NextResponse.next();
-    // } else if (pathname.startsWith('/api/')) {
-    //   // Для API путей — возвращаем 401 JSON вместо редиректа
-    //   response = new NextResponse(
-    //     JSON.stringify({ error: 'Unauthorized' }),
-    //     { status: 401, headers: { 'Content-Type': 'application/json' } }
-    //   );
-    // 
+    } else if (pathname.startsWith('/api/')) {
+      // Для API путей — возвращаем 401 JSON вместо редиректа
+      response = new NextResponse(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { 'Content-Type': 'application/json' } }
+      );
+    
     } else {
       // Для всех остальных путей - проверка авторизации
       if (!isAuthenticated) {
