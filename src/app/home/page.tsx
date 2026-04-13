@@ -12,7 +12,7 @@ import PDFViewer from '@/components/PDFViewer';
 import DocumentDetails from '@/components/DocumentDetails';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiX } from 'react-icons/fi';
-import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
+// import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
 import UserReviewsButton from '@/components/UserReviewsButton';
 import { Title, TitleFontSize } from '../login/title';
 import { useI18n } from '@/hooks/useI18n';

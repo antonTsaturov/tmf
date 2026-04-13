@@ -6,7 +6,6 @@ import {
   Box, 
   Flex, 
   Text, 
-  Button, 
   Separator 
 } from '@radix-ui/themes';
 import { 
@@ -16,9 +15,6 @@ import {
   DotIcon, 
   ArchiveIcon
 } from '@radix-ui/react-icons';
-import {
-  FiInfo,
-} from 'react-icons/fi';
 import { FaRegFolderOpen, FaRegFolder } from 'react-icons/fa6';
 import StudyInfoPanel from './panels/StudyInfoPanel';
 import { useI18n } from '@/hooks/useI18n';

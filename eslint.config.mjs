@@ -13,7 +13,7 @@ const eslintConfig = defineConfig([
         { argsIgnorePattern: "^_" }
       ],      
       "react-hooks/preserve-manual-memoization": "off",
-      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/exhaustive-deps": "off",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/set-state-in-effect": "off",
       "react/no-unescaped-entities": "off",

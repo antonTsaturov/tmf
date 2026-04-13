@@ -126,7 +126,7 @@ const getDisplayName = (value: SelectorValue): string => {
     } else if (type === 'study') {
       const studyObj = value as { id: number; study?: Study };
       if (studyObj.study) {
-        const details = [];
+        //const details = [];
         //if (studyObj.study.protocol) details.push(`${studyObj.study.protocol}`);
         //return details.join(' • ');
       }
@@ -614,7 +614,6 @@ export const StudySelector: FC<{
   onChange, 
   placeholder = "Выберите исследования", 
   disabled ,
-  user
 }) => {
 
  

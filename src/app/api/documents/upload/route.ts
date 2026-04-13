@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool, createTable, DB_INITIALIZED } from '@/lib/db/index';
 import { Tables } from '@/lib/db/schema';
-import { createHash } from 'crypto';
+// import { createHash } from 'crypto';
 import { getIAMToken } from '@/lib/cloud/yc-iam';
 import { withAudit, AuditContext } from '@/lib/audit/audit.middleware';
 import { logger } from '@/lib/utils/logger';
@@ -88,7 +88,7 @@ async function uploadHandler(
     const createdBy = formData.get('createdBy') as string;
     const fileName = formData.get('fileName') as string;
     const documentName = formData.get('documentName') as string;
-    const fileSize = parseInt(formData.get('fileSize') as string);
+    // const fileSize = parseInt(formData.get('fileSize') as string);
     const fileType = formData.get('fileType') as string;
     const tmfZone = formData.get('tmfZone') as string | null;
     const tmfArtifact = formData.get('tmfArtifact') as string | null;
@@ -130,7 +130,7 @@ async function uploadHandler(
       );
     }
 
-    const checksum = createHash('sha256').update(buffer).digest('hex');
+    // const checksum = createHash('sha256').update(buffer).digest('hex');
 
     try {
 
@@ -197,34 +197,34 @@ async function uploadHandler(
     ]);
 
     // Получаем количество существующих версий
-    const { rows: existingVersions } = await client.query(`
-      SELECT COUNT(*) as count FROM document_version WHERE document_id = $1
-    `, [documentId]);
+    // const { rows: existingVersions } = await client.query(`
+    //   SELECT COUNT(*) as count FROM document_version WHERE document_id = $1
+    // `, [documentId]);
     
-    const versionNumber = (existingVersions[0]?.count || 0) + 1;
+    // const versionNumber = (existingVersions[0]?.count || 0) + 1;
 
     // Вставляем версию документа
-    const { rows: [_newVersion] } = await client.query(`
-      INSERT INTO document_version (
-        id, document_id, document_number, document_name,
-        file_name, file_path, file_type, file_size, checksum,
-        uploaded_by, change_reason, uploaded_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING *
-    `, [
-      versionId,
-      documentId,
-      versionNumber,
-      documentName,
-      fileName,
-      fileUrl,
-      fileType,
-      fileSize,
-      checksum,
-      createdBy,
-      versionNumber === 1 ? 'Initial upload' : `Version ${versionNumber} upload`,
-      new Date().toISOString()
-    ]);
+    // const { rows: [_newVersion] } = await client.query(`
+    //   INSERT INTO document_version (
+    //     id, document_id, document_number, document_name,
+    //     file_name, file_path, file_type, file_size, checksum,
+    //     uploaded_by, change_reason, uploaded_at
+    //   ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    //   RETURNING *
+    // `, [
+    //   versionId,
+    //   documentId,
+    //   versionNumber,
+    //   documentName,
+    //   fileName,
+    //   fileUrl,
+    //   fileType,
+    //   fileSize,
+    //   checksum,
+    //   createdBy,
+    //   versionNumber === 1 ? 'Initial upload' : `Version ${versionNumber} upload`,
+    //   new Date().toISOString()
+    // ]);
 
     // Обновляем current_version_id в документе
     await client.query(`

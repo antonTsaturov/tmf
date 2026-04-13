@@ -282,8 +282,9 @@ return (
                 color="iris"
                 onClick={() => {
                   onAddSubfolder(folder.id)
-                  setTimeout(()=>{folder.children && folder.children.length > 0 && setIsExpanded(isExpanded)}, 400)
-                  //setIsExpanded(!isExpanded)
+                  if (folder.children && folder.children.length > 0) {
+                    setTimeout(()=>{setIsExpanded(isExpanded)}, 400)
+                  }
                 }}
                 title="Add subfolder"
               >

@@ -49,7 +49,7 @@ async function handleLogin(request: NextRequest) {
     }
 
     // 4. Проверить блокировку (до проверки пароля)
-    const _currentAttempts = Number(user.failed_login_attempts || 0);
+    //const _currentAttempts = Number(user.failed_login_attempts || 0);
     const lockUntil = user.lock_until ? new Date(user.lock_until) : null;
     const now = new Date();
 

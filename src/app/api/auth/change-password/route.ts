@@ -23,7 +23,7 @@ async function handleChangePassword(request: NextRequest, auth: any) {
   const client = getPool();
 
   try {
-    const { currentPassword, newPassword, _confirmPassword } = await request.json();
+    const { currentPassword, newPassword } = await request.json();
 
     // Получаем пользователя из базы
     const userResult = await client.query(

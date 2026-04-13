@@ -131,7 +131,7 @@ describe('Idle timeout logic', () => {
     const startTime = Date.now();
 
     // Simulate the setInterval-based check loop
-    let lastActivityAt = startTime;
+    const lastActivityAt = startTime;
     let timeoutHandled = false;
     let tickCount = 0;
 

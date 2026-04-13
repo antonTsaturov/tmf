@@ -21,7 +21,6 @@ import {
 import {
   FiSearch,
   FiCheckCircle,
-  FiEye,
   FiDownload,
   FiUser,
   FiFolder,
