@@ -20,9 +20,6 @@ export function LanguageSwitcher({ variant = 'select' }: LanguageSwitcherProps) 
     return (
       <Card size="1" variant="surface">
         <Flex align="center" gap="3">
-          <Box style={{ color: 'var(--gray-11)', display: 'flex', flexShrink: 0 }}>
-            <GlobeIcon width="16" height="16" />
-          </Box>
           <RadioGroup.Root value={locale} onValueChange={(val) => setLocale(val as 'ru' | 'en')}>
             {LANGUAGES.map((lang) => (
               <Flex key={lang.value} align="center" gap="1">

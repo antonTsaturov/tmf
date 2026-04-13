@@ -1,14 +1,18 @@
 import { UserRole } from "@/types/types";
 import { useAuth } from "@/wrappers/AuthProvider";
 import { Button, DropdownMenu, Link } from "@radix-ui/themes";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { FaUser } from "react-icons/fa";
 import UserSettings from "./UserSettings";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/hooks/useI18n";
+import { MainContext } from "@/wrappers/MainContext";
 
 export default function UserDropdownMenu() {
   const { t } = useI18n('userMenu');
+  const { context, updateContext } = useContext(MainContext)!;
+  const { currentStudy } = context;
+  
 	const { user, logout } = useAuth()!;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const pathname = usePathname();
@@ -38,14 +42,24 @@ export default function UserDropdownMenu() {
             <DropdownMenu.Separator />
             </>
           )}
-          <DropdownMenu.Item>{t('studyMetrics')}</DropdownMenu.Item>
 
-          <DropdownMenu.Item
-            onClick={() => setSettingsOpen(true)}
+          <DropdownMenu.Item>
+            {t('studyMetrics')}
+          </DropdownMenu.Item>
+
+          <DropdownMenu.Item 
+            onClick={() => currentStudy && updateContext({isStudyInfoPanelOpen: true})} 
+            disabled={!currentStudy}
           >
+            {t('aboutStudy')}
+          </DropdownMenu.Item>
+
+          <DropdownMenu.Separator  />
+
+          <DropdownMenu.Item onClick={() => setSettingsOpen(true)}>
             {t('userSettings')}
           </DropdownMenu.Item>
-          <DropdownMenu.Separator  />
+
           <DropdownMenu.Item onClick={() => logout()}>
             {t('exit')}
           </DropdownMenu.Item>

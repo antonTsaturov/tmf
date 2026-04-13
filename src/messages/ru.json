@@ -138,8 +138,9 @@
   "userMenu": {
     "userMenu": "Меню пользователя",
     "adminDashboard": "Панель администратора",
-    "studyMetrics": "Статистика исследования",
-    "userSettings": "Настройки пользователя",
+    "studyMetrics": "Статистика",
+    "aboutStudy": "Об исследовании",
+    "userSettings": "Настройки",
     "exit": "Выход"
   },
   "settings": {

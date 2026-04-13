@@ -1,5 +1,6 @@
 //src/components/UserSettings.tsx
 'use client'
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -23,6 +24,7 @@ import { FaUser } from "react-icons/fa";
 import { useNotification } from '@/wrappers/NotificationContext';
 import { logger } from '@/lib/utils/logger';
 import { useI18n } from '@/hooks/useI18n';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 interface UserSettingsProps {
   open: boolean;
@@ -258,12 +260,16 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
           <Tabs.List>
             <Tabs.Trigger value="profile" disabled={loading}>{t('profile')}</Tabs.Trigger>
             <Tabs.Trigger value="password" disabled={loading}>{t('password')}</Tabs.Trigger>
+            <Tabs.Trigger value="language" disabled={loading}>{t('language')}</Tabs.Trigger>
           </Tabs.List>
 
           <Box pt="4" pb="4" style={{ minHeight: '350px' }}>
             <Tabs.Content value="profile"><UserProfile /></Tabs.Content>
             <Tabs.Content value="password">
               <UserPassword onSuccess={handlePasswordSuccess} externalLoading={loading} onLoadingChange={setLoading} />
+            </Tabs.Content>
+            <Tabs.Content value="language">
+              <LanguageSwitcher variant="radio" />
             </Tabs.Content>
           </Box>
         </Tabs.Root>
