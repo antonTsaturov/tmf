@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
 
   // Если токена нет или он невалиден — сразу возвращаем user: null,
-  // не трогая базу (и не создавая лишних соединений)
   if (!authToken) {
     return NextResponse.json({ user: null });
   }

@@ -65,7 +65,12 @@ a {
   align-items: center;
   padding: 0 24px;
   padding: 20px;
-  border-bottom: 1px #000 solid;
+  border-bottom: 1px #c6c6c6 solid;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(0, 0, 0, 0.08),
+    0 8px 24px rgba(0, 0, 0, 0.04);
+  z-index: 1;
 }
 
 .toolbar-title {

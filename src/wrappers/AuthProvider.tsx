@@ -2,20 +2,13 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { AUTH_DISABLED } from '@/proxy';
+import { useRouter } from 'next/navigation';
 import { Spinner, Flex, Text } from '@radix-ui/themes';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
+import type { StudyUser } from '@/types/user';
 
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string[];
-  assigned_site_id: number[];
-  assigned_study_id: number[];
-}
+// Клиентское подмножество StudyUser — только поля, нужные UI
+type User = Pick<StudyUser, 'id' | 'name' | 'email' | 'role' | 'assigned_site_id' | 'assigned_study_id'>;
 
 interface AuthContextType {
   user: User | null;
@@ -31,18 +24,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
+  //const pathname = usePathname();
 
-  // Проверить авторизацию при загрузке
-  useEffect(() => {
-    checkAuth();
+  /**
+   * 1. Перехватчик 401 (Session Expired)
+   * Вместо сложного кулдауна проверяем только, не находимся ли мы уже на логине.
+   */
+  const initFetchInterceptor = useCallback(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
+      const response = await originalFetch.call(this, input, init);
+
+      if (response.status === 401) {
+        const url = typeof input === 'string' ? input : (input as any).url || '';
+        
+        // Не редиректим, если это сам запрос обновления или мы уже на странице логина
+        if (!url.includes('/api/auth/refresh') && !window.location.pathname.startsWith('/login')) {
+          // Используем window.location для полной очистки состояния приложения
+          window.location.href = `/login?from=${encodeURIComponent(window.location.pathname)}`;
+        }
+      }
+      return response;
+    };
   }, []);
+
+  /**
+   * 2. Синхронизация выхода между вкладками
+   */
+  useEffect(() => {
+    const syncLogout = (event: StorageEvent) => {
+      if (event.key === 'auth-logout') {
+        window.location.href = '/login';
+      }
+    };
+    window.addEventListener('storage', syncLogout);
+    return () => window.removeEventListener('storage', syncLogout);
+  }, []);
+
+  useEffect(() => {
+    initFetchInterceptor();
+    checkAuth();
+  }, [initFetchInterceptor]);
 
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/check', {
         credentials: 'include',
-        cache: 'no-store' // Запрет кэширования
+        cache: 'no-store'
       });
       
       if (response.ok) {
@@ -60,7 +88,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
-    
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -69,18 +96,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include'
       });
 
-      const data = await response.json();
-
       if (response.ok) {
+        const data = await response.json();
         setUser(data.user);
-        // ВАЖНО: Вызываем проверку авторизации еще раз, 
-        // чтобы обновить все состояния и убедиться, что сессия активна        
-        await checkAuth();
-        router.refresh();
+        router.refresh(); // Обновляем серверные компоненты
         return true;
-      } else {
-        return false;
       }
+      return false;
     } catch {
       return false;
     } finally {
@@ -89,51 +111,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-      credentials: 'include'
-    });
-
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
-    //router.push('/login');
-    window.location.href = '/login'; // Жесткая перезагрузка страницы
+    // Уведомляем другие вкладки
+    localStorage.setItem('auth-logout', Date.now().toString());
+    router.push('/login');
+    //window.location.href = '/login';
   };
 
-  // Handle token refresh failure — force logout
-  const handleRefreshFailure = useCallback(() => {
-    setUser(null);
-    window.location.href = '/login';
-  }, []);
-
-  // Automatic token refresh every 10 minutes
   useTokenRefresh({
-    onRefreshFailure: handleRefreshFailure,
-    enabled: !!user, // Only refresh when user is authenticated
+    onRefreshFailure: () => {
+      setUser(null);
+      window.location.href = '/login';
+    },
+    enabled: !!user,
   });
-
-  // Автоматический редирект на логин, если пользователь не авторизован
-  useEffect(() => {
-    if (!AUTH_DISABLED) {
-      const publicPaths = ['/login', '/reset-password'];
-      if (!loading && !user && !publicPaths.includes(pathname)) {
-        router.push(`/login?from=${encodeURIComponent(pathname)}`);
-      }
-    }
-  }, [user, loading, pathname, router]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>
-      {/* Ключевое изменение: если мы еще грузимся (loading === true), 
-        мы не рендерим children. Это предотвращает ситуацию, когда 
-        компоненты внутри (как Navigation) видят user === null во время загрузки.
-      */}
       {!loading ? children : (
-        <>
-          <Flex p="3" justify="center" align="center" gap="2" height="100vh">
-            <Spinner size="3" style={{ color: 'gray' }} />
-            <Text size="1" weight="medium">Loaging...</Text>
-          </Flex>
-        </>
+        <Flex p="3" justify="center" align="center" gap="2" height="100vh">
+          <Spinner size="3" style={{ color: 'gray' }} />
+          <Text size="1" weight="medium">Загрузка...</Text>
+        </Flex>
       )}
     </AuthContext.Provider>
   );
@@ -141,8 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };

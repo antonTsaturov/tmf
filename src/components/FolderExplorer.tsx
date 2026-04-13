@@ -356,7 +356,7 @@ const FolderExplorer: React.FC<FileExplorerProps> = ({
     <Box className="file-explorer" p="3" style={{ height: '100%', overflow: 'auto' }}>
       <StudyInfoPanel />
       
-      <Flex align="center" justify="center" py="4" gap="4" >
+      <Flex align="center" justify="center" py="2" gap="4" >
         <Text size="3" weight="bold">
           {t('masterFileTitle')}
         </Text>

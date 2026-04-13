@@ -152,13 +152,13 @@
   display: flex;
   gap: 20px;
   justify-content: space-between;
-  min-height: 67px;
+  min-height: 53px;
 }
 
 .main-content--buttons, .main-content--status {
   border: 1px solid #a2a2a270;
+  border-bottom: none;
   border-radius: 8px;
-  margin-bottom: 16px;
   background: #fafbfc;
   display: flex;  
 }

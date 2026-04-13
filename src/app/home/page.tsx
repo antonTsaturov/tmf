@@ -59,11 +59,11 @@ const Home: React.FC<MainWindowProps> = () => {
               <DocumentActions />
             </div>
             {/* Doc status Indicator */}
-            <div className="main-content--status">
+            {/* <div className="main-content--status">
               {selectedDocument?.status && (
                 <DocumentStatusIndicator size="big" />
               )}
-            </div>
+            </div> */}
           </div>
           {/* Selected Folder Content */}
           <div className="main-content-area">
