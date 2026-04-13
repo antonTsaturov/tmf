@@ -148,6 +148,7 @@
     "profile": "Profile",
     "password": "Password",
     "language": "Language",
+    "languageTitle": "Select preferable language",
     "profileTitle": "Profile Information",
     "userId": "User ID",
     "email": "Email",

@@ -140,14 +140,22 @@ const FolderContentViewer: React.FC = () => {
   };
 
   // Обработчик успешной загрузки новой версии
-  const handleNewVersionSuccess = useCallback((newVersion: any) => {
+  const handleNewVersionSuccess = useCallback((newVersionNumber: number) => {
     if (!selectedDocument) return;
 
-    const updatedDoc = selectedDocument;
-    updatedDoc.document_number = newVersion;
+    // Создаём копию документа с обновлённым номером версии
+    const updatedDoc: Document = {
+      ...selectedDocument,
+      document_number: newVersionNumber,
+    };
+
+    // Обновляем документ в списке папки
     updateSingleDocumentInState(updatedDoc);
 
-  }, []);  
+    // Обновляем выбранный документ в контексте
+    updateContext({ selectedDocument: updatedDoc });
+
+  }, [selectedDocument, updateSingleDocumentInState, updateContext]);  
 
   const handleAddNewDocument = useCallback((updatedDoc: Document | Document[]) => {
     setDocumentsData(prevData => {
@@ -343,8 +351,6 @@ const FolderContentViewer: React.FC = () => {
     );
   }
   
-  console.log(selectedDocument)
-
   return (
     <Box 
       ref={contentRef} 

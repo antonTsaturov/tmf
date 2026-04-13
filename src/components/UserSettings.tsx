@@ -269,7 +269,10 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
               <UserPassword onSuccess={handlePasswordSuccess} externalLoading={loading} onLoadingChange={setLoading} />
             </Tabs.Content>
             <Tabs.Content value="language">
-              <LanguageSwitcher variant="radio" />
+              <Text size="4" weight="bold" mb="2">{t('languageTitle')}</Text>
+              <Flex mt="5">
+                <LanguageSwitcher variant="radio" />
+              </Flex>
             </Tabs.Content>
           </Box>
         </Tabs.Root>

@@ -33,7 +33,7 @@ import { ViewLevel } from '@/types/types';
 interface NewVersionUploadPanelProps {
   //onUploadSuccess?: () => void;
   onUploadError?: (error: string) => void;
-  onSuccess?: (updatedDoc: Document) => void;
+  onSuccess?: (versionNumber: number) => void;
 }
 
 const NewVersionDocumentPanel: React.FC<NewVersionUploadPanelProps> = ({onUploadError, onSuccess}) => {

@@ -18,17 +18,15 @@ export function LanguageSwitcher({ variant = 'select' }: LanguageSwitcherProps) 
 
   if (variant === 'radio') {
     return (
-      <Card size="1" variant="surface">
-        <Flex align="center" gap="3">
-          <RadioGroup.Root value={locale} onValueChange={(val) => setLocale(val as 'ru' | 'en')}>
-            {LANGUAGES.map((lang) => (
-              <Flex key={lang.value} align="center" gap="1">
-                <RadioGroup.Item value={lang.value} />
-                <Text size="2">{lang.label}</Text>
-              </Flex>
-            ))}
-          </RadioGroup.Root>
-        </Flex>
+      <Card size="1" variant="classic" style={{minWidth: '200px'}}>
+        <RadioGroup.Root value={locale} onValueChange={(val) => setLocale(val as 'ru' | 'en')}>
+          {LANGUAGES.map((lang) => (
+            <Flex key={lang.value} align="center" gap="1">
+              <RadioGroup.Item value={lang.value} />
+              <Text size="2">{lang.label}</Text>
+            </Flex>
+          ))}
+        </RadioGroup.Root>
       </Card>
     );
   }
