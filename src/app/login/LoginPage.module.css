@@ -67,26 +67,19 @@
 
 .inputGroup {
   margin-bottom: 5px;
-display: flex;
+  display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 10px;
 }
 
 .inputWrapper {
   position: relative;
 }
 
-/* Email wrapper on top when input is focused */
-.inputWrapper:focus-within {
-  z-index: 2;
-}
-
 .passwordInputWrapper {
   position: relative;
   display: flex;
   align-items: center;
-  top: -1px;
-  z-index: 1;
 }
 
 .passwordToggle {

@@ -1,10 +1,11 @@
 // src/wrappers/AuthProvider.tsx
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Spinner, Flex, Text } from '@radix-ui/themes';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import type { StudyUser } from '@/types/user';
 
 // Клиентское подмножество StudyUser — только поля, нужные UI
@@ -118,6 +119,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/login');
     //window.location.href = '/login';
   };
+
+  const handleIdleTimeout = useCallback(() => {
+    // Сессия истекла по бездействию — очищаем состояние и редиректим
+    setUser(null);
+    localStorage.setItem('auth-logout', Date.now().toString());
+    window.location.href = '/login';
+  }, []);
+
+  // 3. Клиентский таймер бездействия (15 мин без активности → logout)
+  useIdleTimeout({
+    onIdleTimeout: handleIdleTimeout,
+    enabled: !!user,
+  });
 
   useTokenRefresh({
     onRefreshFailure: () => {

@@ -40,7 +40,7 @@ export const SESSION_CONFIG = {
   REFRESH_TOKEN_EXPIRY: 7 * 24 * 60 * 60 * 1000, // 7 days
   
   // Idle timeout (user must be active within this period)
-  IDLE_TIMEOUT: 30 * 60 * 1000, // 30 minutes
+  IDLE_TIMEOUT: 15 * 60 * 1000, // 15 minutes
   
   // Max session duration (regardless of activity)
   MAX_SESSION_DURATION: 24 * 60 * 60 * 1000, // 24 hours

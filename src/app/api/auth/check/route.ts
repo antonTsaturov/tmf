@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from '@/lib/auth/auth.service';
 import { getPool } from '@/lib/db/index';
+import { updateSessionActivity } from '@/lib/auth/session';
 import { logger } from '@/lib/utils/logger';
 
 export async function GET(request: NextRequest) {
@@ -16,6 +17,11 @@ export async function GET(request: NextRequest) {
   const payload = AuthService.verifyToken(authToken);
   if (!payload) {
     return NextResponse.json({ user: null });
+  }
+
+  // Обновляем активность сессии при загрузке страницы
+  if (payload.sessionId) {
+    updateSessionActivity(payload.sessionId);
   }
 
   const client = getPool();

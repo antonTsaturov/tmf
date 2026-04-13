@@ -9,12 +9,29 @@ export enum TitleFontSize {
 
 interface TitleProps {
   fontSize?: TitleFontSize;
+  showLogo?: boolean;
 }
 
-export const Title = ({ fontSize = TitleFontSize.Medium }: TitleProps) => {
+export const Title = ({ fontSize = TitleFontSize.Medium, showLogo = false }: TitleProps) => {
 
   return (
-    <div>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '10px',
+    }}>
+      {showLogo && (
+        <img
+          src="/logo.png"
+          alt="ExploreTMF Logo"
+          style={{
+            width: '36px',
+            height: '36px',
+            objectFit: 'contain',
+          }}
+        />
+      )}
       <h2
         style={{
           color: '#2d3748',
@@ -22,6 +39,7 @@ export const Title = ({ fontSize = TitleFontSize.Medium }: TitleProps) => {
           fontWeight: 800,
           transition: 'font-size 0.2s ease',
           userSelect: 'none',
+          margin: 0,
         }}
       >
         <span style={{ color: '#2d3748' }}>

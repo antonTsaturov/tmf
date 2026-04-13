@@ -25,8 +25,8 @@ export default function UserDropdownMenu() {
 
   return (
     <>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
+      <DropdownMenu.Root >
+        <DropdownMenu.Trigger style={{outline: 'none'}}>
           <Button  color="gray" aria-label={t('userMenu')}>
             <FaUser /> {user?.name}
           </Button>

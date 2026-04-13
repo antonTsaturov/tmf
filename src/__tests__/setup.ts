@@ -146,8 +146,8 @@ jest.mock('@/lib/auth/session', () => {
         session.isValid = false;
         return null;
       }
-      const idleTimeout = 30 * 60 * 1000; // 30 minutes
-      if ((Date.now() - session.lastActivityAt) > idleTimeout) {
+      const { SESSION_CONFIG } = jest.requireActual('@/lib/auth/session');
+      if ((Date.now() - session.lastActivityAt) > SESSION_CONFIG.IDLE_TIMEOUT) {
         session.isValid = false;
         return null;
       }

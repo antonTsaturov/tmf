@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService, type JwtPayload } from '@/lib/auth/auth.service';
-import { updateSessionActivity, getSession } from '@/lib/auth/session';
+import { getSession } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
 import { logger } from '@/lib/utils/logger';
 import jwt from 'jsonwebtoken';
@@ -81,8 +81,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update session activity
-    updateSessionActivity(sessionId);
+    // NOTE: Do NOT call updateSessionActivity() here.
+    // The refresh is an automated background call — it should NOT reset the idle timer.
+    // Real user activity (clicks, navigation, file operations) updates activity
+    // via getAuthenticatedUser() in actual API route handlers.
 
     // Fetch user role from database
     let userRole = 'user';

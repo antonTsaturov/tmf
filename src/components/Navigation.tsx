@@ -169,7 +169,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
               ))}
           </Select.Content>
         </Select.Root>
-        {currentStudy && <IoIosArrowForward />}
+        {currentStudy && <IoIosArrowForward style={{color: 'gray'}} />}
       </Flex>
 
       {/* Шаг 2: Выбор уровня просмотра (показываем только если выбрано исследование) */}
@@ -204,7 +204,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
               </Select.Item>}
             </Select.Content>
           </Select.Root>
-          {currentLevel && currentLevel !== ViewLevel.GENERAL && <IoIosArrowForward />}
+          {currentLevel && currentLevel !== ViewLevel.GENERAL && <IoIosArrowForward style={{color: 'gray'}}/>}
         </Flex>
       )}
 
@@ -229,7 +229,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
             ))}
           </Select.Content>
         </Select.Root>
-        {currentCountry && <IoIosArrowForward />}
+        {currentCountry && <IoIosArrowForward style={{color: 'gray'}}/>}
       </Flex>
         : null
       }
