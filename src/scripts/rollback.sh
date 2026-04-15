@@ -4,10 +4,10 @@ set -e
 echo "🔄 Поиск предыдущей версии образа..."
 
 # Найти предыдущую версию (исключая текущий latest)
-CURRENT_IMAGE=$(docker inspect tmf-app --format='{{.Image}}' 2>/dev/null || echo "")
+CURRENT_IMAGE=$(docker inspect exploretmf --format='{{.Image}}' 2>/dev/null || echo "")
 
 # Найти все образы, отсортированные по времени создания (новые сверху)
-IMAGES=$(docker images ghcr.io/antontsaturov/tmf-app --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | awk '{print $1}')
+IMAGES=$(docker images ghcr.io/antontsaturov/exploretmf --format "{{.ID}} {{.CreatedAt}}" | sort -k2 -r | awk '{print $1}')
 
 # Выбрать первую (не текущую) версию
 PREVIOUS_IMAGE=""
@@ -21,7 +21,7 @@ done
 if [ -z "$PREVIOUS_IMAGE" ]; then
     echo "❌ Не найдено предыдущих версий образа"
     echo "Доступные образы:"
-    docker images ghcr.io/antontsaturov/tmf-app
+    docker images ghcr.io/antontsaturov/exploretmf
     exit 1
 fi
 
@@ -37,16 +37,16 @@ if [ "$confirm" != "y" ]; then
 fi
 
 # Сохраняем текущий образ как failed-версию на случай повторного отката
-docker tag "$CURRENT_IMAGE" ghcr.io/antontsaturov/tmf-app:failed-$(date +%Y%m%d-%H%M%S) 2>/dev/null || true
+docker tag "$CURRENT_IMAGE" ghcr.io/antontsaturov/exploretmf:failed-$(date +%Y%m%d-%H%M%S) 2>/dev/null || true
 
 # Останавливаем и удаляем текущий контейнер
 echo "🛑 Остановка текущего контейнера..."
-docker stop tmf-app && docker rm tmf-app || true
+docker stop exploretmf && docker rm exploretmf || true
 
 # Запускаем со старой версией
 echo "🚀 Запуск предыдущей версии..."
 docker run -d \
-  --name tmf-app \
+  --name exploretmf \
   --restart always \
   -p 127.0.0.1:3000:3000 \
   --env-file /home/anton/.env \
@@ -54,10 +54,10 @@ docker run -d \
 
 # Проверяем, что контейнер запустился
 sleep 3
-if docker ps | grep -q tmf-app; then
+if docker ps | grep -q exploretmf; then
     echo "✅ Откат выполнен успешно!"
     echo "📋 Последние логи:"
-    docker logs tmf-app --tail 20
+    docker logs exploretmf --tail 20
 else
     echo "❌ Ошибка: контейнер не запустился"
     exit 1

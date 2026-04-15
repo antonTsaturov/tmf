@@ -5,7 +5,7 @@
 # Usage:
 #   Manual:  ./backup.sh
 #   Cron:    0 3 * * * /scripts/backup.sh >> /var/log/backup.log 2>&1
-#   Docker:  docker exec tmf-app /scripts/backup.sh
+#   Docker:  docker exec exploretmf /scripts/backup.sh
 #
 # Requires:
 #   - pg_dump (postgresql-client)

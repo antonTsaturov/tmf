@@ -39,16 +39,16 @@ jobs:
           SHORT_SHA=$(git rev-parse --short HEAD)
           APP_VERSION="ver. ${PKG_VERSION}.${COMMIT_COUNT}+${SHORT_SHA}"
           echo "Building version: $APP_VERSION"
-          docker build --no-cache --build-arg APP_VERSION="$APP_VERSION" -t tmf-app .
+          docker build --no-cache --build-arg APP_VERSION="$APP_VERSION" -t exploretmf .
 
       - name: 🏷 Tag image
-        run: docker tag tmf-app ghcr.io/antontsaturov/tmf-app:latest
+        run: docker tag exploretmf ghcr.io/antontsaturov/exploretmf:latest
 
       - name: 🔐 Login to GitHub Container Registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
 
       - name: 📤 Push image
-        run: docker push ghcr.io/antontsaturov/tmf-app:latest
+        run: docker push ghcr.io/antontsaturov/exploretmf:latest
 
       - name: 🚀 Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.0
@@ -60,42 +60,41 @@ jobs:
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ghcr.io -u antontsaturov --password-stdin
 
             # Сохраняем текущую версию как previous перед обновлением
-            docker tag ghcr.io/antontsaturov/tmf-app:latest ghcr.io/antontsaturov/tmf-app:previous 2>/dev/null || true            
+            # docker tag ghcr.io/antontsaturov/exploretmf:latest ghcr.io/antontsaturov/exploretmf:previous 2>/dev/null || true            
             
-            docker pull ghcr.io/antontsaturov/tmf-app:latest
+            docker pull ghcr.io/antontsaturov/exploretmf:latest
             
             # Создаем директорию для скриптов
-            mkdir -p /home/anton/scripts
+            mkdir -p /home/anton/.exploretmf
 
             # ОЧИЩАЕМ старые скрипты (опционально)
-            # rm -rf /home/anton/scripts/*            
+            # rm -rf /home/anton/.exploretmf/*            
             
             # Временный контейнер для извлечения скриптов
-            docker create --name tmf-temp ghcr.io/antontsaturov/tmf-app:latest
-            
+            docker create --name tmf-temp ghcr.io/antontsaturov/exploretmf:latest
+
             # Копируем скрипты из контейнера на хост
-            docker cp tmf-temp:/app/src/scripts/. /home/anton/scripts/ 2>/dev/null || \
-            docker cp tmf-temp:/src/scripts/. /home/anton/scripts/ 2>/dev/null || \
-            docker cp tmf-temp:/scripts/. /home/anton/scripts/ 2>/dev/null || \
+            docker cp tmf-temp:/app/scripts/. /home/anton/.exploretmf/ 2>/dev/null || \
             echo "⚠️ Директория со скриптами не найдена"
-            
+
             # Удаляем временный контейнер
             docker rm tmf-temp
-            
+
             # Делаем все скрипты исполняемыми
-            chmod +x /home/anton/scripts/*.sh
+            chmod +x /home/anton/.exploretmf/*.sh
             
             # Копируем .env файл в директорию скриптов (если нужно)
-            cp /home/anton/.env /home/anton/scripts/.env 2>/dev/null || true
+            cp /home/anton/.env /home/anton/.exploretmf/.env 2>/dev/null || true
             
             # Останавливаем и удаляем старый контейнер
-            docker stop tmf-app || true
-            docker rm tmf-app || true
+            docker stop exploretmf || true
+            docker rm exploretmf || true
             
             # Запускаем новый контейнер
             docker run -d \
-              --name tmf-app \
+              --name exploretmf \
               --restart always \
               -p 127.0.0.1:3000:3000 \
-              --env-file /home/anton/scripts/.env \
-              ghcr.io/antontsaturov/tmf-app:latest            
+              -v /home/anton/.exploretmf/ya_cloud-iam_key.json:/app/ya_cloud-iam_key.json:ro \
+              --env-file /home/anton/.exploretmf/.env \
+              ghcr.io/antontsaturov/exploretmf:latest            
