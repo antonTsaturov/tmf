@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await client.query(
-      `SELECT id, name, email, role, assigned_site_id, assigned_study_id
+      `SELECT id, name, email, role, assigned_site_id, assigned_study_id, email_notifications_enabled
        FROM users
        WHERE id = $1`,
       [payload.id]
@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         role: user.role,
         assigned_site_id: user.assigned_site_id,
         assigned_study_id: user.assigned_study_id,
+        email_notifications_enabled: user.email_notifications_enabled,
       },
     });
   } catch (error) {

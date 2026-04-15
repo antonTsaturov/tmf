@@ -16,7 +16,8 @@ import {
   Badge,
   Card,
   Avatar,
-  Spinner
+  Spinner,
+  Checkbox,
 } from '@radix-ui/themes';
 import { EyeOpenIcon, EyeClosedIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useAuth } from '@/wrappers/AuthProvider';
@@ -228,6 +229,76 @@ const UserProfile: React.FC = () => {
   );
 };
 
+const UserEmailNotification: React.FC = () => {
+  const { t } = useI18n('settings');
+  const { user } = useAuth()!;
+  const { addNotification } = useNotification();
+  const [enabled, setEnabled] = useState(user?.email_notifications_enabled ?? true);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setEnabled(user?.email_notifications_enabled ?? true);
+  }, [user]);
+
+  const handleChange = async (checked: boolean) => {
+    setEnabled(checked);
+    setLoading(true);
+
+    try {
+      const response = await fetch('/api/user/email-notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: checked }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        addNotification('success', t('emailNotificationsUpdated'));
+      } else {
+        setEnabled(!checked);
+        addNotification('error', data.error || t('emailNotificationsError'));
+      }
+    } catch (error) {
+      logger.error('Email notifications toggle error', error);
+      setEnabled(!checked);
+      addNotification('error', t('networkError'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Flex direction="column" gap="4">
+      <Text size="4" weight="bold" mb="2">{t('emailNotifications')}</Text>
+
+      <Box style={{ backgroundColor: 'var(--gray-3)', padding: '16px', borderRadius: '6px' }}>
+        <Flex align="center" gap="2" mb="3">
+          <Checkbox
+            checked={enabled}
+            onCheckedChange={handleChange}
+            disabled={loading}
+            id="email-notifications-checkbox"
+          />
+          <Text
+            as="label"
+            htmlFor="email-notifications-checkbox"
+            size="2"
+            weight="medium"
+            style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+          >
+            {t('emailNotificationsEnabled')}
+          </Text>
+        </Flex>
+
+        <Text size="1" color="gray" style={{ lineHeight: '1.6' }}>
+          {t('emailNotificationsDescription')}
+        </Text>
+      </Box>
+    </Flex>
+  );
+};
+
 const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
   const { t } = useI18n('settings');
   const [activeTab, setActiveTab] = useState('profile');
@@ -260,6 +331,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
           <Tabs.List>
             <Tabs.Trigger value="profile" disabled={loading}>{t('profile')}</Tabs.Trigger>
             <Tabs.Trigger value="password" disabled={loading}>{t('password')}</Tabs.Trigger>
+            <Tabs.Trigger value="notifications" disabled={loading}>{t('notifications')}</Tabs.Trigger>
             <Tabs.Trigger value="language" disabled={loading}>{t('language')}</Tabs.Trigger>
           </Tabs.List>
 
@@ -268,6 +340,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
             <Tabs.Content value="password">
               <UserPassword onSuccess={handlePasswordSuccess} externalLoading={loading} onLoadingChange={setLoading} />
             </Tabs.Content>
+            <Tabs.Content value="notifications"><UserEmailNotification /></Tabs.Content>
             <Tabs.Content value="language">
               <Text size="4" weight="bold" mb="2">{t('languageTitle')}</Text>
               <Flex mt="5">

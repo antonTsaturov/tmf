@@ -9,7 +9,7 @@ import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import type { StudyUser } from '@/types/user';
 
 // Клиентское подмножество StudyUser — только поля, нужные UI
-type User = Pick<StudyUser, 'id' | 'name' | 'email' | 'role' | 'assigned_site_id' | 'assigned_study_id'>;
+type User = Pick<StudyUser, 'id' | 'name' | 'email' | 'role' | 'assigned_site_id' | 'assigned_study_id' | 'email_notifications_enabled'>;
 
 interface AuthContextType {
   user: User | null;

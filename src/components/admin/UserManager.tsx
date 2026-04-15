@@ -530,6 +530,7 @@ const UserManager: FC<UserManagerProps> = () => {
       permissions: getPermissionsForRole(newUserForm.roles),
       assigned_study_id: newUserForm.assigned_study_id,
       assigned_site_id: newUserForm.assigned_site_id,
+      email_notifications_enabled: true,
       failed_login_attempts: 0,
       created_at: new Date().toISOString()
     };

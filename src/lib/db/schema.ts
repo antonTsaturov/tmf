@@ -96,7 +96,6 @@ export const DocumentTable = `
     country VARCHAR(100),
 
     folder_id TEXT NOT NULL,
-    folder_name TEXT,
     tmf_zone TEXT,
     tmf_artifact TEXT,
 
@@ -176,6 +175,10 @@ export const UserTable = `
     lock_until TIMESTAMPTZ,
     password_changed_at TIMESTAMPTZ,
     last_login TIMESTAMPTZ,
+
+    last_digest_at TIMESTAMPTZ,
+    email_notifications_enabled BOOLEAN DEFAULT TRUE,
+    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
   );

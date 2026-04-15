@@ -315,12 +315,10 @@ export default function MyReviewsPage() {
       overflow: 'hidden' 
     }}>
       <header className="toolbar-header">
-        <div className="toolbar-title">
-          <Title
-            fontSize={TitleFontSize.ExtraSmall}
-          />
-          
-        </div>
+        <Title fontSize={TitleFontSize.ExtraSmall} />
+
+        <div className="toolbar-title"></div>
+
         <Link href="/home">
           <Button variant="solid" mr="3"
             onClick={()=> {

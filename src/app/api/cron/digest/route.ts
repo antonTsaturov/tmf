@@ -1,3 +1,5 @@
+// src/app/api/cron/digest/route.ts
+
 import { DigestService } from '@/services/digest.service';
 import { NextResponse } from 'next/server';
 

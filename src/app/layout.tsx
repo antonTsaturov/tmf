@@ -23,7 +23,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ExploreTMF",
-  description: "Manpremo electronic Trial Master File system",
+  description: "Electronic Trial Master File system",
   icons: {
     icon: [
       { url: '/favicon.ico', type: 'image/x-icon' },

@@ -175,7 +175,13 @@
     "cancel": "Cancel",
     "close": "Close",
     "updating": "Updating...",
-    "updatePassword": "Update Password"
+    "updatePassword": "Update Password",
+    "notifications": "Notifications",
+    "emailNotifications": "Email Notifications",
+    "emailNotificationsEnabled": "Enable daily notifications",
+    "emailNotificationsDescription": "You will receive a daily summary of new documents, version updates, and archived documents only for studies you have access to. Emails are sent once every 24 hours and include only changes made since the last notification.",
+    "emailNotificationsError": "Error updating settings",
+    "emailNotificationsUpdated": "Email notification settings updated"
   },
   "documentDetails": {
     "noDocumentSelected": "Select a document to view details",

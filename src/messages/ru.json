@@ -43,7 +43,7 @@
     "resetSent": "Инструкция по восстановлению пароля отправлена на",
     "backToSignIn": "Вернуться ко входу",
     "somethingWrong": "Что-то пошло не так. Попробуйте снова.",
-    "footerPrefix": "Система ExploreTMF",
+    "footerPrefix": "ExploreTMF",
     "footerSecure": "Требуется авторизованный доступ"
   },
   "document": {
@@ -148,7 +148,7 @@
     "profile": "Профиль",
     "password": "Пароль",
     "language": "Язык",
-    "languageTitle": "Выберите предпочитаемый язык",
+    "languageTitle": "Доступные языки",
     "profileTitle": "Основная информация",
     "userId": "ID пользователя",
     "email": "Email",
@@ -175,7 +175,13 @@
     "cancel": "Отмена",
     "close": "Закрыть",
     "updating": "Обновление...",
-    "updatePassword": "Обновить пароль"
+    "updatePassword": "Обновить пароль",
+    "notifications": "Уведомления",
+    "emailNotifications": "Email-уведомления",
+    "emailNotificationsEnabled": "Включить ежедневные уведомления",
+    "emailNotificationsDescription": "Вы будете получать ежедневную сводку о новых документах, обновлениях версий и архивированных документах только в тех исследованиях, к которым у вас есть доступ. Письма отправляются раз в 24 часа и содержат только изменения, произошедшие с момента последнего уведомления.",
+    "emailNotificationsError": "Ошибка при обновении настроек",
+    "emailNotificationsUpdated": "Настройки email-уведомлений обновлены"
   },
   "documentDetails": {
     "noDocumentSelected": "Выберите документ для просмотра сведений",

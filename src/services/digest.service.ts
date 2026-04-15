@@ -14,12 +14,13 @@ export class DigestService {
       SELECT id, email, name, last_digest_at
       FROM users
       WHERE email IS NOT NULL
+      AND email_notifications_enabled = TRUE
     `);
 
     for (const user of users) {
       try {
-        const lastDigest =
-          user.last_digest_at || new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const lastDigest = user.last_digest_at
+          || new Date(Date.now() - 24 * 60 * 60 * 1000);
 
         console.log(`[Digest] Обработка пользователя: ${user.email}`);
         const digest = await getDailyDigest(user.id, lastDigest);
