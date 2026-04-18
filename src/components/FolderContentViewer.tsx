@@ -42,7 +42,6 @@ import EditDocumentTitlePanel from "./panels/EditDocumentPanel";
 import { DocumentLifeCycleStatus } from "@/types/document.status";
 import RestoreDocumentPanel from "./panels/RestoreDocumentPanel";
 import UnarchiveDocumentPanel from "./panels/UnarchiveDocumentPanel";
-import StudyReportPanel from "./panels/StudyReportPanel";
 
 interface DocumentFilters {
     study_id: number;
