@@ -18,31 +18,21 @@ Features.
 24) Пакетная отправка на ревью
 
 25) автоматически удалять центры исследования при удалении исследования у пользователя
-26) при полном удалении исследования/центра - удалять их у пользователей 
+26) при полном удалении исследования/центра - удалять их у пользователей
 
+уязвимости:
 
-Критические (Must-have):
+    Отсутствие аутентификации на основных API endpoints документов — любой пользователь может создавать, читать, изменять и удалять документы.
+    Возможная SQL-инъекция через динамическую интерполяцию в условиях запроса.
+    Отсутствие проверки прав доступа (роли пользователя) в защищенных endpoint'ах.
+    Command injection в сервисе резервного копирования.
+    Небезопасные заголовки CORS с 'unsafe-eval' и 'unsafe-inline'.
+    Потенциальная утечка данных через агрегацию информации о документах.
 
-⏳ Добавить health check и monitoring endpoints
-✅ Unit tests - добавлены comprehensive тесты (src/__tests__/)
+Рекомендации:
 
-Важные (Should-have):
-✅ Napisati хотя бы основные unit tests - ВЫПОЛНЕНО
-  - auth.test.ts (JWT, роли, permissions)
-  - document-lifecycle.test.ts (state machine)
-  - versioning.test.ts (версионирование)
-  - audit.test.ts (логирование)
-  - account-locking.test.ts (блокировка)
-  - file-security.test.ts (валидация файлов)
-  - rate-limiting.test.ts (rate limits)
-Добавить API documentation
-Настроить proper error tracking (Sentry)
-Создать backup strategy
-Добавить database migration system
-
-Nice-to-have:
-Load test и performance tuning
-Redis кэширование
-API versioning
-Graceful shutdown
-Comprehensive logging
+    Добавить проверки аутентификации и авторизации на все критические endpoints.
+    Использовать безопасные параметризованные SQL-запросы.
+    Заменить небезопасные функции выполнения команд.
+    Усилить заголовки безопасности (CSP).
+    Приложение требует срочного рефакторинга механизмов безопасности.

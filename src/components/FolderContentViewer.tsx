@@ -42,6 +42,7 @@ import EditDocumentTitlePanel from "./panels/EditDocumentPanel";
 import { DocumentLifeCycleStatus } from "@/types/document.status";
 import RestoreDocumentPanel from "./panels/RestoreDocumentPanel";
 import UnarchiveDocumentPanel from "./panels/UnarchiveDocumentPanel";
+import StudyReportPanel from "./panels/StudyReportPanel";
 
 interface DocumentFilters {
     study_id: number;
@@ -335,10 +336,12 @@ const FolderContentViewer: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Flex align="center" justify="center" direction="column" gap="4" style={{ height: '100%', minHeight: '400px' }}>
-        <Spinner size="3" />
-        <Text size="3" color="gray">Загрузка содержимого...</Text>
-      </Flex>
+      <>
+        <Flex align="center" justify="center" direction="column" gap="4" style={{ height: '100%', minHeight: '400px' }}>
+          <Spinner size="3" />
+          <Text size="3" color="gray">Загрузка содержимого...</Text>
+        </Flex>
+      </>
     );
   }
 

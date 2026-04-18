@@ -1,13 +1,13 @@
 // src/wrappers/MainContext.tsx
-'use client'
+"use client";
 
-import React, { createContext, useState, ReactNode } from 'react';
-import { FileNode } from '@/components/FolderExplorer';
-import type { Document } from '@/types/document';
-import { Study, StudySite } from '@/types/types';
-import { ViewLevel } from '@/types/types';
-import { Folder } from '@/types/folder';
-import { FolderStructureProvider } from './FolderStructureContext';
+import React, { createContext, useState, ReactNode } from "react";
+import { FileNode } from "@/components/FolderExplorer";
+import type { Document } from "@/types/document";
+import { Study, StudySite } from "@/types/types";
+import { ViewLevel } from "@/types/types";
+import { Folder } from "@/types/folder";
+import { FolderStructureProvider } from "./FolderStructureContext";
 
 export interface MainContextProps {
   isModal: boolean;
@@ -55,7 +55,7 @@ const defaultContext: MainContextProps = {
   isNewVersionPanelOpen: false, // Флаг для открытия окна загрузки новой ВЕРСИИ документа
   isSubmittingToReview: false, // Флаг для открытия окна отправки документа на ревью
   isAcceptedForReview: false, // Флаг для открытия окна для ревью документа
-  isDeletePanelOpen:false,     // Флаг для открытия окна удаления документа
+  isDeletePanelOpen: false, // Флаг для открытия окна удаления документа
   isArchivePanelOpen: false,
   isUnarchivePanelOpen: false,
   isEditTitlePanelOpen: false,
@@ -63,13 +63,17 @@ const defaultContext: MainContextProps = {
   isStudyInfoPanelOpen: false
 };
 
-export const MainContext = createContext<MainContextType | undefined>(undefined);
+export const MainContext = createContext<MainContextType | undefined>(
+  undefined,
+);
 
-export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ContextProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [context, setContext] = useState<MainContextProps>(defaultContext);
 
   const updateContext = (newContext: Partial<MainContextProps>) => {
-    setContext(prev => ({ ...prev, ...newContext }));
+    setContext((prev) => ({ ...prev, ...newContext }));
   };
 
   const resetContext = () => {
@@ -77,15 +81,17 @@ export const ContextProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // 🔹 Приводим тип вручную
-  const folderStructure: Folder | null = 
+  const folderStructure: Folder | null =
     (context.currentStudy?.folders_structure as Folder) ?? null;
 
   return (
-    <MainContext.Provider value={{ 
-      context, 
-      updateContext, 
-      resetContext,
-    }}>
+    <MainContext.Provider
+      value={{
+        context,
+        updateContext,
+        resetContext,
+      }}
+    >
       <FolderStructureProvider structure={folderStructure}>
         {children}
       </FolderStructureProvider>

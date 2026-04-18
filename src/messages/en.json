@@ -87,6 +87,13 @@
     "documentsFound": "documents found",
     "totalWaiting": "total waiting"
   },
+  "studyReportPanel": {
+    "title": "Study Report",
+    "studyFileChecklist": "Study File Checklist",
+    "auditTrailReport": "Audit Trail Report",
+    "generateReport": "Generate Report",
+    "customReport": "Custom Study Report"
+  },
   "archive": {
     "title": "Document Archivation",
     "confirmTitle": "Confirm archivation",

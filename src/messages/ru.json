@@ -87,6 +87,13 @@
     "documentsFound": "документ найдено",
     "totalWaiting": "всего в ожидании"
   },
+  "studyReportPanel": {
+    "title": "Отчет по исследованию",
+    "studyFileChecklist": "Контрольный список файлов исследования",
+    "auditTrailReport": "Отчет по аудиторскому следу",
+    "generateReport": "Сформировать отчет",
+    "customReport": "Пользовательский отчет по исследованию"
+  },
   "archive": {
     "title": "Архивация документа",
     "confirmTitle": "Подтверждение архивации",
