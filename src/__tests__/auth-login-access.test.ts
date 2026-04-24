@@ -13,8 +13,8 @@
 import {
   AuthService,
   JwtPayload,
-} from '@/lib/auth/auth.service';
-import { ACCESS_TOKEN_EXPIRY } from '@/lib/auth/auth.service';
+} from '../lib/auth/auth.service';
+//import { ACCESS_TOKEN_EXPIRY } from '../lib/auth/auth.service';
 
 // --- Helpers ---
 

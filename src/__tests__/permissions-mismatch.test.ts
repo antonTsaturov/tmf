@@ -9,12 +9,12 @@
  * - Multi-role user with conflicting permissions
  */
 
-import { Document } from '@/types/document';
-import { DocumentWorkFlowStatus } from '@/types/document.status';
-import { DocumentAction } from '@/types/document';
-import { ActionRoleMap } from '@/domain/document/document.policy';
-import { getAvailableDocumentActions } from '@/domain/document/document.logic';
-import { UserRole, SiteStatus, StudyStatus } from '@/types/types';
+import { Document } from '../types/document';
+import { DocumentWorkFlowStatus } from '../types/document.status';
+import { DocumentAction } from '../types/document';
+import { ActionRoleMap } from '../domain/document/document.policy';
+import { getAvailableDocumentActions } from '../domain/document/document.logic';
+import { UserRole, SiteStatus, StudyStatus } from '../types/types';
 import { mockDocument } from './setup';
 
 // --- Helpers ---

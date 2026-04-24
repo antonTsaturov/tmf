@@ -9,20 +9,20 @@
  */
 
 import jwt from 'jsonwebtoken';
-import { AuthService, JwtPayload } from '@/lib/auth/auth.service';
-import { createSession, getSession, updateSessionActivity, SESSION_CONFIG } from '@/lib/auth/session';
+import { AuthService, JwtPayload } from '../lib/auth/auth.service';
+import { createSession, getSession, updateSessionActivity, SESSION_CONFIG } from '../lib/auth/session';
 import { mockSessionStorage } from './setup';
 
 // ─── Mock database ──────────────────────────────────────────────────
 const mockQuery = jest.fn();
-jest.mock('@/lib/db', () => ({
+jest.mock('../lib/db', () => ({
   getPool: () => ({
     query: mockQuery,
   }),
 }));
 
 // ─── Mock logger ────────────────────────────────────────────────────
-jest.mock('@/lib/utils/logger', () => ({
+jest.mock('../lib/utils/logger', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -40,7 +40,7 @@ jest.mock('@/lib/utils/logger', () => ({
 }));
 
 // ─── Mock ENV ───────────────────────────────────────────────────────
-jest.mock('@/lib/config/env', () => ({
+jest.mock('../lib/config/env', () => ({
   ENV: {
     JWT_SECRET: 'test-jwt-secret-key-for-testing-only-12345',
   },
@@ -68,13 +68,13 @@ describe('Token Refresh - Session Management', () => {
     it('should create a new session with valid data', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
 
       expect(session).toBeDefined();
       expect(session.userId).toBe(1);
-      expect(session.userEmail).toBe('test@example.com');
+      expect(session.userEmail).toBe('test..example.com');
       expect(session.sessionId).toBeDefined();
       expect(session.isValid).toBe(true);
       expect(session.refreshTokenHash).toBe('test-hash');
@@ -84,7 +84,7 @@ describe('Token Refresh - Session Management', () => {
       const beforeCreate = Date.now();
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
       const afterCreate = Date.now();
@@ -97,7 +97,7 @@ describe('Token Refresh - Session Management', () => {
     it('should set expiresAt based on MAX_SESSION_DURATION', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
 
@@ -110,7 +110,7 @@ describe('Token Refresh - Session Management', () => {
     it('should return session if valid and not expired', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
 
@@ -127,7 +127,7 @@ describe('Token Refresh - Session Management', () => {
     it('should return null for invalidated session', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
 
@@ -144,7 +144,7 @@ describe('Token Refresh - Session Management', () => {
     it('should return null for idle-timed-out session', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
 
@@ -163,7 +163,7 @@ describe('Token Refresh - Session Management', () => {
     it('should update lastActivityAt timestamp', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'test-hash',
       });
 
@@ -188,7 +188,7 @@ describe('Token Refresh - Session Management', () => {
 describe('Token Refresh - JWT Flow', () => {
   const mockPayload: JwtPayload = {
     id: 1,
-    email: 'test@example.com',
+    email: 'test..example.com',
     role: 'MONITOR',
     study_id: [1],
     assigned_site_id: [1],
@@ -236,7 +236,7 @@ describe('Token Refresh - JWT Flow', () => {
     it('should generate refresh token with session and tokenVersion', () => {
       const refreshPayload = {
         id: 1,
-        email: 'test@example.com',
+        email: 'test..example.com',
         sessionId: 'test-session-id',
         tokenVersion: 1,
       };
@@ -285,13 +285,13 @@ describe('Token Refresh - Login Creates Session', () => {
     // Simulate login flow: create session → generate token
     const session = createSession({
       userId: 1,
-      userEmail: 'test@example.com',
+      userEmail: 'test..example.com',
       refreshTokenHash: 'login-hash',
     });
 
     const tokenPayload: JwtPayload = {
       id: 1,
-      email: 'test@example.com',
+      email: 'test..example.com',
       role: 'MONITOR',
       study_id: [1],
       assigned_site_id: [1],
@@ -309,13 +309,13 @@ describe('Token Refresh - Login Creates Session', () => {
     // Step 1: Login creates session + token
     const session = createSession({
       userId: 1,
-      userEmail: 'test@example.com',
+      userEmail: 'test..example.com',
       refreshTokenHash: 'login-hash',
     });
 
     const tokenPayload: JwtPayload = {
       id: 1,
-      email: 'test@example.com',
+      email: 'test..example.com',
       role: 'MONITOR',
       study_id: [1],
       assigned_site_id: [1],
@@ -338,13 +338,13 @@ describe('Token Refresh - Login Creates Session', () => {
     // Create session and token
     const session = createSession({
       userId: 1,
-      userEmail: 'test@example.com',
+      userEmail: 'test..example.com',
       refreshTokenHash: 'login-hash',
     });
 
     const tokenPayload: JwtPayload = {
       id: 1,
-      email: 'test@example.com',
+      email: 'test..example.com',
       role: 'MONITOR',
       study_id: [1],
       assigned_site_id: [1],
@@ -369,7 +369,7 @@ describe('Token Refresh - Login Creates Session', () => {
 
 describe('useTokenRefresh Hook - Behavior', () => {
   // These tests document the expected behavior of the hook
-  // Actual hook testing would require @testing-library/react-hooks
+  // Actual hook testing would require ..testing-library/react-hooks
 
   describe('Refresh Interval', () => {
     it('should refresh every 10 minutes (before 15-min token expiry)', () => {
@@ -389,7 +389,7 @@ describe('useTokenRefresh Hook - Behavior', () => {
     it('should fail refresh when session is expired (idle timeout)', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'login-hash',
       });
 
@@ -407,7 +407,7 @@ describe('useTokenRefresh Hook - Behavior', () => {
     it('should fail refresh when session is invalidated (logout)', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'login-hash',
       });
 
@@ -420,7 +420,7 @@ describe('useTokenRefresh Hook - Behavior', () => {
     it('should succeed when session is active and not idle-timed-out', () => {
       const session = createSession({
         userId: 1,
-        userEmail: 'test@example.com',
+        userEmail: 'test..example.com',
         refreshTokenHash: 'login-hash',
       });
 
@@ -437,11 +437,11 @@ describe('useTokenRefresh Hook - Behavior', () => {
 
 describe('Logout - Session Invalidation', () => {
   it('should invalidate session on logout', () => {
-    const { invalidateSession } = require('@/lib/auth/session');
+    const { invalidateSession } = require('../lib/auth/session');
 
     const session = createSession({
       userId: 1,
-      userEmail: 'test@example.com',
+      userEmail: 'test..example.com',
       refreshTokenHash: 'login-hash',
     });
 
@@ -460,13 +460,13 @@ describe('Logout - Session Invalidation', () => {
   it('should allow extracting sessionId from expired token for logout', () => {
     const session = createSession({
       userId: 1,
-      userEmail: 'test@example.com',
+      userEmail: 'test..example.com',
       refreshTokenHash: 'login-hash',
     });
 
     const tokenPayload: JwtPayload = {
       id: 1,
-      email: 'test@example.com',
+      email: 'test..example.com',
       role: 'MONITOR',
       study_id: [1],
       assigned_site_id: [1],

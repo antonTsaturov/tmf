@@ -8,13 +8,13 @@
  * - Notification and audit trail on review actions
  */
 
-import { Document, DocumentVersionRow } from '@/types/document';
-import { DocumentWorkFlowStatus } from '@/types/document.status';
-import { DocumentAction } from '@/types/document';
-import { Transitions } from '@/domain/document/document.transitions';
-import { ActionRoleMap } from '@/domain/document/document.policy';
-import { getAvailableDocumentActions } from '@/domain/document/document.logic';
-import { UserRole, SiteStatus, StudyStatus } from '@/types/types';
+import { Document, DocumentVersionRow } from '../types/document';
+import { DocumentWorkFlowStatus } from '../types/document.status';
+import { DocumentAction } from '../types/document';
+import { Transitions } from '../domain/document/document.transitions';
+import { ActionRoleMap } from '../domain/document/document.policy';
+import { getAvailableDocumentActions } from '../domain/document/document.logic';
+import { UserRole, SiteStatus, StudyStatus } from '../types/types';
 import { mockDocument, mockDocumentVersion } from './setup';
 
 // --- Helpers ---

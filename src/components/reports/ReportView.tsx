@@ -289,7 +289,7 @@ export function ReportView() {
 
       const rows = data.map((item: AuditLogEntry) => [
         item.audit_id,
-        new Date(item.created_at).toLocaleString('ru-RU'),
+        item.created_at ? new Date(item.created_at).toLocaleString('ru-RU') : '-',
         item.user_name,
         item.user_email,
         item.action,
@@ -446,7 +446,7 @@ export function ReportView() {
                           <Table.Cell style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {row.audit_id}
                           </Table.Cell>
-                          <Table.Cell>{formatDate(row.created_at)}</Table.Cell>
+                          <Table.Cell>{formatDate(String(row.created_at))}</Table.Cell>
                           <Table.Cell>{row.user_name}</Table.Cell>
                           <Table.Cell>{row.user_email}</Table.Cell>
                           <Table.Cell>{row.user_role}</Table.Cell>

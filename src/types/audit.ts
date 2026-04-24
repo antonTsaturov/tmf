@@ -42,7 +42,7 @@ export interface AuditPagination {
 
 export interface AuditLogEntry {
   audit_id?: string; // UUID
-  created_at: string;
+  created_at?: string;
   user_id: string;
   user_name?: string;
   user_email: string;

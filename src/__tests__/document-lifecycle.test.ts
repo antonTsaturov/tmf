@@ -8,10 +8,10 @@
  * - Audit logging on transitions
  */
 
-import { Document } from '@/types/document';
-import { DocumentWorkFlowStatus } from '@/types/document.status';
-import { Transitions, SiteStatusTransitions, StudyStatusTransitions } from '@/domain/document/document.transitions';
-import { DocumentAction } from '@/types/document';
+import { Document } from '../types/document';
+import { DocumentWorkFlowStatus } from '../types/document.status';
+import { Transitions, SiteStatusTransitions, StudyStatusTransitions } from '../domain/document/document.transitions';
+import { DocumentAction } from '../types/document';
 import { mockDocument } from './setup';
 
 describe('Document State Transitions', () => {

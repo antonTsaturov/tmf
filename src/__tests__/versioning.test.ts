@@ -8,12 +8,12 @@
  * - Version metadata
  */
 
-import { Document, DocumentVersionRow } from '@/types/document';
-import { DocumentWorkFlowStatus } from '@/types/document.status';
+import { Document, DocumentVersionRow } from '../types/document';
+import { DocumentWorkFlowStatus } from '../types/document.status';
 import { mockDocument, mockDocumentVersion } from './setup';
 
 describe('Document Versioning', () => {
-  const createMockDocument = (): Document => mockDocument({
+  const createMockDocument = (number: number): Document => mockDocument({
     id: 'doc-1',
     study_id: 1,
     site_id: 'site-1',

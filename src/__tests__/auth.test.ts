@@ -8,18 +8,18 @@
  * - Study/Site access control
  */
 
-import { AuthService, JwtPayload, RefreshTokenPayload } from '@/lib/auth/auth.service';
-import { UserRole } from '@/types/types';
-import { ActionRoleMap } from '@/domain/document/document.policy';
-import { getAvailableDocumentActions } from '@/domain/document/document.logic';
-import { DocumentAction, Document } from '@/types/document';
-import { DocumentWorkFlowStatus } from '@/types/document.status';
-import { SiteStatus, StudyStatus } from '@/types/types';
+import { AuthService, JwtPayload, RefreshTokenPayload } from '../lib/auth/auth.service';
+import { UserRole } from '../types/types';
+import { ActionRoleMap } from '../domain/document/document.policy';
+import { getAvailableDocumentActions } from '../domain/document/document.logic';
+import { DocumentAction, Document } from '../types/document';
+import { DocumentWorkFlowStatus } from '../types/document.status';
+import { SiteStatus, StudyStatus } from '../types/types';
 
 describe('AuthService', () => {
   const mockUser: JwtPayload = {
     id: 1,
-    email: 'test@example.com',
+    email: 'test..example.com',
     role: 'MONITOR',
     study_id: [1],
     assigned_site_id: [1],
@@ -71,7 +71,7 @@ describe('AuthService', () => {
   describe('generateRefreshToken', () => {
     const mockRefreshPayload: RefreshTokenPayload = {
       id: 1,
-      email: 'test@example.com',
+      email: 'test..example.com',
       sessionId: 'test-session',
       tokenVersion: 1,
     };

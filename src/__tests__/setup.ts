@@ -4,8 +4,8 @@
  * Test Setup - Global mocks and utilities
  */
 
-import type { Document, DocumentVersionRow } from '@/types/document';
-import { DocumentWorkFlowStatus } from '@/types/document.status';
+import type { Document, DocumentVersionRow } from '../types/document';
+import { DocumentWorkFlowStatus } from '../types/document.status';
 
 type MockEntity = Record<string, unknown>;
 

@@ -8,9 +8,9 @@
  * - Bulk logging
  */
 
-import { AuditService } from '@/lib/audit/audit.service';
-import { AuditLogEntry } from '@/types/audit';
-import { UserRole } from '@/types/user';
+import { AuditService } from '../lib/audit/audit.service';
+import { AuditLogEntry } from '../types/audit';
+import { UserRole } from '../types/user';
 import { NextRequest } from 'next/server';
 import { PoolClient } from 'pg';
 

@@ -10,7 +10,7 @@
  */
 
 //import { RATE_LIMITS } from '@/lib/security/rate-limit';
-import { RATE_LIMIT_PRESETS as RATE_LIMITS } from '@/lib/security/rate-limit';
+import { RATE_LIMIT_PRESETS as RATE_LIMITS } from '../lib/security/rate-limit';
 
 describe('Rate Limiting - Configuration', () => {
   describe('RATE_LIMITS', () => {
