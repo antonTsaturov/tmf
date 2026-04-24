@@ -133,6 +133,7 @@ export function withAudit(
 
         site_id: siteId,
         study_id: studyId,
+        created_at: ''
       }).catch((err) => logger.error('Audit log failed', err));
 
       return response;
@@ -158,6 +159,7 @@ export function withAudit(
 
         site_id: siteId,
         study_id: studyId,
+        created_at: ''
       }).catch((err) => logger.error('Audit log failed on error', err));
 
       throw error;

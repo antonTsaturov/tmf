@@ -109,7 +109,7 @@ export default function LoginPage() {
       </div>
       <div className={styles.card}>
         <div className={styles.header}>
-          <Title showLogo />
+          <Title showLogo={false} />
         </div>
 
         <form className={styles.form} onSubmit={handleSubmit}>

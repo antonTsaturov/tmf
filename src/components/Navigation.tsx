@@ -148,7 +148,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   }
 
   return (
-    <Flex direction="row" gap="3" ml="5">
+    <Flex direction="row" gap="3" >
       {/* Шаг 1: Выбор исследования */}
       <Flex direction="row" gap="3" align="center">
         <Select.Root

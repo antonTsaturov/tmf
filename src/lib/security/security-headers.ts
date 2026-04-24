@@ -21,6 +21,8 @@ export const securityHeaders = {
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
+    "object-src 'self' blob:; ",  // Разрешает <object data="blob:...">
+    "frame-src 'self' blob:; ",   // Разрешает <iframe> со ссылками blob:    
   ].join('; '),
 
   // Prevent MIME type sniffing
@@ -77,6 +79,8 @@ export const helmetConfig = {
       imgSrc: ["'self'", 'data:', 'https:'],
       fontSrc: ["'self'", 'data:'],
       connectSrc: ["'self'"],
+      objectSrc: ["'self'", "blob:"], // Добавлено для Helmet для просмотра PDF в браузере
+      frameSrc: ["'self'", "blob:"],  // Добавлено для Helmet для просмотра PDF в браузере
       frameAncestors: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],

@@ -107,7 +107,7 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
     // Очистка URL при размонтировании
     return () => {
       if (pdfUrl && usingCache) {
-        URL.revokeObjectURL(pdfUrl);
+        // URL.revokeObjectURL(pdfUrl);
       }
     };
   }, [selectedDocument]);

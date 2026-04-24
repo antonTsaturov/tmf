@@ -319,6 +319,7 @@ const FolderContentViewer: React.FC = () => {
     { value: 'archived', label: 'Архивированные', count: documentCounts.archived },
   ];
 
+  console.log('filteredDocuments: ',filteredDocuments)
   if (!selectedFolder) {
     return (
       <Flex 

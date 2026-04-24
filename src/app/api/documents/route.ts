@@ -142,6 +142,7 @@ async function handleGetDocuments(request: NextRequest) {
         ...doc,
         versions,
         current_version: latest,
+        file_type: latest.file_type,
         status,
         total_versions: versions.length,
         document_name: latest.document_name,

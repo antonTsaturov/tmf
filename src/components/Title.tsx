@@ -26,7 +26,7 @@ export const Title = ({
   subtitle,
 }: TitleProps) => {
   return (
-    <Flex direction="row" align="center" justify="center" gap="10px">
+    <Flex direction="row" align="center" justify="center" gap="10px" mr="5">
       {showLogo && (
         <Image
           src="/logo.png"

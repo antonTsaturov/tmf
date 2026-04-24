@@ -3,7 +3,7 @@ export interface FolderNode {
   id: string;
   name: string;
   type: 'root' | 'folder' | 'subfolder';
-  level: 'general' | 'site';
+  level: 'general' | 'site' | 'country';
   status: 'active' | 'inactive';
   children?: FolderNode[];
   shouldEdit?: boolean;

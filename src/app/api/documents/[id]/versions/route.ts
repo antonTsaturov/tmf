@@ -10,6 +10,10 @@ import { withAudit, AuditContext } from "@/lib/audit/audit.middleware";
 import { AuditAction, AuditEntity } from "@/types/audit";
 import { logger } from "@/lib/utils/logger";
 
+/*
+* Загрузка новых версий документа
+*/
+
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 function getDocumentId(req: NextRequest) {
@@ -226,20 +230,15 @@ export const POST = withAudit(
     
     // 🔹 Старые значения (до изменений)
     getOldValue: (ctx) => ({
-      document: {
-        current_version_number: ctx.entity.current_version_number,
-        current_version_id: ctx.entity.current_version_id,
-      }
-    }),
+      version_number: ctx.entity.current_version_number,
+      version_id: ctx.entity.current_version_id,
+    }),    
     
     // 🔹 Новые значения (после изменений)
     getNewValue: (ctx) => ({
-      document: {
-        current_version_number: ctx.result?.version.document_number,
-        current_version_id: ctx.result?.version.id
-      },
-      document_version: ctx.result
-    }),
+      version_number: ctx.result?.version.document_number,
+      version_id: ctx.result?.version.id,
+    }),    
   },
   uploadNewVersionHandler
 );

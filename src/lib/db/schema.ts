@@ -39,6 +39,7 @@ export const AuditTrialTable = `
         CREATE INDEX idx_audit_action ON audit(action, created_at DESC);
         CREATE INDEX idx_audit_study ON audit(study_id, created_at DESC);
         CREATE INDEX idx_audit_site ON audit(site_id, created_at DESC);
+        CREATE INDEX idx_audit_site_id ON audit(site_id);
 
         CREATE OR REPLACE FUNCTION prevent_audit_update()
         RETURNS TRIGGER AS $$
@@ -85,6 +86,7 @@ export const SiteTable = `
     status TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
   );
+  CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_site_country ON site(country);
 `;
 
 export const DocumentTable = `

@@ -42,13 +42,15 @@ export interface AuditPagination {
 
 export interface AuditLogEntry {
   audit_id?: string; // UUID
-  created_at?: string;
+  created_at: string;
   user_id: string;
+  user_name?: string;
   user_email: string;
   user_role: UserRole[];
   action: AuditAction;
   entity_type: AuditEntity;
   entity_id: string;
+  document_name?: string;
   old_value: Record<string, unknown> | null;
   new_value: Record<string, unknown> | null;
   ip_address: string;
@@ -59,6 +61,8 @@ export interface AuditLogEntry {
   reason?: string;
   site_id: string | null;
   study_id: string | null;
+  study_protocol?: string;
+  site_name?: string;
 }
 
 export interface AuditResponse {

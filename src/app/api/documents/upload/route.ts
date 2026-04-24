@@ -226,6 +226,8 @@ async function uploadHandler(
       new Date().toISOString()
     ]);
 
+
+    
     // Обновляем current_version_id в документе
     await client.query(`
       UPDATE document SET current_version_id = $1 WHERE id = $2
@@ -399,7 +401,6 @@ const auditedHandler = withAudit(
       fileName: ctx.formData?.get('fileName'),
       documentName: ctx.formData?.get('documentName'),
       folderId: ctx.formData?.get('folderId'),
-      folderName: ctx.formData?.get('folderName'),
       fileSize: ctx.formData?.get('fileSize'),
       fileType: ctx.formData?.get('fileType'),
       tmfZone: ctx.formData?.get('tmfZone'),
