@@ -19,6 +19,7 @@ const eslintConfig = defineConfig([
       "react/no-unescaped-entities": "off",
       "@typescript-eslint/no-require-imports": "warn",
       "@typescript-eslint/no-non-null-asserted-optional-chain": "warn",
+      "react-hooks/immutability": "warn"
     },
   },
   // Override default ignores of eslint-config-next.
