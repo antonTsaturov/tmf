@@ -181,8 +181,9 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
 
         {pdfUrl && !loading && !error && (
           <object
+            key={selectedDocument.id}
             ref={objectRef}
-            data={pdfUrl}
+            data={`${pdfUrl}#toolbar=1&navpanes=0&view=FitH`}
             type="application/pdf"
             className="pdf-object"
             aria-label="PDF Viewer"
@@ -190,6 +191,9 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
           >
             <div className="fallback-message">
               <p>Ваш браузер не поддерживает встроенный просмотр PDF.</p>
+              <a href={pdfUrl} download={selectedDocument.document_name || 'document.pdf'} className="download-link">
+                Скачать файл для просмотра
+              </a>              
             </div>
           </object>
         )}

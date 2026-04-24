@@ -18,18 +18,20 @@ export const securityHeaders = {
     "img-src 'self' data: https:",
     "font-src 'self' data:",
     "connect-src 'self'",
-    "frame-ancestors 'none'",
+    "frame-ancestors 'self'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'self' blob:; ",  // Разрешает <object data="blob:...">
     "frame-src 'self' blob:; ",   // Разрешает <iframe> со ссылками blob:    
+    "worker-src 'self' blob:",
+    "child-src 'self' blob:",    
   ].join('; '),
 
   // Prevent MIME type sniffing
   'X-Content-Type-Options': 'nosniff',
 
   // Prevent clickjacking attacks
-  'X-Frame-Options': 'DENY',
+  'X-Frame-Options': 'SAMEORIGIN',
 
   // Enable XSS protection in older browsers
   'X-XSS-Protection': '1; mode=block',
