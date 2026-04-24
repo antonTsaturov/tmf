@@ -182,4 +182,28 @@ export class NotificationService {
       return false;
     }
   }
+
+  /**
+   * Notify user about successful password change (self-initiated)
+   */
+  static async sendPasswordChangedNotification(
+    email: string,
+    name: string,
+    changeOccurredAt?: Date
+  ): Promise<boolean> {
+    try {
+      const loginUrl = `${process.env.APP_URL || 'http://localhost:3000'}/login`;
+      const emailService = EmailService.getInstance();
+
+      return await emailService.sendPasswordChangedEmail({
+        email,
+        loginUrl,
+        userName: name,
+        changeOccurredAt,
+      });
+    } catch (error) {
+      logger.error('Error sending password changed notification:', error);
+      return false;
+    }
+  }   
 }

@@ -6,12 +6,14 @@ import { ResetPasswordEmail } from './templates/reset-password';
 import { NewDocumentEmail } from './templates/new-document';
 import { DocumentReviewEmail } from './templates/document-review';
 import { DigestEmail } from './templates/digest-email';
+import { PasswordChangedEmail } from './templates/password-changed';
 import {
   WelcomeEmailData,
   ResetPasswordEmailData,
   DocumentNotificationEmailData,
   DocumentReviewEmailData,
-  EmailSendOptions
+  EmailSendOptions,
+  PasswordChangedEmailData
 } from './types';
 import { logger } from '@/lib/utils/logger';
 
@@ -153,5 +155,16 @@ export class EmailService {
     }
 
     return result;
+  }
+
+  async sendPasswordChangedEmail(data: PasswordChangedEmailData): Promise<boolean> {
+    const subject = 'Your ExploreTMF Password Has Been Changed';
+    const react = <PasswordChangedEmail {...data} />;
+
+    return this.sendEmail({
+      to: data.email,
+      subject,
+      react,
+    });
   }  
 }

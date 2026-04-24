@@ -27,6 +27,7 @@ export function useStudies() {
       setLoading(true);
       const data = await getTable(table);
       if (table === Tables.STUDY) {
+        console.log(data)
         setStudies(data);
       }
       return data;

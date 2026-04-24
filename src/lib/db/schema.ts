@@ -69,7 +69,6 @@ export const StudyTable = `
         users JSONB,
         total_documents INTEGER DEFAULT 0,
         folders_structure JSONB,
-        audit_trail JSONB
     );
 `;
 

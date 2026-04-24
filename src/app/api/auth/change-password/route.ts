@@ -5,6 +5,7 @@ import { getPool } from '@/lib/db/index';
 import { checkAuth } from '@/lib/auth/check-auth';
 import { logger } from '@/lib/utils/logger';
 import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
+import { NotificationService } from '@/services/notification.service';
 
 export async function POST(request: NextRequest) {
   // Проверяем авторизацию
@@ -90,6 +91,29 @@ async function handleChangePassword(request: NextRequest, auth: any) {
       [hashedPassword, user.id]
     );
 
+
+    // Отправляем уведомление о смене пароля (не блокируя ответ, асинхронный вариант)
+    // try {
+    //   await NotificationService.sendPasswordChangedNotification(
+    //     user.email,
+    //     user.email, // или user.name, если есть поле name
+    //     new Date()
+    //   );
+    // } catch (notifyError) {
+    //   // Логируем ошибку, но не прерываем выполнение
+    //   logger.warn('Failed to send password change notification:', notifyError);
+    // }
+
+    // Запускаем в фоне и логируем ошибки
+    NotificationService.sendPasswordChangedNotification(
+      user.name,
+      user.email,
+      new Date()
+    ).catch((error) => {
+      logger.warn('Failed to send password change notification:', error);
+    });    
+    
+    
     // Логируем действие в audit
     await client.query(
       `INSERT INTO audit (

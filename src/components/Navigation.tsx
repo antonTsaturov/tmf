@@ -26,7 +26,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   const { t } = useI18n('navigation');
   const { user, loading: authLoading } = useAuth()!;
   /*
-  *  studies - стартовая точка загрузки. Объект studies содержит вложенный объект
+  * studies - стартовая точка загрузки. Объект studies содержит вложенный объект
   * центров, которые назначены пользователю.
   */
   const { studies, loading } = useContext(AdminContext)!;
@@ -166,7 +166,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
                 <Select.Item key={study.id} value={study.id.toString()}>
                   {study.protocol}
                 </Select.Item>
-              ))}
+            ))}
           </Select.Content>
         </Select.Root>
         {currentStudy && <IoIosArrowForward style={{color: 'gray'}} />}

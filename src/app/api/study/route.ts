@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
       // Получаем текущего пользователя
       const user = await getAuthenticatedUser(request);
       const assignedSiteIds = user?.assigned_site_id || [];
+      const isAdmin = user?.role?.includes("admin") || false;
 
+      let queryText = '';
+      let queryParams: any[] = [];      
       // if (!DB_INITIALIZED) {
       // // Проверяем существование таблицы
       //   const tableExists = await this.checkTableExists(client, table);
@@ -32,35 +35,49 @@ export async function GET(request: NextRequest) {
       //   }
       // }
 
-      // Если таблица существует, выполняем запрос
-      const queryText = `
-        SELECT 
-          s.*,
-          COALESCE(
-            json_agg(
-              json_build_object(
-                'id', st.id,
-                'study_id', st.study_id,
-                'study_protocol', st.study_protocol,
-                'name', st.name,
-                'number', st.number,
-                'country', st.country,
-                'city', st.city,
-                'principal_investigator', st.principal_investigator,
-                'status', st.status,
-                'created_at', st.created_at
-              )
-            ) FILTER (WHERE st.id IS NOT NULL),
-            '[]'
-          ) AS sites
-        FROM study s
-        LEFT JOIN site st ON st.study_id = s.id
-        WHERE $1::integer[] IS NULL OR $1 = '{}'::integer[] OR st.id::integer = ANY($1)
-        GROUP BY s.id
-        ORDER BY s.id ASC
-      `;
+      
+      if (isAdmin) {
+      // Админ: получаем все исследования без сайтов
+        queryText = `
+          SELECT 
+            s.*,
+            '[]'::json AS sites
+          FROM study s
+          ORDER BY s.id ASC
+        `;
+        queryParams = [];
+      } else {
+        queryText = `
+          SELECT 
+            s.*,
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', st.id,
+                  'study_id', st.study_id,
+                  'study_protocol', st.study_protocol,
+                  'name', st.name,
+                  'number', st.number,
+                  'country', st.country,
+                  'city', st.city,
+                  'principal_investigator', st.principal_investigator,
+                  'status', st.status,
+                  'created_at', st.created_at
+                )
+              ) FILTER (WHERE st.id IS NOT NULL),
+              '[]'
+            ) AS sites
+          FROM study s
+          LEFT JOIN site st ON st.study_id = s.id
+          WHERE $1::integer[] IS NULL OR $1 = '{}'::integer[] OR st.id::integer = ANY($1)
+          GROUP BY s.id
+          ORDER BY s.id ASC
+        `;
 
-      const result = await client.query(queryText, [assignedSiteIds.length > 0 ? assignedSiteIds : null]);
+        queryParams = [assignedSiteIds.length > 0 ? assignedSiteIds : null];
+      }
+
+      const result = await client.query(queryText, queryParams);
 
       return NextResponse.json(result.rows, { status: 200 });
       

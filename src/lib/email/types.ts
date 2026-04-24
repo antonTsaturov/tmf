@@ -7,6 +7,13 @@ export interface WelcomeEmailData {
   userName: string;
 }
 
+export interface PasswordChangedEmailData {
+  email: string;
+  loginUrl: string;
+  userName: string;
+  changeOccurredAt?: Date | string;
+}
+
 export interface ResetPasswordEmailData {
   to: string;
   resetUrl: string;

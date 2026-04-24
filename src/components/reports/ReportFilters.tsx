@@ -523,6 +523,8 @@ import {
   FolderOption,
 } from './report.filters.type';
 import { FolderLevel } from '@/types/folder';
+import { useAuth } from '@/wrappers/AuthProvider';
+import React from 'react';
 
 type Props = {
   onGenerate: (payload: AuditReportRequest) => Promise<void>;
@@ -531,6 +533,7 @@ type Props = {
 export function ReportFilters({ onGenerate }: Props) {
   const { studies } = useContext(AdminContext)!;
   const { reportContext } = useReportContext();
+  const { user } = useAuth()!;
 
   const filterType = reportContext.selectedFilter?.type;
 
@@ -561,7 +564,9 @@ export function ReportFilters({ onGenerate }: Props) {
   const studyOptions: StudyOption[] = useMemo(() => {
     if (!studies) return [];
 
-    return studies.map((s: any) => ({
+    return studies
+    .filter(study => user?.assigned_study_id?.includes(study.id))
+    .map((s: any) => ({
       id: String(s.id),
       label: s.title || s.name || '',
       protocol: s.protocol || '',
@@ -816,7 +821,7 @@ export function ReportFilters({ onGenerate }: Props) {
           onValueChange={handleCenterChange}
           key={`center-select-${filterType}-${filters.studyId}-${filters.country}`}
         >
-          <Select.Trigger placeholder="Center" style={{ minWidth: 300 }} />
+          <Select.Trigger placeholder="Site" style={{ minWidth: 300 }} />
           <Select.Content >
             {centerOptions.map(c => (
               <Select.Item key={c.id} value={c.id}>

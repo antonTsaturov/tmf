@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   description: "Electronic Trial Master File system",
   icons: {
     icon: [
-      { url: '/favicon.ico', type: 'image/x-icon' },
+      { url: '/favicon.svg', type: 'image/x-icon' },
     ],
   },
 };
