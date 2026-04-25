@@ -70,7 +70,7 @@ const UnarchiveDocumentPanel: React.FC<UnarchiveDocumentPanelProps> = ({ onDocum
         handleCancel();
       }
     }}>
-      <AlertDialog.Content style={{ maxWidth: 450 }}>
+      <AlertDialog.Content style={{ maxWidth: 450 }} aria-describedby={undefined}>
         <AlertDialog.Title>Подтверждение разархивации</AlertDialog.Title>
 
         <AlertDialog.Description size="2">

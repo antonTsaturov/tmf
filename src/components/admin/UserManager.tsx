@@ -967,7 +967,7 @@ const UserManager: FC<UserManagerProps> = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog.Root open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <Dialog.Content maxWidth="450px">
+        <Dialog.Content maxWidth="450px" aria-describedby={undefined}>
           <Dialog.Title>Confirm Delete</Dialog.Title>
           <Dialog.Description size="2" mb="4">
             Are you sure you want to delete user <Strong>{userToDelete?.name}</Strong>? 

@@ -15,7 +15,8 @@
     "close": "Close",
     "back": "Back",
     "confirm": "Confirm",
-    "submit": "Submit"
+    "submit": "Submit",
+    "create": "Create"
   },
   "auth": {
     "login": "Sign in",
@@ -147,6 +148,8 @@
     "adminDashboard": "Admin Dashboard",
     "studyMetrics": "Study Metrics",
     "aboutStudy": "About Study",
+    "aboutStudy_toolTip": "Show information about the study",
+    "aboutStudy_toolTipEmpty": "Select a study first",
     "userSettings": "User Settings",
     "exit": "Exit"
   },
@@ -280,5 +283,62 @@
     "selectDocHint": "Select a document to view",
     "docPreview": "Document preview",
     "docDetails": "Document details"
+  },
+  "documentActions": {
+    "create": "Create",
+    "create_tooltip": "Create document",
+    "submit": "Submit",
+    "submit_tooltip": "Submit document for review",
+    "approve": "Review",
+    "approve_tooltip": "Approve or reject document",
+    "archive": "Archive",
+    "archive_tooltip": "Move document to archive",
+    "unarchive": "Unarchive",
+    "unarchive_tooltip": "Return to draft status",
+    "delete": "Delete",
+    "delete_tooltip": "Delete document",
+    "restore": "Restore",
+    "restore_tooltip": "Restore document",
+    "newVersion": "New version",
+    "newVersion_tooltip": "Upload new document version",
+    "view": "View",
+    "view_tooltip": "View document details",
+    "download": "Download",
+    "download_tooltip": "Download document",
+    "edit": "Edit",
+    "edit_tooltip": "Edit document title"
+  },
+  "folderContentViewer": {
+    "loading": "Loading folder contents...",
+    "noFolderSelected": "No folder selected",
+    "selectFolderHint": "Select a folder to view its contents",
+    "errorLoading": "Error loading documents",
+    "documentsSummary": "{shown} / {total} {total, plural, one {document} other {documents}}",
+    "filter": {
+      "all": "All documents",
+      "active": "Active",
+      "deleted": "Deleted",
+      "archived": "Archived"
+    },
+    "emptyStates": {
+      "all": "No documents in this folder",
+      "active": "No active documents",
+      "deleted": "No deleted documents",
+      "archived": "No archived documents"
+    },
+    "table": {
+      "documentName": "Document name",
+      "status": "Status",
+      "version": "Version",
+      "created": "Created"
+    },
+    "document": {
+      "untitled": "Untitled",
+      "currentVersion": "Current version"
+    },
+    "dragAndDrop": {
+      "dropHere": "Drop files here to upload",
+      "uploadingHint": "Release to upload documents"
+    }
   }
 }

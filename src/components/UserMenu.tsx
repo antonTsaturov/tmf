@@ -1,6 +1,6 @@
 import { UserRole } from "@/types/types";
 import { useAuth } from "@/wrappers/AuthProvider";
-import { Button, DropdownMenu, Link } from "@radix-ui/themes";
+import { Button, DropdownMenu, Link, Tooltip,  } from "@radix-ui/themes";
 import { useContext, useState } from "react";
 import { FaUser } from "react-icons/fa";
 import UserSettings from "./UserSettings";
@@ -43,16 +43,19 @@ export default function UserDropdownMenu() {
             </>
           )}
 
-          <DropdownMenu.Item>
+          {/* <DropdownMenu.Item>
             {t('studyMetrics')}
-          </DropdownMenu.Item>
-
-          <DropdownMenu.Item 
-            onClick={() => currentStudy && updateContext({isStudyInfoPanelOpen: true})} 
-            disabled={!currentStudy}
+          </DropdownMenu.Item> */}
+          <Tooltip 
+            content={currentStudy ? t('aboutStudy_toolTip') : t('aboutStudy_toolTipEmpty')}
           >
-            {t('aboutStudy')}
-          </DropdownMenu.Item>
+            <DropdownMenu.Item 
+              onClick={() => currentStudy && updateContext({isStudyInfoPanelOpen: true})} 
+              disabled={!currentStudy}
+            >
+              {t('aboutStudy')}
+            </DropdownMenu.Item>
+          </Tooltip>
 
           <DropdownMenu.Separator  />
 

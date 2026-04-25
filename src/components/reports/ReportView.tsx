@@ -179,7 +179,7 @@ export function ChangesCell({
 
       {/* 🔥 MODAL */}
       <Dialog.Root open={open} onOpenChange={setOpen}>
-          <Dialog.Content className="DialogContent">
+          <Dialog.Content className="DialogContent" aria-describedby={undefined}>
             <Dialog.Title>
               <Text size="3" weight="bold">
                 Changes

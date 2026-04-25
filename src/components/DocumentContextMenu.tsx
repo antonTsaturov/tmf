@@ -6,7 +6,7 @@ import { DocumentAction, Document } from '@/types/document';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { getAvailableDocumentActions } from '@/domain/document/document.logic';
 import { UserRole } from '@/types/types';
-import { actionConfig } from './DocumentActions';
+import { useLocalizedActionConfig } from '@/hooks/useLocalizedActionConfig';
 import { MainContext } from '@/wrappers/MainContext';
 
 
@@ -17,6 +17,7 @@ interface DocumentContextMenuProps {
 }
 
 const DocumentContextMenu = ({ children, onAction , document}: DocumentContextMenuProps) => {
+  const actionConfig = useLocalizedActionConfig();
   const { user } = useAuth();
   const { updateContext, context } = useContext(MainContext)!;
 

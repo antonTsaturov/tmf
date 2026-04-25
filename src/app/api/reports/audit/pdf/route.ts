@@ -132,9 +132,6 @@ export async function POST(req: NextRequest) {
     `;
 
     const client = await pool.connect();
-
-    console.log('Query:', query);
-    console.log('Values:', values);
     
     try {
       const [dataRes, countRes] = await Promise.all([

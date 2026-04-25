@@ -151,7 +151,7 @@ const SubmitToReviewPanel: React.FC<SubmitToReviewPanelProps> = ({ studyId, site
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+      <Dialog.Content style={{ maxWidth: 500, padding: 0 }} aria-describedby={undefined}>
         {/* Header */}
         <Flex 
           justify="between" 

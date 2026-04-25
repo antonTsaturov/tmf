@@ -15,7 +15,8 @@
     "close": "Закрыть",
     "back": "Назад",
     "confirm": "Подтвердить",
-    "submit": "Отправить"
+    "submit": "Отправить",
+    "create": "Создать"
   },
   "auth": {
     "login": "Вход в систему",
@@ -147,6 +148,8 @@
     "adminDashboard": "Панель администратора",
     "studyMetrics": "Статистика",
     "aboutStudy": "Об исследовании",
+    "aboutStudy_toolTip": "Посмотреть информацию об исследовании",
+    "aboutStudy_toolTipEmpty": "Сперва выберите исследование",
     "userSettings": "Настройки",
     "exit": "Выход"
   },
@@ -280,5 +283,63 @@
     "selectDocHint": "Выберите документ для просмотра",
     "docPreview": "Предпросмотр документа",
     "docDetails": "Детали документа"
+  },
+  "documentActions": {
+    "create": "Создать",
+    "create_tooltip": "Создать документ",
+    "submit": "На ревью",
+    "submit_tooltip": "Отправить документ на рассмотрение",
+    "approve": "Проверить",
+    "approve_tooltip": "Одобрить или отклонить документ",
+    "archive": "Архивировать",
+    "archive_tooltip": "Перенести документ в архив",
+    "unarchive": "Разархивировать",
+    "unarchive_tooltip": "Вернуть в статус draft",
+    "delete": "Удалить",
+    "delete_tooltip": "Удалить документ",
+    "restore": "Восстановить",
+    "restore_tooltip": "Восстановить документ",
+    "newVersion": "Новая версия",
+    "newVersion_tooltip": "Загрузить новую версию документа",
+    "view": "Просмотр",
+    "view_tooltip": "Подробная информация о документе",
+    "download": "Скачать",
+    "download_tooltip": "Скачать документ",
+    "edit": "Изменить",
+    "edit_tooltip": "Изменить название документа"
+  },
+  "folderContentViewer": {
+    "loading": "Загрузка содержимого папки...",
+    "noFolderSelected": "Папка не выбрана",
+    "selectFolderHint": "Выберите папку для просмотра содержимого",
+    "errorLoading": "Ошибка загрузки документов",
+    "documentsSummary": "{shown} / {total} {total, plural, one {документ} few {документа} many {документов} other {документа}}",
+    "filter": {
+      "all": "Все документы",
+      "active": "Активные",
+      "deleted": "Удаленные",
+      "archived": "Архивированные"
+    },
+    "emptyStates": {
+      "all": "В этой папке нет документов",
+      "active": "Нет активных документов",
+      "deleted": "Нет удаленных документов",
+      "archived": "Нет архивированных документов"
+    },
+    "table": {
+      "documentName": "Имя документа",
+      "status": "Статус",
+      "version": "Версия",
+      "created": "Создан"
+    },
+    "document": {
+      "untitled": "Без названия",
+      "currentVersion": "Текущая версия"
+    },
+    "dragAndDrop": {
+      "dropHere": "Перетащите файлы сюда для загрузки",
+      "uploadingHint": "Отпустите для загрузки документов"
+    }
   }
-}
+}  
+

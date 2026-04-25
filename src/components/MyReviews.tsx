@@ -166,7 +166,10 @@ export const MyReviews: React.FC<MyReviewsModalProps> = ({
       />
     
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
-        <Dialog.Content style={{ maxWidth: 1200, width: '95vw', height: '85vh', padding: 0 }}>
+        <Dialog.Content 
+          style={{ maxWidth: 1200, width: '95vw', height: '85vh', padding: 0 }}
+          aria-describedby={undefined}
+        >
         {/* Header */}
         <Flex 
         direction="column"

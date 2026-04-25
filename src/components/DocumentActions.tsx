@@ -22,6 +22,8 @@ import { UserRole } from '@/types/types';
 import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
+import { useI18n } from "@/hooks/useI18n";
+import { useLocalizedActionConfig } from '@/hooks/useLocalizedActionConfig';
 
 interface DocumentActionsProps {
   //onAction?: (action: DocumentAction) => void;
@@ -30,7 +32,7 @@ interface DocumentActionsProps {
   onDocumentRestored?: () => void;
 }
 
-interface ActionConfigProps {
+export interface ActionConfigProps {
   icon: React.ReactNode; 
   label: string;
   tooltip?: string;
@@ -39,88 +41,10 @@ interface ActionConfigProps {
   highContrast?: boolean;
 }
 
-// Маппинг действий на иконки, текст и вариант кнопки
-export const actionConfig: Partial<Record<DocumentAction, ActionConfigProps>> = {
-  [DocumentAction.CREATE_DOCUMENT]: { 
-    icon: <FiFilePlus />, 
-    label: 'Создать',
-    tooltip: 'Создать документ',
-    variant: 'solid',
-    highContrast: true
-  },
-  [DocumentAction.SUBMIT_FOR_REVIEW]: { 
-    icon: <FiSend />, 
-    label: 'На ревью',
-    tooltip: 'Отправить документ на рассмотрение',
-    variant: 'soft',
-  },
-  [DocumentAction.APPROVE]: { 
-    icon: <FiCheckCircle />, 
-    label: 'Проверить',
-    tooltip: 'Одобрить или отклонить документ',
-    variant: 'solid',
-  },
-  // [DocumentAction.REJECT]: { // Не используется. Реджект выполняется через Approve
-  //   icon: <FiX />, 
-  //   label: 'Отклонить',
-  //   variant: 'solid',
-  //   //color: Colors.RED
-  // },
-  [DocumentAction.ARCHIVE]: { 
-    icon: <FiArchive />, 
-    label: 'Архивировать',
-    tooltip: 'Перенести документ в архив',
-    variant: 'soft',
-  },
-  [DocumentAction.UNARCHIVE]: {  //Admin only
-    icon: <FiRefreshCw />, 
-    label: 'Разархивировать',
-    tooltip: 'Венруть в статус draft',
-    variant: 'soft'
-  },
-  [DocumentAction.SOFT_DELETE]: { 
-    icon: <FiTrash2 />, 
-    label: 'Удалить',
-    tooltip: 'Удалить документ',
-    variant: 'solid',
-  },
-  [DocumentAction.RESTORE]: { //Admin only
-    icon: <FiRefreshCw />, 
-    label: 'Восстановить',
-    tooltip: 'Восстановить документ',
-    variant: 'solid'
-  },
-  [DocumentAction.UPLOAD_NEW_VERSION]: { 
-    icon: <FiUploadCloud />, 
-    label: 'Новая версия',
-    tooltip: 'Зазгрузить новую версию документа',
-    variant: 'soft',
-  },
-  [DocumentAction.VIEW]: { 
-    icon: <FiEye />, 
-    label: 'Просмотр',
-    tooltip: 'Подробная информация о документе',
-    variant: 'soft'
-  },
-  [DocumentAction.DOWNLOAD]: { 
-    icon: <FiDownload />, 
-    label: 'Скачать',
-    tooltip: 'Скачать документ',
-    variant: 'soft'
-  },
-  [DocumentAction.EDIT]: { 
-    icon: <FiEdit />, 
-    label: 'Изменить',
-    tooltip: 'Изменить название документа',
-    variant: 'soft'
-  }
-};
-
 const MIN_WIDTH = 700; // Width buttons container
 
-const DocumentActions: React.FC<DocumentActionsProps> = ({ 
-  className = '',
-}) => {
+const DocumentActions: React.FC<DocumentActionsProps> = () => {
+  const actionConfig = useLocalizedActionConfig();
   const { user } = useAuth();
   const mainContext = useContext(MainContext);
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
@@ -157,7 +81,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = ({
   return (
     <>
       <Flex 
-        className={`${className}`} 
+        className={`document-actions`} 
         gap="2" 
         wrap="wrap"
         align="center"

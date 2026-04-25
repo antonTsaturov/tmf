@@ -166,7 +166,7 @@ const RestoreDocumentPanel: React.FC<RestoreDocumentPanelProps> = ({
   return (
     <>
       <Dialog.Root open={isRestorePanelOpen} onOpenChange={(open) => !open && !isRestoring && handleCancel()}>
-        <Dialog.Content style={{ maxWidth: 550, padding: 0 }}>
+        <Dialog.Content style={{ maxWidth: 550, padding: 0 }} aria-describedby={undefined}>
           {/* Header */}
           <Flex
             justify="between"

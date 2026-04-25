@@ -144,7 +144,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
           }
         }}
       >
-        <Dialog.Content style={{ maxWidth: 700, padding: 0 }}>
+        <Dialog.Content style={{ maxWidth: 700, padding: 0 }} aria-describedby={undefined}>
           {!currentStudy ? (
             <Flex justify="center" align="center" p="5">
               <Text size="2" color="gray">No study selected</Text>

@@ -42,6 +42,7 @@ import EditDocumentTitlePanel from "./panels/EditDocumentPanel";
 import { DocumentLifeCycleStatus } from "@/types/document.status";
 import RestoreDocumentPanel from "./panels/RestoreDocumentPanel";
 import UnarchiveDocumentPanel from "./panels/UnarchiveDocumentPanel";
+import { useI18n } from "@/hooks/useI18n";
 
 interface DocumentFilters {
     study_id: number;
@@ -58,6 +59,7 @@ interface DocumentsInFolder {
 type ViewFilter = 'all' | 'active' | 'deleted' | 'archived';
 
 const FolderContentViewer: React.FC = () => {
+  const { t } = useI18n('');
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel, currentCountry } = context!;
   const { user } = useAuth();
@@ -313,13 +315,12 @@ const FolderContentViewer: React.FC = () => {
   };
 
   const filterOptions = [
-    { value: 'all', label: 'Все документы', count: documentCounts.all },
-    { value: 'active', label: 'Активные', count: documentCounts.active },
-    { value: 'deleted', label: 'Удаленные', count: documentCounts.deleted },
-    { value: 'archived', label: 'Архивированные', count: documentCounts.archived },
+    { value: 'all', label: t('folderContentViewer.filter.all'), count: documentCounts.all },
+    { value: 'active', label: t('folderContentViewer.filter.active'), count: documentCounts.active },
+    { value: 'deleted', label: t('folderContentViewer.filter.deleted'), count: documentCounts.deleted },
+    { value: 'archived', label: t('folderContentViewer.filter.archived'), count: documentCounts.archived },
   ];
 
-  console.log('filteredDocuments: ',filteredDocuments)
   if (!selectedFolder) {
     return (
       <Flex 
@@ -330,6 +331,7 @@ const FolderContentViewer: React.FC = () => {
         style={{ height: '100%', minHeight: '400px' }}
       >
         <FiFolder size={64} color="var(--gray-6)" />
+        <Text size="3" color="gray">{t('folderContentViewer.noFolderSelected')}</Text>        
       </Flex>
     );
   }
@@ -339,7 +341,7 @@ const FolderContentViewer: React.FC = () => {
       <>
         <Flex align="center" justify="center" direction="column" gap="4" style={{ height: '100%', minHeight: '400px' }}>
           <Spinner size="3" />
-          <Text size="3" color="gray">Загрузка содержимого...</Text>
+          <Text size="3" color="gray">{t('folderContentViewer.loading')}</Text>
         </Flex>
       </>
     );
@@ -349,7 +351,8 @@ const FolderContentViewer: React.FC = () => {
     return (
       <Flex align="center" justify="center" direction="column" gap="4" style={{ height: '100%', minHeight: '400px' }}>
         <FiAlertCircle size={48} color="var(--red-9)" />
-        <Text size="3" color="red">{error}</Text>
+        <Text size="3" color="red">{t('folderContentViewer.errorLoading')}</Text>
+        <Text size="2" color="gray">{error}</Text>
       </Flex>
     );
   }
@@ -385,10 +388,13 @@ const FolderContentViewer: React.FC = () => {
               <Text size="4" weight="bold" ml="2">{selectedFolder.name}</Text>
             </Flex>
             
-            <Text size="1" color="gray">
-              {filteredDocuments.length} / {documentsData?.count || 0} {getDocumentCountText(documentsData?.count || 0)}
-            </Text>
-          </Flex>
+              <Text size="1" color="gray">
+                {t('folderContentViewer.documentsSummary', {
+                  shown: filteredDocuments.length,
+                  total: documentsData?.count || 0
+                })}
+              </Text>
+            </Flex>
 
           {/* Фильтр документов */}
           {filteredDocuments && (
@@ -482,10 +488,19 @@ const FolderContentViewer: React.FC = () => {
               ref={tableHeaderRef}
             >
               <Table.Row  style={{  color: 'gray', '--table-row-box-shadow': 'none' } as React.CSSProperties} >
-                <Table.ColumnHeaderCell style={{ maxWidth: '400px', width: '40%' }}>Имя документа</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell width="20%">Статус</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell width="20%">Версия</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell width="20%">Создан</Table.ColumnHeaderCell>
+                {/* Table headers */}
+                <Table.ColumnHeaderCell style={{ maxWidth: '400px', width: '40%' }}>
+                  {t('folderContentViewer.table.documentName')}
+                </Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell width="20%">
+                  {t('folderContentViewer.table.status')}
+                </Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell width="20%">
+                  {t('folderContentViewer.table.version')}
+                </Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell width="20%">
+                  {t('folderContentViewer.table.created')}
+                </Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>
           </Table.Root>
@@ -511,10 +526,10 @@ const FolderContentViewer: React.FC = () => {
           >
             <FiInbox size={48} color="var(--gray-6)" />
             <Text size="3" color="gray" align="center">
-              {activeFilter === 'all' && 'В этой папке нет документов'}
-              {activeFilter === 'active' && 'Нет активных документов'}
-              {activeFilter === 'deleted' && 'Нет удаленных документов'}
-              {activeFilter === 'archived' && 'Нет архивированных документов'}
+              {activeFilter === 'all' && t('folderContentViewer.emptyStates.all')}
+              {activeFilter === 'active' && t('folderContentViewer.emptyStates.active')}
+              {activeFilter === 'deleted' && t('folderContentViewer.emptyStates.deleted')}
+              {activeFilter === 'archived' && t('folderContentViewer.emptyStates.archived')}
             </Text>
           </Flex>
         ) : (
@@ -568,7 +583,7 @@ const FolderContentViewer: React.FC = () => {
                                   lineHeight: '1.4'
                                 }}
                               >
-                                {doc.document_name || doc.current_version?.document_name || doc.file_name || 'Без названия'}
+                                {doc.document_name || doc.current_version?.document_name || doc.file_name || t('folderContentViewer.document.untitled')}
                               </Text>
                             {doc.tmf_artifact && (
                               <Badge 
@@ -667,25 +682,25 @@ const FolderContentViewer: React.FC = () => {
     </Box>
   );};
 
-const getDocumentCountText = (count: number): string => {
-  if (count === 0) return 'документов';
+// Если встроенная плюрализация не сработает
+// const getDocumentCountKey = (count: number): string => {
+//   if (count === 0) return 'zero';
+//   const lastDigit = count % 10;
+//   const lastTwoDigits = count % 100;
   
-  const lastDigit = count % 10;
-  const lastTwoDigits = count % 100;
-  
-  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
-    return 'документов';
-  }
-  
-  if (lastDigit === 1) {
-    return 'документ';
-  }
-  
-  if (lastDigit >= 2 && lastDigit <= 4) {
-    return 'документа';
-  }
-  
-  return 'документов';
-};
+//   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'many';
+//   if (lastDigit === 1) return 'one';
+//   if (lastDigit >= 2 && lastDigit <= 4) return 'few';
+//   return 'many';
+// };
+// // Использование:
+// t(`folderContentViewer.documentsCount.${getDocumentCountKey(documentsData?.count || 0)}`)
+// // Ключи
+// "documentsCount": {
+//   "zero": "документов",
+//   "one": "документ",
+//   "few": "документа",
+//   "many": "документов"
+// }
 
 export default FolderContentViewer;

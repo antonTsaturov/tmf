@@ -319,7 +319,7 @@ const UserSettings: React.FC<UserSettingsProps> = ({ open, onOpenChange }) => {
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content style={{ maxWidth: 500 }}>
+      <Dialog.Content style={{ maxWidth: 500 }} aria-describedby={undefined}>
         <Flex justify="between" align="center" mb="3">
           <Dialog.Title style={{ margin: 0 }}>{t('title')}</Dialog.Title>
           <Dialog.Close>

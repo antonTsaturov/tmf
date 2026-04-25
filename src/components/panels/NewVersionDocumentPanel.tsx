@@ -119,7 +119,7 @@ const NewVersionDocumentPanel: React.FC<NewVersionUploadPanelProps> = ({onUpload
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => !open && !isUploading && handleCancel()}>
-      <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+      <Dialog.Content style={{ maxWidth: 500, padding: 0 }} aria-describedby={undefined}>
         {/* Header */}
         <Flex 
           justify="between" 

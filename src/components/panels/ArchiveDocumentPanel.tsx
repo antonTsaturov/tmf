@@ -104,7 +104,7 @@ const ArchiveDocumentPanel: React.FC<ArchiveDocumentPanelProps> = ({onDocumentAr
   return (
     <>
       <Dialog.Root open={isArchivePanelOpen} onOpenChange={(open) => !open && !isArchiving && handleCancel()}>
-        <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+        <Dialog.Content style={{ maxWidth: 500, padding: 0 }} aria-describedby={undefined}>
           {/* Header */}
           <Flex 
             justify="between" 

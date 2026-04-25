@@ -164,7 +164,7 @@ const DeleteDocumentPanel: React.FC<DeleteDocumentPanelProps> = ({
   return (
     <>
       <Dialog.Root open={isDeletePanelOpen} onOpenChange={(open) => !open && !isDeleting && handleCancel()}>
-        <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+        <Dialog.Content style={{ maxWidth: 500, padding: 0 }} aria-describedby={undefined}>
           {/* Header */}
           <Flex 
             justify="between" 

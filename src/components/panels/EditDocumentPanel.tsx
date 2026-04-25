@@ -156,7 +156,7 @@ const EditDocumentPanel: React.FC<EditDocumentPanelProps> = ({
 
   return (
     <Dialog.Root open={isEditTitlePanelOpen} onOpenChange={(open) => !open && !isRenaming && handleCancel()}>
-      <Dialog.Content style={{ maxWidth: 500, padding: 0 }}>
+      <Dialog.Content style={{ maxWidth: 500, padding: 0 }} aria-describedby={undefined}>
         {/* Header */}
         <Flex
           justify="between"

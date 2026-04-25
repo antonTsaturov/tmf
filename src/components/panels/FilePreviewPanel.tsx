@@ -383,7 +383,7 @@ const FilePreviewPanel: React.FC<FilePreviewPanelProps> = ({
 
   return (
     <Dialog.Root open={upload.isPreviewOpen} onOpenChange={(open) => !open && !upload.isUploading && handleCancel()}>
-      <Dialog.Content style={{ maxWidth: 700, padding: 0 }}>
+      <Dialog.Content style={{ maxWidth: 700, padding: 0 }} aria-describedby={undefined}>
         {/* Header */}
         <Flex 
           justify="between" 

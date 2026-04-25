@@ -22,7 +22,9 @@ export class DigestService {
         const lastDigest = user.last_digest_at
           || new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+        logger.info(`[Digest] Обработка пользователя: ${user.email}`);
         console.log(`[Digest] Обработка пользователя: ${user.email}`);
+
         const digest = await getDailyDigest(user.id, lastDigest);
 
         const total =
@@ -31,10 +33,11 @@ export class DigestService {
           digest.archivedDocuments.length;
 
         if (total === 0) {
-          console.log(`[Digest] Пропуск ${user.email}: обновлений нет.`);
+          logger.info(`[Digest] Пропуск ${user.email}: обновлений нет.`);
           continue;
         };
 
+        logger.info(`[Digest] Отправка ${total} обновлений на ${user.email}...`);
         console.log(`[Digest] Отправка ${total} обновлений на ${user.email}...`);
 
         const sent = await emailService.sendDailyDigest({
@@ -45,8 +48,10 @@ export class DigestService {
         });
 
         if (sent) {
+            logger.info(`[Digest] Успешно отправлено для ${user.email}`);
             console.log(`[Digest] Успешно отправлено для ${user.email}`);
         } else {
+            logger.error(`[Digest] Ошибка отправки для ${user.email}`);
             console.error(`[Digest] Ошибка отправки для ${user.email}`);
         }        
 
@@ -56,6 +61,7 @@ export class DigestService {
         );
       } catch (error) {
         logger.error(`Digest send failed for user ${user.email}`, error);
+        console.error(`Digest send failed for user ${user.email}`, error);
       }
     }
   }
