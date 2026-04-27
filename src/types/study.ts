@@ -23,3 +23,11 @@ export interface Study {
   audit_trail?: any[] | null;
   sites?: StudySite[];
 }
+
+export const statusLabels: Record<StudyStatus, string> = {
+  [StudyStatus.PLANNED]: 'Planned',
+  [StudyStatus.ONGOING]: 'Ongoing',
+  [StudyStatus.COMPLETED]: 'Completed',
+  [StudyStatus.TERMINATED]: 'Terminated',
+  [StudyStatus.ARCHIVED]: 'Archived'
+};

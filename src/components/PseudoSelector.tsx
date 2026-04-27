@@ -20,14 +20,7 @@ import {
   Cross2Icon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
-
-// Конфигурация для статусов центров
-const SITE_STATUS_CONFIG = {
-  [SiteStatus.OPENED]: { label: 'Opened', color: '#51cf66', icon: '🟢' },
-  [SiteStatus.PLANNED]: { label: 'Planned', color: '#ff922b', icon: '🟡' },
-  [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔒' },
-  [SiteStatus.FROZEN]: { label: 'Frozen', color: '#3b5bff', icon: '❄️' },
-};
+import { SITE_STATUS_CONFIG } from "@/types/site";
 
 // Типы для селектора
 export type SelectorType = 'country' | 'role' | 'site' | 'study'; 

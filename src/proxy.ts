@@ -16,6 +16,7 @@ import { applyCorsHeaders, handleCorsPreflight } from './lib/security/cors';
 
 // Публичные пути (не требуют авторизации)
 const PUBLIC_PATHS = [
+  '/api/ping',
   '/api/auth/login',
   '/api/auth/logout',
   '/api/auth/forgot-password',
@@ -97,6 +98,16 @@ export function proxy(request: NextRequest) {
     } else {
       // Для всех остальных путей - проверка авторизации
       if (!isAuthenticated) {
+
+        if (pathname.startsWith('/api/')) {
+          // Для API возвращаем JSON и статус 401
+          return NextResponse.json(
+            { error: 'Unauthorized' }, 
+            { status: 401 }
+          );
+        }
+
+        // Если пользователь не авторизован - редирект на логин
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('from', pathname);
         response = NextResponse.redirect(loginUrl);

@@ -106,3 +106,19 @@ export interface DocumentVersionRow {
   review_submitter?: ShortUserInfo | null;
 
 }
+
+export interface DocumentStats {
+  total: number;
+  draft: number;
+  in_review: number;
+  approved: number;
+  archived: number;
+  deleted: number;
+  draftPercent: number;
+  inReviewPercent: number;
+  approvedPercent: number;
+  archivedPercent: number;
+  deletedPercent: number;
+  canArchive?: boolean;
+  canExport?: boolean;
+}

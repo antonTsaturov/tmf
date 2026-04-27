@@ -385,7 +385,7 @@ const FolderContentViewer: React.FC = () => {
           <Flex direction="column" gap="1">
             <Flex direction="row" gap="1">
               <FaRegFolderOpen size={24}/>
-              <Text size="4" weight="bold" ml="2">{selectedFolder.name}</Text>
+              <Text size="4" weight="bold" ml="2" style={{ textTransform: 'uppercase' }}>{selectedFolder.name}</Text>
             </Flex>
             
               <Text size="1" color="gray">

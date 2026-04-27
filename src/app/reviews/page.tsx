@@ -37,7 +37,6 @@ import { ru } from "date-fns/locale";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { MainContext } from "@/wrappers/MainContext";
-
 import { useStudiesAndSites } from "@/hooks/useStudiesAndSites";
 import { useTokenRefresh } from "@/hooks/useTokenRefresh";
 import DocumentReviewPanel from "@/components/panels/ReviewDocumentPanel";
@@ -60,13 +59,6 @@ interface PaginationInfo {
   hasMore: boolean;
 }
 
-const VIEW_LEVELS = [
-  { value: "all", label: "All documents" },
-  { value: "site", label: "Site Level documents" },
-  { value: "general", label: "General Level documents" },
-  { value: "country", label: "Country Level documents" },
-];
-
 export default function MyReviewsPage() {
   const { t } = useI18n("reviewsPage");
   const { getFolderNameFromStudiesMap } = useFolderNameByMap();
@@ -75,8 +67,7 @@ export default function MyReviewsPage() {
   const { context, updateContext } = useContext(MainContext)!;
   const { onDocumentUpdatedId, selectedDocument, isRightFrameOpen } = context;
   const { user } = useAuth()!;
-  const { getStudyProtocol, getSiteName, studies, sites } =
-    useStudiesAndSites();
+  const { getStudyProtocol, getSiteName, studies, sites } = useStudiesAndSites();
   const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(true);
@@ -172,12 +163,12 @@ export default function MyReviewsPage() {
     }
   };
 
-  const getDeclension = (count: number, words: [string, string, string]) => {
-    const cases = [2, 0, 1, 1, 1, 2];
-    return words[
-      count % 100 > 4 && count % 100 < 20 ? 2 : cases[Math.min(count % 10, 5)]
-    ];
-  };
+  // const getDeclension = (count: number, words: [string, string, string]) => {
+  //   const cases = [2, 0, 1, 1, 1, 2];
+  //   return words[
+  //     count % 100 > 4 && count % 100 < 20 ? 2 : cases[Math.min(count % 10, 5)]
+  //   ];
+  // };
 
   useEffect(() => {
     setAllDocuments((prev) => prev.filter((d) => d.id !== onDocumentUpdatedId));
@@ -210,6 +201,14 @@ export default function MyReviewsPage() {
     setIsRightFrameAnimating(true);
     updateContext({ isRightFrameOpen: false });
   };
+
+  const VIEW_LEVELS = [
+    { value: "all", label: t("allDocs") },
+    { value: "site", label: t("siteDocs") },
+    { value: "general", label: t("generalDocs") },
+    { value: "country", label: t("countryDocs") },
+  ];
+
 
   // Функция фильтрации
   const filterDocuments = (
@@ -388,13 +387,13 @@ export default function MyReviewsPage() {
                   <FiCheckCircle size={20} color="var(--blue-9)" />
                 </Box>
                 <Heading size="5" mb="1">
-                  Докумнты на рассмотрение
+                  {t('title')}
                 </Heading>
               </Flex>
 
               <Flex align="center" gap="4">
                 <TextField.Root
-                  placeholder="Поиск по названию документа"
+                  placeholder={t("searchPlaceholder")}
                   value={searchQuery}
                   onChange={handleSearchChange}
                   style={{
@@ -406,7 +405,7 @@ export default function MyReviewsPage() {
                   </TextField.Slot>
                 </TextField.Root>
 
-                <Tooltip content="Обновить">
+                <Tooltip content={t("refresh")}>
                   <IconButton
                     variant="ghost"
                     size="2"
@@ -426,22 +425,12 @@ export default function MyReviewsPage() {
               {/* Бейджи под заголовком */}
               <Flex gap="4" align="center" wrap="wrap">
                 <Badge size="2" variant="soft" color="indigo">
-                  {filteredDocuments.length}{" "}
-                  {getDeclension(filteredDocuments.length, [
-                    t("documentsFound"),
-                    t("documentsFound"),
-                    t("documentsFound"),
-                  ])}
+                  {t("documentFound", {count: filteredDocuments.length})}
                 </Badge>
 
                 {/* бейдж для общего количества */}
                 <Badge size="2" variant="soft" color="gray">
-                  {t("totalWaiting")}: {allDocuments.length}{" "}
-                  {getDeclension(allDocuments.length, [
-                    "документ",
-                    "документа",
-                    "документов",
-                  ])}
+                  {t("totalWaiting", {count: filteredDocuments.length})}
                 </Badge>
               </Flex>
 
@@ -475,7 +464,7 @@ export default function MyReviewsPage() {
                   onValueChange={handleLevelFilterChange}
                   size="1"
                 >
-                  <Select.Trigger placeholder="Уровень" variant="ghost" />
+                  <Select.Trigger placeholder={t("levelFilter")} variant="ghost" />
                   <Select.Content>
                     {VIEW_LEVELS.map((level) => (
                       <Select.Item key={level.value} value={level.value}>
@@ -858,10 +847,7 @@ export default function MyReviewsPage() {
                     style={{ flexShrink: 0 }}
                   >
                     <Text size="2" color="gray">
-                      {t("pagination")
-                        .replace("{start}", String(startIndex + 1))
-                        .replace("{end}", String(endIndex))
-                        .replace("{total}", String(filteredDocuments.length))}
+                      {t("pagination", {start: startIndex + 1, end: endIndex, total: filteredDocuments.length})}
                     </Text>
                     <Flex gap="2">
                       <Button

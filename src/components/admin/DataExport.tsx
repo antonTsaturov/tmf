@@ -1,3 +1,5 @@
+//   src/components/admin/DataExport.tsx
+
 import { FC, useState, useEffect, useCallback, useContext } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { StudyStatus } from '@/types/types';
@@ -23,21 +25,8 @@ import {
   ClockIcon,
   ArchiveIcon
 } from '@radix-ui/react-icons';
-
-interface DocumentStats {
-  total: number;
-  draft: number;
-  in_review: number;
-  approved: number;
-  archived: number;
-  deleted: number;
-  draftPercent: number;
-  inReviewPercent: number;
-  approvedPercent: number;
-  archivedPercent: number;
-  deletedPercent: number;
-  canExport: boolean;
-}
+import { statusLabels } from '@/types/study';
+import { DocumentStats } from '@/types/document';
 
 type RadixColors = 'blue' | 'green' | 'gray' | 'red' | 'purple' | 'amber';
 
@@ -47,14 +36,6 @@ const statusColors: Record<StudyStatus, RadixColors> = {
   [StudyStatus.COMPLETED]: 'gray',
   [StudyStatus.TERMINATED]: 'red',
   [StudyStatus.ARCHIVED]: 'purple'
-};
-
-const statusLabels: Record<StudyStatus, string> = {
-  [StudyStatus.PLANNED]: 'Planned',
-  [StudyStatus.ONGOING]: 'Ongoing',
-  [StudyStatus.COMPLETED]: 'Completed',
-  [StudyStatus.TERMINATED]: 'Terminated',
-  [StudyStatus.ARCHIVED]: 'Archived'
 };
 
 const DataExport: FC = () => {

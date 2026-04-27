@@ -33,28 +33,17 @@ import { StudySite } from "@/types/types";
 import { logger } from '@/lib/utils/logger';
 import { getTable } from '@/lib/api/fetch';
 import { Tables } from '@/lib/db/schema';
-
-interface DocumentStats {
-  total: number;
-  draft: number;
-  in_review: number;
-  approved: number;
-  archived: number;
-  deleted: number;
-  draftPercent: number;
-  inReviewPercent: number;
-  approvedPercent: number;
-  archivedPercent: number;
-  deletedPercent: number;
-  canArchive: boolean;
-}
+import { DocumentStats } from "@/types/document";
+import { useI18n } from "@/hooks/useI18n";
+import { statusLabels, StudyStatus } from "@/types/study";
+import { SITE_STATUS_CONFIG } from "@/types/site";
 
 interface StudyInfoPanelProps {
   onArchive?: () => void;
 }
 
 const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
-
+  const { t } = useI18n('studyInfoPanel');
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, isStudyInfoPanelOpen } = context;
 
@@ -118,14 +107,25 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
     }
   }, [currentStudy?.id, isStudyInfoPanelOpen]);
 
+  type RadixColors = 'blue' | 'green' | 'gray' | 'red' | 'purple' | 'amber';
+
   // Статус исследования
-  const getStudyStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'active': return 'green';
-      case 'completed': return 'blue';
-      case 'terminated': return 'red';
-      case 'pending': return 'orange';
-      default: return 'gray';
+  const getStudyStatusColor = (status: string): RadixColors => {
+    const normalizedStatus = status.toLowerCase();
+    
+    switch (normalizedStatus) {
+      case StudyStatus.ONGOING:
+        return 'green';
+      case StudyStatus.COMPLETED:
+        return 'blue';
+      case StudyStatus.TERMINATED:
+        return 'red';
+      case StudyStatus.PLANNED:
+        return 'amber';
+      case StudyStatus.ARCHIVED:
+        return 'gray';
+      default:
+        return 'gray';
     }
   };
 
@@ -147,7 +147,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
         <Dialog.Content style={{ maxWidth: 700, padding: 0 }} aria-describedby={undefined}>
           {!currentStudy ? (
             <Flex justify="center" align="center" p="5">
-              <Text size="2" color="gray">No study selected</Text>
+              <Text size="2" color="gray">{t('noStudySelected')}</Text>
             </Flex>
           ) : (
             <>
@@ -161,7 +161,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
           <Flex align="center" gap="3" justify="center">
             <FiInfo size={18} color="var(--blue-9)" />
             <Dialog.Title size="3" style={{ marginTop: 13 }}>
-              About study
+              {t('title')}
             </Dialog.Title>
           </Flex>
           <Dialog.Close>
@@ -180,7 +180,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
               <Flex direction="column" gap="3">
                 <Flex align="center" gap="2" mb="1">
                   <FiFolder size={18} color="var(--blue-9)" />
-                  <Text size="3" weight="bold">Study Overview</Text>
+                  <Text size="3" weight="bold">{t('studyOverview')}</Text>
                 </Flex>
                 
                 <Separator size="4" />
@@ -189,7 +189,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                   <Table.Body>
                     <Table.Row>
                       <Table.Cell width="40%">
-                        <Text size="2" color="gray">Study title</Text>
+                        <Text size="2" color="gray">{t('studyTitle')}</Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text size="2" weight="medium">{currentStudy.title}</Text>
@@ -197,7 +197,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                     </Table.Row>
                     <Table.Row>
                       <Table.Cell width="40%">
-                        <Text size="2" color="gray">Protocol</Text>
+                        <Text size="2" color="gray">{t('protocol')}</Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text size="2" weight="medium">{currentStudy.protocol}</Text>
@@ -205,7 +205,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                     </Table.Row>
                     <Table.Row>
                       <Table.Cell>
-                        <Text size="2" color="gray">Sponsor</Text>
+                        <Text size="2" color="gray">{t('sponsor')}</Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text size="2">{currentStudy.sponsor || 'N/A'}</Text>
@@ -213,7 +213,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                     </Table.Row>
                     <Table.Row>
                       <Table.Cell>
-                        <Text size="2" color="gray">CRO</Text>
+                        <Text size="2" color="gray">{t('cro')}</Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text size="2">{currentStudy.cro || 'N/A'}</Text>
@@ -221,17 +221,17 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                     </Table.Row>
                     <Table.Row>
                       <Table.Cell>
-                        <Text size="2" color="gray">Status</Text>
+                        <Text size="2" color="gray">{t('status')}</Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Badge size="1" color={getStudyStatusColor(currentStudy.status)}>
-                          {currentStudy.status}
+                          {statusLabels[currentStudy.status]}
                         </Badge>
                       </Table.Cell>
                     </Table.Row>
                     <Table.Row>
                       <Table.Cell>
-                        <Text size="2" color="gray">Countries</Text>
+                        <Text size="2" color="gray">{t('countries')}</Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Flex gap="1" wrap="wrap">
@@ -254,7 +254,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                 <Flex direction="column" gap="3">
                   <Flex align="center" gap="2" mb="1">
                     <FiMapPin size={18} color="var(--purple-9)" />
-                    <Text size="3" weight="bold">Sites Information</Text>
+                    <Text size="3" weight="bold">{t('sitesInformation')}</Text>
                   </Flex>
 
                   <Separator size="4" />
@@ -275,7 +275,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                             <Table.Body>
                               <Table.Row>
                                 <Table.Cell width="40%">
-                                  <Text size="2" color="gray">Site Name</Text>
+                                  <Text size="2" color="gray">{t('siteName')}</Text>
                                 </Table.Cell>
                                 <Table.Cell>
                                   <Text size="2" weight="medium">{site.name}</Text>
@@ -283,7 +283,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                               </Table.Row>
                               <Table.Row>
                                 <Table.Cell>
-                                  <Text size="2" color="gray">Site Number</Text>
+                                  <Text size="2" color="gray">{t('siteNumber')}</Text>
                                 </Table.Cell>
                                 <Table.Cell>
                                   <Text size="2">№{site.number}</Text>
@@ -291,7 +291,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                               </Table.Row>
                               <Table.Row>
                                 <Table.Cell>
-                                  <Text size="2" color="gray">Location</Text>
+                                  <Text size="2" color="gray">{t('location')}</Text>
                                 </Table.Cell>
                                 <Table.Cell>
                                   <Flex gap="2" align="center">
@@ -302,7 +302,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                               </Table.Row>
                               <Table.Row>
                                 <Table.Cell>
-                                  <Text size="2" color="gray">Principal Investigator</Text>
+                                  <Text size="2" color="gray">{t('principalInvestigator')}</Text>
                                 </Table.Cell>
                                 <Table.Cell>
                                   <Text size="2">{site.principal_investigator || 'N/A'}</Text>
@@ -310,11 +310,11 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                               </Table.Row>
                               <Table.Row>
                                 <Table.Cell>
-                                  <Text size="2" color="gray">Status</Text>
+                                  <Text size="2" color="gray">{t('status')}</Text>
                                 </Table.Cell>
                                 <Table.Cell>
                                   <Badge size="1" color={site.status === 'opened' ? 'green' : 'gray'}>
-                                    {site.status}
+                                    {SITE_STATUS_CONFIG[site.status].label}
                                   </Badge>
                                 </Table.Cell>
                               </Table.Row>
@@ -333,7 +333,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
               <Flex direction="column" gap="3">
                 <Flex align="center" gap="2" mb="1">
                   <FiFileText size={18} color="var(--amber-9)" />
-                  <Text size="3" weight="bold">Document Statistics</Text>
+                  <Text size="3" weight="bold">{t('documentStatistics')}</Text>
                 </Flex>
                 
                 <Separator size="4" />
@@ -341,7 +341,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                 {loading ? (
                   <Flex justify="center" align="center" p="4" gap="2">
                     <Spinner size="2" />
-                    <Text size="2" color="gray">Loading statistics...</Text>
+                    <Text size="2" color="gray">{t('loadingStatistics')}</Text>
                   </Flex>
                 ) : documentStats ? (
                   <Flex direction="column" gap="4">
@@ -350,7 +350,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                       <Flex direction="row" align="center" gap="2" justify="between">
                         <Flex align="center" gap="2">
                           <FiFileText size={18} color="var(--gray-9)" />
-                          <Text size="2" weight="medium" color="gray">Total Documents</Text>
+                          <Text size="2" weight="medium" color="gray">{t('totalDocuments')}</Text>
                         </Flex>
                         <Text size="4" weight="bold">{documentStats.total}</Text>
                       </Flex>
@@ -362,35 +362,35 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                         <Flex direction="column" align="center" gap="1">
                           <FiEdit3 size={20} color="var(--gray-9)" />
                           <Text size="4" weight="bold">{documentStats.draft}</Text>
-                          <Text size="1" color="gray">Draft</Text>
+                          <Text size="1" color="gray">{t('draft')}</Text>
                         </Flex>
                       </Card>
                       <Card size="1" style={{ flex: 1, minWidth: 100 }}>
                         <Flex direction="column" align="center" gap="1">
                           <FiClock size={20} color="var(--orange-9)" />
                           <Text size="4" weight="bold">{documentStats.in_review}</Text>
-                          <Text size="1" color="gray">In Review</Text>
+                          <Text size="1" color="gray">{t('inReview')}</Text>
                         </Flex>
                       </Card>
                       <Card size="1" style={{ flex: 1, minWidth: 100 }}>
                         <Flex direction="column" align="center" gap="1">
                           <FiCheckCircle size={20} color="var(--green-9)" />
                           <Text size="4" weight="bold">{documentStats.approved}</Text>
-                          <Text size="1" color="gray">Approved</Text>
+                          <Text size="1" color="gray">{t('approved')}</Text>
                         </Flex>
                       </Card>
                       <Card size="1" style={{ flex: 1, minWidth: 100 }}>
                         <Flex direction="column" align="center" gap="1">
                           <FiArchive size={20} color="var(--blue-9)" />
                           <Text size="4" weight="bold">{documentStats.archived}</Text>
-                          <Text size="1" color="gray">Archived</Text>
+                          <Text size="1" color="gray">{t('archived')}</Text>
                         </Flex>
                       </Card>
                       <Card size="1" style={{ flex: 1, minWidth: 100 }}>
                         <Flex direction="column" align="center" gap="1">
                           <FiTrash2 size={20} color="var(--red-9)" />
                           <Text size="4" weight="bold">{documentStats.deleted}</Text>
-                          <Text size="1" color="gray">Deleted</Text>
+                          <Text size="1" color="gray">{t('deleted')}</Text>
                         </Flex>
                       </Card>
                     </Flex>
@@ -399,7 +399,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                     <Flex direction="column" gap="3">
                       <Flex direction="column" gap="1">
                         <Flex justify="between">
-                          <Text size="2" color="gray">Draft</Text>
+                          <Text size="2" color="gray">{t('draft')}</Text>
                           <Text size="2" weight="medium">{documentStats.draftPercent.toFixed(1)}%</Text>
                         </Flex>
                         <Progress value={documentStats.draftPercent} size="1" color="gray" />
@@ -407,7 +407,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
                       <Flex direction="column" gap="1">
                         <Flex justify="between">
-                          <Text size="2" color="gray">In Review</Text>
+                          <Text size="2" color="gray">{t('inReview')}</Text>
                           <Text size="2" weight="medium">{documentStats.inReviewPercent.toFixed(1)}%</Text>
                         </Flex>
                         <Progress value={documentStats.inReviewPercent} size="1" color="orange" />
@@ -415,7 +415,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
                       <Flex direction="column" gap="1">
                         <Flex justify="between">
-                          <Text size="2" color="gray">Approved</Text>
+                          <Text size="2" color="gray">{t('approved')}</Text>
                           <Text size="2" weight="medium">{documentStats.approvedPercent.toFixed(1)}%</Text>
                         </Flex>
                         <Progress value={documentStats.approvedPercent} size="1" color="green" />
@@ -423,7 +423,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
                       <Flex direction="column" gap="1">
                         <Flex justify="between">
-                          <Text size="2" color="gray">Archived</Text>
+                          <Text size="2" color="gray">{t('archived')}</Text>
                           <Text size="2" weight="medium">{documentStats.archivedPercent.toFixed(1)}%</Text>
                         </Flex>
                         <Progress value={documentStats.archivedPercent} size="1" color="blue" />
@@ -431,14 +431,14 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
 
                       <Flex direction="column" gap="1">
                         <Flex justify="between">
-                          <Text size="2" color="gray">Deleted</Text>
+                          <Text size="2" color="gray">{t('deleted')}</Text>
                           <Text size="2" weight="medium">{documentStats.deletedPercent.toFixed(1)}%</Text>
                         </Flex>
                         <Progress value={documentStats.deletedPercent} size="1" color="red" />
                       </Flex>
                     </Flex>
 
-                    {!documentStats.canArchive && documentStats.draft > 0 && (
+                    {/* {!documentStats.canArchive && documentStats.draft > 0 && (
                       <Flex
                         p="3"
                         gap="2"
@@ -454,11 +454,11 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                           {documentStats.draft} document(s) are still in draft status
                         </Text>
                       </Flex>
-                    )}
+                    )} */}
                   </Flex>
                 ) : (
                   <Flex justify="center" align="center" p="4">
-                    <Text size="2" color="gray">No statistics available</Text>
+                    <Text size="2" color="gray">{t('noStatisticsAvailable')}</Text>
                   </Flex>
                 )}
               </Flex>
@@ -469,23 +469,23 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
               <Flex direction="column" gap="3">
                 <Flex align="center" gap="2" mb="1">
                   <FiUsers size={18} color="var(--cyan-9)" />
-                  <Text size="3" weight="bold">Additional Information</Text>
+                  <Text size="3" weight="bold">{t('additionalInformation')}</Text>
                 </Flex>
                 
                 <Separator size="4" />
 
                 <Flex gap="4" wrap="wrap">
                   <Flex direction="column" gap="1">
-                    <Text size="2" color="gray">Total Sites</Text>
-                    <Text size="4" weight="bold">{assignedSitesCount}</Text>
+                    <Text size="2" color="gray">{t('totalSites')}</Text>
+                    <Text size="4" weight="bold">{studySites.length}</Text>
                   </Flex>
                   <Flex direction="column" gap="1">
-                    <Text size="2" color="gray">Countries</Text>
+                    <Text size="2" color="gray">{t('countries')}</Text>
                     <Text size="4" weight="bold">{countriesCount}</Text>
                   </Flex>
                   {currentStudy.users && (
                     <Flex direction="column" gap="1">
-                      <Text size="2" color="gray">Team Members</Text>
+                      <Text size="2" color="gray">{t('teamMembers')}</Text>
                       <Text size="4" weight="bold">
                         {Array.isArray(currentStudy.users) ? currentStudy.users.length : 'N/A'}
                       </Text>

@@ -11,6 +11,7 @@ import { StructurePreview } from './StructurePreview';
 import { deleteRecord } from '@/lib/api/fetch';
 import { CountrySelector, SelectorValue } from '../PseudoSelector';
 import { logger } from '@/lib/utils/logger';
+import { SITE_STATUS_CONFIG } from '@/types/site';
 
 // Пропсы компонентов
 interface StatusBadgeProps {
@@ -43,14 +44,7 @@ const generateId = (siteID: number): number => {
 const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false }) => {
   const [isEditing, setIsEditing] = useState(false);
 
-  const statusConfig = {
-    [SiteStatus.OPENED]: { label: 'Opened', color: '#51cf66', icon: '🟢' },
-    [SiteStatus.PLANNED]: { label: 'Planned', color: '#ff922b', icon: '🟡' },
-    [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔒' },
-    [SiteStatus.FROZEN]: { label: 'Frozen', color: '#3b5bff', icon: '❄️' },
-  };
-
-  const config = statusConfig[status];
+  const config = SITE_STATUS_CONFIG[status];
 
   const handleStatusChange = (newStatus: SiteStatus) => {
     if (onChange) {
@@ -62,7 +56,7 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
   if (isEditing) {
     return (
       <div className="status-editor">
-        {Object.entries(statusConfig).map(([statusKey, config]) => (
+        {Object.entries(SITE_STATUS_CONFIG).map(([statusKey, config]) => (
           <button
             key={statusKey}
             className="status-option"

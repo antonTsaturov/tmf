@@ -1,5 +1,5 @@
 // UserReviewsButton.tsx
-import { Button, Flex, Badge, Link, Tooltip } from "@radix-ui/themes";
+import { Button, Flex, Badge, Link, Tooltip, Text } from "@radix-ui/themes";
 import { useMemo } from "react";
 import { usePendingReviewsCount } from "@/hooks/usePendingReviewsCount";
 import { UserRole } from "@/types/types";
@@ -29,7 +29,7 @@ const UserReviewsButton = () => {
               <MdOutlinePendingActions />
               {count && count > 0 && (
                 <Badge color="red" variant="solid" size="1">
-                  {count}
+                  <Text style={{ fontSize: "10px" }}>{count}</Text>
                 </Badge>
               )}
             </Flex>
