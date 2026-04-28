@@ -16,6 +16,7 @@ Features:
 13) Глобальная архивация
 14) интеграция с email
 4) Экспорт всех документов по исследованию
+Использовать sessionStorage для хранения контектста
 
 ✅ Заменить hardcoded default JWT_SECRET, добавить валидацию env
 ✅ Добавить rate limiting на все API endpoints

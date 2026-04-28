@@ -58,7 +58,8 @@ async function handleGetDocuments(request: NextRequest) {
       siteOrCountryCondition = `AND d.country = $3`;
       queryParams.push(country);
     } else {
-      siteOrCountryCondition = `AND d.site_id IS NULL AND d.country IS NULL`;
+      //siteOrCountryCondition = `AND d.site_id IS NULL AND d.country IS NULL`;
+      siteOrCountryCondition = `AND (d.site_id IS NULL OR d.country IS NOT NULL)`;
     }
 
     // Единый запрос с агрегацией JSON
