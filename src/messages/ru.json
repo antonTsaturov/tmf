@@ -202,6 +202,7 @@
     "documentId": "ID документа",
     "status": "Статус",
     "folder": "Папка",
+    "country": "Страна",
     "creation": "Создание",
     "created": "Создан",
     "createdBy": "Кем создан",

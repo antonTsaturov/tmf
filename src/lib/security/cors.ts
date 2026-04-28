@@ -24,6 +24,7 @@ export function getAllowedOrigins(): string[] {
   }
 
   // Production: whitelist specific domains
+  logger.info('Allowed CORS origins:', process.env.CORS_ORIGINS);
   const prodOrigins = process.env.CORS_ORIGINS?.split(',') || [];
   
   if (prodOrigins.length === 0) {

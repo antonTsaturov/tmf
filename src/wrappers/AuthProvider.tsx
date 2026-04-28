@@ -7,6 +7,8 @@ import { Spinner, Flex, Text } from '@radix-ui/themes';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import type { StudyUser } from '@/types/user';
+import { MainContext } from '@/wrappers/MainContext';
+import { initFetchInterceptor } from '@/lib/auth/initFetchInterceptor';
 
 // Клиентское подмножество StudyUser — только поля, нужные UI
 type User = Pick<StudyUser, 'id' | 'name' | 'email' | 'role' | 'assigned_site_id' | 'assigned_study_id' | 'email_notifications_enabled'>;
@@ -25,29 +27,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const mainContext = useContext(MainContext);
+  const resetMainContext = mainContext?.resetContext;
   //const pathname = usePathname();
 
   /**
    * 1. Перехватчик 401 (Session Expired)
-   * Вместо сложного кулдауна проверяем только, не находимся ли мы уже на логине.
    */
-  const initFetchInterceptor = useCallback(() => {
-    const originalFetch = window.fetch;
-    window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
-      const response = await originalFetch.call(this, input, init);
+  // const initFetchInterceptor = useCallback(() => {
+  //   const originalFetch = window.fetch;
+  //   window.fetch = async function (input: RequestInfo | URL, init?: RequestInit) {
+  //     const response = await originalFetch.call(this, input, init);
 
-      if (response.status === 401) {
-        const url = typeof input === 'string' ? input : (input as any).url || '';
+  //     // if (response.status === 401) {
+  //     //   const url = typeof input === 'string' ? input : (input as any).url || '';
         
-        // Не редиректим, если это сам запрос обновления или мы уже на странице логина
-        if (!url.includes('/api/auth/refresh') && !window.location.pathname.startsWith('/login')) {
-          // Используем window.location для полной очистки состояния приложения
-          window.location.href = `/login?from=${encodeURIComponent(window.location.pathname)}`;
-        }
-      }
-      return response;
-    };
-  }, []);
+  //     //   // Не редиректим, если это сам запрос обновления или мы уже на странице логина
+  //     //   if (!url.includes('/api/auth/refresh') && !window.location.pathname.startsWith('/login')) {
+  //     //     // Используем window.location для полной очистки состояния приложения
+  //     //     window.location.href = `/login?from=${encodeURIComponent(window.location.pathname)}`;
+  //     //   }
+  //     // }
+
+  //     if (response.status === 401) {
+  //       const url = typeof input === 'string' ? input : (input as any).url || '';
+  //       if (!url.includes('/api/auth/refresh') && !window.location.pathname.startsWith('/login')) {
+          
+  //         // 1. Пробуем обновить токен "тихо"
+  //         const refreshRes = await originalFetch('/api/auth/refresh', { method: 'POST' });
+          
+  //         if (refreshRes.ok) {
+  //           // 2. Если успешно — повторяем исходный запрос с теми же параметрами
+  //           return originalFetch.call(this, input, init);
+  //         } else {
+  //           // 3. Если рефреш тоже не удался (сессия реально истекла) — тогда на логин
+  //           window.location.href = `/login?from=${encodeURIComponent(window.location.pathname)}`;
+  //         }
+  //       }
+  //     }
+
+  //     return response;
+  //   };
+  // }, []);
 
   /**
    * 2. Синхронизация выхода между вкладками
@@ -55,7 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const syncLogout = (event: StorageEvent) => {
       if (event.key === 'auth-logout') {
-        window.location.href = '/login';
+        //window.location.href = '/login';
+        router.push('/login');
       }
     };
     window.addEventListener('storage', syncLogout);
@@ -90,6 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
     try {
+      // Сбрасываем старое состояние ПЕРЕД логином на всякий случай
+      resetMainContext?.();
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -114,6 +139,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' });
     setUser(null);
+
+    // Сбрасываем фильтры и sessionStorage
+    resetMainContext?.();
+
     // Уведомляем другие вкладки
     localStorage.setItem('auth-logout', Date.now().toString());
     router.push('/login');
@@ -123,9 +152,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleIdleTimeout = useCallback(() => {
     // Сессия истекла по бездействию — очищаем состояние и редиректим
     setUser(null);
+
+// Сбрасываем фильтры при таймауте
+    resetMainContext?.();
+
     localStorage.setItem('auth-logout', Date.now().toString());
-    window.location.href = '/login';
-  }, []);
+    //window.location.href = '/login';
+    router.push('/login');
+  }, [resetMainContext]);
 
   // 3. Клиентский таймер бездействия (15 мин без активности → logout)
   useIdleTimeout({
@@ -133,13 +167,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     enabled: !!user,
   });
 
+  // useTokenRefresh({
+  //   onRefreshFailure: () => {
+  //     setUser(null);
+  //     //window.location.href = '/login';
+  //     router.push('/login');
+  //   },
+  //   enabled: !!user,
+  // });
+
+  // Для улучшенной версии DeepSeek
   useTokenRefresh({
     onRefreshFailure: () => {
+      // Don't redirect immediately, let the fetch interceptor handle it
+      console.log('[Auth] Token refresh failed, marking session as invalid');
+      
+      // Clear user state but don't redirect right away
+      // The next API call will trigger 401 and proper redirect
       setUser(null);
-      window.location.href = '/login';
+      
+      // Optional: set a flag that session is expired
+      sessionStorage.setItem('session_expired', 'true');
     },
     enabled: !!user,
   });
+
+  // Проверка session_expired при возвращении на вкладку
+  useEffect(() => {
+    const handleFocus = () => {
+      const sessionExpired = sessionStorage.getItem('session_expired');
+      if (sessionExpired === 'true') {
+        sessionStorage.removeItem('session_expired');
+        router.push('/login');
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [router]);  
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, isAuthenticated: !!user }}>

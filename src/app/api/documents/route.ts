@@ -141,6 +141,7 @@ async function handleGetDocuments(request: NextRequest) {
       const docObject = {
         ...doc,
         versions,
+        country: doc.country || null,
         current_version: latest,
         file_type: latest.file_type,
         status,

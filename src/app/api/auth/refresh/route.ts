@@ -15,7 +15,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { AuthService, type JwtPayload } from '@/lib/auth/auth.service';
-import { getSession } from '@/lib/auth/session';
+import { getSession, updateSessionActivity } from '@/lib/auth/session';
 import { getPool } from '@/lib/db';
 import { logger } from '@/lib/utils/logger';
 import jwt from 'jsonwebtoken';
@@ -70,6 +70,11 @@ export async function POST(request: NextRequest) {
 
     // Verify session is still active (not invalidated, not idle-timed-out)
     const session = getSession(sessionId);
+
+    if (session) {
+      updateSessionActivity(session.sessionId); // Продлеваем жизнь сессии на сервере
+    }    
+
     if (!session) {
       logger.authLog('REFRESH_SESSION_EXPIRED', userId?.toString() || 'unknown', 'Session expired or invalid', {
         sessionId: sessionId.substring(0, 20),

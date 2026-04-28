@@ -46,9 +46,7 @@ export default function UserDropdownMenu() {
           {/* <DropdownMenu.Item>
             {t('studyMetrics')}
           </DropdownMenu.Item> */}
-          <Tooltip 
-            content={currentStudy ? t('aboutStudy_toolTip') : t('aboutStudy_toolTipEmpty')}
-          >
+          <Tooltip content={currentStudy ? t('aboutStudy_toolTip') : t('aboutStudy_toolTipEmpty')}>
             <DropdownMenu.Item 
               onClick={() => currentStudy && updateContext({isStudyInfoPanelOpen: true})} 
               disabled={!currentStudy}

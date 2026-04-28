@@ -1,4 +1,7 @@
 Bugs.
+1) Если загрузить пдф и сразу открыть предпросмотр - ошибка "Failed to load PDF"
+Warning: Invalid absolute docBaseUrl: "blob:https://exploretmf.ru/92efe854-922b-42db-86f8-c84700a0a213".
+[2026-04-27T11:42:36.740Z] [ERROR] [unknown] Error loading PDF | Error: Failed to load PDF
 
 Features.
 1) Добавть возможность удалить файл из кэша предпросмотра

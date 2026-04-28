@@ -39,24 +39,31 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-      <Theme>
-        <LocaleProvider>
-          <AuthProvider>
-            <NotificationProvider>
-              <AdminContextProvider>
-                <UploadProvider>
-                  <ContextProvider>
-
-                    <ConnectivityBanner />
-                    {children}
-
-                  </ContextProvider>
-                </UploadProvider>
-              </AdminContextProvider>
-            </NotificationProvider>
-          </AuthProvider>
-        </LocaleProvider>
-      </Theme>
+        {/* Тема оформления Radix */}
+        <Theme>
+          {/* Локали next-intl */}
+          <LocaleProvider> 
+            {/* Основной контекст */}
+            <ContextProvider>
+              {/* Авторизация */}
+              <AuthProvider>
+                {/* Всплывающие уведомления */}
+                <NotificationProvider>
+                  {/* Контекст для управления системой */}
+                  <AdminContextProvider>
+                    {/* Контекст для загрузки документов */}
+                    <UploadProvider>
+                    
+                      <ConnectivityBanner />
+                      {children}
+                    
+                    </UploadProvider>
+                  </AdminContextProvider>
+                </NotificationProvider>
+              </AuthProvider>
+            </ContextProvider>
+          </LocaleProvider>
+        </Theme>
       </body>
     </html>
   );

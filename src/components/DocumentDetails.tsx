@@ -6,7 +6,6 @@ import { Document } from '@/types/document';
 import { DocumentLifeCycleStatus } from '@/types/document.status';
 import DocumentStatusBadge from './DocumentStatusBadge';
 import '../styles/DocumentDetails.css';
-import { logger } from '@/lib/utils/logger';
 import {
   Box,
   Card,
@@ -139,8 +138,6 @@ const DocumentDetails: React.FC = () => {
     // review_comment?: string | null;
   };
 
-  logger.debug('Document Details', { document: doc });
-
   return (
     <div className="document-details">
       <div className="document-details-content">
@@ -148,14 +145,19 @@ const DocumentDetails: React.FC = () => {
         <section className="document-details-section">
           <h3 className="document-details-section-title">{t('mainInfo')}</h3>
           <dl className="document-details-metadata">
+            {/* Название документа */}
             <div className="metadata-row">
               <dt>{t('name')}</dt>
               <dd>{doc.document_name || doc.file_name || '—'}</dd>
             </div>
+
+            {/* ID документа */}
             <div className="metadata-row">
               <dt>{t('documentId')}</dt>
               <dd className="metadata-value-monospace">{doc.id}</dd>
             </div>
+
+            {/* Статус документа */}
             <div className="metadata-row">
               <dt>{t('status')}</dt>
               <dd>
@@ -170,10 +172,19 @@ const DocumentDetails: React.FC = () => {
                 />}
               </dd>
             </div>
+
+            {/* Директория документа */}
             <div className="metadata-row">
               <dt>{t('folder')}</dt>
               <dd>{getFolderName(doc.folder_id) || '—'}</dd>
             </div>
+
+            {/* Страна */}
+            <div className="metadata-row">
+              <dt>{t('country')}</dt>
+              <dd>{doc.country}</dd>
+            </div>
+
             {doc.tmf_zone && <div className="metadata-row">
               <dt>TMF Zone</dt>
               <dd>{doc.tmf_zone || '—'}</dd>
@@ -226,7 +237,7 @@ const DocumentDetails: React.FC = () => {
             </div>
             <div className="metadata-row">
               <dt>{t('checksum')}</dt>
-              <dd className="metadata-value-monospace metadata-value-truncate" title={doc.checksum}>
+              <dd className="metadata-value-monospace metadata-value-truncate" title={doc.current_version?.checksum}>
                 {doc.current_version?.checksum || '—'}
               </dd>
             </div>
