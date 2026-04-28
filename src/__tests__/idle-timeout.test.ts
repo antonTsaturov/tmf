@@ -178,7 +178,7 @@ describe('Server-side IDLE_TIMEOUT config', () => {
     const { SESSION_CONFIG } = require('@/lib/auth/session');
 
     expect(SESSION_CONFIG.IDLE_TIMEOUT).toBe(IDLE_TIMEOUT);
-    expect(SESSION_CONFIG.IDLE_TIMEOUT).toBe(15 * 60 * 1000);
+    expect(SESSION_CONFIG.IDLE_TIMEOUT).toBe(30 * 60 * 1000);
   });
 
   it('should be less than REFRESH_TOKEN_EXPIRY', () => {
