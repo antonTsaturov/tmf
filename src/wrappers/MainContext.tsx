@@ -102,7 +102,7 @@
 // src/wrappers/MainContext.tsx
 "use client";
 
-import React, { createContext, useState, ReactNode, useEffect, useRef } from "react";
+import React, { createContext, useState, ReactNode, useEffect } from "react";
 import { FileNode } from "@/components/FolderExplorer";
 import type { Document } from "@/types/document";
 import { Study, StudySite } from "@/types/types";

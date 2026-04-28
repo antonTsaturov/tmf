@@ -26,7 +26,7 @@ import { MainContext } from '@/wrappers/MainContext';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { useDocumentNewVersion } from '@/hooks/useDocumentNewVersion';
 import { useNotification } from '@/wrappers/NotificationContext';
-import { Document } from '@/types/document';
+//import { Document } from '@/types/document';
 import { useUpload } from '@/wrappers/UploadContext';
 import { ViewLevel } from '@/types/types';
 

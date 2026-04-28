@@ -8,14 +8,14 @@ import { MainContext } from "@/wrappers/MainContext";
 import { FiX } from "react-icons/fi";
 import UserReviewsButton from "@/components/UserReviewsButton";
 import { Subtitle, Title, TitleFontSize } from "../../components/Title";
-import { useI18n } from "@/hooks/useI18n";
+//import { useI18n } from "@/hooks/useI18n";
 import { ReportsSidebar } from "@/components/reports/ReportsSidebar";
 import { ReportView } from "@/components/reports/ReportView";
 import HomeButton from "@/components/HomeButton";
 import { ReportProvider } from "@/wrappers/ReportContext";
 
 export default function ReportsPage() {
-  const { t } = useI18n("reviewsPage");
+  //const { t } = useI18n("reviewsPage");
   const { context, updateContext } = useContext(MainContext)!;
   const { isRightFrameOpen } = context!;
 

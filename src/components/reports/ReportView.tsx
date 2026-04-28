@@ -21,20 +21,20 @@ import { useState, useEffect } from 'react';
 import { AuditStatus, AuditLogEntry } from '@/types/audit';
 import { AuditReportRequest } from '@/types/reports.type';
 
-type ReportDataItem = {
-  audit_id: string;
-  created_at: string;
-  user_id: string;
-  user_email: string;
-  action: string;
-  entity_type: string;
-  entity_id: string;
-  status: AuditStatus;
-  site_id: string;
-  study_id: string;
-  ip_address: string;
+// type ReportDataItem = {
+//   audit_id: string;
+//   created_at: string;
+//   user_id: string;
+//   user_email: string;
+//   action: string;
+//   entity_type: string;
+//   entity_id: string;
+//   status: AuditStatus;
+//   site_id: string;
+//   study_id: string;
+//   ip_address: string;
 
-};
+// };
 
 type ReportMeta = {
   total: number;

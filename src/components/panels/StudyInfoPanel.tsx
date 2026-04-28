@@ -25,7 +25,6 @@ import {
   FiClock,
   FiArchive,
   FiTrash2,
-  FiAlertCircle,
   FiEdit3
 } from 'react-icons/fi';
 import { MainContext } from "@/wrappers/MainContext";
@@ -129,7 +128,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
     }
   };
 
-  const assignedSitesCount = currentStudy?.sites?.length || 0;
+  //const assignedSitesCount = currentStudy?.sites?.length || 0;
   const countriesCount = new Set(currentStudy?.countries || []).size;
 
   if (!isStudyInfoPanelOpen) return null;
