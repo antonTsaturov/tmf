@@ -24,14 +24,13 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   onViewLevelChange,
 }) => {
   const { t } = useI18n('navigation');
-  const { user, loading: authLoading } = useAuth()!;
+  const { user, loading: authLoading } = useAuth();
   /*
   * studies - стартовая точка загрузки. Объект studies содержит вложенный объект
   * центров, которые назначены пользователю.
   */
   const { studies, loading } = useContext(AdminContext)!;
   
-  const [sites, setSites] = useState<StudySite[]>([]);
   const { context, updateContext } = useContext(MainContext)!;
   const { currentSite, currentStudy, currentLevel, currentCountry } = context;
   const [ countryFilter, setCountryFilter ] = useState<string[]>()
@@ -62,6 +61,8 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         currentCountry: defaultCountry
       });
 
+      setCountryFilter([]);
+
       // Вызываем колбэки
       onStudyChange?.(selectedStudy);
       onSiteChange?.(undefined);
@@ -74,24 +75,29 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
     onViewLevelChange?.(level);
 
     // При переключении на SITE level — автовыбор страны если у пользователя центры только в 1 стране
-    if (level === ViewLevel.SITE && countryFilter?.length === 1) {
-      updateContext({ currentLevel: level, currentSite: undefined, currentCountry: countryFilter[0] });
+    if (level === ViewLevel.SITE && currentStudy?.countries?.length === 1) {
+      updateContext({ currentLevel: level, currentSite: undefined, currentCountry: currentStudy.countries[0] });
     } else {
-      // Обновляем контекст
       updateContext({ currentLevel: level, currentSite: undefined, currentCountry: undefined });
     }
+
+    // При переключении на SITE level если у пользователя центры в несольких странах - устанавливаем фильтр по странам
+    if (currentStudy && level === ViewLevel.SITE && currentStudy?.countries?.length > 1) {
+      setCountryFilter(currentStudy?.countries)
+    }
+
     onSiteChange?.(undefined);
   }, [updateContext, onViewLevelChange, onSiteChange, countryFilter]);
 
 
   const handleSiteChange = useCallback((siteId: string) => {
-    const selectedSite = sites.find(site => Number(site.id) === Number(siteId));
+    const selectedSite = currentStudy &&  currentStudy?.sites?.find(site => Number(site.id) === Number(siteId));
     if (selectedSite) {
       // Сохраняем объект центра в контекст
       updateContext({ currentSite: selectedSite });
       onSiteChange?.(selectedSite);
     }
-  }, [sites, updateContext, onSiteChange]);
+  }, [updateContext, onSiteChange]);
 
   const handleCountryChange = (country: string) => {
     if (currentCountry !== country) {
@@ -100,18 +106,13 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
     }
   }
 
-  // Обновляем локальный стейт с объектами центров
-  useEffect(()=> {
-    const sites = currentStudy && studies.find(study => study.id === currentStudy.id)?.sites;
-    if (sites)
-    setSites(sites)
-  }, [currentStudy])
-
   /* Получаем список стран на основе assigned_site_id пользователя для фильтрации
   * центров по странам
   */
   useEffect(() => {
-    if (user?.assigned_site_id && sites.length > 0) {
+    let sites = currentStudy && currentStudy?.sites;
+
+    if (sites && user?.assigned_site_id && sites.length > 0) {
       // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны
       const assignedCountries = sites
         .filter(site => user.assigned_site_id.includes(Number(site.id)))
@@ -126,7 +127,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         updateContext({ currentCountry: assignedCountries[0] });
       }
     }
-  }, [user?.assigned_site_id, sites, currentCountry, updateContext]);
+  }, [user?.assigned_site_id, currentCountry, updateContext]);
 
 
   if (authLoading || loading) {
@@ -235,7 +236,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       }
 
       {/* Выбор центра */}
-      {currentStudy && currentLevel === ViewLevel.SITE && currentCountry && (
+      {currentStudy?.sites && currentLevel === ViewLevel.SITE && currentCountry && (
         <Select.Root
           size="2"
           key={`site-select-${currentSite?.id}-${currentStudy.id}`}
@@ -245,13 +246,13 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
           <Select.Trigger
             placeholder={loading
               ? t('loadingSites')
-              : !sites.length
+              : !currentStudy?.sites
                 ? t('noSites')
                 : t('selectSite')
             }
           />
           <Select.Content>
-            {sites.filter(site => site.country === currentCountry && user?.assigned_site_id?.includes(Number(site.id)))
+            {currentStudy?.sites.filter(site => site.country === currentCountry && user?.assigned_site_id?.includes(Number(site.id)))
             .map((site) => (
               <Select.Item key={site.id} value={site.id.toString()}>
                 <Flex direction="column">

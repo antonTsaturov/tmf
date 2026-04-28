@@ -37,16 +37,35 @@ export async function GET(request: NextRequest) {
 
       
       if (isAdmin) {
-      // Админ: получаем все исследования без сайтов
+        // Админ: получаем все исследования со всеми центрами
         queryText = `
           SELECT 
             s.*,
-            '[]'::json AS sites
+            COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', st.id,
+                  'study_id', st.study_id,
+                  'study_protocol', st.study_protocol,
+                  'name', st.name,
+                  'number', st.number,
+                  'country', st.country,
+                  'city', st.city,
+                  'principal_investigator', st.principal_investigator,
+                  'status', st.status,
+                  'created_at', st.created_at
+                )
+              ) FILTER (WHERE st.id IS NOT NULL),
+              '[]'::json
+            ) AS sites
           FROM study s
+          LEFT JOIN site st ON st.study_id = s.id
+          GROUP BY s.id
           ORDER BY s.id ASC
         `;
         queryParams = [];
       } else {
+        // Обычный пользователь: получаем исследования только с его центрами
         queryText = `
           SELECT 
             s.*,
