@@ -18,7 +18,7 @@ import { ReportsEmptyState } from './ReportsEmptyState';
 import { ReportFilters } from './ReportFilters';
 import { saveAs } from 'file-saver';
 import { useState, useEffect } from 'react';
-import { AuditStatus, AuditLogEntry } from '@/types/audit';
+import { AuditLogEntry } from '@/types/audit';
 import { AuditReportRequest } from '@/types/reports.type';
 
 // type ReportDataItem = {

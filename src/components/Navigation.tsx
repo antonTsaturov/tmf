@@ -110,7 +110,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   * центров по странам
   */
   useEffect(() => {
-    let sites = currentStudy && currentStudy?.sites;
+    const sites = currentStudy && currentStudy?.sites;
 
     if (sites && user?.assigned_site_id && sites.length > 0) {
       // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны

@@ -1,17 +1,5 @@
 // components/DocumentActions.tsx
 import React, { useContext } from 'react';
-import {
-  FiFilePlus,
-  FiSend,
-  FiCheckCircle,
-  FiArchive,
-  FiRefreshCw,
-  FiTrash2,
-  FiDownload,
-  FiEye,
-  FiUploadCloud,
-  FiEdit
-} from 'react-icons/fi';
 import { Flex, Button, Tooltip } from '@radix-ui/themes';
 import { MainContext } from '@/wrappers/MainContext';
 import { DocumentAction } from '@/types/document';
@@ -22,7 +10,6 @@ import { UserRole } from '@/types/types';
 import '@/styles/DocumentActions.css';
 import { useResizeObserver } from '@/hooks/useResizeObserver';
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
-import { useI18n } from "@/hooks/useI18n";
 import { useLocalizedActionConfig } from '@/hooks/useLocalizedActionConfig';
 
 interface DocumentActionsProps {
