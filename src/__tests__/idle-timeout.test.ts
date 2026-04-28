@@ -2,7 +2,7 @@
  * Idle Timeout Tests
  *
  * Tests for the client-side idle timeout mechanism:
- * - After 15 minutes of inactivity, the user should be logged out
+ * - After 30 minutes of inactivity, the user should be logged out
  * - Activity (mouse, keyboard, scroll) resets the idle timer
  * - The hook should only be active when enabled=true
  *
@@ -41,7 +41,7 @@ describe('Idle timeout logic', () => {
     jest.useRealTimers();
   });
 
-  it('should trigger onIdleTimeout after 15 minutes of inactivity', () => {
+  it('should trigger onIdleTimeout after 30 minutes of inactivity', () => {
     const now = Date.now();
     const lastActivityAt = now - IDLE_TIMEOUT - 1000;
     const onIdleTimeout = jest.fn();
@@ -114,7 +114,7 @@ describe('Idle timeout logic', () => {
     });
     expect(afterActivity.shouldTrigger).toBe(false);
 
-    // After another 15 min of inactivity — should trigger again
+    // After another 30 min of inactivity — should trigger again
     const laterTime = activityTime + IDLE_TIMEOUT + 1000;
     const laterCheck = checkIdleTimeout({
       lastActivityAt: activityTime,
@@ -126,29 +126,39 @@ describe('Idle timeout logic', () => {
     expect(onIdleTimeout).toHaveBeenCalledTimes(2);
   });
 
-  it('should check at CHECK_INTERVAL granularity, not continuously', () => {
+  it('should check at CHECK_INTERVAL granularity and trigger exactly once', () => {
     const onIdleTimeout = jest.fn();
     const startTime = Date.now();
-
-    // Simulate the setInterval-based check loop
-    const lastActivityAt = startTime;
+    const lastActivityAt = startTime; // Last activity at start
+    
     let timeoutHandled = false;
-    let tickCount = 0;
-
-    // Tick every CHECK_INTERVAL for 20 minutes
-    for (let elapsed = 0; elapsed < 20 * 60 * 1000; elapsed += CHECK_INTERVAL) {
-      tickCount++;
+    let triggeredAtTick: number | null = null;
+    let totalTicks = 0;
+    
+    // Simulate periodic checks every minute for 35 minutes
+    for (let elapsed = 0; elapsed <= 35 * 60 * 1000; elapsed += CHECK_INTERVAL) {
+      totalTicks++;
+      const currentTime = startTime + elapsed;
+      
       const result = checkIdleTimeout({
         lastActivityAt,
-        now: startTime + elapsed,
+        now: currentTime,
         timeoutHandled,
         onIdleTimeout,
       });
+      
       timeoutHandled = result.newTimeoutHandled;
+      
+      if (result.shouldTrigger && triggeredAtTick === null) {
+        triggeredAtTick = totalTicks;
+      }
     }
-
+    
+    // Should trigger exactly once, around tick 30 (30 minutes)
     expect(onIdleTimeout).toHaveBeenCalledTimes(1);
-    expect(tickCount).toBeGreaterThan(0);
+    expect(triggeredAtTick).toBeGreaterThanOrEqual(30);
+    expect(triggeredAtTick).toBeLessThanOrEqual(31); // Should trigger at 30 or 31 minutes
+    expect(totalTicks).toBe(36); // 35 minutes + initial tick at 0
   });
 
   it('should handle the AuthProvider idle timeout flow correctly', () => {
