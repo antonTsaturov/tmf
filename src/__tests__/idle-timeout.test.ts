@@ -11,7 +11,7 @@
  * Jest 'node' test environment.
  */
 
-const IDLE_TIMEOUT = 15 * 60 * 1000; // 15 min
+const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 min
 const CHECK_INTERVAL = 60 * 1000;    // 1 min
 
 /**
