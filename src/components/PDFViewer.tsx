@@ -179,7 +179,7 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
           </div>
         )}
 
-        {pdfUrl && !loading && !error && (
+        {/* {pdfUrl && !loading && !error && (
           <object
             key={selectedDocument.id}
             ref={objectRef}
@@ -196,7 +196,24 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
               </a>              
             </div>
           </object>
-        )}
+        )} */}
+        {pdfUrl && !loading && !error && (
+          <iframe
+            key={selectedDocument.id}
+            src={`${pdfUrl}#toolbar=1&navpanes=0&view=FitH`}
+            className="pdf-object"
+            aria-label="PDF Viewer"
+            style={{width: '100%', height: '100%', border: 'none'}}
+            title={selectedDocument.document_name || 'PDF Document'}
+          >
+            <div className="fallback-message">
+              <p>Ваш браузер не поддерживает встроенный просмотр PDF.</p>
+              <a href={pdfUrl} download={selectedDocument.document_name || 'document.pdf'} className="download-link">
+                Скачать файл для просмотра
+              </a>              
+            </div>
+          </iframe>
+        )}        
       </div>
     </div>
   );

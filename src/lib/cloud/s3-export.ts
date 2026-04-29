@@ -103,33 +103,6 @@ export function buildFileNameWithMode(doc: any, mode: string) {
   return `${doc.document_name}_v${doc.document_number}.${ext}`;
 }
 
-// export function buildFolderPathWithMode(doc: any, mode: string) {
-//   //const base = buildFolderPath(doc, doc.hasMultipleCountries);
-//   let base = doc.computedFolderPath;
-
-//   // Fallback к старому методу
-//   if (!base) {
-//     base = buildFolderPath(doc, doc.hasMultipleCountries);
-//   }
-
-//   if (mode !== "full") {
-//     return base;
-//   }
-
-//   // 🔥 удалённые
-//   if (doc.is_deleted) {
-//     return `${base}/history/deleted`;
-//   }
-    
-//   // 👉 финальные версии
-//   if (["approved", "archived"].includes(doc.review_status)) {
-//     return base;
-//   }
-
-//   // 👉 не финальные → history
-//   return `${base}/history`;
-// }
-
 export function buildFolderPathWithMode(doc: any, mode: string) {
   // 🔥 Используем computedFolderPath если он есть
   let base = doc.computedFolderPath;

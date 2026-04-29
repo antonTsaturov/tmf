@@ -162,6 +162,7 @@ const StudyItem: FC<StudyItemProps> = ({ study, index, onUpdate, onDelete }) => 
                       selectedValues={editData.countries || study.countries}
                       onChange={handleCountriesChange}
                       placeholder="Select countries..."
+                      allowMultiple={true}
                     />
                   </Box>
                 </Flex>
@@ -464,6 +465,7 @@ const StudyManager: FC = () => {
                   selectedValues={newStudyForm.countries}
                   onChange={(countries) => setNewStudyForm(prev => ({ ...prev, countries }))}
                   placeholder="Select countries..."
+                  allowMultiple={true}
                 />
               </Flex>
               <Button

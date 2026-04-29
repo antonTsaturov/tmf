@@ -120,7 +120,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
 
       setCountryFilter(assignedCountries);
-      logger.debug('Assigned countries', { countries: assignedCountries });
+      //logger.debug('Assigned countries', { countries: assignedCountries });
 
       // Если у пользователя центры только в 1 стране — автоматически выбираем её
       if (assignedCountries.length === 1 && currentCountry !== assignedCountries[0]) {

@@ -431,8 +431,10 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
   const handleDeleteFolder = useCallback((folderId: string) => {
     // Запрещаем удаление корневых папок Site Level и General
     const result = findFolderInTree(folderId);
-    if (result?.folder.name === 'Site Level' || result?.folder.name === 'General') {
-      alert('Cannot delete root level folders (Site Level and General)');
+    if (result?.folder.name === 'Site Level'
+        || result?.folder.name === 'General'
+        || result?.folder.name === 'Country Level') {
+      alert('Cannot delete root level folders');
       return;
     }
 
