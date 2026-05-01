@@ -1,6 +1,6 @@
 'use client'
 
-import { useContext, useEffect, useState, useCallback } from 'react';
+import { useContext, useEffect, useCallback } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Select, Flex, Text, Spinner } from '@radix-ui/themes';
 import { useAuth } from '@/wrappers/AuthProvider';
@@ -9,7 +9,6 @@ import { MainContext } from '@/wrappers/MainContext';
 import { IoIosArrowForward } from "react-icons/io";
 import React from 'react';
 import { ViewLevel } from '@/types/types';
-import { logger } from '@/lib/utils/logger';
 import { useI18n } from '@/hooks/useI18n';
 
 interface StudySiteNavigationProps {
@@ -32,8 +31,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   const { studies, loading } = useContext(AdminContext)!;
   
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentSite, currentStudy, currentLevel, currentCountry } = context;
-  const [ countryFilter, setCountryFilter ] = useState<string[]>()
+  const { currentSite, currentStudy, currentLevel, currentCountry, countryFilter } = context;
 
   // Сброс выбранного центра при смене уровня
   useEffect(() => {
@@ -58,10 +56,11 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         currentStudy: selectedStudy,
         currentSite: undefined,
         currentLevel: undefined,
-        currentCountry: defaultCountry
+        currentCountry: defaultCountry,
+        countryFilter: defaultCountry ? [defaultCountry] : undefined
       });
 
-      setCountryFilter([]);
+      //setCountryFilter([]);
 
       // Вызываем колбэки
       onStudyChange?.(selectedStudy);
@@ -83,7 +82,8 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
 
     // При переключении на SITE level если у пользователя центры в несольких странах - устанавливаем фильтр по странам
     if (currentStudy && level === ViewLevel.SITE && currentStudy?.countries?.length > 1) {
-      setCountryFilter(currentStudy?.countries)
+      //setCountryFilter(currentStudy?.countries)
+      updateContext({ countryFilter: currentStudy?.countries });
     }
 
     onSiteChange?.(undefined);
@@ -109,26 +109,57 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   /* Получаем список стран на основе assigned_site_id пользователя для фильтрации
   * центров по странам
   */
-  useEffect(() => {
-    const sites = currentStudy && currentStudy?.sites;
+  // useEffect(() => {
+  //   const sites = currentStudy && currentStudy?.sites;
 
-    if (sites && user?.assigned_site_id && sites.length > 0) {
-      // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны
-      const assignedCountries = sites
-        .filter(site => user.assigned_site_id.includes(Number(site.id)))
-        .map(site => site.country)
-        .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
+  //   if (sites && user?.assigned_site_id && sites.length > 0) {
+  //     // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны
+  //     const assignedCountries = sites
+  //       .filter(site => user.assigned_site_id.includes(Number(site.id)))
+  //       .map(site => site.country)
+  //       .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
 
-      setCountryFilter(assignedCountries);
-      //logger.debug('Assigned countries', { countries: assignedCountries });
+  //     //setCountryFilter(assignedCountries);
+  //     updateContext({ countryFilter: assignedCountries });
+  //     //logger.debug('Assigned countries', { countries: assignedCountries });
 
-      // Если у пользователя центры только в 1 стране — автоматически выбираем её
-      if (assignedCountries.length === 1 && currentCountry !== assignedCountries[0]) {
-        updateContext({ currentCountry: assignedCountries[0] });
-      }
-    }
-  }, [user?.assigned_site_id, currentCountry, updateContext]);
+  //     // Если у пользователя центры только в 1 стране — автоматически выбираем её
+  //     if (assignedCountries.length === 1 && currentCountry !== assignedCountries[0]) {
+  //       updateContext({ currentCountry: assignedCountries[0] });
+  //     }
+  //   }
+  // }, [user?.assigned_site_id, currentCountry, updateContext]);
+useEffect(() => {
+  const sites = currentStudy?.sites;
 
+  if (!sites || !user?.assigned_site_id?.length) return;
+
+  const assignedCountries = sites
+    .filter(site => user.assigned_site_id.includes(Number(site.id)))
+    .map(site => site.country)
+    .filter((country, index, self) => country && self.indexOf(country) === index);
+
+  // 🔒 Проверка на изменение
+  const isSame =
+    JSON.stringify(assignedCountries) === JSON.stringify(countryFilter);
+
+  if (!isSame) {
+    updateContext({ countryFilter: assignedCountries });
+  }
+
+  if (
+    assignedCountries.length === 1 &&
+    currentCountry !== assignedCountries[0]
+  ) {
+    updateContext({ currentCountry: assignedCountries[0] });
+  }
+
+}, [
+  currentStudy,                // ❗ ДОБАВИТЬ
+  user?.assigned_site_id,
+  currentCountry,
+  countryFilter               // ❗ ДОБАВИТЬ
+]);
 
   if (authLoading || loading) {
     return (
@@ -191,7 +222,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
               </Select.Item>
 
               {/* Показываем уровень страны только если стран в исследовании больше одной */}
-              {currentStudy.countries.length > 1 && <Select.Item value={ViewLevel.COUNTRY}>
+              {currentStudy?.countries?.length > 1 && <Select.Item value={ViewLevel.COUNTRY}>
                 <Flex direction="column" gap="1">
                   <Text>{t('countryLevel')}</Text>
                 </Flex>

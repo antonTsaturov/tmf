@@ -27,7 +27,7 @@ export default function UserDropdownMenu() {
     <>
       <DropdownMenu.Root >
         <DropdownMenu.Trigger style={{outline: 'none'}}>
-          <Button  color="gray" aria-label={t('userMenu')}>
+          <Button  color="indigo" aria-label={t('userMenu')} >
             <FaUser /> {user?.name}
           </Button>
         </DropdownMenu.Trigger>
@@ -46,7 +46,7 @@ export default function UserDropdownMenu() {
           {/* <DropdownMenu.Item>
             {t('studyMetrics')}
           </DropdownMenu.Item> */}
-          <Tooltip content={currentStudy ? t('aboutStudy_toolTip') : t('aboutStudy_toolTipEmpty')}>
+          <Tooltip content={currentStudy ? t('aboutStudy_toolTip') : t('aboutStudy_toolTipEmpty')} delayDuration={800}>
             <DropdownMenu.Item 
               onClick={() => currentStudy && updateContext({isStudyInfoPanelOpen: true})} 
               disabled={!currentStudy}

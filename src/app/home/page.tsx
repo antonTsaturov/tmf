@@ -2,7 +2,7 @@
 
 import { useRef, useContext } from "react";
 import "@/styles/Home.css";
-import FolderExplorer from "../../components/FolderExplorer";
+import FolderExplorer from "@/components/FolderExplorer/index";
 import UserMenu from "@/components/UserMenu";
 import { Tabs } from "@radix-ui/themes";
 import Navigation from "@/components/Navigation";
@@ -17,6 +17,7 @@ import UserReviewsButton from "@/components/UserReviewsButton";
 import { Title, TitleFontSize } from "../../components/Title";
 import { useI18n } from "@/hooks/useI18n";
 import StudyReportsButton from "@/components/StudyReportsButton";
+import { StudyDocumentSearch } from "@/components/StudyDocumentSearch";
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -36,6 +37,7 @@ const Home: React.FC<MainWindowProps> = () => {
         <Title fontSize={TitleFontSize.ExtraSmall} />
         <Navigation />
         <div className="toolbar-title"></div>
+        <StudyDocumentSearch />
         <StudyReportsButton />
         <UserReviewsButton />
         <UserMenu />

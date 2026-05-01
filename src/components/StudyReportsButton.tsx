@@ -9,7 +9,7 @@ const StudyReportsButton = () => {
     <div>
       <Link href="/reports">
         <Tooltip content="Create report">
-          <Button variant="solid" mr="3" style={{ cursor: "pointer" }} >
+          <Button variant="surface" mr="2" style={{ cursor: "pointer" }} >
             <HiOutlineDocumentReport />
           </Button>
         </Tooltip>

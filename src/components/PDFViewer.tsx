@@ -1,5 +1,5 @@
 // components/PDFViewer.tsx
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 import { MdCached } from "react-icons/md";
@@ -22,7 +22,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
   const [fullscreen, setFullscreen] = useState(false);
   const [usingCache, setUsingCache] = useState(false);
   
-  const objectRef = useRef<HTMLObjectElement>(null);
   const { getCachedPDF, cachePDF } = usePDFCache();
 
   useEffect(() => {

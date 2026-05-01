@@ -2,7 +2,7 @@
 
 export const initFetchInterceptor = () => {
   const originalFetch = window.fetch;
-  const refreshPromise: Promise<boolean> | null = null;
+  //const refreshPromise: Promise<boolean> | null = null;
   let isRefreshing = false;
   const pendingRequests: Array<{
     resolve: (value: Response) => void;

@@ -9,3 +9,32 @@ export enum Colors {
 export const COUNTRIES = [
   'Russia', 'Australia', 'China', 'India', 'Brazil', 'Mexico', 'South Korea', 'USA'
 ];
+
+export type RadixColors =
+  | 'green'
+  | 'red'
+  | 'gray'
+  | 'blue'
+  | 'orange'
+  | 'purple'
+  | 'ruby'
+  | 'brown'
+  | 'crimson'
+  | 'cyan'
+  | 'gold'
+  | 'indigo'
+  | 'lime'
+  | 'pink'
+  | 'plum'
+  | 'teal'
+  | 'tomato'
+  | 'violet'
+  | 'yellow'
+  | 'bronze'
+  | 'amber'
+  | 'iris'
+  | 'jade'
+  | 'grass'
+  | 'mint'
+  | 'sky'
+  | undefined;

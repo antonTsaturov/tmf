@@ -1,5 +1,7 @@
 
 import { DocumentWorkFlowStatus } from '@/types/document.status';
+import { Study } from './study';
+import { StudySite } from './site';
 
 export enum DocumentAction {
   CREATE_DOCUMENT = 'create_document',
@@ -121,4 +123,14 @@ export interface DocumentStats {
   deletedPercent: number;
   canArchive?: boolean;
   canExport?: boolean;
+}
+
+export interface DocumentLink {
+  id: string;
+  document_name: string;
+  study: Study;
+  site: StudySite | null;
+  folder_id: string;
+  country: string;
+  status: DocumentWorkFlowStatus;
 }

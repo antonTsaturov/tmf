@@ -1,5 +1,5 @@
 import '../styles/DocumentStatusBadge.css'
-import { Colors } from '@/lib/config/constants';
+import { DocumentStatusConfig as statusConfig } from '@/types/document.status';
 
 
 interface DocumentStatusBadgeProps {
@@ -7,14 +7,6 @@ interface DocumentStatusBadgeProps {
 }
 
 const DocumentStatusBadge = ({status}: DocumentStatusBadgeProps) => {
-
-  const statusConfig: Record<string, { label: string; color: string }> = {
-    draft: { label: 'DRAFT', color: Colors.GRAY },
-    in_review: { label: 'IN REVIEW', color: Colors.BLUE },
-    approved: { label: 'APPROVED', color: Colors.GREEN },
-    archived: { label: 'ARCHIVED', color: Colors.YELLOW },
-    deleted: { label: 'DELETED', color: Colors.RED },
-  };
   
   const config = typeof status === 'undefined' ? statusConfig['draft'] :  statusConfig[status];
 

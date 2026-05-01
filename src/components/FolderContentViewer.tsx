@@ -176,6 +176,14 @@ const FolderContentViewer: React.FC = () => {
 
   // Функция загрузки документов
   const loadFolderContents = useCallback(async () => {
+
+    if (isLoading) {
+      console.log('⏳ Already loading, skipping');
+      return;
+    }
+    
+    console.log('[selectedFolder]', selectedFolder);
+
     if (!selectedFolder || !currentStudy) {
       setDocumentsData(null);
       return;
@@ -217,7 +225,7 @@ const FolderContentViewer: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedFolder, currentStudy, currentSite, currentLevel, currentCountry]);
+  }, [selectedFolder]); //currentStudy, currentSite, currentLevel, currentCountry
 
   useEffect(() => {
     loadFolderContents();

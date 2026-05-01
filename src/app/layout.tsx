@@ -10,6 +10,7 @@ import { NotificationProvider } from "@/wrappers/NotificationContext";
 import { ConnectivityBanner } from "@/components/ConnectivityBanner"; 
 import { UploadProvider } from "@/wrappers/UploadContext";
 import { LocaleProvider } from "@/wrappers/LocaleProvider";
+import QueryProvider from "@/wrappers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,25 +44,28 @@ export default function RootLayout({
         <Theme>
           {/* Локали next-intl */}
           <LocaleProvider> 
-            {/* Основной контекст */}
-            <ContextProvider>
-              {/* Авторизация */}
-              <AuthProvider>
-                {/* Всплывающие уведомления */}
-                <NotificationProvider>
-                  {/* Контекст для управления системой */}
-                  <AdminContextProvider>
-                    {/* Контекст для загрузки документов */}
-                    <UploadProvider>
-                    
-                      <ConnectivityBanner />
-                      {children}
-                    
-                    </UploadProvider>
-                  </AdminContextProvider>
-                </NotificationProvider>
-              </AuthProvider>
-            </ContextProvider>
+            {/* Поиск документов */}
+            <QueryProvider>
+              {/* Основной контекст */}
+              <ContextProvider>
+                {/* Авторизация */}
+                <AuthProvider>
+                  {/* Всплывающие уведомления */}
+                  <NotificationProvider>
+                    {/* Контекст для управления системой */}
+                    <AdminContextProvider>
+                      {/* Контекст для загрузки документов */}
+                      <UploadProvider>
+                      
+                        <ConnectivityBanner />
+                        {children}
+                      
+                      </UploadProvider>
+                    </AdminContextProvider>
+                  </NotificationProvider>
+                </AuthProvider>
+              </ContextProvider>
+            </QueryProvider>
           </LocaleProvider>
         </Theme>
       </body>

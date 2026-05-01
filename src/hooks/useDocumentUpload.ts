@@ -110,6 +110,8 @@ export const useDocumentUpload = () => {
       }
 
       const filesArray = validFiles.length > 0 ? validFiles : Array.from(files);
+      const studyId = currentStudy?.id!;
+      const siteId = currentSite?.id!;
 
       setPreview({
         files: filesArray,
@@ -119,8 +121,8 @@ export const useDocumentUpload = () => {
         customName: filesArray.length === 1
           ? filesArray[0].name.replace(/\.[^/.]+$/, '')
           : `${filesArray.length} файлов`,
-        studyId: currentStudy?.id!,
-        siteId: currentSite?.id!,
+        studyId: studyId,
+        siteId: siteId,
         country: context.currentCountry,
         createdBy: user.id,
         ...(filesArray.length === 1 && { file: filesArray[0] })

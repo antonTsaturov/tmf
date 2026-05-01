@@ -20,7 +20,7 @@ export interface Study {
   users: any[] | null;
   total_documents: number | null;
   folders_structure: Folder | null;
-  audit_trail?: any[] | null;
+  // audit_trail?: any[] | null;
   sites?: StudySite[];
 }
 
