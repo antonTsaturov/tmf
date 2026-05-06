@@ -367,9 +367,9 @@ const RestoreDocumentPanel: React.FC<RestoreDocumentPanelProps> = ({
                     Reason for restoration
                   </Text>
                   {requireReason && (
-                    <Badge size="1" variant="solid" color="blue">Optional</Badge>
+                    <Badge size="1" variant="solid" color="pink">Required</Badge>
                   )}
-                  <Tooltip content="Provide a reason for restoring this document (optional but recommended for audit trail)">
+                  <Tooltip content="Provide a reason for restoring this document">
                     <FiInfo size={14} color="var(--gray-9)" />
                   </Tooltip>
                 </Flex>

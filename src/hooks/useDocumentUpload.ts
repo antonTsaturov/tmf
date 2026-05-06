@@ -8,6 +8,7 @@ import { useNotification } from '@/wrappers/NotificationContext';
 import { useUpload } from '@/wrappers/UploadContext';
 import { Document as DocumentVersion } from '@/types/document';
 import { logger } from '@/lib/utils/logger';
+import { ViewLevel } from '@/types/types';
 
 type ProgressCallback = (index: number, progress: number, document?: any) => void;
 
@@ -46,7 +47,7 @@ export const useDocumentUpload = () => {
   const [progress, setProgress] = useState(0);
   const { user } = useAuth();
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedFolder, currentStudy, currentSite, selectedDocument} = context;
+  const { selectedFolder, currentStudy, currentSite, selectedDocument, currentLevel} = context;
   const { addNotification } = useNotification();
   const upload = useUpload();
   const setPreview = upload.setFilePreview;
@@ -112,18 +113,18 @@ export const useDocumentUpload = () => {
       const filesArray = validFiles.length > 0 ? validFiles : Array.from(files);
       const studyId = currentStudy?.id!;
       const siteId = currentSite?.id!;
+      const country = currentLevel === ViewLevel.COUNTRY ? context.currentCountry : undefined;
 
       setPreview({
         files: filesArray,
         folderId: selectedFolder.id,
-        //folderName: selectedFolder.name,
         size: filesArray.reduce((total, file) => total + file.size, 0),
         customName: filesArray.length === 1
           ? filesArray[0].name.replace(/\.[^/.]+$/, '')
           : `${filesArray.length} файлов`,
         studyId: studyId,
         siteId: siteId,
-        country: context.currentCountry,
+        country: country,
         createdBy: user.id,
         ...(filesArray.length === 1 && { file: filesArray[0] })
       });

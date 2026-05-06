@@ -24,7 +24,7 @@ export default function UserDropdownMenu() {
   }
 
   return (
-    <>
+    <div style={{marginLeft: '10px'}}>
       <DropdownMenu.Root >
         <DropdownMenu.Trigger style={{outline: 'none'}}>
           <Button  color="indigo" aria-label={t('userMenu')} >
@@ -74,6 +74,6 @@ export default function UserDropdownMenu() {
         onOpenChange={setSettingsOpen}
       />
 
-    </>
+    </div>
   )
 }

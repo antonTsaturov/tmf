@@ -24,15 +24,43 @@ const UserReviewsButton = () => {
     <div>
       <Link href="/reviews">
         <Tooltip content="Pending review">
-          <Button variant="surface" mr="2" style={{ cursor: 'pointer' }} >
+          <Button 
+            variant="surface" 
+            mr="2" 
+            style={{ 
+              cursor: 'pointer',
+              position: 'relative'  // Добавляем относительное позиционирование для кнопки
+            }} 
+          >
             <Flex align="center" gap="2">
               <MdOutlinePendingActions />
-              {count && count > 0 && (
-                <Badge color="red" variant="solid" size="1">
-                  <Text style={{ fontSize: "10px" }}>{count}</Text>
-                </Badge>
-              )}
             </Flex>
+            
+            {/* Бейдж теперь вне Flex и позиционируется абсолютно */}
+            {count && count > 0 && (
+              <Badge 
+                color="red" 
+                variant="solid" 
+                size="1"
+                style={{ 
+                  position: 'absolute',
+                  top: '-8px',      // Смещаем вверх
+                  right: '-8px',    // Смещаем вправо
+                  borderRadius: '50%',
+                  minWidth: '18px',   // Минимальная ширина
+                  width: 'auto',      // Автоширина для чисел больше 9
+                  height: '18px',
+                  padding: '0 5px',   // Отступы для чисел
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ fontSize: '10px', lineHeight: 1 }}>
+                  {count > 99 ? '99+' : count}
+                </Text>
+              </Badge>
+            )}
           </Button>
         </Tooltip>
       </Link>

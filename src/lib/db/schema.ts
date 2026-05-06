@@ -9,67 +9,67 @@ export enum Tables {
 }
 
 export const AuditTrialTable = `
-    CREATE TABLE IF NOT EXISTS audit (
-        id BIGSERIAL PRIMARY KEY,
-        audit_id UUID NOT NULL UNIQUE,
-        created_at TIMESTAMPTZ NOT NULL,
-        user_id TEXT NOT NULL,
-        user_email TEXT NOT NULL,
-        user_role JSONB NOT NULL,
-        action TEXT NOT NULL,
-        entity_type TEXT NOT NULL,
-        entity_id UUID NOT NULL,
-        old_value JSONB,
-        new_value JSONB,
-        ip_address INET NOT NULL,
-        user_agent TEXT NOT NULL,
-        session_id TEXT NOT NULL,
-        status TEXT NOT NULL,
-        error_message TEXT,
-        reason TEXT,
-        site_id VARCHAR(100),
-        study_id VARCHAR(100),
+  CREATE TABLE IF NOT EXISTS audit (
+    id BIGSERIAL PRIMARY KEY,
+    audit_id UUID NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL,
+    user_id TEXT NOT NULL,
+    user_email TEXT NOT NULL,
+    user_role JSONB NOT NULL,
+    action TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id UUID NOT NULL,
+    old_value JSONB,
+    new_value JSONB,
+    ip_address INET NOT NULL,
+    user_agent TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    status TEXT NOT NULL,
+    error_message TEXT,
+    reason TEXT,
+    site_id VARCHAR(100),
+    study_id VARCHAR(100),
 
-        CONSTRAINT audit_status_check CHECK (status IN ('SUCCESS', 'FAILURE')),
-        CONSTRAINT audit_action_check CHECK (action IN ('CREATE', 'UPDATE', 'DELETE', 'RESTORE'))
-    );
-        CREATE INDEX idx_audit_timestamp ON audit(created_at DESC);
-        CREATE INDEX idx_audit_user ON audit(user_id, created_at DESC);
-        CREATE INDEX idx_audit_entity ON audit(entity_type, entity_id, created_at DESC);
-        CREATE INDEX idx_audit_action ON audit(action, created_at DESC);
-        CREATE INDEX idx_audit_study ON audit(study_id, created_at DESC);
-        CREATE INDEX idx_audit_site ON audit(site_id, created_at DESC);
-        CREATE INDEX idx_audit_site_id ON audit(site_id);
+    CONSTRAINT audit_status_check CHECK (status IN ('SUCCESS', 'FAILURE')),
+    CONSTRAINT audit_action_check CHECK (action IN ('CREATE', 'UPDATE', 'DELETE', 'RESTORE'))
+  );
+    CREATE INDEX idx_audit_timestamp ON audit(created_at DESC);
+    CREATE INDEX idx_audit_user ON audit(user_id, created_at DESC);
+    CREATE INDEX idx_audit_entity ON audit(entity_type, entity_id, created_at DESC);
+    CREATE INDEX idx_audit_action ON audit(action, created_at DESC);
+    CREATE INDEX idx_audit_study ON audit(study_id, created_at DESC);
+    CREATE INDEX idx_audit_site ON audit(site_id, created_at DESC);
+    CREATE INDEX idx_audit_site_id ON audit(site_id);
 
-        CREATE OR REPLACE FUNCTION prevent_audit_update()
-        RETURNS TRIGGER AS $$
-        BEGIN
-          RAISE EXCEPTION 'Audit logs cannot be modified';
-        END;
-        $$ LANGUAGE plpgsql;
+    CREATE OR REPLACE FUNCTION prevent_audit_update()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      RAISE EXCEPTION 'Audit logs cannot be modified';
+    END;
+    $$ LANGUAGE plpgsql;
 
-        DROP TRIGGER IF EXISTS trigger_prevent_audit_update ON audit; 
+    DROP TRIGGER IF EXISTS trigger_prevent_audit_update ON audit; 
 
-        CREATE TRIGGER trigger_prevent_audit_update
-          BEFORE UPDATE OR DELETE ON audit
-          FOR EACH ROW
-          EXECUTE FUNCTION prevent_audit_update();
+    CREATE TRIGGER trigger_prevent_audit_update
+      BEFORE UPDATE OR DELETE ON audit
+      FOR EACH ROW
+      EXECUTE FUNCTION prevent_audit_update();
 `;
 
 
 export const StudyTable = `
-    CREATE TABLE IF NOT EXISTS study (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        protocol TEXT UNIQUE NOT NULL,
-        sponsor TEXT,
-        cro TEXT,
-        countries TEXT[],
-        status TEXT NOT NULL,
-        users JSONB,
-        total_documents INTEGER DEFAULT 0,
-        folders_structure JSONB,
-    );
+  CREATE TABLE IF NOT EXISTS study (
+    id SERIAL PRIMARY KEY,
+    title TEXT NOT NULL,
+    protocol TEXT UNIQUE NOT NULL,
+    sponsor TEXT,
+    cro TEXT,
+    countries TEXT[],
+    status TEXT NOT NULL,
+    users JSONB,
+    total_documents INTEGER DEFAULT 0,
+    folders_structure JSONB,
+  );
 `;
 
 export const SiteTable = `

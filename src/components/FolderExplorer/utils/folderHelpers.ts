@@ -26,15 +26,31 @@ export const findPathToFolder = (nodes: FileNode[], targetId: string, path: stri
 };
 
 export const collectAllFolderIds = (nodes: FileNode[]): string[] => {
-    const ids: string[] = [];
-    for (const node of nodes) {
-      if (node.type === 'folder' || node.type === 'subfolder') {
-        if (node.children && node.children.length > 0) {
-          ids.push(node.id);
-          ids.push(...collectAllFolderIds(node.children));
+  const ids: string[] = [];
+  for (const node of nodes) {
+    if (node.type === 'folder' || node.type === 'subfolder') {
+      if (node.children && node.children.length > 0) {
+        ids.push(node.id);
+        ids.push(...collectAllFolderIds(node.children));
+      }
+    }
+  }
+  return ids;
+};
+
+export const collectAllFolderIdsFromData = (nodes: FileNode[]): string[] => {
+  const ids: string[] = [];
+  for (const node of nodes) {
+    // Собираем ID для всех типов папок
+    if (node.type === 'folder' || node.type === 'subfolder' || node.type === 'root') {
+      if (node.children && node.children.length > 0) {
+        ids.push(node.id);
+        if (node.children) {
+          ids.push(...collectAllFolderIdsFromData(node.children));
         }
       }
     }
-    return ids;
-  };
+  }
+  return ids;
+};
 

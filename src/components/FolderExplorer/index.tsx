@@ -1,17 +1,18 @@
-// src/components/FileExplorer.tsx
+// src/components/FolderExplorer/index.tsx
 
-import React, {  useContext, useEffect, useState } from 'react';
+import React, {  useCallback, useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { ViewLevel } from '@/types/types';
 import { 
   Box, 
   Flex, 
   Text, 
-  Separator, 
 } from '@radix-ui/themes';
 import StudyInfoPanel from '../panels/StudyInfoPanel';
 import { useI18n } from '@/hooks/useI18n';
 import FolderTreeNode from './FolderTreeNode';
+import { findPathToFolder } from './utils/folderHelpers';
+import { SidebarSkeleton } from '../ui/SidebarSkeleton';
 
 export interface FileNode {
   id: string;
@@ -37,9 +38,10 @@ const FolderExplorer: React.FC<FileExplorerProps> = ({
 }) => {
   const { t } = useI18n('folderExplorer');
   const { context } = useContext(MainContext)!;
-  const { currentStudy, currentSite, currentLevel, currentCountry } = context;
+  const { currentStudy, currentSite, currentLevel, currentCountry, selectedFolder } = context;
   const [data, setData] = useState<FileNode[] | undefined>();
   const [filteredData, setFilteredData] = useState<FileNode[] | undefined>();
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   // Get folders structure from Study object
   useEffect(() => {
@@ -97,6 +99,46 @@ const FolderExplorer: React.FC<FileExplorerProps> = ({
   }, [data, currentLevel, currentSite]);
 
 
+  // Функция для переключения одной папки
+  const handleToggleFolder = useCallback((nodeId: string) => {
+    setExpandedFolders(prev => {
+      const newExpanded = new Set(prev);
+      if (newExpanded.has(nodeId)) {
+        newExpanded.delete(nodeId);
+      } else {
+        newExpanded.add(nodeId);
+      }
+      return newExpanded;
+    });
+  }, []);
+
+  // Функция для переключения всех папок в ветке
+  const handleToggleAllFolders = useCallback((ids: string[], expand: boolean) => {
+    setExpandedFolders(prev => {
+      const newExpanded = new Set(prev);
+      if (expand) {
+        ids.forEach(id => newExpanded.add(id));
+      } else {
+        ids.forEach(id => newExpanded.delete(id));
+      }
+      return newExpanded;
+    });
+  }, []);
+
+  // Эффект для автоматического раскрытия папок при выборе папки
+  useEffect(() => {
+    if (selectedFolder && filteredData) {
+      const parentIds = findPathToFolder(filteredData, selectedFolder.id);
+      if (parentIds && parentIds.length > 0) {
+        setExpandedFolders(prev => {
+          const newExpanded = new Set(prev);
+          parentIds.forEach(id => newExpanded.add(id));
+          return newExpanded;
+        });
+      }
+    }
+  }, [selectedFolder, filteredData]);
+  
   if (!Array.isArray(filteredData)) {
     return (
       <Flex justify="center" align="center" p="4">
@@ -105,46 +147,74 @@ const FolderExplorer: React.FC<FileExplorerProps> = ({
     );
   }
 
-  return (
-    <Box className="file-explorer" p="3" style={{ height: '100%', overflow: 'auto' }}>
+return (
+    <Box className="file-explorer" pb="6" style={{ height: '100%', overflow: 'auto' }}>
+      {/* Панель с информацией о выбранном исследовании */}
       <StudyInfoPanel />
-      
-      <Flex align="center" justify="center" py="2" gap="4" >
-        <Text size="3" weight="bold">
-          {t('masterFileTitle')}
-        </Text>
-      </Flex>
-      <Separator mb="4" style={{ width: '100%' }} />
 
-      {!currentStudy || !currentLevel ? (
-        <Flex direction="column" gap="2" align="center">
-          {!currentStudy && (
-            <Text size="2" color="gray">{t('selectStudy')}</Text>
-          )}
-          {currentStudy && !currentLevel && (
-            <Text size="2" color="gray">{t('selectLevel')}</Text>
-          )}
+      {/* Sticky контейнер для фиксированной панели */}
+      <Box  
+        style={{
+          padding: '14px', 
+          position: 'sticky', 
+          top: 0, 
+          backgroundColor: 'var(--gray-5)', 
+          zIndex: 10,
+          borderBottom: '1px solid var(--gray-7)',
+          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center'
+        }}
+      >        
+          <Text size="2" weight="bold">
+            {t('masterFileTitle')}
+          </Text>
+      </Box>
+
+      <Box p="2">
+      {/* 1. Если исследование не выбрано — показываем полноценный скелетон */}
+      {!currentStudy ? (
+        <Flex direction="column" align="center" justify="center" py="4">
+          <SidebarSkeleton/> 
+        </Flex>
+      ) : 
+      
+      /* 2. Если исследование выбрано, но не выбран уровень (General/Country/Site) */
+      !currentLevel ? (
+        <Flex direction="column" align="center" justify="center" py="4">
+          <SidebarSkeleton  />
         </Flex>
       )
-        : currentLevel === ViewLevel.SITE && !currentSite ? (
-        <Flex direction="column" gap="2" align="center">
-          <Text size="2" color="gray">{t('selectSite')}</Text>
-        </Flex>)
-        : currentLevel === ViewLevel.COUNTRY && !currentCountry ? (
-        <Flex direction="column" gap="2" align="center">
-          <Text size="2" color="gray">{t('selectCountry')}</Text>
+
+      /* 3. Логика для уровней Site и Country */
+      : currentLevel === ViewLevel.SITE && !currentSite ? (
+        <Flex direction="column" gap="2" align="center" justify="center" py="4">
+          <SidebarSkeleton />
         </Flex>
-      ) : filteredData.length === 0 ? (
-        <Flex direction="column" gap="2" align="center">
+      )
+
+      : currentLevel === ViewLevel.COUNTRY && !currentCountry ? (
+        <Flex direction="column" gap="2" align="center" justify="center" py="4">
+          <SidebarSkeleton />
+        </Flex>
+      ) 
+      
+      /* 4. Обработка пустых данных */
+      : filteredData.length === 0 ? (
+        <Flex direction="column" gap="2" align="center" py="4">
           <Text size="2" color="gray">
             {currentLevel === ViewLevel.GENERAL
               ? t('noGeneralFolders')
-              : t('noSiteFolders')}
+              : currentLevel === ViewLevel.SITE ?
+              t('noSiteFolders')
+              : t('noCountryFolders')
+            }
           </Text>
-        </Flex>
-      ) : (
+        </Flex> 
+      ) 
+      
+      /* 5. Основной рендер дерева папок */
+      : (
         <Flex direction="column" gap="1">
-          {/* {filteredData.map(node => FolderTreeNode(node))} */}
           {filteredData.map(node => (
             <FolderTreeNode 
               key={node.id}
@@ -153,12 +223,15 @@ const FolderExplorer: React.FC<FileExplorerProps> = ({
               allowMultiSelect={allowMultiSelect}
               showFileIcons={showFileIcons}
               filteredData={filteredData}
+              expandedFolders={expandedFolders}
+              onToggleFolder={handleToggleFolder}
+              onToggleAllFolders={handleToggleAllFolders}              
             />
           ))}          
         </Flex>
       )}
+      </Box>
     </Box>
   );
-};
-
+}
 export default FolderExplorer;

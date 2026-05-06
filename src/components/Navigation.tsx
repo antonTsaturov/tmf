@@ -1,8 +1,9 @@
+// src/components/Navigation.tsx
 'use client'
 
 import { useContext, useEffect, useCallback } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
-import { Select, Flex, Text, Spinner } from '@radix-ui/themes';
+import { Select, Flex, Text, Spinner, Button, Tooltip } from '@radix-ui/themes';
 import { useAuth } from '@/wrappers/AuthProvider';
 import { Study, StudySite } from '@/types/types';
 import { MainContext } from '@/wrappers/MainContext';
@@ -10,6 +11,9 @@ import { IoIosArrowForward } from "react-icons/io";
 import React from 'react';
 import { ViewLevel } from '@/types/types';
 import { useI18n } from '@/hooks/useI18n';
+import { useStudyChange } from '@/hooks/useStudyChange'; 
+import { LuLayers3 } from "react-icons/lu";
+
 
 interface StudySiteNavigationProps {
   onStudyChange?: (study: Study | undefined) => void;
@@ -29,9 +33,9 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   * центров, которые назначены пользователю.
   */
   const { studies, loading } = useContext(AdminContext)!;
-  
   const { context, updateContext } = useContext(MainContext)!;
   const { currentSite, currentStudy, currentLevel, currentCountry, countryFilter } = context;
+
 
   // Сброс выбранного центра при смене уровня
   useEffect(() => {
@@ -42,124 +46,108 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   }, [currentLevel, currentSite, updateContext, onSiteChange]);
 
   // Обработчики
-  const handleStudyChange = useCallback((studyId: string) => {
-    const selectedStudy = studies.find((study: Study) => Number(study.id) === Number(studyId));
-
-    if (selectedStudy) {
-      // Если у исследования только 1 страна — сразу устанавливаем её
-      const defaultCountry = selectedStudy.countries.length === 1
-        ? selectedStudy.countries[0]
-        : undefined;
-
-      // Сохраняем объект исследования в контекст
-      updateContext({
-        currentStudy: selectedStudy,
-        currentSite: undefined,
-        currentLevel: undefined,
-        currentCountry: defaultCountry,
-        countryFilter: defaultCountry ? [defaultCountry] : undefined
-      });
-
-      //setCountryFilter([]);
-
-      // Вызываем колбэки
-      onStudyChange?.(selectedStudy);
-      onSiteChange?.(undefined);
-      onViewLevelChange?.(undefined);
-    }
-  }, [studies, updateContext, onStudyChange, onSiteChange, onViewLevelChange]);
-
-
+  const { handleStudyChange } = useStudyChange({
+    studies,
+    updateContext,
+    onStudyChange,
+    onSiteChange,
+    onViewLevelChange,
+  });
+  
   const handleViewLevelChange = useCallback((level: ViewLevel) => {
     onViewLevelChange?.(level);
 
     // При переключении на SITE level — автовыбор страны если у пользователя центры только в 1 стране
     if (level === ViewLevel.SITE && currentStudy?.countries?.length === 1) {
-      updateContext({ currentLevel: level, currentSite: undefined, currentCountry: currentStudy.countries[0] });
+      updateContext({ 
+        currentLevel: level, 
+        currentSite: undefined, 
+        currentCountry: currentStudy.countries[0],
+        selectedFolder: null 
+      });
     } else {
-      updateContext({ currentLevel: level, currentSite: undefined, currentCountry: undefined });
+      updateContext({ 
+        currentLevel: level, 
+        currentSite: undefined, 
+        currentCountry: undefined,
+        selectedFolder: null
+       });
     }
 
     // При переключении на SITE level если у пользователя центры в несольких странах - устанавливаем фильтр по странам
     if (currentStudy && level === ViewLevel.SITE && currentStudy?.countries?.length > 1) {
-      //setCountryFilter(currentStudy?.countries)
-      updateContext({ countryFilter: currentStudy?.countries });
+      updateContext({ 
+        countryFilter: currentStudy?.countries,
+        selectedFolder: null
+      });
     }
-
-    onSiteChange?.(undefined);
   }, [updateContext, onViewLevelChange, onSiteChange, countryFilter]);
-
 
   const handleSiteChange = useCallback((siteId: string) => {
     const selectedSite = currentStudy &&  currentStudy?.sites?.find(site => Number(site.id) === Number(siteId));
     if (selectedSite) {
       // Сохраняем объект центра в контекст
-      updateContext({ currentSite: selectedSite });
-      onSiteChange?.(selectedSite);
+      updateContext({ 
+        currentSite: selectedSite,
+        selectedFolder: null
+       });
     }
   }, [updateContext, onSiteChange]);
 
   const handleCountryChange = (country: string) => {
     if (currentCountry !== country) {
-      updateContext({ currentCountry: country, currentSite: undefined });
-      onSiteChange?.(undefined);
+      updateContext({ 
+        currentCountry: country, 
+        currentSite: undefined,
+        selectedFolder: null 
+      });
     }
+  }
+
+  const handleStudyMap = () => {
+    updateContext({ 
+      selectedFolder: null,
+      showLastDocuments: false,
+      currentLevel: undefined,
+      currentCountry: undefined,
+      currentSite: undefined
+    });
   }
 
   /* Получаем список стран на основе assigned_site_id пользователя для фильтрации
   * центров по странам
   */
-  // useEffect(() => {
-  //   const sites = currentStudy && currentStudy?.sites;
+  useEffect(() => {
+    const sites = currentStudy?.sites;
 
-  //   if (sites && user?.assigned_site_id && sites.length > 0) {
-  //     // Фильтруем центры, которые назначены пользователю, и собираем уникальные страны
-  //     const assignedCountries = sites
-  //       .filter(site => user.assigned_site_id.includes(Number(site.id)))
-  //       .map(site => site.country)
-  //       .filter((country, index, self) => country && self.indexOf(country) === index); // Убираем дубликаты
+    if (!sites || !user?.assigned_site_id?.length) return;
 
-  //     //setCountryFilter(assignedCountries);
-  //     updateContext({ countryFilter: assignedCountries });
-  //     //logger.debug('Assigned countries', { countries: assignedCountries });
+    const assignedCountries = sites
+      .filter(site => user.assigned_site_id.includes(Number(site.id)))
+      .map(site => site.country)
+      .filter((country, index, self) => country && self.indexOf(country) === index);
 
-  //     // Если у пользователя центры только в 1 стране — автоматически выбираем её
-  //     if (assignedCountries.length === 1 && currentCountry !== assignedCountries[0]) {
-  //       updateContext({ currentCountry: assignedCountries[0] });
-  //     }
-  //   }
-  // }, [user?.assigned_site_id, currentCountry, updateContext]);
-useEffect(() => {
-  const sites = currentStudy?.sites;
+    // 🔒 Проверка на изменение
+    const isSame =
+      JSON.stringify(assignedCountries) === JSON.stringify(countryFilter);
 
-  if (!sites || !user?.assigned_site_id?.length) return;
+    if (!isSame) {
+      updateContext({ countryFilter: assignedCountries });
+    }
 
-  const assignedCountries = sites
-    .filter(site => user.assigned_site_id.includes(Number(site.id)))
-    .map(site => site.country)
-    .filter((country, index, self) => country && self.indexOf(country) === index);
+    if (
+      assignedCountries.length === 1 &&
+      currentCountry !== assignedCountries[0]
+    ) {
+      updateContext({ currentCountry: assignedCountries[0] });
+    }
 
-  // 🔒 Проверка на изменение
-  const isSame =
-    JSON.stringify(assignedCountries) === JSON.stringify(countryFilter);
-
-  if (!isSame) {
-    updateContext({ countryFilter: assignedCountries });
-  }
-
-  if (
-    assignedCountries.length === 1 &&
-    currentCountry !== assignedCountries[0]
-  ) {
-    updateContext({ currentCountry: assignedCountries[0] });
-  }
-
-}, [
-  currentStudy,                // ❗ ДОБАВИТЬ
-  user?.assigned_site_id,
-  currentCountry,
-  countryFilter               // ❗ ДОБАВИТЬ
-]);
+  }, [
+    currentStudy,
+    user?.assigned_site_id,
+    currentCountry,
+    countryFilter
+  ]);
 
   if (authLoading || loading) {
     return (
@@ -183,6 +171,15 @@ useEffect(() => {
     <Flex direction="row" gap="3" >
       {/* Шаг 1: Выбор исследования */}
       <Flex direction="row" gap="3" align="center">
+        <Tooltip content="Изменить уровень просмотра">
+          <Button
+            variant="surface"
+            size="2"
+            onClick={handleStudyMap}
+          >
+            <LuLayers3 />
+          </Button>
+        </Tooltip>
         <Select.Root
           size="2"
           key={`study-select-${currentStudy?.id}`}

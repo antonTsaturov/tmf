@@ -1,5 +1,6 @@
 :root {
   --gl-background-color: #f3f3f3dc;
+  --gl-padding: 10px 10px 10px 5px;
 }
 
 .sidebarresizable-root {
@@ -34,8 +35,7 @@
   display: flex;
   flex-direction: column;
   z-index: 20;
-  margin-top: 20px;
-  padding: 0 20px 40px 0;
+  padding: 10px 10px 10px 0;
 }
 
 .right-frame-content {
@@ -105,7 +105,7 @@
 }
 
 .sidebar-content {
-  padding: 20px 10px 20px 20px;
+  padding: 10px 5px 10px 10px;
   flex: 1; /* Добавить - растягивается на всю высоту */
   display: flex; /* Добавить */
   flex-direction: column; /* Добавить */
@@ -123,7 +123,7 @@
 
 .main-content {
   flex: 1;
-  padding: 20px 20px 20px 10px;
+  padding: var(--gl-padding);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -139,7 +139,9 @@
 .main-content-area {
   background-color: #fafafa;
   border: 1px solid #a2a2a270;
-  border-radius: 8px;
+  border-top: none;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
   display: flex;
   flex: 1;
   flex-direction: column;
@@ -158,7 +160,8 @@
 .main-content--buttons, .main-content--status {
   border: 1px solid #a2a2a270;
   border-bottom: none;
-  border-radius: 8px;
+  border-top-right-radius: 8px;
+  border-top-left-radius: 8px;
   background: #fafbfc;
   display: flex;  
 }

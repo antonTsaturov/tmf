@@ -119,9 +119,9 @@ export async function POST(request: NextRequest) {
 
     const newAccessToken = AuthService.generateAccessToken(accessTokenPayload);
 
-    logger.authLog('REFRESH_SUCCESS', session.userId.toString(), 'Token refreshed', {
-      sessionId: sessionId.substring(0, 20),
-    });
+    // logger.authLog('REFRESH_SUCCESS', session.userId.toString(), 'Token refreshed', {
+    //   sessionId: sessionId.substring(0, 20),
+    // });
 
     // Set new access token in cookie
     const response = new NextResponse(

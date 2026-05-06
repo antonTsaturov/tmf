@@ -28,7 +28,6 @@ import { FileIcon } from 'react-file-icon';
 import { 
   FiFilter, 
   FiChevronDown, 
-  FiFolder, 
   FiInbox,
   FiAlertCircle, 
 } from 'react-icons/fi';
@@ -36,13 +35,16 @@ import { FaRegFolderOpen } from "react-icons/fa";
 import { ViewLevel } from "@/types/types";
 import { useDragAndDrop } from '@/hooks/useDragAndDrop'; 
 import { useAuth } from "@/wrappers/AuthProvider";
-import DragAndDropOverlay from "./DragAndDropOverlay";
+import DragAndDropOverlay from "./ui/DragAndDropOverlay";
 import { useUpload } from "@/wrappers/UploadContext";
 import EditDocumentTitlePanel from "./panels/EditDocumentPanel";
 import { DocumentLifeCycleStatus } from "@/types/document.status";
 import RestoreDocumentPanel from "./panels/RestoreDocumentPanel";
 import UnarchiveDocumentPanel from "./panels/UnarchiveDocumentPanel";
 import { useI18n } from "@/hooks/useI18n";
+import { WelcomeScreen } from "./ui/WelcomeScreen";
+import { StudyMap } from "./ui/StudyMap";
+import { ViewLastDocuments } from "./ui/ViewLastDocuments";
 
 interface DocumentFilters {
     study_id: number;
@@ -61,7 +63,16 @@ type ViewFilter = 'all' | 'active' | 'deleted' | 'archived';
 const FolderContentViewer: React.FC = () => {
   const { t } = useI18n('');
   const { context, updateContext } = useContext(MainContext)!;
-  const { currentStudy, currentSite, docWasDeleted, selectedFolder, selectedDocument, currentLevel, currentCountry } = context!;
+  const { 
+    currentStudy, 
+    currentSite, 
+    docWasDeleted, 
+    selectedFolder, 
+    selectedDocument, 
+    currentLevel, 
+    currentCountry,
+    showLastDocuments
+  } = context!;
   const { user } = useAuth();
   const upload = useUpload();
   const { handleAction } = useDocumentActionHandler();
@@ -182,8 +193,6 @@ const FolderContentViewer: React.FC = () => {
       return;
     }
     
-    console.log('[selectedFolder]', selectedFolder);
-
     if (!selectedFolder || !currentStudy) {
       setDocumentsData(null);
       return;
@@ -225,7 +234,7 @@ const FolderContentViewer: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedFolder]); //currentStudy, currentSite, currentLevel, currentCountry
+  }, [selectedFolder, currentStudy, currentSite, currentLevel, currentCountry]);
 
   useEffect(() => {
     loadFolderContents();
@@ -329,7 +338,14 @@ const FolderContentViewer: React.FC = () => {
     { value: 'archived', label: t('folderContentViewer.filter.archived'), count: documentCounts.archived },
   ];
 
-  if (!selectedFolder) {
+  const showWelcomeScreen = !selectedFolder && !currentStudy && !currentLevel;
+  const showStudyMap = !selectedFolder && currentStudy !== undefined && showLastDocuments === false;
+  const showLast = !selectedFolder  && showLastDocuments === true;
+
+  // console.log('showWelcomeScreen:', showWelcomeScreen);
+  // console.log('showStudyMap:',  showStudyMap);
+  // console.log('showLast:',  showLast);
+  if (showWelcomeScreen) {
     return (
       <Flex 
         align="center" 
@@ -338,11 +354,39 @@ const FolderContentViewer: React.FC = () => {
         gap="4" 
         style={{ height: '100%', minHeight: '400px' }}
       >
-        <FiFolder size={64} color="var(--gray-6)" />
-        <Text size="3" color="gray">{t('folderContentViewer.noFolderSelected')}</Text>        
+        <WelcomeScreen />   
       </Flex>
     );
   }
+
+  if (showStudyMap) {
+    return (
+      <Flex 
+        align="center" 
+        justify="center" 
+        direction="column" 
+        gap="4" 
+        style={{ height: '100%', minHeight: '400px' }}
+      >
+        <StudyMap />
+      </Flex>
+    );
+  }
+
+  if (showLast) {
+    const level = currentLevel as ViewLevel;
+    return (
+      <Flex 
+        align="center" 
+        justify="center" 
+        direction="column" 
+        gap="4" 
+        style={{ height: '100%', minHeight: '400px' }}
+      >
+        <ViewLastDocuments level={level} />
+      </Flex>
+    );
+  }  
 
   if (isLoading) {
     return (
@@ -365,6 +409,7 @@ const FolderContentViewer: React.FC = () => {
     );
   }
   
+  console.log('selectedDocument:', selectedDocument?.country);
   return (
     <Box 
       ref={contentRef} 
@@ -393,7 +438,7 @@ const FolderContentViewer: React.FC = () => {
           <Flex direction="column" gap="1">
             <Flex direction="row" gap="1">
               <FaRegFolderOpen size={24}/>
-              <Text size="4" weight="bold" ml="2" style={{ textTransform: 'uppercase' }}>{selectedFolder.name}</Text>
+              <Text size="4" weight="bold" ml="2" style={{ textTransform: 'uppercase' }}>{selectedFolder?.name}</Text>
             </Flex>
             
               <Text size="1" color="gray">
@@ -530,7 +575,7 @@ const FolderContentViewer: React.FC = () => {
             justify="center" 
             direction="column" 
             gap="4" 
-            style={{ height: '300px' }}
+            height="100%"
           >
             <FiInbox size={48} color="var(--gray-6)" />
             <Text size="3" color="gray" align="center">
@@ -689,26 +734,5 @@ const FolderContentViewer: React.FC = () => {
       />
     </Box>
   );};
-
-// Если встроенная плюрализация не сработает
-// const getDocumentCountKey = (count: number): string => {
-//   if (count === 0) return 'zero';
-//   const lastDigit = count % 10;
-//   const lastTwoDigits = count % 100;
-  
-//   if (lastTwoDigits >= 11 && lastTwoDigits <= 19) return 'many';
-//   if (lastDigit === 1) return 'one';
-//   if (lastDigit >= 2 && lastDigit <= 4) return 'few';
-//   return 'many';
-// };
-// // Использование:
-// t(`folderContentViewer.documentsCount.${getDocumentCountKey(documentsData?.count || 0)}`)
-// // Ключи
-// "documentsCount": {
-//   "zero": "документов",
-//   "one": "документ",
-//   "few": "документа",
-//   "many": "документов"
-// }
 
 export default FolderContentViewer;

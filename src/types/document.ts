@@ -133,4 +133,6 @@ export interface DocumentLink {
   folder_id: string;
   country: string;
   status: DocumentWorkFlowStatus;
+  uploaded_at?: string;
+  uploaded_by?: string;
 }

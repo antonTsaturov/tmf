@@ -17,8 +17,7 @@ import {
 import { MagnifyingGlassIcon, Cross2Icon } from "@radix-ui/react-icons";
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useContext, useEffect, useState } from "react";
-import { DocumentStatusConfig } from '@/types/document.status';
-import { DocumentWorkFlowStatus } from "@/types/document.status";
+import { DocumentStatusConfig, DocumentWorkFlowStatus } from '@/types/document.status';
 import { DocumentLink } from "@/types/document";
 import { RadixColors } from "@/lib/config/constants";
 import { ViewLevel } from "@/types/types";
@@ -26,8 +25,11 @@ import { MainContext, MainContextProps } from "@/wrappers/MainContext";
 import { AdminContext } from "@/wrappers/AdminContext";
 import { FileNode } from "./FolderExplorer/index";
 import { findNodeById } from "./FolderExplorer/utils/folderHelpers";
+import { fetchDocuments, searchConfig as config } from "@/lib/utils/search";
+import { useDebounce } from "@/hooks/useDebounce";
 
-type FilterKey = "all" | DocumentWorkFlowStatus;
+
+export type FilterKey = "all" | DocumentWorkFlowStatus;
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "All" },
@@ -56,57 +58,57 @@ const getDocumentLevel = (folderId?: string): ViewLevel => {
   return ViewLevel.ROOT;
 };
 
-const fetchDocuments = async (
-  query: string,
-  filter: FilterKey,
-  signal?: AbortSignal
-): Promise<DocumentLink[]> => {
-  // 🔒 защита от лишних вызовов (дополнительно к enabled в react-query)
-  if (!query.trim()) return [];
+// const fetchDocuments = async (
+//   query: string,
+//   filter: FilterKey,
+//   signal?: AbortSignal
+// ): Promise<DocumentLink[]> => {
+//   // 🔒 защита от лишних вызовов (дополнительно к enabled в react-query)
+//   if (!query.trim()) return [];
 
-  const params = new URLSearchParams({
-    q: query.trim(),
-    filter: filter === "all" ? "all" : String(filter),
-  });
+//   const params = new URLSearchParams({
+//     q: query.trim(),
+//     filter: filter === "all" ? "all" : String(filter),
+//   });
 
-  const response = await fetch(
-    `/api/documents/search?${params.toString()}`,
-    {
-      method: "GET",
-      credentials: "include",
-      signal,
-    }
-  );
+//   const response = await fetch(
+//     `/api/documents/search?${params.toString()}`,
+//     {
+//       method: "GET",
+//       credentials: "include",
+//       signal,
+//     }
+//   );
 
-  // 🔐 auth handling
-  if (response.status === 401) {
-    throw new Error("Session expired");
-  }
+//   // 🔐 auth handling
+//   if (response.status === 401) {
+//     throw new Error("Session expired");
+//   }
 
-  if (!response.ok) {
-    let message = "Failed to fetch documents";
+//   if (!response.ok) {
+//     let message = "Failed to fetch documents";
 
-    try {
-      const errorData = await response.json();
-      message = errorData.error || message;
-    } catch {
-      // ignore JSON parse error
-    }
+//     try {
+//       const errorData = await response.json();
+//       message = errorData.error || message;
+//     } catch {
+//       // ignore JSON parse error
+//     }
 
-    throw new Error(message);
-  }
+//     throw new Error(message);
+//   }
 
-  const data = await response.json();
+//   const data = await response.json();
 
-  // 🧠 гарантируем стабильный контракт
-  return data.documents ?? [];
-};
+//   // 🧠 гарантируем стабильный контракт
+//   return data.documents ?? [];
+// };
 
 export const StudyDocumentSearch: React.FC = () => {
   const {updateContext} = useContext(MainContext)!;
   const { studies } = useContext(AdminContext)!;
   const [query, setQuery] = React.useState("");
-  const [activeFilter, setActiveFilter] = React.useState<FilterKey>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
   const [showLevelFilters, setShowLevelFilters] = useState(false);
   const [activeLevelFilter, setActiveLevelFilter] = useState<ViewLevel>(ViewLevel.ROOT);
   const [open, setOpen] = useState(false); // Контролируем состояние диалога
@@ -124,12 +126,13 @@ export const StudyDocumentSearch: React.FC = () => {
     queryKey: ["documents", debouncedQuery, activeFilter],
     queryFn: ({ signal }) => fetchDocuments(debouncedQuery, activeFilter, signal),
     enabled: hasQuery,
-    staleTime: 30 * 1000, // 30 секунд для поиска - более актуальные данные
-    gcTime: 5 * 60 * 1000, // 5 минут в кэше (вместо cacheTime в v5)
+    //staleTime: 30 * 1000, // 30 секунд для поиска - более актуальные данные
+    //gcTime: 5 * 60 * 1000, // 5 минут в кэше (вместо cacheTime в v5)
     // Дополнительные опции для поиска:
     placeholderData: (previousData) => previousData, // Показывает старые данные при новом поиске
-    refetchOnWindowFocus: false, // Не обновлять при фокусе окна
-    retry: 1, // Только 1 повтор при ошибке
+    //refetchOnWindowFocus: false, // Не обновлять при фокусе окна
+    //retry: 1, // Только 1 повтор при ошибке
+    ...config
   });
 
   // Фильтрация результатов по уровню (General/Country/Site) на основе folder_id
@@ -197,13 +200,12 @@ const handleDocumentClick = useCallback((doc: DocumentLink) => {
   }
   
   if (doc?.site) {
-    updates.currentCountry = doc?.country || 'Russia';
+    updates.currentCountry = doc?.country || 'Russia'; // NB!
     updates.countryFilter = doc.study.countries;
     updates.currentSite = doc?.site;
   }
   
-  // Используем flushSync для синхронного обновления (если нужно)
-    updateContext(updates);
+  updateContext(updates);
 }, [studies, updateContext]);
 
   // Получение цвета для уровня
@@ -462,14 +464,3 @@ const handleDocumentClick = useCallback((doc: DocumentLink) => {
     </Dialog.Root>
   );
 };
-
-function useDebounce<T>(value: T, delay: number) {
-  const [debounced, setDebounced] = React.useState(value);
-
-  React.useEffect(() => {
-    const handler = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(handler);
-  }, [value, delay]);
-
-  return debounced;
-}

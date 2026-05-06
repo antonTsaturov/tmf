@@ -141,7 +141,8 @@
     "selectSite": "Выберите центр",
     "selectCountry": "Выберите страну",
     "noGeneralFolders": "Нет общих папок",
-    "noSiteFolders": "Нет папок для показа"
+    "noSiteFolders": "Нет папок для показа по центрам",
+    "noCountryFolders": "Нет папок для показа по странам"
   },
   "userMenu": {
     "userMenu": "Меню пользователя",

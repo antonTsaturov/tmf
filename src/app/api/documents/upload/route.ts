@@ -99,7 +99,6 @@ async function uploadHandler(
       studyId === undefined ||
       Number.isNaN(studyId) ||
       !folderId ||
-      //!folderName ||
       !createdBy
     ) {
       return NextResponse.json(
@@ -174,6 +173,11 @@ async function uploadHandler(
   const normalizedSiteId = (siteId === 'undefined' || siteId === undefined || siteId === null || siteId === '') 
     ? null 
     : siteId;
+
+  const normalizedCountry = (country === 'undefined' || country === undefined || country === null || country === '') 
+    ? null 
+    : country;
+
     
     // Вставляем документ
     const { rows: [newDocument] } = await client.query(`
@@ -187,9 +191,8 @@ async function uploadHandler(
       documentId,
       studyId,
       normalizedSiteId,
-      country || null,
+      normalizedCountry,
       folderId,
-      //folderName,
       tmfZone || null,
       tmfArtifact || null,
       createdBy,

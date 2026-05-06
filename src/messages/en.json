@@ -141,7 +141,8 @@
     "selectSite": "Select site",
     "selectCountry": "Select country",
     "noGeneralFolders": "No general folders",
-    "noSiteFolders": "No site folders"
+    "noSiteFolders": "No site folders",
+    "noCountryFolders": "No country folders"
   },
   "userMenu": {
     "userMenu": "User menu",

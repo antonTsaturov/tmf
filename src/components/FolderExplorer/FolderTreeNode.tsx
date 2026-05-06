@@ -1,21 +1,5 @@
 // src/components/FolderExplorer/FolderTreeNode.tsx
 
-/**
- * Renders a single node in the folder tree.
- *
- * @param {Object} node - The folder node to render.
- * @param {string} node.id - The ID of the folder node.
- * @param {string} node.name - The name of the folder node.
- * @param {boolean} node.selected - Whether the folder node is selected.
- * @param {boolean} node.expanded - Whether the folder node is expanded.
- * @param {Function} onToggle - A function to toggle the expansion of the folder node.
- * @param {boolean} isExpanded - Whether the folder node is currently expanded.
- * @param {boolean} isSelected - Whether the folder node is currently selected.
- * @param {Function} onSelect - A function to handle the selection of the folder node.
- * @param {Function} setFolderRef - A function to set the ref of the folder node.
- * @returns {JSX.Element} The rendered folder node.
- */
-
 import { Badge, Box, Flex, Text } from "@radix-ui/themes";
 import { FileNode } from "./index";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -23,7 +7,7 @@ import { MainContext } from "@/wrappers/MainContext";
 import { StudyStatus, ViewLevel } from "@/types/types";
 import { ChevronRightIcon, DotIcon, LockClosedIcon, ArchiveIcon } from "@radix-ui/react-icons";
 import { FaRegFolderOpen, FaRegFolder } from "react-icons/fa6";
-import { collectAllFolderIds, findNodeById, findPathToFolder } from "./utils/folderHelpers";
+import { collectAllFolderIds } from "./utils/folderHelpers";
 
 interface FolderTreeNodeProps {
   node: FileNode;
@@ -31,6 +15,9 @@ interface FolderTreeNodeProps {
   allowMultiSelect?: boolean;
   showFileIcons?: boolean;
   filteredData?: FileNode[];
+  expandedFolders?: Set<string>;
+  onToggleFolder?: (nodeId: string) => void;
+  onToggleAllFolders?: (ids: string[], expand: boolean) => void;
 }
 
 const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({ 
@@ -38,16 +25,18 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
   depth = 1, 
   allowMultiSelect = false, 
   showFileIcons = true, 
-  filteredData 
+  filteredData,
+  expandedFolders = new Set(),
+  onToggleFolder,
+  onToggleAllFolders
 }) => {
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite, currentLevel, selectedFolder, isFolderContentLoading } = context;
   const folderRefs = useRef<Map<string, HTMLDivElement>>(new Map());
-  
+  const userSelectedFolderIdRef = useRef<string | null>(null);
 
-  const isExpanded = expandedFolders.has(node.id);
+  const isExpanded = expandedFolders?.has(node.id);
   const isSelected = selectedNodes.has(node.id) || selectedFolder?.id === node.id;
   const hasChildren = node.children && node.children.length > 0;
   const displayType = (node.type === 'root' || node.type === 'subfolder') ? 'folder' : node.type;
@@ -70,33 +59,9 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
 
   const toggleFolder = (nodeId: string) => {
     if (!filteredData) return;
-    const newExpanded = new Set(expandedFolders);
-    const node = findNodeById(filteredData, nodeId);
+    onToggleFolder?.(nodeId);
+  };  
 
-    if (newExpanded.has(nodeId)) {
-      newExpanded.delete(nodeId);
-      //onToggle?.(node!, false);
-    } else {
-      newExpanded.add(nodeId);
-      //onToggle?.(node!, true);
-    }
-    setExpandedFolders(newExpanded);
-  };
-
-  const toggleAllFolders = (ids: string[], expand: boolean) => {
-    if (!filteredData) return;
-    
-    const newExpanded = new Set(expandedFolders);
-    
-    if (expand) {
-      ids.forEach(id => newExpanded.add(id));
-    } else {
-      ids.forEach(id => newExpanded.delete(id));
-    }
-    
-    setExpandedFolders(newExpanded);
-  };
-  
   const handleSelect = (node: FileNode, event: React.MouseEvent) => {
     event.stopPropagation();
     if (isFolderContentLoading) return;
@@ -110,18 +75,23 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
 
     const isSameNode = context.selectedFolder?.id === node.id;
 
+    // ✅ Устанавливаем флаг, что это клик пользователя (не программная прокрутка)
+    userSelectedFolderIdRef.current = node.id;
+
     if (allowMultiSelect && event.ctrlKey) {
       const newSelected = new Set(selectedNodes);
       if (newSelected.has(node.id)) {
         newSelected.delete(node.id);
         if (context.selectedFolder?.id === node.id) {
           updateContext({ selectedFolder: null });
+          userSelectedFolderIdRef.current = null;
         }
       } else {
         newSelected.add(node.id);
         updateContext({ selectedFolder: node });
       }
       setSelectedNodes(newSelected);
+      
     } else {
       if (isSameNode) {
         setSelectedNodes(new Set());
@@ -131,7 +101,6 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
         updateContext({ selectedFolder: node });
       }
     }
-    //onSelect?.(node);
   };
 
   const setFolderRef = useCallback((nodeId: string) => (element: HTMLDivElement | null) => {
@@ -142,48 +111,78 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
     }
   }, []); 
 
-  const scrollToFolder = useCallback((folderId: string) => {
+  const scrollToFolder = useCallback((folderId: string, isProgrammatic = true) => {
+    if (!isProgrammatic) return; // Если прокрутка вызвана кликом пользователя - пропускаем
+    
     const element = folderRefs.current.get(folderId);
-    if (element) {
-      element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
-    }
+    if (!element) return;
+
+    const scrollContainer = element.closest('.file-explorer') as HTMLElement;
+    if (!scrollContainer) return;
+
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
+    
+    // Вычисляем целевую позицию
+    const targetScrollTop = scrollContainer.scrollTop + 
+      (elementRect.top - containerRect.top) - 
+      (containerRect.height / 2) + 
+      (elementRect.height / 2);
+    
+    // Плавная анимация с easing функцией
+    const startScrollTop = scrollContainer.scrollTop;
+    const distance = targetScrollTop - startScrollTop;
+    const duration = 500; // мс
+    let startTime: number | null = null;
+
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+
+    const animation = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const timeElapsed = currentTime - startTime;
+      const progress = Math.min(timeElapsed / duration, 1);
+      const easeProgress = easeInOutCubic(progress);
+      
+      scrollContainer.scrollTop = startScrollTop + distance * easeProgress;
+      
+      if (progress < 1) {
+        requestAnimationFrame(animation);
+      }
+    };
+
+    requestAnimationFrame(animation);
   }, []);
 
   useEffect(() => {
     if (selectedFolder) {
       setSelectedNodes(new Set([selectedFolder.id]));
       
-      // Раскрываем ВСЕ папки (если нужно найти глубоко вложенную)
-      // Но лучше раскрывать только путь к папке. Используем существующую collectAllFolderIds?
-      // Нет, она раскрывает всё дерево. Давайте сделаем умнее:
+      // ✅ Проверяем, была ли папка выбрана пользователем
+      const isUserSelected = userSelectedFolderIdRef.current === selectedFolder.id;
       
-      
-      if (filteredData) {
-        const parentIds = findPathToFolder(filteredData, selectedFolder.id);
-        if (parentIds && parentIds.length > 0) {
-          // Раскрываем только родительские папки
-          setExpandedFolders(prev => {
-            const newExpanded = new Set(prev);
-            parentIds.forEach(id => newExpanded.add(id));
-            return newExpanded;
-          });
-          
-          // Даем время на рендер раскрытых папок
-          setTimeout(() => {
-            scrollToFolder(selectedFolder.id);
-          }, 150);
-        } else {
+      if (!isUserSelected) {
+        // Только если это НЕ клик пользователя - делаем прокрутку
+        setTimeout(() => {
           scrollToFolder(selectedFolder.id);
-        }
+        }, 300);
       }
+      
+      // ✅ Сбрасываем ref после обработки
+      userSelectedFolderIdRef.current = null;
     } else {
       setSelectedNodes(new Set());
     }
     updateContext({ selectedDocument: null });
-  }, [selectedFolder, filteredData, scrollToFolder]);    
+  }, [selectedFolder, scrollToFolder]);
+
+  useEffect(() => {
+    const allRelatedIds = collectAllFolderIds([node]);
+    onToggleAllFolders?.(allRelatedIds, true);
+  }, [node]);
 
 
   if (!isAvailableForCurrentLevel()) return null;
@@ -275,9 +274,11 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
             marginTop:'1px'
           }}
           title={node.name}
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation();
             if (isFolder && isAvailableForCurrentLevel()) {
               if (hasChildren) toggleFolder(node.id);
+              handleSelect(node, e);
             }
           }}
         >
@@ -292,18 +293,10 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
               e.stopPropagation();
               
               // Собираем ID самой папки и всех её детей
-              // Важно: передаем [node], чтобы включить ID текущей папки в список на переключение
               const allRelatedIds = collectAllFolderIds([node]);
               
-              if (isExpanded) {
-                // Если папка сейчас развернута (мы видим "Fold all")
-                // Мы принудительно УДАЛЯЕМ все ID этой ветки из expandedFolders
-                toggleAllFolders(allRelatedIds, false);
-              } else {
-                // Если папка свернута (мы видим "Unfold all")
-                // Мы принудительно ДОБАВЛЯЕМ все ID этой ветки
-                toggleAllFolders(allRelatedIds, true);
-              }
+              // ✅ Используем пропс onToggleAllFolders
+              onToggleAllFolders?.(allRelatedIds, !isExpanded);
             }}
           >
             <Text>
@@ -341,6 +334,9 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
               allowMultiSelect={allowMultiSelect}
               showFileIcons={showFileIcons}
               filteredData={filteredData}
+              expandedFolders={expandedFolders}
+              onToggleFolder={onToggleFolder}
+              onToggleAllFolders={onToggleAllFolders}              
             />
           ))}
         </Box>
