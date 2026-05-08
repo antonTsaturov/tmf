@@ -198,7 +198,7 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
         gap="2"
         className={`node ${isSelected ? 'selected' : ''} ${!isFolder ? 'file-node' : ''}`}
         style={{ 
-          paddingLeft: `${depth * 12}px`,
+          paddingLeft: `${depth * 25}px`,
           paddingRight: '8px',
           paddingTop: '8px',
           paddingBottom: '8px',

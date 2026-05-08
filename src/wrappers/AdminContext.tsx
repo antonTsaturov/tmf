@@ -17,7 +17,7 @@ interface AdminContextType {
     error: string | null;
     saveStudy: (table: Tables, studyData: Study) => Promise<Study>;
     saveSite: (table: Tables, siteData: StudySite) => Promise<StudySite>;
-    saveUser: (table: Tables, siteData: StudyUser) => Promise<StudyUser>;
+    saveUser: (table: Tables, siteData: Partial<StudyUser>) => Promise<StudyUser>;
     loading: boolean;
     isAuthenticated: boolean;
     currentStudyID: number | null;

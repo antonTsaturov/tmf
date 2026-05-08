@@ -170,8 +170,9 @@ async function handleLogin(request: NextRequest) {
       id: user.id,
       email: user.email,
       role: user.role,
-      study_id: user.study_id,
+      assigned_study_id: user.assigned_study_id,
       assigned_site_id: user.assigned_site_id,
+      assigned_country_by_study: user.assigned_country_by_study,
       sessionId: session.sessionId,
     };
 
@@ -186,7 +187,8 @@ async function handleLogin(request: NextRequest) {
         email: user.email,
         role: user.role,
         assigned_site_id: user.assigned_site_id,
-        study_id: user.study_id,
+        assigned_study_id: user.assigned_study_id,
+        assigned_country_by_study: user.assigned_country_by_study,
         is_first_login: isFirstLogin
       }
     });

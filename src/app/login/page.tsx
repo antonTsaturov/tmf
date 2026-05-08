@@ -1,18 +1,21 @@
 // app/login/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 import styles from "./LoginPage.module.css";
 import { logger } from "@/lib/utils/logger";
 import { Title } from "../../components/Title";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useI18n } from "@/hooks/useI18n";
+import { MainContext } from "@/wrappers/MainContext";
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? " 0.0.0-dev";
 
 export default function LoginPage() {
   const { t } = useI18n("auth");
+  const mainContext = useContext(MainContext);
+  const resetMainContext = mainContext?.resetContext;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,6 +45,8 @@ export default function LoginPage() {
       if (!response.ok) {
         throw new Error(data.error || t("loginFailed"));
       }
+
+      resetMainContext?.();
 
       window.location.href = "/home";
     } catch (err: any) {

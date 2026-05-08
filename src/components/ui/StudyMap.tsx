@@ -7,62 +7,125 @@ import { useContext, useMemo, useState } from 'react';
 import { MainContext, MainContextProps } from '@/wrappers/MainContext';
 import { StudySite, ViewLevel } from '@/types/types';
 import { FaRegBuilding, FaClinicMedical } from "react-icons/fa";
+import { useAuth } from '@/wrappers/AuthProvider';
 
 
 export const StudyMap = () => {
   const { context, updateContext } = useContext(MainContext)!;
+  const { user } = useAuth();
   const { currentStudy } = context!;
   const [isHovered, setIsHovered] = useState(false);
 
   // Группируем сайты по странам на основе данных из currentStudy
-  const hierarchyData = useMemo(() => {
-    if (!currentStudy?.sites || currentStudy.sites.length === 0) {
-      return { studyName: currentStudy?.title || 'No Study', countries: [], studyCountries: [] };
-    }
+  // const hierarchyData = useMemo(() => {
+  //   if (!currentStudy?.sites || currentStudy.sites.length === 0) {
+  //     return { studyName: currentStudy?.title || 'No Study', countries: [], studyCountries: [] };
+  //   }
 
-    // Группировка сайтов по стране
-    const countriesMap = new Map<string, typeof currentStudy.sites>();
+  //   // Группировка сайтов по стране
+  //   const countriesMap = new Map<string, typeof currentStudy.sites>();
     
-    currentStudy.sites.forEach((site) => {
-      const country = site.country;
-      if (!countriesMap.has(country)) {
-        countriesMap.set(country, []);
-      }
-      countriesMap.get(country)!.push(site);
-    });
+  //   currentStudy.sites.forEach((site) => {
+  //     const country = site.country;
+  //     if (!countriesMap.has(country)) {
+  //       countriesMap.set(country, []);
+  //     }
+  //     countriesMap.get(country)!.push(site);
+  //   });
 
-    // Преобразуем Map в массив объектов для отображения
-    const countries = Array.from(countriesMap.entries()).map(([country, sites]) => ({
+  //   // Преобразуем Map в массив объектов для отображения
+  //   const countries = Array.from(countriesMap.entries()).map(([country, sites]) => ({
+  //     name: country,
+  //     hasSites: true,
+  //     sites: sites
+  //     .filter(site =>user?.assigned_site_id.includes(Number(site.id)))
+  //     .map((site: StudySite) => ({
+  //       id: site.id,
+  //       study_id: site.study_id,
+  //       study_protocol: site.study_protocol,
+  //       country: site.country,
+  //       name: site.name,
+  //       city: site.city,
+  //       principal_investigator: site.principal_investigator,
+  //       status: site.status,
+  //       number: site.number
+  //     }))
+  //   }));
+
+  //   // Создаем массив стран из currentStudy.countries
+  //   const studyCountries = (currentStudy.countries || []).map(country => ({
+  //     name: country,
+  //     hasSites: countriesMap.has(country),
+  //     siteCount: countriesMap.get(country)?.length || 0
+  //   }));
+
+  //   return {
+  //     studyName: currentStudy.title || currentStudy.protocol || 'Untitled Study',
+  //     protocol: currentStudy.protocol,
+  //     sponsor: currentStudy.sponsor,
+  //     countries,
+  //     studyCountries
+  //   };
+  // }, [currentStudy]);
+const hierarchyData = useMemo(() => {
+  if (!currentStudy?.sites || currentStudy.sites.length === 0) {
+    return { studyName: currentStudy?.title || 'No Study', countries: [], studyCountries: [] };
+  }
+
+  // Получаем страны, назначенные пользователю для этого исследования
+  const userAssignedCountries = user?.assigned_country_by_study?.[currentStudy.id] || [];
+
+  // Группировка сайтов по стране
+  const countriesMap = new Map<string, typeof currentStudy.sites>();
+  console.log(' [currentStudy.sites]', currentStudy.sites);
+  
+  currentStudy.sites.forEach((site) => {
+    const country = site.country;
+    if (!countriesMap.has(country)) {
+      countriesMap.set(country, []);
+    }
+    countriesMap.get(country)!.push(site);
+  });
+
+  // Преобразуем Map в массив объектов для отображения
+  // Фильтруем только те страны, которые назначены пользователю
+  const countries = Array.from(countriesMap.entries())
+    .filter(([country]) => userAssignedCountries.includes(country)) // ← Добавьте эту фильтрацию
+    .map(([country, sites]) => ({
       name: country,
       hasSites: true,
-      sites: sites.map((site: StudySite) => ({
-        id: site.id,
-        study_id: site.study_id,
-        study_protocol: site.study_protocol,
-        country: site.country,
-        name: site.name,
-        city: site.city,
-        principal_investigator: site.principal_investigator,
-        status: site.status,
-        number: site.number
-      }))
+      sites: sites
+        .filter(site => user?.assigned_site_id?.includes(Number(site.id)) || false)
+        .map((site: StudySite) => ({
+          id: site.id,
+          study_id: site.study_id,
+          study_protocol: site.study_protocol,
+          country: site.country,
+          name: site.name,
+          city: site.city,
+          principal_investigator: site.principal_investigator,
+          status: site.status,
+          number: site.number
+        }))
     }));
 
-    // Создаем массив стран из currentStudy.countries
-    const studyCountries = (currentStudy.countries || []).map(country => ({
+  // Создаем массив стран из currentStudy.countries, фильтруя по назначенным пользователю
+  const studyCountries = (currentStudy.countries || [])
+    .filter(country => userAssignedCountries.includes(country)) // ← Добавьте эту фильтрацию
+    .map(country => ({
       name: country,
       hasSites: countriesMap.has(country),
       siteCount: countriesMap.get(country)?.length || 0
     }));
 
-    return {
-      studyName: currentStudy.title || currentStudy.protocol || 'Untitled Study',
-      protocol: currentStudy.protocol,
-      sponsor: currentStudy.sponsor,
-      countries,
-      studyCountries
-    };
-  }, [currentStudy]);
+  return {
+    studyName: currentStudy.title || currentStudy.protocol || 'Untitled Study',
+    protocol: currentStudy.protocol,
+    sponsor: currentStudy.sponsor,
+    countries,
+    studyCountries
+  };
+}, [currentStudy, user]); // ← Добавьте user в зависимости  
 
   // Функция для получения цвета статуса
   const getStatusColor = (status: string) => {
@@ -184,7 +247,7 @@ export const StudyMap = () => {
           </Flex>
 
           
-          {hierarchyData.studyCountries.length > 1 && 
+          {hierarchyData.studyCountries.length > 0 && 
             <Box style={{ flex: 1 }}>
             <Flex direction="column" gap="2">
               <Flex align="center" gap="2">
@@ -197,7 +260,8 @@ export const StudyMap = () => {
               <ScrollArea style={{ flex: 1, flexGrow: 1, height: '100%' }}>
                 {hierarchyData.studyCountries.length && (
                   <Flex direction="column" gap="2">
-                    {hierarchyData.studyCountries.map((country, idx) => (
+                    {hierarchyData.studyCountries
+                    .map((country, idx) => (
                       <Tooltip key={idx} content={`Открыть уровень страны (${country.name})`}>
                         <Card 
                           key={idx} 

@@ -332,7 +332,7 @@ const filteredOptions = getOptions().filter(option => {
       <DropdownMenu.Content
         style={{
           minWidth: 300,
-          maxWidth: 400,
+          maxWidth: 600,
           maxHeight: 400
         }}
         sideOffset={4}

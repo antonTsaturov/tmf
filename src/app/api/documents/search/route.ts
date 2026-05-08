@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
 
     // 🧠 Маппинг в lightweight модель
     const documents = result.rows.map(row => ({
-      id: row.id,
+      id: row.document_id,
       document_name: row.document_name,
       folder_id: row.folder_id,
       country: row.country,

@@ -133,9 +133,6 @@ export const buildLastDocumentsQuery = (params: Params) => {
     console.warn('Invalid parameters for buildLastDocumentsQuery:', { viewLevel, country, siteId });
     return { query: `SELECT * FROM document WHERE 1=0`, values: [] };
   }
-
-  console.log("filters", filters);
-  console.log("values", values);
   
   const query = `
     SELECT

@@ -76,3 +76,62 @@ a {
 .toolbar-title {
   flex: 1;
 }
+
+/* Resize handle styles */
+.resize-handle {
+  width: 4px;
+  background-color: transparent;
+  cursor: col-resize;
+  position: relative;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.resize-handle:hover {
+  background: linear-gradient(to bottom, transparent, #4f9ff6, transparent);
+}
+
+.sidebarresizable-root.resizing .resize-handle {
+  background: linear-gradient(to bottom, transparent, #4f9ff6, transparent);
+}
+
+.sidebarresizable-root.resizing .resize-handle-line {
+  background-color: #4f9ff6; /* Опционально: делаем линию ярче при перетаскивании */
+}
+
+.sidebarresizable-root.resizing {
+  cursor: col-resize;
+  user-select: none; /* Запрещаем выделение текста по всему окну во время ресайза */
+}
+
+.resize-handle-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 8%;
+  background-color: #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+/* Update sidebar-layout to use flex properly */
+.sidebar-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Sidebar should not have fixed width anymore */
+.sidebar {
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+/* Main content takes remaining space */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

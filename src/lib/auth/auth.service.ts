@@ -16,9 +16,10 @@ export interface JwtPayload {
   id: number;
   email: string;
   role: string;
-  study_id: number[];
+  assigned_study_id: number[];
   assigned_site_id: number[];
   sessionId?: string; // Added for session tracking
+  assigned_country_by_study?: Record<number, string[]>
 }
 
 export interface RefreshTokenPayload {

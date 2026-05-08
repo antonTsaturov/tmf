@@ -14,7 +14,7 @@ import DeletedDocumentsViewer from '@/components/admin/DeletedDocumentsViewer';
 import FoldersStructureManager from '@/components/admin/FoldersStructureManager';
 import SiteManager from '@/components/admin/SiteManager';
 import StudyManager from '@/components/admin/StudyManager';
-import UserManager from '@/components/admin/UserManager';
+import UserManager from '@/components/admin/UserManager/index';
 import StudyArchivation from '@/components/admin/StudyArchivation';
 import DataExport from '@/components/admin/DataExport';
 

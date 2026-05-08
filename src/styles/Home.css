@@ -54,13 +54,15 @@
 .right-frame-close-button {
   background: none;
   border: none;
-  padding: 8px;
+  padding: 7px;
   cursor: pointer;
   color: #666;
   border-radius: 4px;
   display: flex;
   align-self: baseline;
   justify-content: center;
+  margin-top: 7px;
+  margin-right: 10px;
 }
 
 
