@@ -172,6 +172,7 @@ export const UserTable = `
     permissions JSONB NOT NULL,
     assigned_study_id INTEGER[] DEFAULT '{}',
     assigned_site_id INTEGER[] DEFAULT '{}',
+    assigned_country_by_study JSONB DEFAULT '{}',
     failed_login_attempts INTEGER DEFAULT 0,
     lock_until TIMESTAMPTZ,
     password_changed_at TIMESTAMPTZ,
@@ -234,6 +235,7 @@ const getSafeUserFields = () => `
   permissions,
   assigned_study_id,
   assigned_site_id,
+  assigned_country_by_study,
   failed_login_attempts,
   lock_until,             -- поле для работы блокировки
   password_changed_at,

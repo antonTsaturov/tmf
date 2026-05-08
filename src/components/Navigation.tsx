@@ -1,7 +1,7 @@
 // src/components/Navigation.tsx
 'use client'
 
-import { useContext, useEffect, useCallback } from 'react';
+import { useContext, useEffect, useCallback, useMemo } from 'react';
 import { AdminContext } from '@/wrappers/AdminContext';
 import { Select, Flex, Text, Spinner, Button, Tooltip } from '@radix-ui/themes';
 import { useAuth } from '@/wrappers/AuthProvider';
@@ -149,6 +149,16 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
     countryFilter
   ]);
 
+  const assignedSites =
+    currentStudy?.sites?.some(site =>
+      user?.assigned_site_id.includes(Number(site.id))
+    ) ?? false;
+
+  const userAssignedCountries = useMemo(() => {
+    if (!currentStudy || !user?.assigned_country_by_study) return [];
+    return user.assigned_country_by_study[currentStudy.id] || [];
+  }, [currentStudy, user]);
+
   if (authLoading || loading) {
     return (
       <Flex p="1" justify="center" align="center" gap="2" ml="2">
@@ -157,7 +167,6 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       </Flex>
     );
   }
-
 
   if (!studies?.length) {
     return (
@@ -219,14 +228,16 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
               </Select.Item>
 
               {/* Показываем уровень страны только если стран в исследовании больше одной */}
-              {currentStudy?.countries?.length > 1 && <Select.Item value={ViewLevel.COUNTRY}>
+              {currentStudy?.countries?.length > 1 && 
+              <Select.Item value={ViewLevel.COUNTRY}>
                 <Flex direction="column" gap="1">
                   <Text>{t('countryLevel')}</Text>
                 </Flex>
               </Select.Item>}
 
-              {/* Показываем уровень центров только если пользователю назначен хотя бы 1 центр */}
-              {user &&  user.assigned_site_id.length > 0 &&  <Select.Item value={ViewLevel.SITE}>
+              {/* Показываем уровень центров только если пользователю назначен хотя бы 1 центр в исследовании */}
+              {user &&  assignedSites &&  
+              <Select.Item value={ViewLevel.SITE}>
                 <Flex direction="column" gap="1">
                   <Text>{t('siteLevel')}</Text>
                 </Flex>
@@ -294,7 +305,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
 
 
       {/* Выбор страны  */}
-      {currentStudy && currentLevel === ViewLevel.COUNTRY && (
+      {currentStudy && currentLevel === ViewLevel.COUNTRY && userAssignedCountries && (
         <Select.Root
           size="2"
           key={`country-select-${currentCountry}`}
@@ -303,13 +314,21 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         >
           <Select.Trigger placeholder={t('selectCountry')} />
           <Select.Content>
-            {(countryFilter?.length ? countryFilter : currentStudy.countries).map((country) => (
+            {/* {(countryFilter?.length ? countryFilter : currentStudy.countries).map((country) => (
               <Select.Item key={country} value={country}>
                 <Flex direction="column">
                   <Text>{country}</Text>
                 </Flex>
               </Select.Item>
-            ))}
+            ))} */}
+
+            {userAssignedCountries.map((country) => (
+              <Select.Item key={country} value={country}>
+                <Flex direction="column">
+                  <Text>{country}</Text>
+                </Flex>
+              </Select.Item>
+            ))}            
           </Select.Content>
         </Select.Root>
       )}

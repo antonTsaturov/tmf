@@ -64,6 +64,7 @@ export interface StudyUser {
   permissions: UserPermissions;
   assigned_study_id: number[];
   assigned_site_id: number[];
+  assigned_country_by_study: Record<number, string[]>;
   email_notifications_enabled: boolean;
   last_login?: Date;
   password_changed_at?: Date;

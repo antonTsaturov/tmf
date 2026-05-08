@@ -18,7 +18,6 @@ export const WelcomeScreen = () => {
   const { updateContext } = useContext(MainContext)!;
   const { studies, loading } = useContext(AdminContext)!;
   const { user } = useAuth();
-  console.log(studies);
 
   const { handleStudyChange } = useStudyChange({
     studies,

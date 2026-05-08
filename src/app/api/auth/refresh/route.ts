@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
       id: session.userId,
       email: session.userEmail,
       role: userRole,
-      study_id: [],
+      assigned_study_id: [],
       assigned_site_id: [],
       sessionId: session.sessionId,
     };

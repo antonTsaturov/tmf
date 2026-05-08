@@ -58,52 +58,6 @@ const getDocumentLevel = (folderId?: string): ViewLevel => {
   return ViewLevel.ROOT;
 };
 
-// const fetchDocuments = async (
-//   query: string,
-//   filter: FilterKey,
-//   signal?: AbortSignal
-// ): Promise<DocumentLink[]> => {
-//   // 🔒 защита от лишних вызовов (дополнительно к enabled в react-query)
-//   if (!query.trim()) return [];
-
-//   const params = new URLSearchParams({
-//     q: query.trim(),
-//     filter: filter === "all" ? "all" : String(filter),
-//   });
-
-//   const response = await fetch(
-//     `/api/documents/search?${params.toString()}`,
-//     {
-//       method: "GET",
-//       credentials: "include",
-//       signal,
-//     }
-//   );
-
-//   // 🔐 auth handling
-//   if (response.status === 401) {
-//     throw new Error("Session expired");
-//   }
-
-//   if (!response.ok) {
-//     let message = "Failed to fetch documents";
-
-//     try {
-//       const errorData = await response.json();
-//       message = errorData.error || message;
-//     } catch {
-//       // ignore JSON parse error
-//     }
-
-//     throw new Error(message);
-//   }
-
-//   const data = await response.json();
-
-//   // 🧠 гарантируем стабильный контракт
-//   return data.documents ?? [];
-// };
-
 export const StudyDocumentSearch: React.FC = () => {
   const {updateContext} = useContext(MainContext)!;
   const { studies } = useContext(AdminContext)!;
@@ -126,12 +80,7 @@ export const StudyDocumentSearch: React.FC = () => {
     queryKey: ["documents", debouncedQuery, activeFilter],
     queryFn: ({ signal }) => fetchDocuments(debouncedQuery, activeFilter, signal),
     enabled: hasQuery,
-    //staleTime: 30 * 1000, // 30 секунд для поиска - более актуальные данные
-    //gcTime: 5 * 60 * 1000, // 5 минут в кэше (вместо cacheTime в v5)
-    // Дополнительные опции для поиска:
     placeholderData: (previousData) => previousData, // Показывает старые данные при новом поиске
-    //refetchOnWindowFocus: false, // Не обновлять при фокусе окна
-    //retry: 1, // Только 1 повтор при ошибке
     ...config
   });
 
@@ -180,33 +129,36 @@ export const StudyDocumentSearch: React.FC = () => {
     );
   };
 
-const handleDocumentClick = useCallback((doc: DocumentLink) => {
-  const study = studies.find((s) => s.id === doc.study.id);
-  const docLevel = getDocumentLevel(doc.folder_id);
-  const folderNode = findNodeById([study?.folders_structure] as FileNode[], String(doc.folder_id));
+  const handleDocumentClick = useCallback((doc: DocumentLink) => {
+    const study = studies.find((s) => s.id === doc.study.id);
+    const docLevel = getDocumentLevel(doc.folder_id);
+    const folderNode = findNodeById([study?.folders_structure] as FileNode[], String(doc.folder_id));
 
-  // Сначала закрываем диалог
-  setOpen(false);
+    // Сначала закрываем диалог
+    setOpen(false);
 
-  // Собираем все обновления в один объект
-  const updates: Partial<MainContextProps> = {
-    currentStudy: study,
-    currentLevel: docLevel,
-    selectedFolder: folderNode,
-  };
-  
-  if (docLevel !== ViewLevel.SITE) {
-    updates.currentCountry = doc?.country;
-  }
-  
-  if (doc?.site) {
-    updates.currentCountry = doc?.country || 'Russia'; // NB!
-    updates.countryFilter = doc.study.countries;
-    updates.currentSite = doc?.site;
-  }
-  
-  updateContext(updates);
-}, [studies, updateContext]);
+    // Собираем все обновления в один объект
+    const updates: Partial<MainContextProps> = {
+      currentStudy: study,
+      currentLevel: docLevel,
+      selectedFolder: folderNode,
+    };
+    
+    if (docLevel !== ViewLevel.SITE) {
+      updates.currentCountry = doc?.country;
+    }
+    
+    if (doc?.site) {
+      updates.currentCountry = doc?.country || 'Russia'; // NB!
+      updates.countryFilter = doc.study.countries;
+      updates.currentSite = doc?.site;
+    }
+    
+    updateContext(updates);
+    // Сохраняем ID документа, чтобы при загрузке документов в FolderContentViewer автоматически его выбрать
+    sessionStorage.setItem('selectedDocumentId', doc.id);
+
+  }, [studies, updateContext]);
 
   // Получение цвета для уровня
   const getLevelColor = useCallback((level: ViewLevel): RadixColors => {

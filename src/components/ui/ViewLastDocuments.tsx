@@ -2,12 +2,14 @@
 'use client'
 import { useContext } from "react";
 import { MainContext } from "@/wrappers/MainContext";
-import { Badge, Box, Flex, Section, Spinner, Table, Text } from "@radix-ui/themes";
+import { Box, Flex, Section, Spinner, Table, Text } from "@radix-ui/themes";
 import { FiFolder, FiUser, FiCalendar } from "react-icons/fi";
 import { FileIcon } from "react-file-icon";
 import { ViewLevel } from "@/types/types";
 import { useLastDocuments } from "@/hooks/useLastDocuments";
 import { useFolderName } from "@/hooks/useFolderName";
+import { findNodeById } from "../FolderExplorer/utils/folderHelpers";
+import { FileNode } from "../FolderExplorer";
 
 
 interface LastDocsProps {
@@ -15,13 +17,10 @@ interface LastDocsProps {
 }
 
 export function ViewLastDocuments({ level }: LastDocsProps) {
-  const { context } = useContext(MainContext)!;
+  const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentCountry, currentSite, currentLevel } = context;
   const getFolderName = useFolderName();
 
-  // if (!currentStudy) {
-  //   return null;
-  // }
   const siteId = currentSite?.id;
   const country = currentLevel === ViewLevel.COUNTRY ? currentCountry : undefined;
   const studyId = currentStudy?.id;
@@ -41,6 +40,14 @@ export function ViewLastDocuments({ level }: LastDocsProps) {
     } catch {
       return dateString;
     }
+  };
+
+  const handleClick = (folderId: string, docId: string) => {
+    const folderNode = findNodeById([currentStudy?.folders_structure] as FileNode[], String(folderId));
+    // выбираем папку
+    updateContext({ selectedFolder: folderNode });
+    // Сохраняем ID документа, чтобы при загрузке документов в FolderContentViewer автоматически его выбрать
+    sessionStorage.setItem('selectedDocumentId', docId);
   };
 
   return (
@@ -85,6 +92,9 @@ export function ViewLastDocuments({ level }: LastDocsProps) {
                     cursor: 'pointer',
                     transition: 'background-color 0.2s',
                     verticalAlign: 'middle'
+                  }}
+                  onClick={() => {
+                    handleClick(link.folder_id, link.id);
                   }}
                   onMouseEnter={(e) => {
                     (e.currentTarget as HTMLElement).style.backgroundColor = 'var(--gray-3)';

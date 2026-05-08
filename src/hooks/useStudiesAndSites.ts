@@ -117,7 +117,6 @@ export const useStudiesAndSites = (): UseStudiesAndSitesReturn => {
       return `Country Level Document (${country || 'Unknown'})`;
 
     }
-    console.log(doc)
     return docLevel;
   }, [sites]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useContext } from "react";
+import { useRef, useContext, useEffect, useCallback, useState } from "react";
 import "@/styles/Home.css";
 import FolderExplorer from "@/components/FolderExplorer/index";
 import UserMenu from "@/components/UserMenu";
@@ -24,6 +24,8 @@ interface MainWindowProps {
   minWidth?: number;
   maxWidth?: number;
 }
+const SIDEBAR_MIN_WIDTH = 400;
+const SIDEBAR_MAX_WIDTH = 600;
 
 const Home: React.FC<MainWindowProps> = () => {
   const { t } = useI18n("reviewsPage");
@@ -31,8 +33,61 @@ const Home: React.FC<MainWindowProps> = () => {
   const { context, updateContext } = useContext(MainContext)!;
   const { selectedDocument, isRightFrameOpen } = context!;
 
+  // State for sidebar width
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_MIN_WIDTH); // default width
+  const [isResizing, setIsResizing] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const startResizing = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  }, []);
+
+  const stopResizing = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  const resize = useCallback(
+    (e: MouseEvent) => {
+      if (isResizing) {
+        const newWidth = e.clientX;
+        if (newWidth >= SIDEBAR_MIN_WIDTH && newWidth <= SIDEBAR_MAX_WIDTH) {
+          setSidebarWidth(newWidth);
+        }
+      }
+    },
+    [isResizing, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH]
+  );
+
+  useEffect(() => {
+    window.addEventListener("mousemove", resize);
+    window.addEventListener("mouseup", stopResizing);
+    return () => {
+      window.removeEventListener("mousemove", resize);
+      window.removeEventListener("mouseup", stopResizing);
+    };
+  }, [resize, stopResizing]);
+
+  useEffect(() => {
+    const savedWidth = localStorage.getItem('sidebarWidth');
+    if (savedWidth) {
+      const width = parseInt(savedWidth);
+      if (width >= SIDEBAR_MIN_WIDTH && width <= SIDEBAR_MAX_WIDTH) {
+        setSidebarWidth(width);
+      }
+    }
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded && !isResizing) {
+      localStorage.setItem('sidebarWidth', sidebarWidth.toString());
+    }
+
+  }, [isResizing, isLoaded, sidebarWidth]);
+    
   return (
-    <div className="sidebarresizable-root">
+    <div className={`sidebarresizable-root ${isResizing ? "resizing" : ""}`}>
       <header className="toolbar-header">
         <Title fontSize={TitleFontSize.ExtraSmall} />
         <Navigation />
@@ -44,13 +99,23 @@ const Home: React.FC<MainWindowProps> = () => {
       </header>
       <div className="sidebar-layout">
         {/* Folders Explorer*/}
-        <div ref={sidebarRef} className="sidebar">
+        <div ref={sidebarRef} className="sidebar" style={{ width: `${sidebarWidth}px` }}>
           <div className="sidebar-content">
             <div className="sidebar-content-area">
               <FolderExplorer showFileIcons={true} allowMultiSelect={true} />
             </div>
           </div>
         </div>
+
+        {/* Resize handle */}
+        <div 
+          className="resize-handle"
+          onMouseDown={startResizing}
+          //style={{ cursor: isResizing ? 'col-resize' : 'col-resize' }}
+        >
+          <div className="resize-handle-line"></div>
+        </div>
+
         {/* Main content */}
         <div className="main-content">
           <div className="main-content-row">
@@ -74,15 +139,17 @@ const Home: React.FC<MainWindowProps> = () => {
         {isRightFrameOpen && (
           <div className="right-frame">
             <div className="right-frame-content">
-              <button
-                className="right-frame-close-button"
-                onClick={() => updateContext({ isRightFrameOpen: false })}
-              >
-                <FiX />
-              </button>
 
               <Tabs.Root defaultValue="view" className="right-frame-tabs-root">
-                <Tabs.List>
+                <Tabs.List style={{textAlign: 'center'}}>
+
+                  <button
+                    className="right-frame-close-button"
+                    onClick={() => updateContext({ isRightFrameOpen: false })}
+                  >
+                    <FiX />
+                  </button>
+
                   <Tabs.Trigger value="view">{t("docPreview")}</Tabs.Trigger>
                   <Tabs.Trigger value="tab2">{t("docDetails")}</Tabs.Trigger>
                 </Tabs.List>

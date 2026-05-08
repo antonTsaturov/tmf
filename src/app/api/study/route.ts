@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
       // Получаем текущего пользователя
       const user = await getAuthenticatedUser(request);
       const assignedSiteIds = user?.assigned_site_id || [];
+      const assignedStudiesIds = user?.assigned_study_id || [];
       const isAdmin = user?.role?.includes("admin") || false;
 
       let queryText = '';
@@ -88,12 +89,12 @@ export async function GET(request: NextRequest) {
             ) AS sites
           FROM study s
           LEFT JOIN site st ON st.study_id = s.id
-          WHERE $1::integer[] IS NULL OR $1 = '{}'::integer[] OR st.id::integer = ANY($1)
+          WHERE $1::integer[] IS NULL OR $1 = '{}'::integer[] OR s.id::integer = ANY($1)
           GROUP BY s.id
           ORDER BY s.id ASC
         `;
 
-        queryParams = [assignedSiteIds.length > 0 ? assignedSiteIds : null];
+        queryParams = [assignedStudiesIds.length > 0 ? assignedStudiesIds : null];
       }
 
       const result = await client.query(queryText, queryParams);

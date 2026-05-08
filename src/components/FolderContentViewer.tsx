@@ -86,6 +86,18 @@ const FolderContentViewer: React.FC = () => {
 
   useEffect(()=> {
     updateContext({isFolderContentLoading:isLoading})
+
+    // Если в sessionStorage есть выделенный документ, берем его
+    if (!isLoading) {
+      const preSelectedDocumentId: string | null = sessionStorage.getItem('selectedDocumentId');
+      if (preSelectedDocumentId) {
+        const selectedDocument = documentsData?.documents.find(doc => String(doc.id) === preSelectedDocumentId);
+        if (selectedDocument) {
+          updateContext({ selectedDocument: selectedDocument });
+        }
+        sessionStorage.removeItem('selectedDocumentId');
+      }
+    }
   }, [isLoading])
   
   // Загрузка перетаскиванием
@@ -237,7 +249,9 @@ const FolderContentViewer: React.FC = () => {
   }, [selectedFolder, currentStudy, currentSite, currentLevel, currentCountry]);
 
   useEffect(() => {
+    // Загружаем документы
     loadFolderContents();
+
   }, [loadFolderContents]);
 
   useEffect(() => {
@@ -342,9 +356,6 @@ const FolderContentViewer: React.FC = () => {
   const showStudyMap = !selectedFolder && currentStudy !== undefined && showLastDocuments === false;
   const showLast = !selectedFolder  && showLastDocuments === true;
 
-  // console.log('showWelcomeScreen:', showWelcomeScreen);
-  // console.log('showStudyMap:',  showStudyMap);
-  // console.log('showLast:',  showLast);
   if (showWelcomeScreen) {
     return (
       <Flex 
@@ -383,7 +394,9 @@ const FolderContentViewer: React.FC = () => {
         gap="4" 
         style={{ height: '100%', minHeight: '400px' }}
       >
-        <ViewLastDocuments level={level} />
+        <ViewLastDocuments 
+          level={level}
+        />
       </Flex>
     );
   }  
@@ -409,7 +422,6 @@ const FolderContentViewer: React.FC = () => {
     );
   }
   
-  console.log('selectedDocument:', selectedDocument?.country);
   return (
     <Box 
       ref={contentRef} 
@@ -434,87 +446,89 @@ const FolderContentViewer: React.FC = () => {
 
       {/* Заголовок с информацией о папке - фиксированный */}
       <Box style={{ flexShrink: 0 }}>
-        <Section size="1" p="4" mb="0" ref={folderHeaderRef} style={{display: "flex",justifyContent:"space-between", alignItems:"start"}}>
-          <Flex direction="column" gap="1">
+        <Flex  p="4" mb="0" ref={folderHeaderRef} width="100%">
+          <Flex direction="column" gap="1" width="100%">
             <Flex direction="row" gap="1">
               <FaRegFolderOpen size={24}/>
               <Text size="4" weight="bold" ml="2" style={{ textTransform: 'uppercase' }}>{selectedFolder?.name}</Text>
             </Flex>
             
-              <Text size="1" color="gray">
-                {t('folderContentViewer.documentsSummary', {
-                  shown: filteredDocuments.length,
-                  total: documentsData?.count || 0
-                })}
-              </Text>
-            </Flex>
+            <Flex direction="row" gap="1" align="center"  justify="between">
+            <Text size="1" color="gray">
+              {t('folderContentViewer.documentsSummary', {
+                shown: filteredDocuments.length,
+                total: documentsData?.count || 0
+              })}
+            </Text>
 
-          {/* Фильтр документов */}
-          {filteredDocuments && (
-            <Popover.Root>
-              <Popover.Trigger>
-                <Button
-                  variant="ghost" 
-                  color={activeFilter !== 'all' ? "indigo" : "gray"}
-                  size="1"
-                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                >
-                  <Flex align="center" gap="2">
-                    {activeFilter !== 'all' ? <FiFilter /> : null}
-                    <Text >
-                      {filterOptions.find(f => f.value === activeFilter)?.label}
-                    </Text>
-                    <FiChevronDown style={{ opacity: 0.6 }} />
-                  </Flex>
-                </Button>
-              </Popover.Trigger>
+            {/* Фильтр документов */}
+            {filteredDocuments && (
+              <Popover.Root>
+                <Popover.Trigger>
+                  <Button
+                    variant="ghost" 
+                    color={activeFilter !== 'all' ? "indigo" : "gray"}
+                    size="1"
+                    style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                  >
+                    <Flex align="center" gap="2">
+                      {activeFilter !== 'all' ? <FiFilter /> : null}
+                      <Text >
+                        {filterOptions.find(f => f.value === activeFilter)?.label}
+                      </Text>
+                      <FiChevronDown style={{ opacity: 0.6 }} />
+                    </Flex>
+                  </Button>
+                </Popover.Trigger>
 
-              <Popover.Content size="1" width="200px">
-                <Flex direction="column" gap="1">
-                  {filterOptions.map(option => {
-                    const isSelected = activeFilter === option.value;
-                    return (
-                      <Button
-                        key={option.value}
-                        variant={isSelected ? 'ghost' : 'ghost'}
-                        color={isSelected ? 'indigo' : 'gray'}
-                        onClick={() => {
-                          setActiveFilter(option.value as ViewFilter);
-                          updateContext({ selectedDocument: null });
-                        }}
-                        style={{ 
-                          justifyContent: 'flex-start', 
-                          width: '100%',
-                          paddingLeft: '8px',
-                          paddingRight: '8px',
-                          marginBottom: '1px'
-                        }}
-                      >
-                        <Flex align="center" justify="between" width="100%">
-                          <Flex align="center" gap="2">
-                            {/* Небольшой визуальный маркер выбранного пункта */}
-                            <Box style={{ width: 6, height: 6, borderRadius: '50%', 
-                              backgroundColor: isSelected ? 'var(--indigo-9)' : 'transparent' }} 
-                            />
-                            <Text size="1" weight={isSelected ? "bold" : "regular"}>
-                              {option.label}
-                            </Text>
+                <Popover.Content size="1" width="200px">
+                  <Flex direction="column" gap="1">
+                    {filterOptions.map(option => {
+                      const isSelected = activeFilter === option.value;
+                      return (
+                        <Button
+                          key={option.value}
+                          variant={isSelected ? 'ghost' : 'ghost'}
+                          color={isSelected ? 'indigo' : 'gray'}
+                          onClick={() => {
+                            setActiveFilter(option.value as ViewFilter);
+                            updateContext({ selectedDocument: null });
+                          }}
+                          style={{ 
+                            justifyContent: 'flex-start', 
+                            width: '100%',
+                            paddingLeft: '8px',
+                            paddingRight: '8px',
+                            marginBottom: '1px'
+                          }}
+                        >
+                          <Flex align="center" justify="between" width="100%">
+                            <Flex align="center" gap="2">
+                              {/* Небольшой визуальный маркер выбранного пункта */}
+                              <Box style={{ width: 6, height: 6, borderRadius: '50%', 
+                                backgroundColor: isSelected ? 'var(--indigo-9)' : 'transparent' }} 
+                              />
+                              <Text size="1" weight={isSelected ? "bold" : "regular"}>
+                                {option.label}
+                              </Text>
+                            </Flex>
+                            <Badge 
+                              variant={isSelected ? "solid" : "surface"} 
+                              color={isSelected ? "indigo" : "gray"}
+                            >
+                              {option.count}
+                            </Badge>
                           </Flex>
-                          <Badge 
-                            variant={isSelected ? "solid" : "surface"} 
-                            color={isSelected ? "indigo" : "gray"}
-                          >
-                            {option.count}
-                          </Badge>
-                        </Flex>
-                      </Button>
-                    );
-                  })}
-                </Flex>
-              </Popover.Content>
-            </Popover.Root>
-          )}
-        </Section>
+                        </Button>
+                      );
+                    })}
+                  </Flex>
+                </Popover.Content>
+              </Popover.Root>
+            )}
+            </Flex>
+          </Flex>
+        </Flex>
       </Box>
 
       {/* Заголовок таблицы - фиксированный */}
@@ -536,7 +550,8 @@ const FolderContentViewer: React.FC = () => {
               onContextMenu={(e) => e.preventDefault()}
               style={{ 
                 borderRadius: 0,
-                borderBottom: 1
+                borderBottom: 1,
+                maxHeight: '20px',
               }}
               ref={tableHeaderRef}
             >
