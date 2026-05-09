@@ -5,6 +5,7 @@ import { DocumentAction, Document, DocumentVersionRow } from '@/types/document';
 import { useDocumentUpload } from './useDocumentUpload';
 import { logger } from '@/lib/utils/logger';
 import { useNotification } from '@/wrappers/NotificationContext';
+import { useCopyDocumentLink } from './useCopyDocumentLink';
 
 interface UseDocumentActionHandlerReturn {
   handleAction: (action: DocumentAction, doc?: Document) => void;
@@ -12,17 +13,14 @@ interface UseDocumentActionHandlerReturn {
 }
 
 export const useDocumentActionHandler = (): UseDocumentActionHandlerReturn => {
-  const mainContext = useContext(MainContext);
+  const { updateContext, context } = useContext(MainContext)!;
   const { handleFileSelect, handleUploadNewVersion } = useDocumentUpload();
   const { addNotification } = useNotification();
+  
+  const { selectedDocument } = context;
+  const { copyDocumentLink } = useCopyDocumentLink();
 
-  if (!mainContext) {
-    throw new Error('useDocumentActionHandler must be used within MainContext Provider');
-  }
-
-  const { updateContext } = mainContext;
-
-  const handleAction = useCallback((action: DocumentAction) => {
+  const handleAction = useCallback(async (action: DocumentAction) => {
 
     switch (action) {
       case DocumentAction.VIEW:
@@ -54,7 +52,7 @@ export const useDocumentActionHandler = (): UseDocumentActionHandlerReturn => {
         handleUploadNewVersion();
         break;
       case DocumentAction.DOWNLOAD: {
-        const document = mainContext.context.selectedDocument;
+        const document = context.selectedDocument;
         if (!document) {
           logger.warn('No document selected for download');
           break;
@@ -65,20 +63,30 @@ export const useDocumentActionHandler = (): UseDocumentActionHandlerReturn => {
           break;
         }
         const url = `/api/documents/${document.id}/versions/${version.document_number}/download`;
+        console.log(url);
         window.open(url, '_blank');
         break;
       }
       case DocumentAction.CREATE_DOCUMENT:
         handleFileSelect();
         break;
+      case DocumentAction.SHARE:
+        if (!selectedDocument) {
+          logger.warn('No document selected for sharing');
+          addNotification('error', 'Не выбран документ');
+          break;
+        } else {
+          await copyDocumentLink(selectedDocument);
+        }
+        break;
       default:
         logger.warn('Action not implemented', { action });
     }
-  }, [updateContext, mainContext]);
+  }, [updateContext, context]);
 
   // Download a specific version (used from DocumentDetails version list)
   const handleDownloadVersion = useCallback(async (version: DocumentVersionRow) => {
-    const doc = mainContext.context.selectedDocument;
+    const doc = context.selectedDocument;
     if (!doc) {
       logger.warn('No document selected for version download');
       return;
@@ -116,7 +124,7 @@ export const useDocumentActionHandler = (): UseDocumentActionHandlerReturn => {
       logger.error('Download error', error);
       addNotification('error', 'Не удалось загрузить файл');
     }
-  }, [mainContext, addNotification]);
+  }, [context, addNotification]);
 
   return {
     handleAction,

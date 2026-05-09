@@ -56,7 +56,7 @@ export async function createOrUpdateRecord(table: Tables, id: number | string, u
         RETURNING *;
       `;
       
-      logger.debug('updateQuery, updateValues: ', { query: updateQuery, values: updateValues })
+      //logger.debug('updateQuery, updateValues: ', { query: updateQuery, values: updateValues })
       const result = await client.query(updateQuery, updateValues);
       logger.info(`createOrUpdateRecord: Record with id ${id} in table ${table} was updated.`);
       return result.rows[0];

@@ -134,37 +134,37 @@ export function invalidateSession(sessionId: string): boolean {
 /**
  * Invalidate all sessions for a user (e.g., on password change)
  */
-export function invalidateUserSessions(userId: number): number {
-  let count = 0;
+// export function invalidateUserSessions(userId: number): number {
+//   let count = 0;
   
-  for (const [sessionId, session] of sessionStore.entries()) {
-    if (session.userId === userId && session.isValid) {
-      session.isValid = false;
-      count++;
+//   for (const [sessionId, session] of sessionStore.entries()) {
+//     if (session.userId === userId && session.isValid) {
+//       session.isValid = false;
+//       count++;
       
-      // Remove after delay
-      setTimeout(() => {
-        sessionStore.delete(sessionId);
-      }, 1000);
-    }
-  }
+//       // Remove after delay
+//       setTimeout(() => {
+//         sessionStore.delete(sessionId);
+//       }, 1000);
+//     }
+//   }
   
-  return count;
-}
+//   return count;
+// }
 
 /**
  * Check if refresh token is valid for session
  */
-export function verifyRefreshToken(sessionId: string, refreshTokenHash: string): boolean {
-  const session = getSession(sessionId);
+// export function verifyRefreshToken(sessionId: string, refreshTokenHash: string): boolean {
+//   const session = getSession(sessionId);
   
-  if (!session) {
-    return false;
-  }
+//   if (!session) {
+//     return false;
+//   }
   
-  // Timing-safe comparison
-  return session.refreshTokenHash === refreshTokenHash;
-}
+//   // Timing-safe comparison
+//   return session.refreshTokenHash === refreshTokenHash;
+// }
 
 /**
  * Cleanup expired sessions (run periodically)

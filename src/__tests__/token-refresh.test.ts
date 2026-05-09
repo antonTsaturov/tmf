@@ -190,7 +190,7 @@ describe('Token Refresh - JWT Flow', () => {
     id: 1,
     email: 'test..example.com',
     role: 'MONITOR',
-    study_id: [1],
+    assigned_study_id: [1],
     assigned_site_id: [1],
     sessionId: 'test-session-id',
   };
@@ -293,7 +293,7 @@ describe('Token Refresh - Login Creates Session', () => {
       id: 1,
       email: 'test..example.com',
       role: 'MONITOR',
-      study_id: [1],
+      assigned_study_id: [1],
       assigned_site_id: [1],
       sessionId: session.sessionId,
     };
@@ -317,7 +317,7 @@ describe('Token Refresh - Login Creates Session', () => {
       id: 1,
       email: 'test..example.com',
       role: 'MONITOR',
-      study_id: [1],
+      assigned_study_id: [1],
       assigned_site_id: [1],
       sessionId: session.sessionId,
     };
@@ -346,7 +346,7 @@ describe('Token Refresh - Login Creates Session', () => {
       id: 1,
       email: 'test..example.com',
       role: 'MONITOR',
-      study_id: [1],
+      assigned_study_id: [1],
       assigned_site_id: [1],
       sessionId: session.sessionId,
     };
@@ -468,7 +468,7 @@ describe('Logout - Session Invalidation', () => {
       id: 1,
       email: 'test..example.com',
       role: 'MONITOR',
-      study_id: [1],
+      assigned_study_id: [1],
       assigned_site_id: [1],
       sessionId: session.sessionId,
     };

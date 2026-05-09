@@ -27,6 +27,7 @@ import { FileNode } from "./FolderExplorer/index";
 import { findNodeById } from "./FolderExplorer/utils/folderHelpers";
 import { fetchDocuments, searchConfig as config } from "@/lib/utils/search";
 import { useDebounce } from "@/hooks/useDebounce";
+import { getDocumentLevel } from "@/lib/utils/folder";
 
 
 export type FilterKey = "all" | DocumentWorkFlowStatus;
@@ -45,18 +46,6 @@ const LevelFilters =[
   {key: ViewLevel.GENERAL, label: 'General'},
   {key: ViewLevel.COUNTRY, label: 'Country'}
 ]
-
-// Функция для определения уровня документа по folder_id
-const getDocumentLevel = (folderId?: string): ViewLevel => {
-  if (!folderId) return ViewLevel.ROOT;
-  
-  const lowerFolderId = folderId.toLowerCase();
-  if (lowerFolderId.includes("general")) return ViewLevel.GENERAL;
-  if (lowerFolderId.includes("country")) return ViewLevel.COUNTRY;
-  if (lowerFolderId.includes("site")) return ViewLevel.SITE;
-  
-  return ViewLevel.ROOT;
-};
 
 export const StudyDocumentSearch: React.FC = () => {
   const {updateContext} = useContext(MainContext)!;
@@ -129,6 +118,7 @@ export const StudyDocumentSearch: React.FC = () => {
     );
   };
 
+  // Клик по ссылке открывает папку с документом в исследовании и автоматически выбирает документ
   const handleDocumentClick = useCallback((doc: DocumentLink) => {
     const study = studies.find((s) => s.id === doc.study.id);
     const docLevel = getDocumentLevel(doc.folder_id);
@@ -294,7 +284,7 @@ export const StudyDocumentSearch: React.FC = () => {
           <Separator size="4" />
 
           {/* Счетчик результатов и кнопка Clear all */}
-          <Flex justify="between" align="center">
+          <Flex justify={`${!hasQuery ? "end" : "between"}`} align="center">
             {hasQuery && <Text size="1" color="gray">
               
               {results.length} document{results.length !== 1 ? 's' : ''} found
@@ -304,11 +294,9 @@ export const StudyDocumentSearch: React.FC = () => {
                 </Text>
               )}
             </Text>}
-            {hasQuery && (
-              <Button variant="ghost" size="1" color="plum" onClick={clearAll} mr="2">
+              <Button variant="ghost" size="1" color="plum" onClick={clearAll} mr="2" disabled={!hasQuery}>
                 Clear all
               </Button>
-            )}
           </Flex>          
 
           {/* Results  */}

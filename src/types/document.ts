@@ -15,7 +15,8 @@ export enum DocumentAction {
   UPLOAD_NEW_VERSION = 'upload_new_version',
   VIEW = 'view',
   DOWNLOAD = 'download',
-  EDIT = 'edit'
+  EDIT = 'edit',
+  SHARE = 'share',
 }
 
 export type DocumentType = 'pdf';
@@ -135,4 +136,12 @@ export interface DocumentLink {
   status: DocumentWorkFlowStatus;
   uploaded_at?: string;
   uploaded_by?: string;
+}
+
+export interface SharedDocument {
+  study_id: string;
+  site_id: string | null;
+  country: string | null;
+  folder_id: string;
+  document_id: string;
 }

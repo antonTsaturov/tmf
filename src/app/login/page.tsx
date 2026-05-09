@@ -48,7 +48,14 @@ export default function LoginPage() {
 
       resetMainContext?.();
 
-      window.location.href = "/home";
+      // проверяем sessionStorage на наличие redirectLink (см. src/app/share/[...slug]/page.tsx)
+      if (sessionStorage.getItem("redirectToShareDoc")) {
+        window.location.href = sessionStorage.getItem("redirectToShareDoc") || "/home";
+        sessionStorage.removeItem("redirectToShareDoc");
+      } else {
+        window.location.href = "/home";
+      }
+
     } catch (err: any) {
       setError(err.message || t("loginFailed"));
     } finally {
@@ -140,6 +147,7 @@ export default function LoginPage() {
                 className={`${styles.input} ${styles.inputTop}`}
                 placeholder={t("emailPlaceholder")}
                 disabled={loading}
+                autoFocus={true}
               />
             </div>
 

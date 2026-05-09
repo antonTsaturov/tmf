@@ -38,7 +38,6 @@ async function handleLogin(request: NextRequest) {
     );
 
     const user = result.rows[0];
-
     // 3. Проверить пользователя
     if (!user) {
       logger.authError('LOGIN_USER_NOT_FOUND', undefined, `Email: ${email}`, { ip: clientIp });
@@ -48,6 +47,15 @@ async function handleLogin(request: NextRequest) {
       );
     }
 
+    const status = user.status;
+
+    if (status === UserStatus.INACTIVE) {
+      logger.authError('LOGIN_USER_INACTIVE', user.id, `User is inactive`, { ip: clientIp });
+      return NextResponse.json(
+        { error: 'Account is inactive' },
+        { status: 401 }
+      );
+    }
     // 4. Проверить блокировку (до проверки пароля)
     //const _currentAttempts = Number(user.failed_login_attempts || 0);
     const lockUntil = user.lock_until ? new Date(user.lock_until) : null;

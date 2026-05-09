@@ -13,7 +13,7 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import { FiTrash2, FiMapPin, FiGlobe, FiEdit2 } from "react-icons/fi";
-import { SiteSelector, CountrySelector } from "@/components/PseudoSelector";
+import { SiteSelector } from "@/components/PseudoSelector";
 import { Study } from "@/types/study";
 import { StudyUser } from "@/types/user";
 import { StudySite } from "@/types/site";
@@ -39,37 +39,14 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
   onUpdateCountries,
   onRemove,
 }) => {
-  const [tempSiteIds, setTempSiteIds] = useState<number[]>(assignedSiteIds);
-  //const [tempCountry, setTempCountry] = useState<string[]>(assignedCountry);
 
   // Получаем список всех центров для этого исследования
   const studySites = allSites.filter((site) => site.study_id === study.id);
   
-  // Получаем информацию о назначенных центрах
-  const assignedSitesInfo = studySites.filter((site) =>
-    assignedSiteIds.includes(Number(site.id))
-  );
   
-  // Получаем список стран для этого исследования из объекта study
-  const studyCountries = study.countries || [];
-
   const handleSiteChange = (siteIds: number[]) => {
-    setTempSiteIds(siteIds);
     onUpdateSites(siteIds);
   };
-
-  // const handleCountryChange = (countryCodes: string[]) => {
-  //   setTempCountry(countryCodes);
-  //   onUpdateCountries(countryCodes);
-  // };
-
-  const handleCancelSites = () => {
-    setTempSiteIds(assignedSiteIds);
-  };
-
-  // const handleCancelCountries = () => {
-  //   setTempCountry(assignedCountry);
-  // };
 
   return (
     <Card variant="surface" style={{ backgroundColor: "var(--gray-2)" }}>

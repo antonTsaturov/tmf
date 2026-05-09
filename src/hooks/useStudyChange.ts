@@ -33,7 +33,8 @@ export const useStudyChange = ({
         currentLevel: undefined,
         currentCountry: defaultCountry,
         countryFilter: defaultCountry ? [defaultCountry] : undefined,
-        selectedFolder: null
+        selectedFolder: null,
+        showLastDocuments: false
       });
 
       onStudyChange?.(selectedStudy);

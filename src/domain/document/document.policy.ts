@@ -85,5 +85,11 @@ export const ActionRoleMap: Record<DocumentAction, UserRole[]> = {
         UserRole.COORDINATOR,
 
     ],
+    [DocumentAction.SHARE]: [
+        UserRole.ADMIN,
+        UserRole.STUDY_MANAGER,
+        UserRole.MONITOR,
+        UserRole.DATA_MANAGER,
+    ],
 
 };

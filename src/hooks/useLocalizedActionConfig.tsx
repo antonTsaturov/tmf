@@ -11,7 +11,8 @@ import {
   FiDownload,
   FiEye,
   FiUploadCloud,
-  FiEdit
+  FiEdit,
+  FiLink
 } from 'react-icons/fi';
 
 // Хук для создания локализованного маппинга
@@ -91,7 +92,14 @@ export const useLocalizedActionConfig = (): Partial<Record<DocumentAction, Actio
         label: t('edit'),
         tooltip: t('edit_tooltip'),
         variant: 'soft'
+    },
+    [DocumentAction.SHARE]: {
+        icon: <FiLink />,
+        label: t('share'),
+        tooltip: t('share_tooltip'),
+        variant: 'soft',
     }
+
   };
 };
 

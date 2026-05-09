@@ -2,13 +2,14 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Spinner, Flex, Text } from '@radix-ui/themes';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTokenRefresh } from '@/hooks/useTokenRefresh';
 import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import type { StudyUser } from '@/types/user';
 import { MainContext } from '@/wrappers/MainContext';
 import { initFetchInterceptor } from '@/lib/auth/initFetchInterceptor';
+import { PageLoading } from '@/components/ui/PageLoading';
+import { PUBLIC_PATHS } from '@/proxy';
 
 // Клиентское подмножество StudyUser — только поля, нужные UI
 type User = Pick<StudyUser, 'id' | 'name' | 'email' | 'role' | 'assigned_site_id' | 'assigned_study_id' | 'email_notifications_enabled' | 'assigned_country_by_study'>;
@@ -27,8 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const mainContext = useContext(MainContext);
   const resetMainContext = mainContext?.resetContext;
+
+  const isPublicPath = PUBLIC_PATHS.some(path => pathname?.startsWith(path));
   /**
    * 2. Синхронизация выхода между вкладками
    */
@@ -45,7 +49,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     initFetchInterceptor();
-    checkAuth();
+
+    // На публичных страницах не проверяем авторизацию
+    if (!isPublicPath) {
+      checkAuth();
+    } else {
+      // На публичных страницах сразу заканчиваем загрузку
+      setLoading(false);
+    }    
   }, [initFetchInterceptor]);
 
   const checkAuth = async () => {
@@ -123,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // 3. Клиентский таймер бездействия (15 мин без активности → logout)
   useIdleTimeout({
     onIdleTimeout: handleIdleTimeout,
-    enabled: !!user,
+    enabled: !!user && !isPublicPath,
   });
 
   useTokenRefresh({
@@ -138,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Optional: set a flag that session is expired
       sessionStorage.setItem('session_expired', 'true');
     },
-    enabled: !!user,
+    enabled: !!user && !isPublicPath,
   });
 
   // Проверка session_expired при возвращении на вкладку
@@ -158,10 +169,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ user, loading, logout, isAuthenticated: !!user }}>
       {!loading ? children : (
-        <Flex p="3" justify="center" align="center" gap="2" height="100vh">
-          <Spinner size="3" style={{ color: 'gray' }} />
-          <Text size="1" weight="medium">Загрузка...</Text>
-        </Flex>
+        <PageLoading />
+        // <Flex p="3" justify="center" align="center" gap="2" height="100vh">
+        //   <Spinner size="3" style={{ color: 'gray' }} />
+        //   <Text size="1" weight="medium">Загрузка...</Text>
+        // </Flex>
       )}
     </AuthContext.Provider>
   );

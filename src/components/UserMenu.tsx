@@ -7,6 +7,7 @@ import UserSettings from "./UserSettings";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/hooks/useI18n";
 import { MainContext } from "@/wrappers/MainContext";
+import { FiInfo, FiLogOut, FiSettings } from "react-icons/fi";
 
 export default function UserDropdownMenu() {
   const { t } = useI18n('userMenu');
@@ -51,18 +52,18 @@ export default function UserDropdownMenu() {
               onClick={() => currentStudy && updateContext({isStudyInfoPanelOpen: true})} 
               disabled={!currentStudy}
             >
-              {t('aboutStudy')}
+              <FiInfo />{t('aboutStudy')}
             </DropdownMenu.Item>
           </Tooltip>
 
           <DropdownMenu.Separator  />
 
           <DropdownMenu.Item onClick={() => setSettingsOpen(true)}>
-            {t('userSettings')}
+            <FiSettings />{t('userSettings')}
           </DropdownMenu.Item>
 
           <DropdownMenu.Item onClick={() => logout()}>
-            {t('exit')}
+            <FiLogOut />{t('exit')}
           </DropdownMenu.Item>
 
         </DropdownMenu.Content>

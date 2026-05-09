@@ -125,7 +125,6 @@ const UserManager: FC<UserManagerProps> = () => {
       permissions: getPermissionsForRole(newUserForm.roles),
       assigned_study_id: newUserForm.assigned_study_id,
       assigned_site_id: newUserForm.assigned_site_id,
-      //assigned_countries: newUserForm.assigned_countries,
       email_notifications_enabled: true,
       failed_login_attempts: 0,
       created_at: new Date().toISOString()
@@ -290,7 +289,6 @@ const UserManager: FC<UserManagerProps> = () => {
       active: managedUsers?.filter(u => u.status === UserStatus.ACTIVE).length || 0,
       inactive: managedUsers?.filter(u => u.status === UserStatus.INACTIVE).length || 0,
       pending: managedUsers?.filter(u => u.status === UserStatus.PENDING).length || 0,
-      terminated: managedUsers?.filter(u => u.status === UserStatus.TERMINATED).length || 0,
     };
     
     return stats;
@@ -580,10 +578,6 @@ const UserManager: FC<UserManagerProps> = () => {
             <Badge color="gray" variant="soft">{stats.inactive}</Badge>
           </Flex>
           <Separator orientation="vertical" />
-          <Flex gap="2" align="center">
-            <Text size="1" color="gray">Terminated:</Text>
-            <Badge color="red" variant="soft">{stats.terminated}</Badge>
-          </Flex>
         </Flex>
       </Card>
 

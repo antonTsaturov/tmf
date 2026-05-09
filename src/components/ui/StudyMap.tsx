@@ -8,6 +8,7 @@ import { MainContext, MainContextProps } from '@/wrappers/MainContext';
 import { StudySite, ViewLevel } from '@/types/types';
 import { FaRegBuilding, FaClinicMedical } from "react-icons/fa";
 import { useAuth } from '@/wrappers/AuthProvider';
+import { StudyStatusLabels, StudyStatusColors } from '@/types/study';
 
 
 export const StudyMap = () => {
@@ -16,57 +17,6 @@ export const StudyMap = () => {
   const { currentStudy } = context!;
   const [isHovered, setIsHovered] = useState(false);
 
-  // Группируем сайты по странам на основе данных из currentStudy
-  // const hierarchyData = useMemo(() => {
-  //   if (!currentStudy?.sites || currentStudy.sites.length === 0) {
-  //     return { studyName: currentStudy?.title || 'No Study', countries: [], studyCountries: [] };
-  //   }
-
-  //   // Группировка сайтов по стране
-  //   const countriesMap = new Map<string, typeof currentStudy.sites>();
-    
-  //   currentStudy.sites.forEach((site) => {
-  //     const country = site.country;
-  //     if (!countriesMap.has(country)) {
-  //       countriesMap.set(country, []);
-  //     }
-  //     countriesMap.get(country)!.push(site);
-  //   });
-
-  //   // Преобразуем Map в массив объектов для отображения
-  //   const countries = Array.from(countriesMap.entries()).map(([country, sites]) => ({
-  //     name: country,
-  //     hasSites: true,
-  //     sites: sites
-  //     .filter(site =>user?.assigned_site_id.includes(Number(site.id)))
-  //     .map((site: StudySite) => ({
-  //       id: site.id,
-  //       study_id: site.study_id,
-  //       study_protocol: site.study_protocol,
-  //       country: site.country,
-  //       name: site.name,
-  //       city: site.city,
-  //       principal_investigator: site.principal_investigator,
-  //       status: site.status,
-  //       number: site.number
-  //     }))
-  //   }));
-
-  //   // Создаем массив стран из currentStudy.countries
-  //   const studyCountries = (currentStudy.countries || []).map(country => ({
-  //     name: country,
-  //     hasSites: countriesMap.has(country),
-  //     siteCount: countriesMap.get(country)?.length || 0
-  //   }));
-
-  //   return {
-  //     studyName: currentStudy.title || currentStudy.protocol || 'Untitled Study',
-  //     protocol: currentStudy.protocol,
-  //     sponsor: currentStudy.sponsor,
-  //     countries,
-  //     studyCountries
-  //   };
-  // }, [currentStudy]);
 const hierarchyData = useMemo(() => {
   if (!currentStudy?.sites || currentStudy.sites.length === 0) {
     return { studyName: currentStudy?.title || 'No Study', countries: [], studyCountries: [] };
@@ -77,7 +27,7 @@ const hierarchyData = useMemo(() => {
 
   // Группировка сайтов по стране
   const countriesMap = new Map<string, typeof currentStudy.sites>();
-  console.log(' [currentStudy.sites]', currentStudy.sites);
+  console.log(' [userAssignedCountries]', userAssignedCountries);
   
   currentStudy.sites.forEach((site) => {
     const country = site.country;
@@ -90,7 +40,7 @@ const hierarchyData = useMemo(() => {
   // Преобразуем Map в массив объектов для отображения
   // Фильтруем только те страны, которые назначены пользователю
   const countries = Array.from(countriesMap.entries())
-    .filter(([country]) => userAssignedCountries.includes(country)) // ← Добавьте эту фильтрацию
+    //.filter(([country]) => userAssignedCountries.includes(country))
     .map(([country, sites]) => ({
       name: country,
       hasSites: true,
@@ -185,7 +135,7 @@ const hierarchyData = useMemo(() => {
   };
 
   return (
-    <Card m="4" size="3" style={{ width: '100%', maxWidth: '1100px', minHeight: 0, overflow: 'hidden' }}>
+    <Card m="4" size="3" style={{ width: '100%', maxWidth: '1000px', minHeight: 0, overflow: 'hidden' }}>
       <Flex justify="between" pb="4" align="center">
         {/* Кнопка назад */}
         <Tooltip content="Вернуться к выбору исследования">
@@ -238,16 +188,18 @@ const hierarchyData = useMemo(() => {
                   </Flex>
                 )}
                 {/* Статус исследования */}
-                <Badge size="2" variant="surface" color={currentStudy?.status === 'ongoing' ? 'green' : 'gray'}>
-                  {currentStudy?.status === 'ongoing' ? 'В процессе' : currentStudy?.status}
-                </Badge>
 
+                {currentStudy &&
+                  <Badge size="2" variant="surface" color={StudyStatusColors[currentStudy?.status]}>
+                    {StudyStatusLabels[currentStudy?.status]}
+                  </Badge>
+                }
               </Card>
             </Tooltip>
           </Flex>
 
-          
-          {hierarchyData.studyCountries.length > 0 && 
+          {/* Спсисок стран исследования */}
+          {hierarchyData.studyCountries.length > 0 && currentStudy && currentStudy?.countries?.length > 1 && 
             <Box style={{ flex: 1 }}>
             <Flex direction="column" gap="2">
               <Flex align="center" gap="2">
@@ -303,7 +255,7 @@ const hierarchyData = useMemo(() => {
             </Flex>
           </Box>}
 
-          {/* Иерархия центров */}
+          {/* Спсисок центров */}
           <Box style={{ flex: 2, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', height: '270px'   }}>
             <Flex direction="column" gap="2" style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
               <Flex align="center" gap="2">

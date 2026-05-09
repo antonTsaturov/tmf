@@ -111,7 +111,6 @@ const Home: React.FC<MainWindowProps> = () => {
         <div 
           className="resize-handle"
           onMouseDown={startResizing}
-          //style={{ cursor: isResizing ? 'col-resize' : 'col-resize' }}
         >
           <div className="resize-handle-line"></div>
         </div>
@@ -121,7 +120,7 @@ const Home: React.FC<MainWindowProps> = () => {
           <div className="main-content-row">
             {/* Actions Buttons */}
             <div className="main-content--buttons">
-              <DocumentActions />
+              {selectedDocument && <DocumentActions />}
             </div>
             {/* Doc status Indicator */}
             {/* <div className="main-content--status">

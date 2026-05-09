@@ -34,7 +34,7 @@ import { getTable } from '@/lib/api/fetch';
 import { Tables } from '@/lib/db/schema';
 import { DocumentStats } from "@/types/document";
 import { useI18n } from "@/hooks/useI18n";
-import { statusLabels, StudyStatus } from "@/types/study";
+import { StudyStatusLabels, StudyStatusColors } from "@/types/study";
 import { SITE_STATUS_CONFIG } from "@/types/site";
 
 interface StudyInfoPanelProps {
@@ -106,27 +106,7 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
     }
   }, [currentStudy?.id, isStudyInfoPanelOpen]);
 
-  type RadixColors = 'blue' | 'green' | 'gray' | 'red' | 'purple' | 'amber';
 
-  // Статус исследования
-  const getStudyStatusColor = (status: string): RadixColors => {
-    const normalizedStatus = status.toLowerCase();
-    
-    switch (normalizedStatus) {
-      case StudyStatus.ONGOING:
-        return 'green';
-      case StudyStatus.COMPLETED:
-        return 'blue';
-      case StudyStatus.TERMINATED:
-        return 'red';
-      case StudyStatus.PLANNED:
-        return 'amber';
-      case StudyStatus.ARCHIVED:
-        return 'gray';
-      default:
-        return 'gray';
-    }
-  };
 
   //const assignedSitesCount = currentStudy?.sites?.length || 0;
   const countriesCount = new Set(currentStudy?.countries || []).size;
@@ -223,8 +203,8 @@ const StudyInfoPanel: React.FC<StudyInfoPanelProps> = () => {
                         <Text size="2" color="gray">{t('status')}</Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Badge size="1" color={getStudyStatusColor(currentStudy.status)}>
-                          {statusLabels[currentStudy.status]}
+                        <Badge size="1" color={StudyStatusColors[currentStudy.status]}>
+                          {StudyStatusLabels[currentStudy.status]}
                         </Badge>
                       </Table.Cell>
                     </Table.Row>

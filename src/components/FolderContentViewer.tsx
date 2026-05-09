@@ -1,7 +1,7 @@
 // components/FolderContentViewer.tsx
-import { MainContext } from "@/wrappers/MainContext";
+import { MainContext, MainContextProps } from "@/wrappers/MainContext";
 import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { Document, DocumentAction } from "@/types/document";
+import { Document, DocumentAction, SharedDocument } from "@/types/document";
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 import { logger } from '@/lib/utils/logger';
 
@@ -32,7 +32,7 @@ import {
   FiAlertCircle, 
 } from 'react-icons/fi';
 import { FaRegFolderOpen } from "react-icons/fa";
-import { ViewLevel } from "@/types/types";
+import { StudySite, ViewLevel } from "@/types/types";
 import { useDragAndDrop } from '@/hooks/useDragAndDrop'; 
 import { useAuth } from "@/wrappers/AuthProvider";
 import DragAndDropOverlay from "./ui/DragAndDropOverlay";
@@ -45,6 +45,10 @@ import { useI18n } from "@/hooks/useI18n";
 import { WelcomeScreen } from "./ui/WelcomeScreen";
 import { StudyMap } from "./ui/StudyMap";
 import { ViewLastDocuments } from "./ui/ViewLastDocuments";
+import { AdminContext } from "@/wrappers/AdminContext";
+import { getDocumentLevel } from "@/lib/utils/folder";
+import { findNodeById } from "./FolderExplorer/utils/folderHelpers";
+import { FileNode } from "./FolderExplorer";
 
 interface DocumentFilters {
     study_id: number;
@@ -60,8 +64,18 @@ interface DocumentsInFolder {
 
 type ViewFilter = 'all' | 'active' | 'deleted' | 'archived';
 
+const getSharedDocumentParams = (key: string) => {
+  const stored = sessionStorage.getItem(key);
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return null;
+};
+
+
 const FolderContentViewer: React.FC = () => {
   const { t } = useI18n('');
+  const { studies, loading: studiesLoading } = useContext(AdminContext)!;
   const { context, updateContext } = useContext(MainContext)!;
   const { 
     currentStudy, 
@@ -84,12 +98,20 @@ const FolderContentViewer: React.FC = () => {
   
   const [activeFilter, setActiveFilter] = useState<ViewFilter>('all');
 
+  // Обработка нажатий на Document Link и Document Share Link
   useEffect(()=> {
     updateContext({isFolderContentLoading:isLoading})
 
+
+    if (studiesLoading) {
+      return;
+    }    
+
     // Если в sessionStorage есть выделенный документ, берем его
+    // selectedDocumentId может быть только если пользователь искал документ в поиске и выбрал его
     if (!isLoading) {
       const preSelectedDocumentId: string | null = sessionStorage.getItem('selectedDocumentId');
+      console.log('preSelectedDocumentId', preSelectedDocumentId)
       if (preSelectedDocumentId) {
         const selectedDocument = documentsData?.documents.find(doc => String(doc.id) === preSelectedDocumentId);
         if (selectedDocument) {
@@ -98,7 +120,53 @@ const FolderContentViewer: React.FC = () => {
         sessionStorage.removeItem('selectedDocumentId');
       }
     }
-  }, [isLoading])
+
+    // Проверяем sessionStorage наличие sharedDocumentParams
+    // sharedDocumentParams будет только если пользователь открывал ссылку на докумнет (shared document)
+    const params: SharedDocument = getSharedDocumentParams('sharedDocumentParams');
+    if (params) {
+      const study = studies.find((s) => String(s.id) === params.study_id);
+      const docLevel = getDocumentLevel(params.folder_id);
+
+      console.log('study?.folders_structure and params.folder_id', study?.folders_structure, params.folder_id)
+
+      const folderNode = findNodeById([study?.folders_structure] as FileNode[], params.folder_id);
+      const updates: Partial<MainContextProps> = {
+        currentStudy: study,
+        currentLevel: docLevel,
+        selectedFolder: folderNode,
+      };
+      
+      //  Определяем страну для Country Level и для General Level (General Level должен иметь страну по умолчанию)
+      if (docLevel !== ViewLevel.SITE && params?.country) {
+        updates.currentCountry = params?.country;
+      }
+      
+      // Определяем site для Site Level
+      if (params?.site_id && study?.sites) {
+        const site = study?.sites.find((s) => String(s.id) === params.site_id);
+
+        updates.currentCountry = site?.country;
+        updates.countryFilter = study.countries;
+        updates.currentSite = site as StudySite;
+      }
+
+      // Определяем документ
+      if (params?.document_id) {
+        const doc = documentsData?.documents.find((d) => String(d.id) === params.document_id);
+        if (doc) {
+          updates.selectedDocument = doc;
+        }
+      }
+      
+      updateContext(updates);
+      sessionStorage.removeItem('sharedDocumentParams');
+    }
+
+    // Очистка sessionStorage
+    // sessionStorage.removeItem('selectedDocumentId');
+    // sessionStorage.removeItem('sharedDocumentParams');
+  }, [isLoading, studiesLoading]);
   
   // Загрузка перетаскиванием
   const { isDragOver, handleDragEnter, handleDragLeave, handleDragOver, handleDrop } = useDragAndDrop({

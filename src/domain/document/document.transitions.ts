@@ -6,6 +6,7 @@ const BASE_ACTIONS: DocumentAction[] = [
   DocumentAction.CREATE_DOCUMENT,
   DocumentAction.VIEW,
   DocumentAction.DOWNLOAD,
+  DocumentAction.SHARE
 ]
 
 export const Transitions: Record<DocumentWorkFlowStatus, DocumentAction[]> = {

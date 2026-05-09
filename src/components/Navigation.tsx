@@ -65,12 +65,23 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
         currentCountry: currentStudy.countries[0],
         selectedFolder: null 
       });
-    } else {
+    } 
+    if (level === ViewLevel.GENERAL) {
       updateContext({ 
         currentLevel: level, 
         currentSite: undefined, 
         currentCountry: undefined,
-        selectedFolder: null
+        selectedFolder: null,
+        showLastDocuments: true
+       });
+    }
+    if (level === ViewLevel.COUNTRY) {
+      updateContext({ 
+        currentLevel: level, 
+        currentSite: undefined, 
+        currentCountry: undefined,
+        selectedFolder: null,
+        showLastDocuments: false
        });
     }
 
@@ -89,7 +100,8 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       // Сохраняем объект центра в контекст
       updateContext({ 
         currentSite: selectedSite,
-        selectedFolder: null
+        selectedFolder: null,
+        showLastDocuments: true
        });
     }
   }, [updateContext, onSiteChange]);
@@ -99,7 +111,8 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       updateContext({ 
         currentCountry: country, 
         currentSite: undefined,
-        selectedFolder: null 
+        selectedFolder: null,
+        showLastDocuments: true
       });
     }
   }
@@ -110,7 +123,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       showLastDocuments: false,
       currentLevel: undefined,
       currentCountry: undefined,
-      currentSite: undefined
+      currentSite: undefined,
     });
   }
 

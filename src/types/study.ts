@@ -1,3 +1,4 @@
+import { RadixColors } from "@/lib/config/constants";
 import { Folder } from "./folder";
 import { StudySite } from './types';
 
@@ -20,14 +21,21 @@ export interface Study {
   users: any[] | null;
   total_documents: number | null;
   folders_structure: Folder | null;
-  // audit_trail?: any[] | null;
   sites?: StudySite[];
 }
 
-export const statusLabels: Record<StudyStatus, string> = {
+export const StudyStatusLabels: Record<StudyStatus, string> = {
   [StudyStatus.PLANNED]: 'Planned',
   [StudyStatus.ONGOING]: 'Ongoing',
   [StudyStatus.COMPLETED]: 'Completed',
   [StudyStatus.TERMINATED]: 'Terminated',
   [StudyStatus.ARCHIVED]: 'Archived'
+};
+
+export const StudyStatusColors: Record<StudyStatus, RadixColors> = {
+  [StudyStatus.PLANNED]: 'blue',
+  [StudyStatus.ONGOING]: 'green',
+  [StudyStatus.COMPLETED]: 'gray',
+  [StudyStatus.TERMINATED]: 'red',
+  [StudyStatus.ARCHIVED]: 'purple'
 };

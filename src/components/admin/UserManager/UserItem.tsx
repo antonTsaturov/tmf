@@ -1,13 +1,13 @@
 // src/components/admin/UserManager/UserItem.tsx
 
-import { SelectorValue, RoleSelector, SiteSelector, StudySelector } from "@/components/PseudoSelector";
+import { SelectorValue, RoleSelector } from "@/components/PseudoSelector";
 import { getPermissionsForRole } from "@/lib/auth/permissions";
 import { StudyUser, UserRole, OrganisationType, UserStatus } from "@/types/user";
 import { Card, Flex, TextField, Badge, Button, Select, Tooltip, 
           Separator, Text, DropdownMenu, Dialog, Box, IconButton, ScrollArea 
 } from "@radix-ui/themes";
-import { FC, useState, ChangeEvent, useCallback, useMemo, useEffect } from "react";
-import { FiCheck, FiX, FiEdit2, FiTrash2, FiPlus, FiMapPin, FiGlobe } from "react-icons/fi";
+import { FC, useState, ChangeEvent, useMemo, useEffect } from "react";
+import { FiCheck, FiX, FiEdit2, FiTrash2, FiMapPin, FiGlobe } from "react-icons/fi";
 import { StudySite } from "@/types/site";
 import { Study } from "@/types/study";
 import { ROLE_CONFIG as roleConfig } from '@/types/types';
@@ -44,7 +44,6 @@ const StatusBadge: FC<StatusBadgeProps> = ({ status, onChange, editable = false 
     [UserStatus.ACTIVE]: { label: 'Active', color: 'green', icon: '🟢' },
     [UserStatus.INACTIVE]: { label: 'Inactive', color: 'gray', icon: '⚪' },
     [UserStatus.PENDING]: { label: 'Pending', color: 'orange', icon: '🟡' },
-    [UserStatus.TERMINATED]: { label: 'Terminated', color: 'red', icon: '🔴' },
   };
 
   const config = statusConfig[status];
@@ -435,11 +434,11 @@ const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, on
     });
     
     // Убираем дубликаты
-    const uniqueNewSites = [...new Set(siteIds)];
+    const uniqueSites = [...new Set(otherSites), ...new Set(siteIds)];
     
     setEditData(prev => ({
       ...prev,
-      assigned_site_id: [...otherSites, ...uniqueNewSites]
+      assigned_site_id: [...new Set(uniqueSites)]
     }));
   };
 

@@ -9,7 +9,8 @@
   // Исключение из поиска (экономит CPU при Ctrl+Shift+F)
   "search.exclude": {
     "**/node_modules": true,
-    "**/dist": true
+    "**/dist": true,
+    "**/__tests__": true
   },
   // КЛЮЧЕВОЙ ПАРАМЕТР: отключает слежение за изменениями в этих папках (экономит CPU)
   "files.watcherExclude": {

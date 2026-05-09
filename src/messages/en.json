@@ -312,7 +312,9 @@
     "download": "Download",
     "download_tooltip": "Download document",
     "edit": "Edit",
-    "edit_tooltip": "Edit document title"
+    "edit_tooltip": "Edit document title",
+    "share": "Share",
+    "share_tooltip": "Share document"
   },
   "folderContentViewer": {
     "loading": "Loading folder contents...",

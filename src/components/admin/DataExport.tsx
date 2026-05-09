@@ -25,18 +25,18 @@ import {
   ClockIcon,
   ArchiveIcon
 } from '@radix-ui/react-icons';
-import { statusLabels } from '@/types/study';
+import { StudyStatusLabels, StudyStatusColors } from '@/types/study';
 import { DocumentStats } from '@/types/document';
 
-type RadixColors = 'blue' | 'green' | 'gray' | 'red' | 'purple' | 'amber';
+// type RadixColors = 'blue' | 'green' | 'gray' | 'red' | 'purple' | 'amber';
 
-const statusColors: Record<StudyStatus, RadixColors> = {
-  [StudyStatus.PLANNED]: 'blue',
-  [StudyStatus.ONGOING]: 'green',
-  [StudyStatus.COMPLETED]: 'gray',
-  [StudyStatus.TERMINATED]: 'red',
-  [StudyStatus.ARCHIVED]: 'purple'
-};
+// const statusColors: Record<StudyStatus, RadixColors> = {
+//   [StudyStatus.PLANNED]: 'blue',
+//   [StudyStatus.ONGOING]: 'green',
+//   [StudyStatus.COMPLETED]: 'gray',
+//   [StudyStatus.TERMINATED]: 'red',
+//   [StudyStatus.ARCHIVED]: 'purple'
+// };
 
 const DataExport: FC = () => {
   const { studies } = useContext(AdminContext)!;
@@ -192,7 +192,7 @@ const DataExport: FC = () => {
               <Text size="1" color="gray" weight="medium">Study Status</Text>
               <Flex align="center" gap="3">
                 <Badge
-                  color={statusColors[selectedStudy.status]}
+                  color={StudyStatusColors[selectedStudy.status]}
                   variant="solid"
                   size="2"
                 >
@@ -202,7 +202,7 @@ const DataExport: FC = () => {
                     ) : (
                       <ClockIcon />
                     )}
-                    {statusLabels[selectedStudy.status]}
+                    {StudyStatusLabels[selectedStudy.status]}
                   </Flex>
                 </Badge>
                 <Text size="1" color="gray">

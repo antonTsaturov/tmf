@@ -41,7 +41,7 @@ export async function getAuthenticatedUser(request: NextRequest) {
   const client = getPool();
   try {
     const result = await client.query(
-      `SELECT id, name, email, role, assigned_site_id, assigned_study_id, status
+      `SELECT id, name, email, role, assigned_site_id, assigned_study_id, assigned_country_by_study, status
        FROM users
        WHERE id = $1`,
       [payload.id]

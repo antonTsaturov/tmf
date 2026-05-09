@@ -4,7 +4,6 @@ export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   PENDING = 'pending',
-  TERMINATED = 'terminated'
 }
 
 export enum UserRole {

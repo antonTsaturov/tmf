@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
   const [validatingToken, setValidatingToken] = useState(true);
   const [redirectCountdown, setRedirectCountdown] = useState(10);
   const [tokenExpiresAt, setTokenExpiresAt] = useState<number | null>(null);
-  //const [tokenTimeLeft, setTokenTimeLeft] = useState('');
+  const [tokenTimeLeft, setTokenTimeLeft] = useState('');
 
   // Validate token on page load
   useEffect(() => {
@@ -68,14 +68,14 @@ export default function ResetPasswordPage() {
       const diff = tokenExpiresAt - now;
 
       if (diff <= 0) {
-        //setTokenTimeLeft('Expired');
+        setTokenTimeLeft('Expired');
         setInvalidToken(true);
         return;
       }
 
-      // const minutes = Math.floor(diff / 60000);
-      // const seconds = Math.floor((diff % 60000) / 1000);
-      //setTokenTimeLeft(`${minutes}m ${seconds}s`);
+      const minutes = Math.floor(diff / 60000);
+      const seconds = Math.floor((diff % 60000) / 1000);
+      setTokenTimeLeft(`${minutes}m ${seconds}s`);
     };
 
     updateCountdown();

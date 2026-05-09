@@ -1,6 +1,6 @@
 // proxy.ts
 /**
- * 🔐 NEXT.JS MIDDLEWARE / PROXY
+ * NEXT.JS MIDDLEWARE / PROXY
  * Handles:
  * - Authentication checks
  * - Authorization redirects
@@ -15,13 +15,14 @@ import { getSecurityHeaders } from './lib/security/security-headers';
 import { applyCorsHeaders, handleCorsPreflight } from './lib/security/cors';
 
 // Публичные пути (не требуют авторизации)
-const PUBLIC_PATHS = [
+export const PUBLIC_PATHS = [
   '/api/ping',
   '/api/auth/login',
   '/api/auth/logout',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/reset-password',
+  '/share',
   '/api/csrf',
   '/_next/static',
   '/favicon.ico'
@@ -66,7 +67,7 @@ export function proxy(request: NextRequest) {
     return handleCorsPreflight(request);
   }
 
-  // Create response that will carry security headers
+  // Создаем response позже
   let response: NextResponse;
 
   if (AUTH_DISABLED) {
@@ -76,55 +77,76 @@ export function proxy(request: NextRequest) {
     const payload = authToken ? AuthService.verifyToken(authToken) : null;
     const isAuthenticated = !!payload;
 
+    // ВАЖНО: Сначала проверяем публичные пути
+    const isPublicPath = PUBLIC_PATHS.some(path => {
+      if (pathname === path) return true;
+      if (pathname.startsWith(path + '/')) return true;
+      // Для точного совпадения с query параметрами
+      if (pathname === path.split('?')[0]) return true;
+      return false;
+    });
+
+
+    // Публичные пути - пропускаем без проверки авторизации
+    if (isPublicPath) {
+      response = NextResponse.next();
+    }
     // Специальная обработка для страницы логина
-    if (pathname === '/login' || pathname.startsWith('/login?')) {
-      // Если пользователь уже авторизован - редирект на главную
+    else if (pathname === '/login' || pathname.startsWith('/login?')) {
       if (isAuthenticated) {
         response = NextResponse.redirect(new URL('/home', request.url));
       } else {
-        // Иначе показываем страницу логина
         response = NextResponse.next();
       }
-    } else if (pathname === '/') {
-      // Корневой путь: если не авторизован - редирект на логин, если авторизован - на home
+    }
+    // Корневой путь
+    else if (pathname === '/') {
       if (isAuthenticated) {
         response = NextResponse.redirect(new URL('/home', request.url));
       } else {
         response = NextResponse.redirect(new URL('/login', request.url));
       }
-    } else if (PUBLIC_PATHS.some(path => pathname.startsWith(path))) {
-      // Пропустить другие публичные пути
-      response = NextResponse.next();
-    } else {
-      // Для всех остальных путей - проверка авторизации
+    }
+    // API пути требуют авторизации
+    else if (pathname.startsWith('/api/')) {
       if (!isAuthenticated) {
-
-        if (pathname.startsWith('/api/')) {
-          // Для API возвращаем JSON и статус 401
-          return NextResponse.json(
-            { error: 'Unauthorized' }, 
-            { status: 401 }
-          );
-        }
-
-        // Если пользователь не авторизован - редирект на логин
+        return NextResponse.json(
+          { error: 'Unauthorized' }, 
+          { status: 401 }
+        );
+      }
+      // Добавляем user info в headers для API
+      const requestHeaders = new Headers(request.headers);
+      if (payload) {
+        requestHeaders.set('x-user-id', payload.id.toString());
+        requestHeaders.set('x-user-email', payload.email);
+        requestHeaders.set('x-user-roles', JSON.stringify(payload.role || []));
+      }
+      response = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
+    // Все остальные пути (защищенные)
+    else {
+      if (!isAuthenticated) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('from', pathname);
         response = NextResponse.redirect(loginUrl);
       } else if (!payload) {
-        // Токен невалиден
         response = NextResponse.redirect(new URL('/login', request.url));
         response.cookies.delete('auth-token');
       } else {
-        // Добавить информацию о пользователе в заголовки
+        // Добавляем информацию о пользователе
         const requestHeaders = new Headers(request.headers);
         requestHeaders.set('x-user-id', payload.id.toString());
         requestHeaders.set('x-user-email', payload.email);
-
-        const roles = payload.role || [];
-        requestHeaders.set('x-user-roles', JSON.stringify(roles));
+        requestHeaders.set('x-user-roles', JSON.stringify(payload.role || []));
         response = NextResponse.next({
-          headers: requestHeaders,
+          request: {
+            headers: requestHeaders,
+          },
         });
       }
     }

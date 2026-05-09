@@ -42,7 +42,7 @@
     "sending": "Отправка...",
     "remindPassword": "Отправить инструкцию",
     "resetSent": "Инструкция по восстановлению пароля отправлена на",
-    "backToSignIn": "Вернуться ко входу",
+    "backToSignIn": "Закрыть окно",
     "somethingWrong": "Что-то пошло не так. Попробуйте снова.",
     "footerPrefix": "ExploreTMF",
     "footerSecure": "Требуется авторизованный доступ"
@@ -312,7 +312,9 @@
     "download": "Скачать",
     "download_tooltip": "Скачать документ",
     "edit": "Изменить",
-    "edit_tooltip": "Изменить название документа"
+    "edit_tooltip": "Изменить название документа",
+    "share": "Поделиться",
+    "share_tooltip": "Поделиться документом"
   },
   "folderContentViewer": {
     "loading": "Загрузка содержимого папки...",
