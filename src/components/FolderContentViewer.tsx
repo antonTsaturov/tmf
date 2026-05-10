@@ -4,7 +4,6 @@ import { useContext, useEffect, useState, useRef, useCallback, useMemo } from "r
 import { Document, DocumentAction, SharedDocument } from "@/types/document";
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 import { logger } from '@/lib/utils/logger';
-
 import FilePreviewPanel from "./panels/FilePreviewPanel";
 import NewVersionUploadPanel from "./panels/NewVersionDocumentPanel";
 import SubmitToReviewPanel from "./panels/SubmitToReviewPanel";
@@ -13,24 +12,9 @@ import DocumentContextMenu from './DocumentContextMenu';
 import DeleteDocumentPanel from "./panels/DeleteDocumentPanel";
 import ArchiveDocumentPanel from "./panels/ArchiveDocumentPanel";
 import DocumentStatusBadge from "./DocumentStatusBadge";
-import { 
-  Flex, 
-  Text, 
-  Box, 
-  Spinner, 
-  Badge,
-  Popover,
-  Button,
-  Table,
-  Section,
-} from '@radix-ui/themes';
+import { Flex, Text, Box, Spinner, Badge, Popover, Button, Table, } from '@radix-ui/themes';
 import { FileIcon } from 'react-file-icon';
-import { 
-  FiFilter, 
-  FiChevronDown, 
-  FiInbox,
-  FiAlertCircle, 
-} from 'react-icons/fi';
+import { FiFilter, FiChevronDown, FiInbox, FiAlertCircle } from 'react-icons/fi';
 import { FaRegFolderOpen } from "react-icons/fa";
 import { StudySite, ViewLevel } from "@/types/types";
 import { useDragAndDrop } from '@/hooks/useDragAndDrop'; 
@@ -97,76 +81,6 @@ const FolderContentViewer: React.FC = () => {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
   const [activeFilter, setActiveFilter] = useState<ViewFilter>('all');
-
-  // Обработка нажатий на Document Link и Document Share Link
-  useEffect(()=> {
-    updateContext({isFolderContentLoading:isLoading})
-
-
-    if (studiesLoading) {
-      return;
-    }    
-
-    // Если в sessionStorage есть выделенный документ, берем его
-    // selectedDocumentId может быть только если пользователь искал документ в поиске и выбрал его
-    if (!isLoading) {
-      const preSelectedDocumentId: string | null = sessionStorage.getItem('selectedDocumentId');
-      console.log('preSelectedDocumentId', preSelectedDocumentId)
-      if (preSelectedDocumentId) {
-        const selectedDocument = documentsData?.documents.find(doc => String(doc.id) === preSelectedDocumentId);
-        if (selectedDocument) {
-          updateContext({ selectedDocument: selectedDocument });
-        }
-        sessionStorage.removeItem('selectedDocumentId');
-      }
-    }
-
-    // Проверяем sessionStorage наличие sharedDocumentParams
-    // sharedDocumentParams будет только если пользователь открывал ссылку на докумнет (shared document)
-    const params: SharedDocument = getSharedDocumentParams('sharedDocumentParams');
-    if (params) {
-      const study = studies.find((s) => String(s.id) === params.study_id);
-      const docLevel = getDocumentLevel(params.folder_id);
-
-      console.log('study?.folders_structure and params.folder_id', study?.folders_structure, params.folder_id)
-
-      const folderNode = findNodeById([study?.folders_structure] as FileNode[], params.folder_id);
-      const updates: Partial<MainContextProps> = {
-        currentStudy: study,
-        currentLevel: docLevel,
-        selectedFolder: folderNode,
-      };
-      
-      //  Определяем страну для Country Level и для General Level (General Level должен иметь страну по умолчанию)
-      if (docLevel !== ViewLevel.SITE && params?.country) {
-        updates.currentCountry = params?.country;
-      }
-      
-      // Определяем site для Site Level
-      if (params?.site_id && study?.sites) {
-        const site = study?.sites.find((s) => String(s.id) === params.site_id);
-
-        updates.currentCountry = site?.country;
-        updates.countryFilter = study.countries;
-        updates.currentSite = site as StudySite;
-      }
-
-      // Определяем документ
-      if (params?.document_id) {
-        const doc = documentsData?.documents.find((d) => String(d.id) === params.document_id);
-        if (doc) {
-          updates.selectedDocument = doc;
-        }
-      }
-      
-      updateContext(updates);
-      sessionStorage.removeItem('sharedDocumentParams');
-    }
-
-    // Очистка sessionStorage
-    // sessionStorage.removeItem('selectedDocumentId');
-    // sessionStorage.removeItem('sharedDocumentParams');
-  }, [isLoading, studiesLoading]);
   
   // Загрузка перетаскиванием
   const { isDragOver, handleDragEnter, handleDragLeave, handleDragOver, handleDrop } = useDragAndDrop({
@@ -225,9 +139,7 @@ const FolderContentViewer: React.FC = () => {
     updateSingleDocumentInState(updatedDoc);
     
     // Если документ был выделен, обновляем и выделение в контексте
-    if (selectedDocument?.id === updatedDoc.id) {
-      updateContext({ selectedDocument: updatedDoc });
-    } else {
+    if (String(selectedDocument?.id) === String(updatedDoc.id)) {
       updateContext({ selectedDocument: updatedDoc });
     }
   };
@@ -269,7 +181,6 @@ const FolderContentViewer: React.FC = () => {
   const loadFolderContents = useCallback(async () => {
 
     if (isLoading) {
-      console.log('⏳ Already loading, skipping');
       return;
     }
     
@@ -315,11 +226,10 @@ const FolderContentViewer: React.FC = () => {
       setIsLoading(false);
     }
   }, [selectedFolder, currentStudy, currentSite, currentLevel, currentCountry]);
-
+  
+  // Загружаем документы
   useEffect(() => {
-    // Загружаем документы
     loadFolderContents();
-
   }, [loadFolderContents]);
 
   useEffect(() => {
@@ -329,6 +239,67 @@ const FolderContentViewer: React.FC = () => {
       updateContext({docWasDeleted: false});
     }
   }, [uploadSuccess, loadFolderContents, docWasDeleted, updateContext ]);
+
+  // Обработка Document Link и Document Share Params, сохраненных в sessionStorage
+  useEffect(()=> {
+    updateContext({isFolderContentLoading:isLoading})
+
+
+    if (studiesLoading || !documentsData || isLoading) {
+      return;
+    }    
+
+    // Если в sessionStorage есть выделенный документ, берем его
+    // selectedDocumentId может быть 
+    // 1. если пользователь искал документ в поиске и выбрал его
+    // 2. если пользователь открывал документ из Last Documents
+    if (!isLoading) {
+      const preSelectedDocumentId: string | null = sessionStorage.getItem('selectedDocumentId');
+      if (preSelectedDocumentId) {
+        const selectedDocument = documentsData?.documents.find(doc => String(doc.id) === preSelectedDocumentId);
+        if (selectedDocument) {
+          updateContext({ selectedDocument: selectedDocument });
+        }
+        sessionStorage.removeItem('selectedDocumentId');
+      }
+    }
+
+    // Проверяем sessionStorage наличие sharedDocumentParams
+    // sharedDocumentParams будет только если пользователь открывал ссылку на докумнет (shared document)
+    const params: SharedDocument = getSharedDocumentParams('sharedDocumentParams');
+    if (params && !isLoading) {
+      
+      const study = studies.find((s) => String(s.id) === params.study_id);
+      const docLevel = getDocumentLevel(params.folder_id);
+      const doc = documentsData?.documents.find((d) => String(d.id) === params.document_id);
+
+      const folderNode = findNodeById([study?.folders_structure] as FileNode[], params.folder_id);
+      const updates: Partial<MainContextProps> = {
+        currentStudy: study,
+        currentLevel: docLevel,
+        selectedFolder: folderNode,
+        selectedDocument: doc
+      };
+      
+      // Определяем страну для Country Level и для General Level 
+      // (General Level должен иметь страну по умолчанию)
+      if (docLevel !== ViewLevel.SITE && params?.country) {
+        updates.currentCountry = params?.country;
+      }
+      
+      // Определяем site для Site Level
+      if (params?.site_id && study?.sites) {
+        const site = study?.sites.find((s) => String(s.id) === params.site_id);
+
+        updates.currentCountry = site?.country;
+        updates.countryFilter = study.countries;
+        updates.currentSite = site as StudySite;
+      }
+      updateContext(updates);
+      sessionStorage.removeItem('sharedDocumentParams');
+    }
+
+  }, [isLoading, studiesLoading, documentsData]);
 
   const filteredDocuments = useMemo(() => {
     if (!documentsData?.documents) return [];
@@ -490,6 +461,7 @@ const FolderContentViewer: React.FC = () => {
     );
   }
   
+  console.log('selectedDocument', selectedDocument);
   return (
     <Box 
       ref={contentRef} 
@@ -807,7 +779,7 @@ const FolderContentViewer: React.FC = () => {
       />
       <DeleteDocumentPanel />
       <ArchiveDocumentPanel
-        onDocumentArchived={(updatedDoc) => handleUpdateFIleInFolder(updatedDoc)}
+        onDocumentArchived={() => loadFolderContents()}
       />
       <UnarchiveDocumentPanel
         onDocumentUnarchived={() => loadFolderContents()}

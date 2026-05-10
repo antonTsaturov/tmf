@@ -2,22 +2,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react';
-import {
-  Dialog,
-  Tabs,
-  Flex,
-  Text,
-  TextField,
-  Button,
-  Box,
-  IconButton,
-  Separator,
-  DataList,
-  Badge,
-  Card,
-  Avatar,
-  Spinner,
-  Checkbox,
+import { Dialog, Tabs, Flex, Text, TextField, Button, Box, IconButton, Separator, DataList,
+  Badge, Card, Avatar, Spinner, Checkbox,
 } from '@radix-ui/themes';
 import { EyeOpenIcon, EyeClosedIcon, Cross2Icon } from '@radix-ui/react-icons';
 import { useAuth } from '@/wrappers/AuthProvider';

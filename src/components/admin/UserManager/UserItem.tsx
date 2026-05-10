@@ -4,7 +4,8 @@ import { SelectorValue, RoleSelector } from "@/components/PseudoSelector";
 import { getPermissionsForRole } from "@/lib/auth/permissions";
 import { StudyUser, UserRole, OrganisationType, UserStatus } from "@/types/user";
 import { Card, Flex, TextField, Badge, Button, Select, Tooltip, 
-          Separator, Text, DropdownMenu, Dialog, Box, IconButton, ScrollArea 
+          Separator, Text, DropdownMenu, Dialog, Box, IconButton, ScrollArea, 
+          Checkbox
 } from "@radix-ui/themes";
 import { FC, useState, ChangeEvent, useMemo, useEffect } from "react";
 import { FiCheck, FiX, FiEdit2, FiTrash2, FiMapPin, FiGlobe } from "react-icons/fi";
@@ -212,14 +213,20 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
                 <Flex direction="column" gap="1">
                   {studySites.map(site => (
                     <Flex key={site.id} align="center" gap="2" p="1">
-                      <input
-                        type="checkbox"
-                        checked={isSiteSelected(Number(site.id))}
-                        onChange={() => toggleSite(Number(site.id))}
-                        style={{ cursor: 'pointer' }}
-                      />
                       <Box style={{ flex: 1 }}>
-                        <Text size="2">{site.name}</Text>
+                        <Text size="2" as="label" htmlFor={`site-${site.id}`} >
+                          
+                          <Flex as="span" gap="2">
+                            <Checkbox
+                              id={`site-${site.id}`}
+                              checked={isSiteSelected(Number(site.id))}
+                              onCheckedChange={() => toggleSite(Number(site.id))}
+                              style={{ cursor: 'pointer' }}
+                              defaultChecked
+                            />
+                              {site.name}
+                          </Flex>
+                        </Text>
                         <Text size="1" color="gray"> ({site.city}, {site.country})</Text>
                       </Box>
                       {site.principal_investigator && (
@@ -283,13 +290,17 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
               <Flex direction="column" gap="1">
                 {studyCountries.map(country => (
                   <Flex key={country} align="center" gap="2" p="1">
-                    <input
-                      type="checkbox"
-                      checked={tempCountryCodes.includes(country)}
-                      onChange={() => toggleCountry(country)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                    <Text size="2">{country}</Text>
+                    <Text size="2" as="label" htmlFor={`country-${country}`}>
+                      <Flex as="span" gap="2">
+                        <Checkbox
+                          id={`country-${country}`}
+                          checked={tempCountryCodes.includes(country)}
+                          onCheckedChange={() => toggleCountry(country)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        {country}
+                      </Flex>
+                    </Text>
                   </Flex>
                 ))}
               </Flex>

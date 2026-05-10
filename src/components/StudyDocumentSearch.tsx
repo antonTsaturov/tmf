@@ -134,12 +134,10 @@ export const StudyDocumentSearch: React.FC = () => {
       selectedFolder: folderNode,
     };
     
-    if (docLevel !== ViewLevel.SITE) {
+    if (docLevel !== ViewLevel.SITE) { 
       updates.currentCountry = doc?.country;
-    }
-    
-    if (doc?.site) {
-      updates.currentCountry = doc?.country || 'Russia'; // NB!
+    } else if (doc?.site) {
+      updates.currentCountry = doc.site.country;
       updates.countryFilter = doc.study.countries;
       updates.currentSite = doc?.site;
     }

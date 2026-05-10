@@ -13,6 +13,7 @@ import { ViewLevel } from '@/types/types';
 import { useI18n } from '@/hooks/useI18n';
 import { useStudyChange } from '@/hooks/useStudyChange'; 
 import { LuLayers3 } from "react-icons/lu";
+import { SITE_STATUS_CONFIG, SiteStatus } from '@/types/site';
 
 
 interface StudySiteNavigationProps {
@@ -96,7 +97,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
 
   const handleSiteChange = useCallback((siteId: string) => {
     const selectedSite = currentStudy &&  currentStudy?.sites?.find(site => Number(site.id) === Number(siteId));
-    if (selectedSite) {
+    if (selectedSite && selectedSite.status === SiteStatus.OPENED) {
       // Сохраняем объект центра в контекст
       updateContext({ 
         currentSite: selectedSite,
@@ -190,14 +191,15 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   }
 
   return (
-    <Flex direction="row" gap="3" >
+    <Flex direction="row" gap="2" >
       {/* Шаг 1: Выбор исследования */}
-      <Flex direction="row" gap="3" align="center">
+      <Flex direction="row" gap="2" align="center">
         <Tooltip content="Изменить уровень просмотра">
           <Button
             variant="surface"
             size="2"
             onClick={handleStudyMap}
+            mr="3"
           >
             <LuLayers3 />
           </Button>
@@ -225,7 +227,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
 
       {/* Шаг 2: Выбор уровня просмотра (показываем только если выбрано исследование) */}
       {currentStudy && (
-        <Flex direction="row" gap="3" align="center">
+        <Flex direction="row" gap="2" align="center">
           <Select.Root
             size="2"
             key={`level-select-${currentLevel}-${currentStudy.id}`}
@@ -264,7 +266,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       {/* Дополнительный фильтр центров по странам.
           Доступен если пользователю добавлены центры в более чем 1 стране */}
       {currentStudy && currentLevel === ViewLevel.SITE && countryFilter && countryFilter.length > 1 ?
-       <Flex direction="row" gap="3" align="center">
+       <Flex direction="row" gap="2" align="center">
         <Select.Root
           size="2"
           key={`country-select-${currentCountry}`}
@@ -306,9 +308,18 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
           <Select.Content>
             {currentStudy?.sites.filter(site => site.country === currentCountry && user?.assigned_site_id?.includes(Number(site.id)))
             .map((site) => (
-              <Select.Item key={site.id} value={site.id.toString()}>
-                <Flex direction="column">
-                  <Text>{site.name} №{site.number}</Text>
+              <Select.Item 
+                key={site.id} 
+                value={site.id.toString()}
+                disabled={site.status !== SiteStatus.OPENED }
+              >
+                <Flex direction="row" gap="2" align="center">
+                  <Text style={{ fontSize: '0.5em', display: 'inline-flex' }}>
+                    {SITE_STATUS_CONFIG[site.status].icon}
+                  </Text>
+                  <Text>
+                    {site.name} №{site.number} {site.status !== SiteStatus.OPENED && `(${SITE_STATUS_CONFIG[site.status].label})` }
+                  </Text>
                 </Flex>
               </Select.Item>
             ))}

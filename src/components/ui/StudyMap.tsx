@@ -5,7 +5,7 @@ import { Box, Flex, Text, Card, Heading, Badge, Separator, Button, Tooltip, Scro
 import { GlobeIcon } from '@radix-ui/react-icons';
 import { useContext, useMemo, useState } from 'react';
 import { MainContext, MainContextProps } from '@/wrappers/MainContext';
-import { StudySite, ViewLevel } from '@/types/types';
+import { SiteStatus, StudySite, ViewLevel } from '@/types/types';
 import { FaRegBuilding, FaClinicMedical } from "react-icons/fa";
 import { useAuth } from '@/wrappers/AuthProvider';
 import { StudyStatusLabels, StudyStatusColors } from '@/types/study';
@@ -27,7 +27,6 @@ const hierarchyData = useMemo(() => {
 
   // Группировка сайтов по стране
   const countriesMap = new Map<string, typeof currentStudy.sites>();
-  console.log(' [userAssignedCountries]', userAssignedCountries);
   
   currentStudy.sites.forEach((site) => {
     const country = site.country;
@@ -287,16 +286,17 @@ const hierarchyData = useMemo(() => {
                               style={{ marginLeft: '12px' }}
                               maxWidth="90%"
                             >
-                              <Tooltip content={`Открыть уровень центра (${site.name})`}>
+                              <Tooltip content={`${site.status === SiteStatus.OPENED ? 'Открыть уровень центра' : 'Центр закрыт'}`}>
                                 <Card 
                                   mb="2" 
                                   variant="classic" 
                                   size="2" 
                                   style={{ 
                                     flex: 1, 
-                                    cursor: 'pointer',
+                                    cursor: `${site.status === SiteStatus.OPENED ? 'pointer' : 'not-allowed'}`,
                                   }} 
-                                  onClick={() => handleStudyMapClick(site)}
+                                  onClick={() => site.status === SiteStatus.OPENED && handleStudyMapClick(site)}
+                                  
                                 >
                                   <Flex 
                                     align="start" 

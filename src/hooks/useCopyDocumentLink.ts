@@ -16,8 +16,6 @@ export const useCopyDocumentLink = (): UseCopyDocumentLinkReturn => {
 
   const getDocumentLink = useCallback(async (doc: Document): Promise<string | null> => {
 
-    console.log('[getDocumentLink] doc:', doc);
-
     try {
       const currentOrigin = window.location.origin;      
       const link = `${currentOrigin}/share/${doc?.study_id}/${doc?.country}/${doc?.site_id}/${doc?.folder_id}/${doc?.id}`;

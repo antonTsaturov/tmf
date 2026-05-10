@@ -22,7 +22,7 @@ export const PUBLIC_PATHS = [
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/reset-password',
-  '/share',
+  // '/share',
   '/api/csrf',
   '/_next/static',
   '/favicon.ico'

@@ -176,7 +176,7 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
     } else {
       setSelectedNodes(new Set());
     }
-    updateContext({ selectedDocument: null });
+    //updateContext({ selectedDocument: null });
   }, [selectedFolder, scrollToFolder]);
 
   useEffect(() => {

@@ -20,7 +20,7 @@ export interface StudySite {
 export const SITE_STATUS_CONFIG = {
   [SiteStatus.OPENED]: { label: 'Opened', color: '#51cf66', icon: '🟢' },
   [SiteStatus.PLANNED]: { label: 'Planned', color: '#ff922b', icon: '🟡' },
-  [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔒' },
+  [SiteStatus.CLOSED]: { label: 'Closed', color: '#ff6b6b', icon: '🔴' },
   [SiteStatus.FROZEN]: { label: 'Frozen', color: '#3b5bff', icon: '❄️' },
 };
 

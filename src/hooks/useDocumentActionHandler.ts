@@ -63,7 +63,6 @@ export const useDocumentActionHandler = (): UseDocumentActionHandlerReturn => {
           break;
         }
         const url = `/api/documents/${document.id}/versions/${version.document_number}/download`;
-        console.log(url);
         window.open(url, '_blank');
         break;
       }

@@ -77,9 +77,9 @@ export default function SharePage()  {
       document_id
     };
 
+    // Сохраняем параметры документа в sessionStorage
     sessionStorage.setItem('sharedDocumentParams', JSON.stringify(sharedDocumentParams));
-    sessionStorage.setItem('selectedDocumentId', document_id);
-    // Если доступ есть, перенаправляем на главное окно
+    // Перенаправляем на главное окно => при монтировании FolderContentViewer обновляем контекст сохраненными параметрами
     router.push('/home');
   }, [user, isAuthLoading, study_id, country, site_id]);
 
