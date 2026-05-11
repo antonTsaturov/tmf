@@ -75,7 +75,7 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
     <Flex align="center">
       {selectedFolder && statusOrder.map((s, index) => {
         const isActive = !showEmpty && index <= currentIndex;
-        const isCurrent = !showEmpty && s === status;
+        //const isCurrent = !showEmpty && s === status;
         const colors = statusColors[s];
         
         const circle = (

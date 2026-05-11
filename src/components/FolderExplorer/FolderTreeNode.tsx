@@ -73,7 +73,7 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
       return;
     }
 
-    const isSameNode = context.selectedFolder?.id === node.id;
+    //const isSameNode = context.selectedFolder?.id === node.id;
 
     // ✅ Устанавливаем флаг, что это клик пользователя (не программная прокрутка)
     userSelectedFolderIdRef.current = node.id;

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
       // Получаем текущего пользователя
       const user = await getAuthenticatedUser(request);
-      const assignedSiteIds = user?.assigned_site_id || [];
+      //const assignedSiteIds = user?.assigned_site_id || [];
       const assignedStudiesIds = user?.assigned_study_id || [];
       const isAdmin = user?.role?.includes("admin") || false;
 

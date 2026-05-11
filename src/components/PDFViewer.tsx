@@ -58,7 +58,7 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
         
         if (cached) {
           // Используем кэшированную версию
-          const blob = new Blob([cached.data], { type: 'application/pdf' });
+          //const blob = new Blob([cached.data], { type: 'application/pdf' });
           //const url = URL.createObjectURL(blob);
           //setPdfUrl(url);
           setPdfData(new Uint8Array(cached.data));

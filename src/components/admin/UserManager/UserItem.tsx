@@ -334,7 +334,7 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
   );
 };
 
-const UserItem: FC<UserItemProps> = ({ user, sites, studies, index, onUpdate, onDelete }) => {
+const UserItem: FC<UserItemProps> = ({ user, studies, index, onUpdate, onDelete }) => {
   const assignedSiteIds = user?.assigned_site_id || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,17 +1,17 @@
 // src/components/admin/UserManager/index.tsx
 'use client'
-import { useState, useCallback, FC, ChangeEvent, useEffect, useContext } from 'react';
+import { useState, useCallback, FC, useEffect, useContext } from 'react';
 import { Box, Flex, Text, Heading, Button, TextField, Select, Badge, Card, Separator, Dialog,
-  DropdownMenu, Tooltip, Strong, ScrollArea,
+  Strong, ScrollArea,
 } from '@radix-ui/themes';
-import { FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiUsers, FiRefreshCw, } from 'react-icons/fi';
+import { FiPlus, FiTrash2,  FiUsers, FiRefreshCw } from 'react-icons/fi';
 import { AdminContext } from '@/wrappers/AdminContext';
-import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite, Study, ROLE_CONFIG as roleConfig } from '@/types/types';
+import { StudyUser, OrganisationType, UserRole, UserStatus, UserPermissions, StudySite } from '@/types/types';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from '../StructurePreview';
 import { useEntityState } from '@/hooks/useEntityState';
 import { useNotification } from '@/wrappers/NotificationContext';
-import { RoleSelector, SelectorValue, SiteSelector, StudySelector, CountrySelector } from '../../PseudoSelector';
+import { RoleSelector, SelectorValue, SiteSelector, StudySelector } from '../../PseudoSelector';
 import { deleteRecord } from '@/lib/api/fetch';
 import { getPermissionsForRole} from '@/lib/auth/permissions';
 import { v4 as uuidv4 } from 'uuid';
