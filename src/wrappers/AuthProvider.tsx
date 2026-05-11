@@ -47,18 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener('storage', syncLogout);
   }, []);
 
-  useEffect(() => {
-    initFetchInterceptor();
-
-    // На публичных страницах не проверяем авторизацию
-    if (!isPublicPath) {
-      checkAuth();
-    } else {
-      // На публичных страницах сразу заканчиваем загрузку
-      setLoading(false);
-    }    
-  }, [initFetchInterceptor]);
-
   const checkAuth = async () => {
     try {
       const response = await fetch('/api/auth/check', {
@@ -78,6 +66,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    initFetchInterceptor();
+
+    // На публичных страницах не проверяем авторизацию
+    if (!isPublicPath) {
+      checkAuth();
+    } else {
+      // На публичных страницах сразу заканчиваем загрузку
+      setLoading(false);
+    }    
+  }, [initFetchInterceptor]);
+
+
 
   // const login = async (email: string, password: string): Promise<boolean> => {
   //   setLoading(true);

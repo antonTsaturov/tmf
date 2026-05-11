@@ -99,6 +99,26 @@ const UserManager: FC<UserManagerProps> = () => {
     }
   }, [newUserForm.roles]);
     
+
+  // Функция для загрузки списка пользователей
+  // Вынесена отдельно, так как используется повторно после добавления нового пользователя
+  const loadUsers = async () => {
+    try {
+      const loadedUsers = await loadAllUsers();
+      const studyUsers = loadedUsers as unknown as StudyUser[];
+      logger.info('Users loaded', { count: studyUsers?.length });
+      if (studyUsers ) {
+        setManagedUsers(studyUsers);
+      } else {
+        setManagedUsers([]);
+      }
+    } catch (err) {
+      logger.error('Error loading users', err);
+      addNotification('error', 'Failed to load users from database.');
+      setManagedUsers([]);
+    }
+  };
+
   // Добавление нового пользователя
   const handleAddUser = useCallback( async () => {
     if (!newUserForm.name.trim() || !newUserForm.email.trim()) {
@@ -202,24 +222,6 @@ const UserManager: FC<UserManagerProps> = () => {
     generateUserObject();
   }, [newUserForm, managedUsers, loadTablePartial]);
 
-  // Функция для загрузки списка пользователей
-  // Вынесена отдельно, так как используется повторно после добавления нового пользователя
-  const loadUsers = async () => {
-    try {
-      const loadedUsers = await loadAllUsers();
-      const studyUsers = loadedUsers as unknown as StudyUser[];
-      logger.info('Users loaded', { count: studyUsers?.length });
-      if (studyUsers ) {
-        setManagedUsers(studyUsers);
-      } else {
-        setManagedUsers([]);
-      }
-    } catch (err) {
-      logger.error('Error loading users', err);
-      addNotification('error', 'Failed to load users from database.');
-      setManagedUsers([]);
-    }
-  };
 
   // Загрузка пользователей и центров
   useEffect(() => {
