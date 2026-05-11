@@ -35,16 +35,16 @@
   border-bottom: 1px solid #e0e0e0;
 }
 
-.header-left {
+/* .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 1;
   min-width: 0;
   margin-left: 10px;
-}
+} */
 
-.document-title {
+/* .document-title {
   font-size: 14px;
   font-weight: 500;
   color: #333;
@@ -52,7 +52,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
-}
+} */
 
 .page-info {
   font-size: 12px;
@@ -62,26 +62,30 @@
   border-radius: 4px;
 }
 
-.header-actions {
+/* .header-actions {
   display: flex;
   align-items: center;
   gap: 4px;
-}
+} */
 
 .icon-button {
   background: none;
   border: none;
-  padding: 8px;
+  padding: 0 .5rem;
+  font-size: 16px;
   cursor: pointer;
-  color: #666;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  height: 32px;
+  width: 32px;
+  margin-bottom: 5px;
 }
 
 .icon-button:hover {
-  background-color: #f5f5f5;
+  background-color: #e6e4e4;
   color: #333;
 }
 
@@ -91,16 +95,15 @@
   display: flex;
 }
 
-.pdf-iframe {
+/* .pdf-iframe {
   width: 100%;
   height: 100%;
   border: none;
   background-color: white;
-}
+} */
 
 .pdf-viewer-loading-state,
 .pdf-viewer-error-state {
-  /* position: absolute; */
   top: 0;
   left: 0;
   right: 0;
@@ -113,7 +116,7 @@
   width: 100%;
 }
 
-.spinner {
+/* .spinner {
   width: 40px;
   height: 40px;
   border: 3px solid #f3f3f3;
@@ -125,7 +128,7 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
+} */
 
 .pdf-viewer-error-icon {
   font-size: 48px;
@@ -140,7 +143,7 @@
   max-width: 300px;
 }
 
-.download-button {
+/* .download-button {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -151,14 +154,14 @@
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-}
+} */
 
-.download-button:hover {
+/* .download-button:hover {
   background-color: #1976D2;
-}
+} */
 
 /* Элементы управления страницами */
-.page-controls {
+/* .page-controls {
   position: absolute;
   bottom: 20px;
   left: 50%;
@@ -171,9 +174,9 @@
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 10;
-}
+} */
 
-.page-controls button {
+/* .page-controls button {
   background: none;
   border: none;
   padding: 4px 8px;
@@ -212,29 +215,9 @@
 .page-controls input:focus {
   outline: none;
   border-color: #2196F3;
-}
+} */
 
 /* Плейсхолдер для правой панели */
-.right-frame-placeholder {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #999;
-  background-color: #fafafa;
-}
-
-.placeholder-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.placeholder-text {
-  font-size: 14px;
-  text-align: center;
-}
-
 /* Стили для ошибок в PDFViewer */
 .pdf-viewer.error-mode {
   display: flex;
@@ -265,21 +248,6 @@
 }
 
 /* Индикатор прогресса загрузки */
-.loading-progress {
-  width: 100%;
-  max-width: 300px;
-  height: 4px;
-  background-color: #f0f0f0;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 12px;
-}
-
-.loading-progress-bar {
-  height: 100%;
-  background-color: #2196F3;
-  transition: width 0.3s ease;
-}
 
 /* Анимация для кэшированных файлов */
 @keyframes cachePulse {
@@ -290,4 +258,21 @@
 
 .cache-badge {
   animation: cachePulse 2s ease-in-out infinite;
+}
+
+.pdf-viewer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.header-left {
+  flex-shrink: 0;
+}
+
+.header-actions {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }

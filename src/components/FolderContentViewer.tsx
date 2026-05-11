@@ -301,6 +301,13 @@ const FolderContentViewer: React.FC = () => {
 
   }, [isLoading, studiesLoading, documentsData]);
 
+  // const renderCount = useRef(0);
+
+  // useEffect(() => {
+  //   renderCount.current++;
+  //   console.log(`Рендер компонента: ${renderCount.current}`);
+  // }); // Без массива зависимостей — срабатывает при каждом рендере
+
   const filteredDocuments = useMemo(() => {
     if (!documentsData?.documents) return [];
     
@@ -391,54 +398,54 @@ const FolderContentViewer: React.FC = () => {
     { value: 'archived', label: t('folderContentViewer.filter.archived'), count: documentCounts.archived },
   ];
 
-  const showWelcomeScreen = !selectedFolder && !currentStudy && !currentLevel;
-  const showStudyMap = !selectedFolder && currentStudy !== undefined && showLastDocuments === false;
-  const showLast = !selectedFolder  && showLastDocuments === true;
+  // const showWelcomeScreen = !selectedFolder && !currentStudy && !currentLevel;
+  // const showStudyMap = !selectedFolder && currentStudy !== undefined && showLastDocuments === false;
+  // const showLast = !selectedFolder  && showLastDocuments === true;
 
-  if (showWelcomeScreen) {
-    return (
-      <Flex 
-        align="center" 
-        justify="center" 
-        direction="column" 
-        gap="4" 
-        style={{ height: '100%', minHeight: '400px' }}
-      >
-        <WelcomeScreen />   
-      </Flex>
-    );
-  }
+  // if (showWelcomeScreen) {
+  //   return (
+  //     <Flex 
+  //       align="center" 
+  //       justify="center" 
+  //       direction="column" 
+  //       gap="4" 
+  //       style={{ height: '100%', minHeight: '400px' }}
+  //     >
+  //       <WelcomeScreen />   
+  //     </Flex>
+  //   );
+  // }
 
-  if (showStudyMap) {
-    return (
-      <Flex 
-        align="center" 
-        justify="center" 
-        direction="column" 
-        gap="4" 
-        style={{ height: '100%', minHeight: '400px' }}
-      >
-        <StudyMap />
-      </Flex>
-    );
-  }
+  // if (showStudyMap) {
+  //   return (
+  //     <Flex 
+  //       align="center" 
+  //       justify="center" 
+  //       direction="column" 
+  //       gap="4" 
+  //       style={{ height: '100%', minHeight: '400px' }}
+  //     >
+  //       <StudyMap />
+  //     </Flex>
+  //   );
+  // }
 
-  if (showLast) {
-    const level = currentLevel as ViewLevel;
-    return (
-      <Flex 
-        align="center" 
-        justify="center" 
-        direction="column" 
-        gap="4" 
-        style={{ height: '100%', minHeight: '400px' }}
-      >
-        <ViewLastDocuments 
-          level={level}
-        />
-      </Flex>
-    );
-  }  
+  // if (showLast) {
+  //   const level = currentLevel as ViewLevel;
+  //   return (
+  //     <Flex 
+  //       align="center" 
+  //       justify="center" 
+  //       direction="column" 
+  //       gap="4" 
+  //       style={{ height: '100%', minHeight: '400px' }}
+  //     >
+  //       <ViewLastDocuments 
+  //         level={level}
+  //       />
+  //     </Flex>
+  //   );
+  // }  
 
   if (isLoading) {
     return (
@@ -460,8 +467,8 @@ const FolderContentViewer: React.FC = () => {
       </Flex>
     );
   }
-  
-  console.log('selectedDocument', selectedDocument);
+
+  //console.log('[ FolderContentViewer ] renderCount:', renderCount.current);
   return (
     <Box 
       ref={contentRef} 

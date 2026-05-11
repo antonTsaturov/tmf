@@ -52,10 +52,10 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
   // Определяем размеры в зависимости от пропса size
   const getCircleSize = () => {
     switch (size) {
-      case 'small': return '14px';
-      case 'medium': return '18px';
-      case 'big': return '20px';
-      default: return '14px';
+      case 'small': return '16px';
+      case 'medium': return '20px';
+      case 'big': return '22px';
+      default: return '16px';
     }
   };
 
@@ -86,7 +86,7 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
               height: circleSize,
               borderRadius: '50%',
               backgroundColor: isActive ? colors.active : colors.inactive,
-              border: isCurrent ? '2px solid var(--gray-10)' : '2px solid transparent',
+              // border: isCurrent ? '2px solid var(--gray-10)' : '2px solid transparent',
               opacity: showEmpty ? 0.5 : 1,
               display: 'flex',
               alignItems: 'center',
@@ -120,18 +120,19 @@ const DocumentStatusIndicator: React.FC<DocumentStatusIndicatorProps> = ({
             {index < statusOrder.length - 1 && (
               <Box
                 style={{
-                  width: size === 'small' ? '12px' : size === 'medium' ? '16px' : '20px',
-                  height: '1px',
-                  backgroundColor: !showEmpty && index < currentIndex 
-                    ? colors.active 
-                    : !showEmpty && index === currentIndex - 1 
-                    ? colors.active 
-                    : 'var(--gray-5)',
+                  width: '34px',
+                  // height: '1px',
+                  // backgroundColor: !showEmpty && index < currentIndex 
+                  //   ? colors.active 
+                  //   : !showEmpty && index === currentIndex - 1 
+                  //   ? colors.active 
+                  //   : 'var(--gray-5)',
                   transition: 'background-color 0.2s ease',
                   margin: '0 4px',
                   flexShrink: 1,
-                  minWidth: size === 'small' ? '8px' : size === 'medium' ? '12px' : '16px',
-                  maxWidth: size === 'small' ? '20px' : size === 'medium' ? '24px' : '28px'
+                  //minWidth: size === 'small' ? '24px' : size === 'medium' ? '18px' : '22px',
+                  // maxWidth: size === 'small' ? '20px' : size === 'medium' ? '24px' : '28px',
+                  borderBottom: '4px dotted var(--gray-5)'
                 }}
               />
             )}

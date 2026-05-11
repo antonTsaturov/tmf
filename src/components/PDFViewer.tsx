@@ -7,6 +7,12 @@ import { usePDFCache } from '@/hooks/usePDFCache';
 import '../styles/PDFViewer.css';
 import { Flex, Spinner } from '@radix-ui/themes';
 import { logger } from '@/lib/utils/logger';
+import { Worker, Viewer } from '@react-pdf-viewer/core';
+import { toolbarPlugin } from '@react-pdf-viewer/toolbar';
+import { HiOutlineExclamationTriangle } from "react-icons/hi2";
+
+import '@react-pdf-viewer/core/lib/styles/index.css';
+import '@react-pdf-viewer/toolbar/lib/styles/index.css';
 
 interface PDFViewerProps {
   onClose?: () => void;
@@ -18,16 +24,22 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  // const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfData, setPdfData] = useState<Uint8Array | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [usingCache, setUsingCache] = useState(false);
   
   const { getCachedPDF, cachePDF } = usePDFCache();
 
+  const toolbarPluginInstance = toolbarPlugin();
+
+  const { Toolbar } = toolbarPluginInstance;
+  
+
   useEffect(() => {
     const loadPDF = async () => {
       if (!selectedDocument) {
-        setPdfUrl(null);
+        setPdfData(null);
         return;
       }
 
@@ -47,8 +59,9 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
         if (cached) {
           // Используем кэшированную версию
           const blob = new Blob([cached.data], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
+          //const url = URL.createObjectURL(blob);
+          //setPdfUrl(url);
+          setPdfData(new Uint8Array(cached.data));
           setUsingCache(true);
           setLoading(false);
           return;
@@ -89,10 +102,10 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
         }
 
         // Создаем URL для отображения
-        const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        setPdfUrl(url);
-        
+        // const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+        // const url = URL.createObjectURL(blob);
+        // setPdfUrl(url);
+        setPdfData(new Uint8Array(arrayBuffer));
       } catch (err) {
         logger.error('Error loading PDF', err);
         setError('Failed to load PDF');
@@ -105,7 +118,7 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
 
     // Очистка URL при размонтировании
     return () => {
-      if (pdfUrl && usingCache) {
+      if (pdfData && usingCache) {
         // URL.revokeObjectURL(pdfUrl);
       }
     };
@@ -116,14 +129,14 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
     // Если панель закрывается
     if (!context.isRightFrameOpen) {
       // Очищаем URL если он существует
-      if (pdfUrl) {
-        URL.revokeObjectURL(pdfUrl);
-        setPdfUrl(null);
+      if (pdfData) {
+        //URL.revokeObjectURL(pdfData);
+        setPdfData(null);
       }
       setError(null);
       setFullscreen(false);
     }
-  }, [context.isRightFrameOpen, pdfUrl]);
+  }, [context.isRightFrameOpen, pdfData]);
 
   const toggleFullscreen = () => {
     setFullscreen(!fullscreen);
@@ -148,17 +161,88 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
                <MdCached title={'Cashed file'}/>
           )}
         <div className="header-left">
-          <span className="document-title" title={selectedDocument.document_name}>
+          {/* <span className="document-title" title={selectedDocument.document_name}>
             {selectedDocument.document_name || 'Без названия'}
-          </span>
+          </span> */}
         </div>
         <div className="header-actions">
+          <Toolbar>
+            {(slots) => {
+              const {
+                ZoomIn,
+                ZoomOut,
+                GoToPreviousPage,
+                GoToNextPage,
+                CurrentPageInput,
+                NumberOfPages,
+                Download,
+                Zoom,
+              } = slots;
+
+              return (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '100%',
+                    padding: '0 12px',
+                    gap: '12px',
+                    fontSize: '12px',
+                  }}
+                >
+                  {/* Левая часть */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <GoToPreviousPage />
+                    <GoToNextPage />
+                    <CurrentPageInput />
+                    <span>/</span>
+                    <NumberOfPages />
+                  </div>
+
+                  {/* Центр */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      margin: '0 auto',
+                    }}
+                  >
+                    <ZoomOut />
+                    <ZoomIn />
+                    {fullscreen && (
+                      <Zoom  />
+                    )}
+                  </div>
+
+                  {/* Правая часть */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                  <Download />
+
+                  </div>
+                </div>
+              );
+            }}
+          </Toolbar>
+
           <button 
             className="icon-button" 
             onClick={toggleFullscreen}
             title={fullscreen ? 'Оконный режим' : 'Полный экран'}
           >
-            {fullscreen ? <FiMinimize2 /> : <FiMaximize2 />}
+            {fullscreen ? <FiMinimize2 strokeWidth={1.1} /> : <FiMaximize2 strokeWidth={1.1} />}
           </button>
         </div>
       </div>
@@ -173,45 +257,21 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
 
         {error && (
           <div className="pdf-viewer-error-state">
-            <div className="pdf-viewer-error-icon">⚠️</div>
+            <div className="pdf-viewer-error-icon"><HiOutlineExclamationTriangle /></div>
             <div className="pdf-viewer-error-message">{error}</div>
           </div>
         )}
 
-        {/* {pdfUrl && !loading && !error && (
-          <object
-            key={selectedDocument.id}
-            ref={objectRef}
-            data={`${pdfUrl}#toolbar=1&navpanes=0&view=FitH`}
-            type="application/pdf"
-            className="pdf-object"
-            aria-label="PDF Viewer"
-            style={{width: '100%'}}
-          >
-            <div className="fallback-message">
-              <p>Ваш браузер не поддерживает встроенный просмотр PDF.</p>
-              <a href={pdfUrl} download={selectedDocument.document_name || 'document.pdf'} className="download-link">
-                Скачать файл для просмотра
-              </a>              
-            </div>
-          </object>
-        )} */}
-        {pdfUrl && !loading && !error && (
-          <iframe
-            key={selectedDocument.id}
-            src={`${pdfUrl}#toolbar=1&navpanes=0&view=FitH`}
-            className="pdf-object"
-            aria-label="PDF Viewer"
-            style={{width: '100%', height: '100%', border: 'none'}}
-            title={selectedDocument.document_name || 'PDF Document'}
-          >
-            <div className="fallback-message">
-              <p>Ваш браузер не поддерживает встроенный просмотр PDF.</p>
-              <a href={pdfUrl} download={selectedDocument.document_name || 'document.pdf'} className="download-link">
-                Скачать файл для просмотра
-              </a>              
-            </div>
-          </iframe>
+        {pdfData && !loading && !error && (
+          <div className="pdf-viewer-content">
+            <Worker workerUrl="/pdf.worker.min.js">
+              <Viewer
+                fileUrl={pdfData}
+                plugins={[toolbarPluginInstance]}
+                defaultScale={1}
+              />
+            </Worker>
+          </div>
         )}        
       </div>
     </div>

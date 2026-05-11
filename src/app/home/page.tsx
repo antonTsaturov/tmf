@@ -12,12 +12,17 @@ import PDFViewer from "@/components/PDFViewer";
 import DocumentDetails from "@/components/DocumentDetails";
 import { MainContext } from "@/wrappers/MainContext";
 import { FiX } from "react-icons/fi";
-// import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
+import DocumentStatusIndicator from '@/components/DocumentStatusIndicator';
 import UserReviewsButton from "@/components/UserReviewsButton";
 import { Title, TitleFontSize } from "../../components/Title";
 import { useI18n } from "@/hooks/useI18n";
 import StudyReportsButton from "@/components/StudyReportsButton";
 import { StudyDocumentSearch } from "@/components/StudyDocumentSearch";
+import FoldersList from "@/components/FoldersList";
+import { WelcomeScreen } from "@/components/ui/WelcomeScreen";
+import { StudyMap } from "@/components/ui/StudyMap";
+import { ViewLastDocuments } from "@/components/ui/ViewLastDocuments";
+import { ViewLevel } from "@/types/types";
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -31,8 +36,10 @@ const Home: React.FC<MainWindowProps> = () => {
   const { t } = useI18n("reviewsPage");
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { context, updateContext } = useContext(MainContext)!;
-  const { selectedDocument, isRightFrameOpen } = context!;
+  const { selectedDocument, isRightFrameOpen, selectedFolder, 
+    currentLevel, currentStudy, showLastDocuments } = context!;
 
+  const folderChildren = selectedFolder?.children || [];
   // State for sidebar width
   const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_MIN_WIDTH); // default width
   const [isResizing, setIsResizing] = useState(false);
@@ -86,6 +93,13 @@ const Home: React.FC<MainWindowProps> = () => {
 
   }, [isResizing, isLoaded, sidebarWidth]);
     
+  const showFolderContentViewer = selectedFolder && selectedFolder?.children?.length === 0;
+  const showFoldersList = selectedFolder && folderChildren.length > 0;
+  const showWelcomeScreen = !selectedFolder && !currentStudy && !currentLevel;
+  const showStudyMap = !selectedFolder && currentStudy !== undefined && showLastDocuments === false;
+  const showLast = !selectedFolder  && showLastDocuments === true;
+  const level = currentLevel as ViewLevel;
+
   return (
     <div className={`sidebarresizable-root ${isResizing ? "resizing" : ""}`}>
       <header className="toolbar-header">
@@ -122,16 +136,27 @@ const Home: React.FC<MainWindowProps> = () => {
             <div className="main-content--buttons">
               {selectedDocument && <DocumentActions />}
             </div>
-            {/* Doc status Indicator */}
-            {/* <div className="main-content--status">
-              {selectedDocument?.status && (
-                <DocumentStatusIndicator size="big" />
-              )}
-            </div> */}
           </div>
+
           {/* Selected Folder Content */}
           <div className="main-content-area">
-            <FolderContentViewer />
+            {showFolderContentViewer && (
+              <FolderContentViewer />
+            )}
+            {showWelcomeScreen && (
+              <WelcomeScreen />
+            )}
+            {showStudyMap && (
+              <StudyMap />
+            )}
+            {showLast && (
+              <ViewLastDocuments 
+                level={level}
+              />
+            )}
+            {showFoldersList && (
+              <FoldersList />
+            )}
           </div>
         </div>
         {/* Right frame */}
@@ -185,6 +210,12 @@ const Home: React.FC<MainWindowProps> = () => {
                   )}
                 </Tabs.Content>
                 <Tabs.Content value="tab2" className="right-frame-tab-content">
+                  {/* Doc status Indicator */}
+                  <div className="main-content--status">
+                    {selectedDocument?.status && (
+                      <DocumentStatusIndicator size="big" />
+                    )}
+                  </div>
                   <DocumentDetails />
                 </Tabs.Content>
               </Tabs.Root>

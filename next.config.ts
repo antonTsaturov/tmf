@@ -31,6 +31,11 @@ const nextConfig: NextConfig = {
     // Фиксируем версию на этапе сборки
     NEXT_PUBLIC_APP_VERSION: getVersion(),
   },
+  turbopack: {
+    resolveAlias: {
+      canvas: './empty-module.js', // Можно ссылаться на пустой файл в корне
+    },
+  },
 };
 
 export default nextConfig;

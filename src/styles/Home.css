@@ -159,13 +159,18 @@
   min-height: 53px;
 }
 
-.main-content--buttons, .main-content--status {
+.main-content--buttons {
   border: 1px solid #a2a2a270;
   border-bottom: none;
   border-top-right-radius: 8px;
   border-top-left-radius: 8px;
   background: #fafbfc;
   display: flex;  
+}
+
+.main-content--status {
+  display: flex;  
+  padding: 1rem 1.5rem;
 }
 
 .main-content--buttons {

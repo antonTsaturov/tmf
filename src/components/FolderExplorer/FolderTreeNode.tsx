@@ -66,8 +66,8 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
     event.stopPropagation();
     if (isFolderContentLoading) return;
 
-    const isFolder = node.type === 'subfolder' && node.children?.length === 0;
-    if (!isFolder) return;
+    // const isFolder = node.type === 'subfolder' && node.children?.length === 0;
+    // if (!isFolder) return;
 
     if (context.currentLevel === ViewLevel.SITE && !currentSite) {
       return;
@@ -93,13 +93,12 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
       setSelectedNodes(newSelected);
       
     } else {
-      if (isSameNode) {
-        setSelectedNodes(new Set());
-        updateContext({ selectedFolder: null });
-      } else {
-        setSelectedNodes(new Set([node.id]));
-        updateContext({ selectedFolder: node });
+      if (isExpanded ) {
+        onToggleFolder?.(node.id);
+        
       }
+      setSelectedNodes(new Set([node.id]));
+      updateContext({ selectedFolder: node });
     }
   };
 

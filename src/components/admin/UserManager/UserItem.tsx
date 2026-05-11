@@ -117,15 +117,6 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
   // Получаем список стран для этого исследования из объекта study
   const studyCountries = study.countries || [];
   
-  // Фильтруем доступные страны для выбора (только те, что есть в исследовании)
-  // const availableCountriesForStudy = studyCountries.map(countryName => ({
-  //   code: countryName,
-  //   name: countryName
-  // }));
-
-  // Текущие назначенные страны (из editData)
-  //const currentAssignedCountries = assignedCountryCodes;
-
   const handleSaveSites = () => {
     onUpdateSites(tempSiteIds);
     setIsEditingSites(false);
@@ -271,7 +262,7 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
         </Flex>
 
         {/* Секция стран */}
-        <Flex direction="column" gap="2">
+        {studyCountries. length > 1 && <Flex direction="column" gap="2">
           <Flex justify="between" align="center">
             <Flex gap="1" align="center">
               <FiGlobe size={14} />
@@ -337,7 +328,7 @@ const StudyAssignmentCard: FC<StudyAssignmentCardProps> = ({
               )}
             </Flex>
           )}
-        </Flex>
+        </Flex>}
       </Flex>
     </Card>
   );

@@ -89,8 +89,11 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
     // При переключении на SITE level если у пользователя центры в несольких странах - устанавливаем фильтр по странам
     if (currentStudy && level === ViewLevel.SITE && currentStudy?.countries?.length > 1) {
       updateContext({ 
+        currentLevel: level, 
+        currentSite: undefined, 
         countryFilter: currentStudy?.countries,
-        selectedFolder: null
+        selectedFolder: null,
+        showLastDocuments: false
       });
     }
   }, [updateContext, onViewLevelChange, onSiteChange, countryFilter]);
@@ -108,12 +111,20 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
   }, [updateContext, onSiteChange]);
 
   const handleCountryChange = (country: string) => {
-    if (currentCountry !== country) {
+    // Сдесь селектор работает как селектор стран
+    if (currentCountry !== country && currentLevel === ViewLevel.COUNTRY) {
       updateContext({ 
         currentCountry: country, 
         currentSite: undefined,
         selectedFolder: null,
         showLastDocuments: true
+      });
+    } else {
+      updateContext({ 
+        currentCountry: country, 
+        currentSite: undefined,
+        selectedFolder: null,
+        showLastDocuments: false
       });
     }
   }
@@ -242,8 +253,11 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
                 </Flex>
               </Select.Item>
 
-              {/* Показываем уровень страны только если стран в исследовании больше одной */}
-              {currentStudy?.countries?.length > 1 && 
+              {/* Показываем уровень страны только если стран в исследовании больше одной
+              && пользователю назначен хотя бы 1 страна в исследовании
+              */}
+              {currentStudy?.countries?.length > 1
+              && userAssignedCountries.length > 0 && 
               <Select.Item value={ViewLevel.COUNTRY}>
                 <Flex direction="column" gap="1">
                   <Text>{t('countryLevel')}</Text>

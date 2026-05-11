@@ -1,0 +1,1 @@
+// Empty file for next.config.ts

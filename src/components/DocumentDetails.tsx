@@ -21,6 +21,7 @@ import { useFolderName } from '@/hooks/useFolderName';
 import { DocumentVersionRow } from '@/types/document';
 import { useDocumentActionHandler } from '@/hooks/useDocumentActionHandler';
 import { useI18n } from '@/hooks/useI18n';
+import { ViewLevel } from '@/types/types';
 
 const DocumentDetails: React.FC = () => {
   const { t } = useI18n('documentDetails');
@@ -118,24 +119,12 @@ const DocumentDetails: React.FC = () => {
 
   // Приводим selectedDocument к расширенному типу с пользовательскими полями
   const doc = selectedDocument as Document & {
-    // study_id?: number;
-    // site_id?: string;
-    // folder_id: string;
-    //creator?: { id: string; name: string; email: string; role?: string[] } | null;
     deleter?: { id: string; name: string; email: string } | null;
     restorer_info?: { id: string; name: string; email: string } | null;
     deleted_by_info?: { name: string; email: string, role: string, deleted_at: string } | null;
     archived_by_info?: { name: string; email: string, role: string, archived_at: string } | null;
     unarchived_by_info?: { name: string; email: string, role: string } | null;
     unarchive_reason: string | null;
-    // last_uploader?: { id: string; name: string; email: string } | null;
-    // reviewer?: { id: string; name: string; email: string } | null;
-    // approver?: { id: string; name: string; email: string } | null;
-    // assigned_reviewer?: { id: string; name: string; email: string } | null;
-    // review_status?: string | null;
-    // review_submitted_at?: string | null;
-    // reviewed_at?: string | null;
-    // review_comment?: string | null;
   };
 
   return (
@@ -180,10 +169,10 @@ const DocumentDetails: React.FC = () => {
             </div>
 
             {/* Страна */}
-            <div className="metadata-row">
+            {context.currentLevel === ViewLevel.COUNTRY && <div className="metadata-row">
               <dt>{t('country')}</dt>
               <dd>{doc.country}</dd>
-            </div>
+            </div>}
 
             {doc.tmf_zone && <div className="metadata-row">
               <dt>TMF Zone</dt>
