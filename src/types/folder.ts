@@ -7,6 +7,7 @@ export interface FolderNode {
   status: 'active' | 'inactive';
   children?: FolderNode[];
   shouldEdit?: boolean;
+  userModified?: boolean;
 }
 
 export enum FolderLevel {
@@ -25,6 +26,7 @@ export interface Folder {
   status: FolderStatus;
   children: Folder[];
   shouldEdit: boolean;
+  userModified?: boolean;
 }
 
 export enum FolderType {

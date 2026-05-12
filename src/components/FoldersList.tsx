@@ -8,8 +8,6 @@ const FoldersList: React.FC = () => {
   const { context, updateContext } = useContext(MainContext)!;
   const { selectedFolder } = context;
 
-  console.log('[FolderViewer] selectedFolder', selectedFolder);
-
   // Получаем дочерние папки (исключаем корневую папку, если нужно)
   const childFolders = selectedFolder?.children?.filter(child => child.type !== 'root') || [];
 
@@ -18,24 +16,27 @@ const FoldersList: React.FC = () => {
       {/* Заголовок с информацией о папке - фиксированный */}
       <Box style={{ flexShrink: 0 }}>
         <Flex p="4" mb="0" width="100%">
-          <Flex direction="column" gap="1" width="100%">
+          <Flex direction="column" gap="2" width="100%">
             <Flex direction="row" gap="1" align="center">
-              <FaRegFolderOpen size={24}/>
+              <FaRegFolderOpen size={22}/>
               <Text size="4" weight="bold" ml="2" style={{ textTransform: 'uppercase' }}>
                 {selectedFolder?.name}
               </Text>
             </Flex>
             
             <Flex direction="row" gap="1" align="center" justify="between">
-              <Text size="2" color="gray">
-                {childFolders.length} {childFolders.length === 1 ? 'папка' : 'папок'}
+              <Text size="1" color="gray">
+                {childFolders.length} {childFolders.length === 1 ?
+                 'папка' 
+                 : childFolders.length >= 2 && childFolders.length <= 4 ? 'папки' 
+                 : 'папок'}
               </Text>
             </Flex>
           </Flex>
         </Flex>
       </Box>
 
-      <ScrollArea style={{ height: 'calc(100vh - 200px)' }}>
+      <ScrollArea style={{ height: 'calc(100vh - 240px)' }}>
         {/* Плиточный режим для дочерних папок */}
         {childFolders.length > 0 ? (
           <Box p="4" pt="0">

@@ -3,11 +3,7 @@
 import React, {  useCallback, useContext, useEffect, useState } from 'react';
 import { MainContext } from '@/wrappers/MainContext';
 import { ViewLevel } from '@/types/types';
-import { 
-  Box, 
-  Flex, 
-  Text, 
-} from '@radix-ui/themes';
+import { Box, Flex, Text, ContextMenu, ScrollArea } from '@radix-ui/themes';
 import StudyInfoPanel from '../panels/StudyInfoPanel';
 import { useI18n } from '@/hooks/useI18n';
 import FolderTreeNode from './FolderTreeNode';
@@ -23,6 +19,7 @@ export interface FileNode {
   size?: string;
   modified?: string;
   extension?: string;
+  userModified?: boolean;
 }
 
 export interface FileExplorerProps {
@@ -147,16 +144,14 @@ const FolderExplorer: React.FC<FileExplorerProps> = ({
     );
   }
 
-return (
-    <Box className="file-explorer" pb="6" style={{ height: '100%', overflow: 'auto' }}>
+  return (
+    <Box className="file-explorer" pb="6" >
       {/* Панель с информацией о выбранном исследовании */}
       <StudyInfoPanel />
 
-      {/* Sticky контейнер для фиксированной панели */}
       <Box  
         style={{
           padding: '14px', 
-          position: 'sticky', 
           top: 0, 
           backgroundColor: 'var(--gray-5)', 
           zIndex: 10,
@@ -170,6 +165,7 @@ return (
           </Text>
       </Box>
 
+      <ScrollArea style={{ height: 'calc(100vh - 160px)' }}>
       <Box p="2">
       {/* 1. Если исследование не выбрано — показываем полноценный скелетон */}
       {!currentStudy ? (
@@ -218,7 +214,7 @@ return (
           {filteredData.map(node => (
             <FolderTreeNode 
               key={node.id}
-              node={node}
+              nod={node}
               depth={1}
               allowMultiSelect={allowMultiSelect}
               showFileIcons={showFileIcons}
@@ -231,6 +227,7 @@ return (
         </Flex>
       )}
       </Box>
+      </ScrollArea>
     </Box>
   );
 }

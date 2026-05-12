@@ -31,10 +31,10 @@ export const WelcomeScreen = () => {
       <Card size="3" style={{ maxWidth: '600px', width: '100%', textAlign: 'center' }}>
         <Flex direction="column" align="center" gap="4">
           
-          <Heading size="6" mb="1">Начните работу c ExploeTMF</Heading>
+          <Heading size="6" mb="1">Начните работу c ExploreTMF</Heading>
           
           <Text color="gray" size="2" mb="4">
-            Чтобы просмотреть документы, пожалуйста, выберите исследование в меню сверху или нажмите кнопку ниже.
+            Чтобы просмотреть документы, выберите исследование в меню сверху или нажмите кнопку ниже.
           </Text>
 
           {!loading ? <DropdownMenu.Root>

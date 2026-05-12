@@ -263,7 +263,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
         )}
 
         {pdfData && !loading && !error && (
-          <div className="pdf-viewer-content">
             <Worker workerUrl="/pdf.worker.min.js">
               <Viewer
                 fileUrl={pdfData}
@@ -271,7 +270,6 @@ const PDFViewer: React.FC<PDFViewerProps> = () => {
                 defaultScale={1}
               />
             </Worker>
-          </div>
         )}        
       </div>
     </div>

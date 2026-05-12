@@ -41,7 +41,15 @@ export const useStudyChange = ({
       onSiteChange?.(undefined);
       onViewLevelChange?.(undefined);
     }
+
+    /* 
+    *  Сохраняем последней выбранный исследование в localStorage.
+    *  При входе в приложение сразу устанавливаем последнее сохранённое исследование
+    */
+    localStorage.setItem('currentStudy', JSON.stringify(selectedStudy));
   }, [studies, updateContext, onStudyChange, onSiteChange, onViewLevelChange]);
+
+  
 
   return { handleStudyChange };
 };

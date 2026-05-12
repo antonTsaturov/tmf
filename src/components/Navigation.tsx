@@ -174,6 +174,23 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
     countryFilter
   ]);
 
+
+  // Загрузка последнего выбранного исследования
+  useEffect(() => {
+    const preSavedStudy = localStorage.getItem('currentStudy');
+
+    if (preSavedStudy) {
+      const savedStudy: Study = JSON.parse(preSavedStudy);
+      const checkAssignedStudy = user?.assigned_study_id?.includes(Number(savedStudy.id));
+
+      if (savedStudy && checkAssignedStudy) {
+        updateContext({ currentStudy: savedStudy });
+      }
+      localStorage.removeItem('currentStudy');
+    }
+
+  }, [])
+
   const assignedSites =
     currentStudy?.sites?.some(site =>
       user?.assigned_site_id.includes(Number(site.id))
@@ -200,6 +217,7 @@ const Navigation: React.FC<StudySiteNavigationProps> = ({
       </Flex>
     );
   }
+
 
   return (
     <Flex direction="row" gap="2" >

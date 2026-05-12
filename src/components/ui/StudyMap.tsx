@@ -134,7 +134,7 @@ const hierarchyData = useMemo(() => {
   };
 
   return (
-    <Card m="4" size="3" style={{ width: '100%', maxWidth: '1000px', minHeight: 0, overflow: 'hidden' }}>
+    <Card m="4" size="3" style={{  minHeight: 0, overflow: 'hidden' }}>
       <Flex justify="between" pb="4" align="center">
         {/* Кнопка назад */}
         <Tooltip content="Вернуться к выбору исследования">

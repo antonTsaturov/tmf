@@ -37,7 +37,8 @@ const Home: React.FC<MainWindowProps> = () => {
   const sidebarRef = useRef<HTMLDivElement>(null);
   const { context, updateContext } = useContext(MainContext)!;
   const { selectedDocument, isRightFrameOpen, selectedFolder, 
-    currentLevel, currentStudy, showLastDocuments } = context!;
+    currentLevel, currentStudy, showLastDocuments 
+  } = context!;
 
   const folderChildren = selectedFolder?.children || [];
   // State for sidebar width
@@ -91,7 +92,9 @@ const Home: React.FC<MainWindowProps> = () => {
       localStorage.setItem('sidebarWidth', sidebarWidth.toString());
     }
 
-  }, [isResizing, isLoaded, sidebarWidth]);
+  }, [isResizing, isLoaded ]); //sidebarWidth
+
+
     
   const showFolderContentViewer = selectedFolder && selectedFolder?.children?.length === 0;
   const showFoldersList = selectedFolder && folderChildren.length > 0;
@@ -99,6 +102,7 @@ const Home: React.FC<MainWindowProps> = () => {
   const showStudyMap = !selectedFolder && currentStudy !== undefined && showLastDocuments === false;
   const showLast = !selectedFolder  && showLastDocuments === true;
   const level = currentLevel as ViewLevel;
+
 
   return (
     <div className={`sidebarresizable-root ${isResizing ? "resizing" : ""}`}>

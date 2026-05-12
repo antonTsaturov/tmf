@@ -6,30 +6,14 @@ import { AdminContext } from '@/wrappers/AdminContext';
 import { FolderType, FolderStatus, Folder, FolderLevel } from '@/types/folder';
 import { Tables } from '@/lib/db/schema';
 import { StructurePreview } from './StructurePreview';
-import {
-  Card,
-  Flex,
-  Text,
-  Badge,
-  Button,
-  Separator,
-  Heading,
-  Box,
-  IconButton,
-  ScrollArea,
-  TextField
+import { Card, Flex, Text, Badge, Button, Separator, Heading, Box,
+  IconButton, ScrollArea, TextField
 } from '@radix-ui/themes';
-import {
-  PlusIcon,
-  TrashIcon,
-  DownloadIcon,
-  UploadIcon,
-  ResetIcon,
-  ChevronRightIcon,
-  ChevronDownIcon,
-  HomeIcon
+import { PlusIcon, TrashIcon, DownloadIcon, UploadIcon, ResetIcon, ChevronRightIcon,
+  ChevronDownIcon, HomeIcon
 } from '@radix-ui/react-icons';
 import { FaRegFolder, FaRegFolderOpen } from "react-icons/fa";
+import { useFolderCreation } from '@/hooks/useFolderCreation';
 
 export interface FolderPosition {
   folder: Folder;
@@ -52,34 +36,6 @@ interface FolderTreeProps {
 }
 
 export const generateId = (level: FolderLevel): string => `${level}-${uuidv4()}`;
-
-export const createNewFolder = (
-  name: string = '', 
-  type: FolderType = FolderType.FOLDER,
-  shouldEdit: boolean = false,
-  level: FolderLevel = FolderLevel.GENERAL, // По умолчанию GENERAL
-  parentLevel?: FolderLevel // Уровень родителя
-): Folder & { shouldEdit?: boolean } => {
-  // Определяем уровень для новой папки
-  let folderLevel = level;
-  
-  // Если есть родительский уровень, наследуем его
-  if (parentLevel !== undefined) {
-    folderLevel = parentLevel;
-  }
-  
-  const id = generateId(folderLevel);
-  
-  return {
-    id,
-    name,
-    type,
-    level: folderLevel,
-    status: FolderStatus.ACTIVE,
-    children: [],
-    shouldEdit
-  };
-};
 
 /*
 * Создание начальной структуры: две обязательные папки GENERAL и SITE.
@@ -333,6 +289,8 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
   const [rootFolder, setRootFolder] = useState<Folder | null>(null);
   const [structureObject, setStructureObject] = useState<Folder>({} as Folder);
 
+  const { createFolder } = useFolderCreation();
+
   // Поиск папки в дереве
   const findFolderInTree = useCallback((folderId: string, tree?: Folder): FolderPosition | null => {
     const searchTree = tree || rootFolder;
@@ -381,13 +339,12 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       // Определяем уровень для новой папки (наследуем от целевой папки)
       const targetLevel = folder.level;
       
-      const newFolder = createNewFolder(
-        '', 
-        parent?.type,
-        //FolderType.FOLDER, 
-        true,
-        targetLevel // Используем уровень целевой папки
-      );
+      const newFolder = createFolder({
+        name: '',
+        type: parent?.type,
+        shouldEdit: true,
+        level: targetLevel
+      });
 
       const targetIndex = parentArray.findIndex(f => f.id === folder.id);
       
@@ -413,12 +370,12 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       const { folder } = result;
       
       // Новая подпапка наследует уровень родителя
-      const newSubfolder = createNewFolder(
-        '', 
-        FolderType.SUBFOLDER, 
-        true,
-        folder.level // Наследуем уровень родителя
-      );
+      const newSubfolder = createFolder({
+        name:'', 
+        type: FolderType.SUBFOLDER, 
+        shouldEdit: true,
+        level: folder.level // Наследуем уровень родителя
+      });
       
       if (!folder.children) {
         folder.children = [];
@@ -448,7 +405,6 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
 
       const { folder, parent } = result;
       const parentArray = parent ? parent.children : tree.children;
-      
       const index = parentArray.findIndex(f => f.id === folder.id);
       if (index !== -1) {
         parentArray.splice(index, 1);
@@ -563,7 +519,6 @@ const FoldersStructureManager: FC<FolderTreeProps> = () => {
       if (!currentStudy) {
         return;
       }
-
       setRootFolder(currentStudy.folders_structure);
       setStructureObject({} as Folder);
     }
