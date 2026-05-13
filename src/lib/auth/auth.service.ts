@@ -1,16 +1,17 @@
 // lib/auth/auth.service.ts
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions,  } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { ENV } from '@/lib/config/env';
 import { logger } from '@/lib/utils/logger';
+import { TIMEOUTS } from '@/lib/config/timeouts';
+
+const ACCESS_TOKEN_EXPIRY_SECONDS: number = TIMEOUTS.TOKENS.ACCESS_TOKEN_SECONDS;
+const REFRESH_TOKEN_EXPIRY_SECONDS: number = TIMEOUTS.TOKENS.REFRESH_TOKEN_SECONDS;
 
 const JWT_SECRET = ENV.JWT_SECRET;
 const REFRESH_SECRET = ENV.JWT_SECRET + '_refresh'; // Use different salt for refresh tokens
 
-// Token expiry times
-const ACCESS_TOKEN_EXPIRY = '15m'; // Short-lived access token
-const REFRESH_TOKEN_EXPIRY = '7d'; // Long-lived refresh token
 
 export interface JwtPayload {
   id: number;
@@ -40,10 +41,11 @@ export class AuthService {
    * Used for API requests, expires in 15 minutes
    */
   static generateAccessToken(payload: JwtPayload): string {
-    return jwt.sign(payload, JWT_SECRET, {
-      expiresIn: ACCESS_TOKEN_EXPIRY,
+    const options: SignOptions = {
+      expiresIn: ACCESS_TOKEN_EXPIRY_SECONDS, // число в секундах
       algorithm: 'HS256'
-    });
+    };
+    return jwt.sign(payload, JWT_SECRET, options);
   }
 
   /**
@@ -52,10 +54,11 @@ export class AuthService {
    * @returns Refresh token string
    */
   static generateRefreshToken(payload: RefreshTokenPayload): string {
-    return jwt.sign(payload, REFRESH_SECRET, {
-      expiresIn: REFRESH_TOKEN_EXPIRY,
+    const options: SignOptions = {
+      expiresIn: REFRESH_TOKEN_EXPIRY_SECONDS, // число в секундах
       algorithm: 'HS256'
-    });
+    };
+    return jwt.sign(payload, REFRESH_SECRET, options);
   }
 
   /**

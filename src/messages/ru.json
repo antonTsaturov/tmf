@@ -291,8 +291,8 @@
     "docDetails": "Детали документа"
   },
   "documentActions": {
-    "create": "Создать",
-    "create_tooltip": "Создать документ",
+    "create": "Загрузить",
+    "create_tooltip": "Загрузить новый документ",
     "submit": "На ревью",
     "submit_tooltip": "Отправить документ на рассмотрение",
     "approve": "Проверить",

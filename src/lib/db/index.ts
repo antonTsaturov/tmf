@@ -1,3 +1,4 @@
+import "server-only";
 import { Pool } from 'pg';
 import { Tables, tableSQLMap, tableSQLDepend } from './schema';
 import { logger } from '@/lib/utils/logger';

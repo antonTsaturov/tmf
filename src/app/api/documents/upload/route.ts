@@ -9,6 +9,9 @@ import { logger } from '@/lib/utils/logger';
 import { applyRateLimit, RATE_LIMIT_PRESETS } from '@/lib/security/rate-limit';
 import { validateFileUpload } from '@/lib/security/file-security';
 import { NotificationService } from '@/services/notification.service';
+import { getAuthenticatedUser } from '@/lib/auth/check-auth';
+import { requirePermission } from '@/lib/security/permissions';
+import { DocumentAction } from '@/types/document';
 
 // Функция для кодирования метаданных в ASCII
 function encodeMetadata(value: string): string {
@@ -60,11 +63,24 @@ async function uploadFileWithIAM(
   }
 }
 
-// Основная функция обработки создания объекта документа в базе данных
+// Основная функция  создания объекта документа в базе данных
 async function uploadHandler(
   request: NextRequest,
   ctx: AuditContext
 ) {
+
+  const user = await getAuthenticatedUser(request);
+  if (!user) {
+    return NextResponse.json(
+      { error: 'User not found' },
+      { status: 401 },
+    );
+  }
+
+  requirePermission(user.role, DocumentAction.CREATE_DOCUMENT);
+
+
+  
   const client = getPool();
   
   try {
@@ -84,7 +100,6 @@ async function uploadHandler(
     const siteId = formData.get('siteId') as string || null;
     const country = formData.get('country') as string || null;
     const folderId = formData.get('folderId') as string;
-    //const folderName = formData.get('folderName') as string;
     const createdBy = formData.get('createdBy') as string;
     const fileName = formData.get('fileName') as string;
     const documentName = formData.get('documentName') as string;

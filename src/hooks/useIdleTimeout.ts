@@ -64,3 +64,5 @@ export function useIdleTimeout(options: UseIdleTimeoutOptions) {
     };
   }, [enabled, handleActivity, onIdleTimeout]);
 }
+
+

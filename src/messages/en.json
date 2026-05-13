@@ -291,8 +291,8 @@
     "docDetails": "Document details"
   },
   "documentActions": {
-    "create": "Create",
-    "create_tooltip": "Create document",
+    "create": "Add",
+    "create_tooltip": "Add document",
     "submit": "Submit",
     "submit_tooltip": "Submit document for review",
     "approve": "Review",

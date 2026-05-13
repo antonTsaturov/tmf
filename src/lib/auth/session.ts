@@ -96,6 +96,8 @@ export function getSession(sessionId: string): SessionData | null {
     return null;
   }
   
+
+
   return session;
 }
 
@@ -250,3 +252,4 @@ if (!isTestEnv) {
  * - Database for persistent session records
  * - Message queues for session invalidation broadcast
  */
+

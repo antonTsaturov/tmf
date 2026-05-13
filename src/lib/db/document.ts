@@ -60,6 +60,15 @@ export async function ensureIndexesAndTriggers() {
       CREATE INDEX IF NOT EXISTS idx_document_version_status ON document_version(review_status);
     `);
 
+    // Проверяем существование индексов для user_sessions
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON user_sessions(user_id);
+      CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON user_sessions(expires_at);
+      CREATE INDEX IF NOT EXISTS idx_sessions_last_activity ON user_sessions(last_activity_at);
+      CREATE INDEX IF NOT EXISTS idx_sessions_valid ON user_sessions(is_valid);
+    `);
+
+
     // Создаем функцию для автоматического обновления current_version_id если её нет
     await client.query(`
       CREATE OR REPLACE FUNCTION update_document_current_version()

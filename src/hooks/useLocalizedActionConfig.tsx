@@ -12,7 +12,8 @@ import {
   FiEye,
   FiUploadCloud,
   FiEdit,
-  FiLink
+  FiLink,
+  FiPlus
 } from 'react-icons/fi';
 
 // Хук для создания локализованного маппинга
@@ -21,7 +22,7 @@ export const useLocalizedActionConfig = (): Partial<Record<DocumentAction, Actio
   
   return {
     [DocumentAction.CREATE_DOCUMENT]: { 
-        icon: <FiFilePlus />, 
+        icon: <FiPlus />, 
         label: t('create'),
         tooltip: t('create_tooltip'),
         variant: 'solid',

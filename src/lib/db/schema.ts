@@ -186,42 +186,38 @@ export const UserTable = `
   );
 `;
 
-// Триггер для обновления updated_at
-export const UpdateUserTimestamp = `
-  CREATE OR REPLACE FUNCTION update_user_timestamp()
-  RETURNS TRIGGER AS $$
+export const UserSessionTable = `
+  CREATE TABLE IF NOT EXISTS user_sessions (
+      session_id VARCHAR(255) PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      user_email VARCHAR(255) NOT NULL,
+      refresh_token_hash VARCHAR(255) NOT NULL,
+      created_at BIGINT NOT NULL,
+      last_activity_at BIGINT NOT NULL,
+      expires_at BIGINT NOT NULL,
+      is_valid BOOLEAN DEFAULT true,
+      ip_address VARCHAR(45),
+      user_agent TEXT
+  );
+`;
+
+export const CleanupExpiredSessions = `
+  CREATE OR REPLACE FUNCTION cleanup_expired_sessions()
+  RETURNS INTEGER AS $$
+  DECLARE
+      deleted_count INTEGER;
   BEGIN
-    NEW.updated_at = NOW();
-    RETURN NEW;
+      DELETE FROM user_sessions 
+      WHERE expires_at < EXTRACT(EPOCH FROM NOW()) * 1000
+        OR NOT is_valid
+        OR (EXTRACT(EPOCH FROM NOW()) * 1000 - last_activity_at) > 1800000; -- 30 минут idle
+      
+      GET DIAGNOSTICS deleted_count = ROW_COUNT;
+      RETURN deleted_count;
   END;
   $$ LANGUAGE plpgsql;
-
-  DROP TRIGGER IF EXISTS update_user_timestamp_trigger ON ${Tables.USERS};
-  CREATE TRIGGER update_user_timestamp_trigger
-  BEFORE UPDATE ON ${Tables.USERS}
-  FOR EACH ROW
-  EXECUTE FUNCTION update_user_timestamp();
 `;
 
-// Вспомогательная таблица для связи пользователей и исследований (опционально)
-export const UserStudyRelationTable = `
-  CREATE TABLE IF NOT EXISTS user_study_relation (
-    user_id INTEGER REFERENCES user(id) ON DELETE CASCADE,
-    study_id INTEGER REFERENCES study(id) ON DELETE CASCADE,
-    assigned_at TIMESTAMPTZ DEFAULT NOW(),
-    PRIMARY KEY (user_id, study_id)
-  );
-`;
-
-// Вспомогательная таблица для связи пользователей и центров (опционально)
-export const UserSiteRelationTable = `
-  CREATE TABLE IF NOT EXISTS user_site_relation (
-    user_id INTEGER REFERENCES user(id) ON DELETE CASCADE,
-    site_id INTEGER REFERENCES site(id) ON DELETE CASCADE,
-    assigned_at TIMESTAMPTZ DEFAULT NOW(),
-    PRIMARY KEY (user_id, site_id)
-  );
-`;
 
 // Утилитарная функция для получения безопасных полей пользователя
 const getSafeUserFields = () => `

@@ -27,9 +27,9 @@ const FoldersList: React.FC = () => {
             <Flex direction="row" gap="1" align="center" justify="between">
               <Text size="1" color="gray">
                 {childFolders.length} {childFolders.length === 1 ?
-                 'папка' 
-                 : childFolders.length >= 2 && childFolders.length <= 4 ? 'папки' 
-                 : 'папок'}
+                 'подпапка' 
+                 : childFolders.length >= 2 && childFolders.length <= 4 ? 'подпапки' 
+                 : 'подпапок'}
               </Text>
             </Flex>
           </Flex>

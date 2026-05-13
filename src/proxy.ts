@@ -13,12 +13,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AuthService } from './lib/auth/auth.service';
 import { getSecurityHeaders } from './lib/security/security-headers';
 import { applyCorsHeaders, handleCorsPreflight } from './lib/security/cors';
+import { getSession } from './lib/auth/session';
+import { logger } from './lib/utils/logger';
 
 // Публичные пути (не требуют авторизации)
 export const PUBLIC_PATHS = [
   '/api/ping',
   '/api/auth/login',
   '/api/auth/logout',
+  '/api/auth/refresh',
+  '/api/auth/check',
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
   '/reset-password',
@@ -54,6 +58,40 @@ function shouldSkipMiddleware(pathname: string): boolean {
   return SKIP_MIDDLEWARE_PATHS.some(pattern => pattern.test(pathname));
 }
 
+async function checkAuthWithSession(request: NextRequest): Promise<{ 
+  isAuthenticated: boolean; 
+  payload: any | null;
+  sessionId?: string;
+}> {
+  const authToken = request.cookies.get('auth-token')?.value;
+  
+  if (!authToken) {
+    return { isAuthenticated: false, payload: null };
+  }
+
+  const payload = AuthService.verifyToken(authToken);
+  if (!payload || !payload.sessionId) {
+    return { isAuthenticated: false, payload: null };
+  }
+
+  // ✅ Проверяем сессию в БД
+  const session = await getSession(payload.sessionId);
+  
+  if (!session) {
+    logger.debug('Session expired in middleware', { 
+      sessionId: payload.sessionId?.substring(0, 20),
+      userId: payload.id 
+    });
+    return { isAuthenticated: false, payload: null };
+  }
+
+  return { 
+    isAuthenticated: true, 
+    payload,
+    sessionId: payload.sessionId 
+  };
+}
+
 export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
@@ -67,7 +105,7 @@ export function proxy(request: NextRequest) {
     return handleCorsPreflight(request);
   }
 
-  // Создаем response позже
+  // Создаем response
   let response: NextResponse;
 
   if (AUTH_DISABLED) {

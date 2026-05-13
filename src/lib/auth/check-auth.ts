@@ -27,16 +27,26 @@ export async function checkAuth(request: NextRequest) {
 
 export async function getAuthenticatedUser(request: NextRequest) {
   const authToken = request.cookies.get('auth-token')?.value;
-
   if (!authToken) return null;
 
   const payload = AuthService.verifyToken(authToken);
   if (!payload) return null;
 
   // Обновляем активность сессии при каждом реальном API-запросе
+  // if (payload.sessionId) {
+  //   updateSessionActivity(payload.sessionId);
+  // }
   if (payload.sessionId) {
-    updateSessionActivity(payload.sessionId);
-  }
+    const updated = await updateSessionActivity(payload.sessionId);
+    if (!updated) {
+      // Сессия не найдена или истекла
+      logger.warn('Session not found or expired during activity update', { 
+        sessionId: payload.sessionId 
+      });
+      // Не возвращаем null, просто логируем - пользователь может быть аутентифицирован
+      // но сессия уже умерла из-за таймаута
+    }
+  }  
 
   const client = getPool();
   try {

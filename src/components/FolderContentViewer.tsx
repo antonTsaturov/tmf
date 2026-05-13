@@ -412,6 +412,7 @@ const FolderContentViewer: React.FC = () => {
     );
   }
 
+  console.log('documentsData', documentsData);
   return (
     <Box 
       ref={contentRef} 

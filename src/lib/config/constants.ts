@@ -38,3 +38,29 @@ export type RadixColors =
   | 'mint'
   | 'sky'
   | undefined;
+
+// lib/constants/public-paths.ts
+// Этот файл безопасен для импорта на клиенте
+
+export const PUBLIC_PATHS = [
+  '/api/ping',
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/auth/refresh',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/reset-password',
+  '/api/csrf',
+  '/_next/static',
+  '/favicon.ico',
+  '/api/auth/check',
+];
+
+// Функция для проверки публичного пути
+export function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some(path => {
+    if (pathname === path) return true;
+    if (pathname.startsWith(path + '/')) return true;
+    return false;
+  });
+}

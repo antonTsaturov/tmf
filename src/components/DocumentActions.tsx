@@ -36,7 +36,7 @@ const DocumentActions: React.FC<DocumentActionsProps> = () => {
   const mainContext = useContext(MainContext);
   if (!mainContext) throw new Error('DocumentActions must be used within MainContext Provider');
   const { context } = mainContext;
-  const { selectedFolder, selectedDocument, currentSite, currentLevel, currentStudy} = context;
+  const { selectedFolder, selectedDocument, currentSite, currentLevel, currentStudy, currentCountry } = context;
   
   // Хук для уменьшения кнопок при сужении контейнера
   const [containerRef, { width }] = useResizeObserver<HTMLDivElement>();
@@ -58,8 +58,8 @@ const DocumentActions: React.FC<DocumentActionsProps> = () => {
 
   // Определяем, нужно ли показывать кнопки
   const shouldShowActions = (currentLevel === ViewLevel.GENERAL && selectedFolder)
-  || (currentLevel === ViewLevel.SITE && currentSite && selectedFolder)
-  || (currentLevel === ViewLevel.COUNTRY && selectedFolder);
+                          || (currentLevel === ViewLevel.SITE && currentSite && selectedFolder)
+                          || (currentLevel === ViewLevel.COUNTRY && currentCountry && selectedFolder);
 
   if (!shouldShowActions || availableActions.length === 0) {
     return null;

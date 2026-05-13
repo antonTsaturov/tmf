@@ -6,8 +6,6 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { MainContext } from "@/wrappers/MainContext";
 import { StudyStatus, ViewLevel } from "@/types/types";
 import { collectAllFolderIds } from "./utils/folderHelpers";
-import { useFolderCreation } from "@/hooks/useFolderCreation";
-import { Folder } from "@/types/folder";
 import FolderItem from "./FolderItem";
 
 
@@ -22,33 +20,6 @@ interface FolderTreeNodeProps {
   onToggleAllFolders?: (ids: string[], expand: boolean) => void;
 }
 
-export interface FolderPosition {
-  folder: Folder;
-  parent: Folder | null;
-}
-
-const findFolderInTree = (folderId: string, tree?: Folder): FolderPosition | null => {
-  const searchTree = tree ;
-  if (!searchTree) return null;
-  if (searchTree.id === folderId) return { folder: searchTree, parent: null };
-  
-  const searchInChildren = (children: Folder[], parent: Folder): FolderPosition | null => {
-    for (const child of children) {
-      if (child.id === folderId) {
-        return { folder: child, parent };
-      }
-      if (child.children && child.children.length > 0) {
-        const result = searchInChildren(child.children, child);
-        if (result) return result;
-      }
-    }
-    return null;
-  };
-  
-  return searchInChildren(searchTree.children, searchTree);
-}
-
-
 const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({ 
   nod, 
   depth = 1, 
@@ -60,32 +31,11 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
   onToggleAllFolders
 }) => {
   const [node, setNode ]= useState(nod); // Отдельная папка в дереве
-  const [tree, setTree] = useState<Folder>(filteredData![0] as Folder); // Дерево уровня целиком (Site or General or Country)
   
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
 
   const { context, updateContext } = useContext(MainContext)!;
   const { currentStudy, currentSite, currentLevel, selectedFolder, isFolderContentLoading } = context;
-  const { createFolder } = useFolderCreation();
-
-  type TreeUpdater = (tree: Folder) => void;
-
-  // Обновление дерева
-  const updateTree = useCallback((updater: TreeUpdater) => {
-    setTree(prev => {
-      if (!prev) return prev;
-      const newTree = JSON.parse(JSON.stringify(prev)) as Folder;
-      updater(newTree);
-      return newTree;
-    });
-    setNode(prev => {
-      if (!prev) return prev;
-      const newTree = JSON.parse(JSON.stringify(prev)) as Folder;
-      updater(newTree);
-      return newTree;
-    });
-
-  }, []);
 
   const folderRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const userSelectedFolderIdRef = useRef<string | null>(null);
@@ -132,12 +82,16 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
       if (newSelected.has(node.id)) {
         newSelected.delete(node.id);
         if (context.selectedFolder?.id === node.id) {
-          updateContext({ selectedFolder: null });
+          updateContext({ 
+            selectedFolder: null,
+           });
           userSelectedFolderIdRef.current = null;
         }
       } else {
         newSelected.add(node.id);
-        updateContext({ selectedFolder: node });
+        updateContext({ 
+          selectedFolder: node,
+         });
       }
       setSelectedNodes(newSelected);
       
@@ -147,7 +101,10 @@ const FolderTreeNode: React.FC<FolderTreeNodeProps> = ({
         
       }
       setSelectedNodes(new Set([node.id]));
-      updateContext({ selectedFolder: node });
+      updateContext({ 
+        selectedFolder: node,
+        selectedDocument: null
+      });
     }
   };
 

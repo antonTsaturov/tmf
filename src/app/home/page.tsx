@@ -23,6 +23,7 @@ import { WelcomeScreen } from "@/components/ui/WelcomeScreen";
 import { StudyMap } from "@/components/ui/StudyMap";
 import { ViewLastDocuments } from "@/components/ui/ViewLastDocuments";
 import { ViewLevel } from "@/types/types";
+import { SessionTimer } from "@/components/ui/SessionTimer";
 
 interface MainWindowProps {
   initialWidth?: number;
@@ -110,6 +111,7 @@ const Home: React.FC<MainWindowProps> = () => {
         <Title fontSize={TitleFontSize.ExtraSmall} />
         <Navigation />
         <div className="toolbar-title"></div>
+        < SessionTimer />
         <StudyDocumentSearch />
         <StudyReportsButton />
         <UserReviewsButton />
@@ -138,7 +140,7 @@ const Home: React.FC<MainWindowProps> = () => {
           <div className="main-content-row">
             {/* Actions Buttons */}
             <div className="main-content--buttons">
-              {selectedDocument && <DocumentActions />}
+              {selectedFolder?.children?.length === 0 && <DocumentActions />}
             </div>
           </div>
 

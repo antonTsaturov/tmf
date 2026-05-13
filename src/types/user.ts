@@ -74,3 +74,10 @@ export interface StudyUser {
 export interface StudyUserWithPermissions extends StudyUser {
   permissions: UserPermissions;
 }
+
+export type UserAccess = {
+  role: string[];
+  assigned_study_id?: number[];
+  assigned_site_id?: number[];
+  assigned_country_by_study?: Record<string, string[]>;
+};
